@@ -1282,7 +1282,7 @@ async function loadRobinSharedData() {
     
     // For non-admin users, try loading from GitHub
     try {
-        const itemsResp = await fetch('https://raw.githubusercontent.com/Worklaf/Worklaf/main/AirdropLab/guides/Robinhood/robin_shared_items.json?v=' + Date.now());
+        const itemsResp = await fetch('https://raw.githubusercontent.com/Worklaf/main/guides/Robinhood/robin_shared_items.json?v=' + Date.now());
         if (itemsResp.ok) {
             const data = await itemsResp.json();
             userItemsData = { items: data.items || {}, collections: data.collections || [], dappCategories: data.dappCategories || [] };
@@ -1294,7 +1294,7 @@ async function loadRobinSharedData() {
     }
 
     try {
-        const editsResp = await fetch('https://raw.githubusercontent.com/Worklaf/Worklaf/main/AirdropLab/guides/Robinhood/robin_shared_edits.json?v=' + Date.now());
+        const editsResp = await fetch('https://raw.githubusercontent.com/Worklaf/main/guides/Robinhood/robin_shared_edits.json?v=' + Date.now());
         if (editsResp.ok) {
             const data = await editsResp.json();
             editsOverride = data.editsOverride || {};
