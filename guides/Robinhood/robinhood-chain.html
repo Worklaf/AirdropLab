@@ -511,7 +511,16 @@
         </div>
         
         <label id="fieldUrl"><span data-i18n="url_label">URL Link</span> *<input type="url" id="addFieldUrl" placeholder="https://..." required></label>
-        <label id="fieldImage"><span data-i18n="image_label">Image URL (for NFT)</span><input type="url" id="addFieldImage" placeholder="https://...image.png"></label>
+        <div id="fieldImage" style="display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--text-muted);font-weight:600;">
+    <span><span data-i18n="image_label">Images (for NFT)</span> (up to 5)</span>
+    <div id="imageInputsContainer" style="display:flex;flex-direction:column;gap:8px;">
+        <div class="image-input-row" style="display:flex;gap:8px;align-items:center;">
+            <input type="url" class="addFieldImage" placeholder="https://...image.png" style="flex:1; background:rgba(10,14,26,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);">
+            <button type="button" class="add-image-btn" onclick="window.addImageInput()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;">+</button>
+        </div>
+    </div>
+    <div id="imageCounter" style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">1/5 images</div>
+</div>
         <label id="fieldWebsite"><span data-i18n="website_label">Project Website URL</span><input type="url" id="addFieldWebsite" placeholder="https://..."></label>
         <label id="fieldTwitter"><span data-i18n="twitter_label">Project Twitter URL</span><input type="url" id="addFieldTwitter" placeholder="https://x.com/..."></label>
         <label id="fieldDescription"><span data-i18n="description_label">Action Description</span><input type="text" id="addFieldDescription" placeholder="Description..."></label>
