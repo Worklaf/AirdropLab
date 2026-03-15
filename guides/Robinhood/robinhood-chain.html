@@ -704,7 +704,6 @@
         const isActive = editBtn.classList.contains('active');
         editBtn.innerHTML = `<i class="fas fa-${isActive ? 'check' : 'pen'}"></i> <span data-i18n="${isActive ? 'finish_editing' : 'edit_mode'}">${getTranslation(isActive ? 'finish_editing' : 'edit_mode')}</span>`;
     }
-}
 
 function toggleLanguage() {
     // Переключаемся между 'en' и 'ua'
