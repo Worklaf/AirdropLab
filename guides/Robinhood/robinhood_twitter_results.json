@@ -1,21 +1,5 @@
 {
-  "timestamp": "2026-03-12T12:05:51.084353Z",
-  "total": 1,
-  "nfts": [
-    {
-      "project": "clara",
-      "twitter": "clarachainxyz",
-      "zone": "nft_clara",
-      "text": "Free Mint NFT on Robinhood Testnet \n\n\"QUEENHOOD\" on CLARA \n\nMint: \nclarachain.net/queenhood\n\nRT & Paste Your Wallet Address Below ",
-      "url": "https://x.com/clarachainxyz/status/2031797958212272236",
-      "time_ago": "17h",
-      "datetime": "2026-03-11T18:22:36.000Z",
-      "likes": 61,
-      "retweets": 59,
-      "triggerText": "NFT On Robinhood",
-      "mint_links": [
-        "clarachain.net/queenhood"
-      ]
-    }
-  ]
+  "timestamp": "2026-03-15T15:35:49.863597Z",
+  "total": 0,
+  "nfts": []
 }
