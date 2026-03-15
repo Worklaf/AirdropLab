@@ -1,35 +1,21 @@
 {
-  "timestamp": "2026-03-12T12:02:50.285138Z",
-  "total": 3,
+  "timestamp": "2026-03-15T15:33:20.853783Z",
+  "total": 2,
   "nfts": [
     {
-      "project": "clara",
-      "twitter": "clarachainxyz",
-      "zone": "nft_clara",
-      "text": "Free Mint NFT on ARC Testnet \n\n\"VALKYRIE\" on CLARA \n\nMint: \nclarachain.net/valkyrie\n\nRT & Paste Your Wallet Address Below ",
-      "url": "https://x.com/clarachainxyz/status/2030361798353059883",
-      "time_ago": "4d",
-      "datetime": "2026-03-07T19:15:49.000Z",
-      "likes": 56,
-      "retweets": 61,
-      "triggerText": "Free Mint NFT on Arc Testnet",
+      "project": "arkle",
+      "twitter": "0xarkle",
+      "zone": "nft_arkle",
+      "text": "Nfts Update\n\nMint Free Nft on Arc Testnet \n\nLexi: \narklelab.xyz/lexi\n\nRetweet & Comment Wallet address\n\nClaim Now: \npresale.arklelab.xyz",
+      "url": "https://x.com/0xarkle/status/2032522222355763391",
+      "time_ago": "1d",
+      "datetime": "2026-03-13T18:20:34.000Z",
+      "likes": 43,
+      "retweets": 35,
+      "triggerText": "NFT On Arc Testnet",
       "mint_links": [
-        "clarachain.net/valkyrie"
-      ]
-    },
-    {
-      "project": "caset",
-      "twitter": "casetnetwork",
-      "zone": "nft_caset",
-      "text": "Mint Free NFT On ARC Testnet \n\nFree Mint: \ncaset.network/katana\n\nKATANA On Caset\n\nRetweet & Comment wallet address",
-      "url": "https://x.com/casetnetwork/status/2030272889954673036",
-      "time_ago": "4d",
-      "datetime": "2026-03-07T13:22:32.000Z",
-      "likes": 87,
-      "retweets": 70,
-      "triggerText": "Mint Free NFT On ARC Testnet",
-      "mint_links": [
-        "caset.network/katana"
+        "arklelab.xyz/lexi",
+        "arklelab.xyz"
       ]
     },
     {
@@ -38,10 +24,10 @@
       "zone": "nft_alze",
       "text": "Free Mint NFT On Arc Testnet! \n\nArchemist: \nalze.xyz/Archemist\n\nExplore the Arc Testnet\n\n850 $ALZE Claim: \nclaim.alze.xyz",
       "url": "https://x.com/0xAlze/status/2023918416734941245",
-      "time_ago": "22d",
+      "time_ago": "25d",
       "datetime": "2026-02-18T00:32:07.000Z",
       "likes": 153,
-      "retweets": 143,
+      "retweets": 145,
       "triggerText": "NFT on Arc Testnet",
       "mint_links": [
         "alze.xyz/archemist",
