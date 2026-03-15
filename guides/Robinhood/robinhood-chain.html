@@ -910,7 +910,8 @@ function toggleLanguage() {
     localStorage.setItem(LANGUAGE_KEY, currentLanguage);
     if (currentUser) saveToCloud({ robinLanguage: currentLanguage, robinLanguageTimestamp: Date.now() });
     updateAllTranslations();
-    updateAllLinkDescriptions(); // ← ДОБАВЬТЕ ЭТУ СТРОКУ
+    updateAllLinkDescriptions(); // Обновляем tooltips
+    updateAllDescriptionsFromData(); // ← ДОБАВЬТЕ ЭТУ СТРОКУ
     showToast(currentLanguage === 'en' ? 'Language: English' : 'Мова: Українська', 'info');
 }
 // ============================================
@@ -927,10 +928,12 @@ function updateAllLinkDescriptions() {
         
         if (newTooltip) {
             link.setAttribute('data-tooltip', newTooltip);
+        } else {
+            link.removeAttribute('data-tooltip');
         }
     });
 }
-async function loadLanguagePreference() {
+    async function loadLanguagePreference() {
     let localLang = localStorage.getItem(LANGUAGE_KEY);
     if (localLang) currentLanguage = (localLang === 'uk') ? 'ua' : localLang;
     if (currentUser) {
@@ -949,7 +952,7 @@ async function loadLanguagePreference() {
         } catch (e) { console.error("Error loading language:", e); }
     }
     updateAllTranslations();
-    updateAllDescriptionsFromData(); // ← ДОБАВЬТЕ ЭТУ СТРОКУ
+    updateAllDescriptionsFromData(); // ← ДОБАВЬТЕ
 }
 
 // ============================================
@@ -2649,13 +2652,37 @@ function updateAllDescriptionsFromData() {
         if (item.descEn) link.setAttribute('data-desc-en', item.descEn);
         if (item.descUa) link.setAttribute('data-desc-ua', item.descUa);
         
-        // Обновляем текущий tooltip
+        // Обновляем текущий tooltip в зависимости от языка
         const newTooltip = currentLanguage === 'ua' 
             ? (item.descUa || item.descEn || item.tooltip)
             : (item.descEn || item.descUa || item.tooltip);
             
         if (newTooltip) {
             link.setAttribute('data-tooltip', newTooltip);
+        }
+        
+        // Важно: обновляем text-content ссылки если она была переведена
+        const linkTitle = getLinkTitle(link);
+        if (item.title && linkTitle !== item.title) {
+            Array.from(link.childNodes).forEach(n => { 
+                if (n.nodeType === Node.TEXT_NODE) n.remove(); 
+            });
+            link.insertBefore(document.createTextNode(item.title), link.firstChild);
+        }
+    });
+    
+    // Обновляем таблицу dApps (4 пункт)
+    document.querySelectorAll('.dapp-table .task-desc').forEach(td => {
+        const tr = td.closest('tr');
+        const zone = tr?.dataset.zone;
+        if (!zone) return;
+        
+        const category = userItemsData.dappCategories.find(c => c.id === zone);
+        if (category) {
+            const newText = currentLanguage === 'ua' 
+                ? (category.descUa || category.descEn || category.description || '')
+                : (category.descEn || category.descUa || category.description || '');
+            td.textContent = newText;
         }
     });
 }
