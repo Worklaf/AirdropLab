@@ -511,7 +511,16 @@
         </div>
         
         <label id="fieldUrl"><span data-i18n="url_label">URL Link</span> *<input type="url" id="addFieldUrl" placeholder="https://..." required></label>
-        <label id="fieldImage"><span data-i18n="image_label">Image URL (for NFT)</span><input type="url" id="addFieldImage" placeholder="https://...image.png"></label>
+       <div id="fieldImage" class="field-hidden">
+    <span data-i18n="image_label">Image URL (for NFT)</span> <span class="image-counter">(up to 5)</span>
+    <div id="imageInputsContainer" style="display:flex;flex-direction:column;gap:8px;">
+        <div class="image-input-row" style="display:flex;gap:8px;align-items:center;">
+            <input type="url" class="addFieldImage" placeholder="https://...image.png" style="flex:1;">
+            <button type="button" class="add-image-btn" onclick="window.addImageInput()" style="background:var(--accent);color:white;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;">+</button>
+        </div>
+    </div>
+    <div class="image-counter" id="imageCounter">1/5 images</div>
+</div>
         <label id="fieldWebsite"><span data-i18n="website_label">Project Website URL</span><input type="url" id="addFieldWebsite" placeholder="https://..."></label>
         <label id="fieldTwitter"><span data-i18n="twitter_label">Project Twitter URL</span><input type="url" id="addFieldTwitter" placeholder="https://x.com/..."></label>
         <label id="fieldDescription"><span data-i18n="description_label">Action Description</span><input type="text" id="addFieldDescription" placeholder="Description..."></label>
@@ -898,7 +907,68 @@ async function autoTranslate(text, targetLang) {
         return text;
     }
 }
+// ===== MULTI-IMAGE FUNCTIONS =====
+window.addImageInput = function(value = '') {
+    const container = document.getElementById('imageInputsContainer');
+    const rows = container.querySelectorAll('.image-input-row');
+    if (rows.length >= 5) return;
+    
+    const row = document.createElement('div');
+    row.className = 'image-input-row';
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    row.innerHTML = `
+        <input type="url" class="addFieldImage" placeholder="https://...image.png" value="${value}" style="flex:1;background:rgba(10,14,26,0.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);">
+        <button type="button" class="remove-image-btn" style="background:var(--alert-red);color:white;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;">×</button>
+    `;
+    
+    row.querySelector('.remove-image-btn').addEventListener('click', () => {
+        row.remove();
+        window.updateImageCounter();
+    });
+    
+    container.appendChild(row);
+    window.updateImageCounter();
+}
 
+function updateImageCounter() {
+    const count = document.querySelectorAll('.addFieldImage').length;
+    const counter = document.getElementById('imageCounter');
+    if (counter) counter.textContent = `${count}/5 images`;
+}
+
+function getImagesFromInputs() {
+    return Array.from(document.querySelectorAll('.addFieldImage'))
+        .map(input => input.value.trim())
+        .filter(url => url.length > 0);
+}
+
+function clearImageInputs() {
+    const container = document.getElementById('imageInputsContainer');
+    container.innerHTML = `
+        <div class="image-input-row" style="display:flex;gap:8px;align-items:center;">
+            <input type="url" class="addFieldImage" placeholder="https://...image.png" style="flex:1;background:rgba(10,14,26,0.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);">
+            <button type="button" class="add-image-btn" onclick="window.addImageInput()" style="background:var(--accent);color:white;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;">+</button>
+        </div>
+    `;
+    window.updateImageCounter();
+}
+
+function populateImageInputs(images) {
+    clearImageInputs();
+    const inputs = document.querySelectorAll('.addFieldImage');
+    if (images.length > 0 && inputs[0]) {
+        inputs[0].value = images[0];
+    }
+    for (let i = 1; i < images.length; i++) {
+        window.addImageInput(images[i]);
+    }
+    window.updateImageCounter();
+}
+
+// Make functions available globally
+window.getImagesFromInputs = getImagesFromInputs;
+window.clearImageInputs = clearImageInputs;
+window.populateImageInputs = populateImageInputs;
 // ===== TOAST =====
 function showToast(message, type = 'info') {
     const container = document.getElementById('robinToastContainer');
@@ -1759,6 +1829,7 @@ function openModal(title, fields) {
     document.getElementById('descFieldUa').classList.add('field-hidden');
     
     overlayEl().classList.add('open');
+    clearImageInputs();
 }
 
 function closeModal() {
@@ -1811,7 +1882,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
             const newUrl = document.getElementById('addFieldUrl').value.trim();
             const newTooltipEn = document.getElementById('addFieldTooltipEn').value.trim();
             const newTooltipUa = document.getElementById('addFieldTooltipUa').value.trim();
-            const newImage = normalizeImageUrl(document.getElementById('addFieldImage').value.trim());
+            const newImages = getImagesFromInputs();
             
             if (!newTitle || !newUrl) { alert('Title and URL are required!'); return; }
 
@@ -1825,7 +1896,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                     found.descEn = newTooltipEn;
                     found.descUa = newTooltipUa;
                     found.tooltip = currentModalLang === 'en' ? newTooltipEn : newTooltipUa;
-                    found.image = newImage; 
+                    found.images = newImages;
                     isUserItem = true; 
                     await saveRobinUserItems(); 
                     break; 
@@ -1839,7 +1910,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                     descEn: newTooltipEn, 
                     descUa: newTooltipUa,
                     tooltip: newTooltipEn || newTooltipUa, 
-                    image: newImage 
+                    images: newImages
                 }; 
                 await saveRobinEditsOverride(); 
             }
@@ -1850,7 +1921,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                 descEn: newTooltipEn, 
                 descUa: newTooltipUa,
                 tooltip: newTooltipEn || newTooltipUa, 
-                image: newImage 
+                images: newImages
             });
             
             if (favoritesState[id]) { 
@@ -1874,7 +1945,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
         const descEn = document.getElementById('addFieldTooltipEn').value.trim();
         const descUa = document.getElementById('addFieldTooltipUa').value.trim();
         const tooltip = descEn || descUa;
-        const image = normalizeImageUrl(document.getElementById('addFieldImage').value.trim());
+        const newImages = getImagesFromInputs();
         const website = document.getElementById('addFieldWebsite').value.trim(); 
         const twitter = document.getElementById('addFieldTwitter').value.trim();
         const description = document.getElementById('addFieldDescription').value.trim();
@@ -1890,7 +1961,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                 tooltip, 
                 descEn,
                 descUa,
-                image, 
+                images: newImages, 
                 trackType: config.trackType, 
                 addedAt: Date.now() 
             };
@@ -1970,7 +2041,10 @@ function createUserLink(item, zone) {
     if (item.tooltip) link.setAttribute('data-tooltip', item.tooltip);
     if (item.descEn) link.setAttribute('data-desc-en', item.descEn);
     if (item.descUa) link.setAttribute('data-desc-ua', item.descUa);
-    if (item.image) link.setAttribute('data-image', item.image);
+    if (item.images && item.images.length > 0) {
+    link.setAttribute('data-images', JSON.stringify(item.images));
+    link.setAttribute('data-image-index', '0');
+}
     
     link.textContent = item.title;
     wrapper.appendChild(link);
@@ -2136,7 +2210,15 @@ function applyRobinOverrideToLink(link, ov) {
     if (ov.tooltip !== undefined) { if (ov.tooltip) link.setAttribute('data-tooltip', ov.tooltip); else link.removeAttribute('data-tooltip'); }
     if (ov.descEn !== undefined) { if (ov.descEn) link.setAttribute('data-desc-en', ov.descEn); else link.removeAttribute('data-desc-en'); }
     if (ov.descUa !== undefined) { if (ov.descUa) link.setAttribute('data-desc-ua', ov.descUa); else link.removeAttribute('data-desc-ua'); }
-    if (ov.image !== undefined) { if (ov.image) link.setAttribute('data-image', ov.image); else link.removeAttribute('data-image'); }
+    if (ov.images !== undefined) { 
+    if (ov.images && ov.images.length > 0) {
+        link.setAttribute('data-images', JSON.stringify(ov.images));
+        link.setAttribute('data-image-index', '0');
+    } else {
+        link.removeAttribute('data-images');
+        link.removeAttribute('data-image-index');
+    }
+}
 }
 
 function applyRobinAllOverrides() {
@@ -2180,7 +2262,14 @@ function openRobinEditModal(link) {
     document.getElementById('addFieldUrl').value = link.href;
     document.getElementById('addFieldTooltipEn').value = link.getAttribute('data-desc-en') || '';
     document.getElementById('addFieldTooltipUa').value = link.getAttribute('data-desc-ua') || '';
-    document.getElementById('addFieldImage').value = link.getAttribute('data-image') || '';
+    const imagesAttr = link.getAttribute('data-images');
+let images = [];
+if (imagesAttr) {
+    try { images = JSON.parse(imagesAttr); } catch(err) {}
+} else if (link.getAttribute('data-image')) {
+    images = [link.getAttribute('data-image')];
+}
+populateImageInputs(images);
     
     document.getElementById('descFieldEn').classList.remove('field-hidden');
     document.getElementById('descFieldUa').classList.remove('field-hidden');
