@@ -1178,15 +1178,19 @@ function initLightbox() {
         if (e.key === 'ArrowRight') navigateLightbox(1);
     });
     
-    // Mouse wheel navigation
-    const wheelHandler = (e) => {
-        if (!currentLightboxData || !currentLightboxData.images || currentLightboxData.images.length <= 1) return;
-        e.preventDefault();
-        if (e.deltaY > 0) navigateLightbox(1);
-        else navigateLightbox(-1);
-    };
+    // Mouse wheel navigation - добавляем на document, чтобы работало везде
+const wheelHandler = (e) => {
+    const overlay = document.getElementById('robinLightboxOverlay');
+    // Проверяем, открыт ли лайтбокс
+    if (!overlay.classList.contains('open')) return;
+    if (!currentLightboxData || !currentLightboxData.images || currentLightboxData.images.length <= 1) return;
     
-    document.getElementById('robinLightboxOverlay').addEventListener('wheel', wheelHandler, { passive: false });
+    e.preventDefault();
+    if (e.deltaY > 0) navigateLightbox(1);
+    else navigateLightbox(-1);
+};
+
+document.addEventListener('wheel', wheelHandler, { passive: false });
     
     // Right-click context menu для всех ссылок
     document.addEventListener('contextmenu', (e) => {
