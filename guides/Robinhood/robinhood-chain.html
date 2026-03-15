@@ -651,16 +651,7 @@
 </script>
 <script type="module">
 
-// ===== LANGUAGE SYSTEM =====
-let currentLanguage = 'en';
-const LANGUAGE_KEY = 'robin_language_v1';
-
-function getTranslation(key) {
-    const data = window.i18nData[currentLanguage] || window.i18nData.en;
-    return data[key] || key;
-}
-
-function updateAllTranslations() {
+// ===== LANGUAGE SYSTEM =====function updateAllTranslations() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         const translation = getTranslation(key);
@@ -674,7 +665,6 @@ function updateAllTranslations() {
 
     document.documentElement.lang = currentLanguage;
     
-    // Hide all tooltips
     document.querySelectorAll('.floating-tooltip').forEach(tooltip => {
         tooltip.classList.remove('visible');
     });
@@ -683,27 +673,23 @@ function updateAllTranslations() {
     }
     activeTooltipTarget = null;
 
-    // Update language toggle button text
     const toggleText = document.getElementById('languageToggleText');
     if (toggleText) {
         toggleText.textContent = currentLanguage === 'en' ? '🇺🇦 Українська' : '🇬🇧 English';
     }
 
-    // Update theme button
     const themeBtn = document.getElementById('themeToggleBtn');
     if (themeBtn) {
         const isLight = document.body.classList.contains('light-theme');
         themeBtn.innerHTML = `<i class="fas fa-${isLight ? 'moon' : 'sun'}"></i> <span data-i18n="${isLight ? 'dark_theme' : 'light_theme'}">${getTranslation(isLight ? 'dark_theme' : 'light_theme')}</span>`;
     }
 
-    // Update badges button
     const badgesBtn = document.getElementById('toggleBadgesBtn');
     if (badgesBtn) {
         const hidden = getBadgeHiddenState();
         badgesBtn.textContent = getTranslation(hidden ? 'show_badges' : 'hide_badges');
     }
 
-    // Update legend
     const legendToggle = document.getElementById('legendToggle');
     if (legendToggle) {
         const isMobile = window.innerWidth <= 768;
@@ -713,7 +699,6 @@ function updateAllTranslations() {
         }
     }
 
-    // Update edit mode button
     const editBtn = document.getElementById('editModeBtn');
     if (editBtn) {
         const isActive = editBtn.classList.contains('active');
