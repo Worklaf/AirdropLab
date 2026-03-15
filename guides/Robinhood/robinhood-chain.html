@@ -13,7 +13,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
    <style>
-       
+       .lightbox-image {
+    transition: opacity 0.15s ease;
+}
+
+.lightbox-image.changing {
+    opacity: 0.5;
+}
         :root {
             --bg-color: #0a0e1a;
             --card-bg: #121826;
@@ -511,15 +517,15 @@
         </div>
         
         <label id="fieldUrl"><span data-i18n="url_label">URL Link</span> *<input type="url" id="addFieldUrl" placeholder="https://..." required></label>
-       <div id="fieldImage" class="field-hidden">
-    <span data-i18n="image_label">Image URL (for NFT)</span> <span class="image-counter">(up to 5)</span>
+        <div id="fieldImage" class="field-hidden" style="display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--text-muted);font-weight:600;">
+    <span><span data-i18n="image_label">Images (for NFT)</span> (up to 5)</span>
     <div id="imageInputsContainer" style="display:flex;flex-direction:column;gap:8px;">
         <div class="image-input-row" style="display:flex;gap:8px;align-items:center;">
-            <input type="url" class="addFieldImage" placeholder="https://...image.png" style="flex:1;">
-            <button type="button" class="add-image-btn" onclick="window.addImageInput()" style="background:var(--accent);color:white;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;">+</button>
+            <input type="url" class="addFieldImage" placeholder="https://...image.png" style="flex:1; background:rgba(10,14,26,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);">
+            <button type="button" class="add-image-btn" onclick="window.addImageInput()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;">+</button>
         </div>
     </div>
-    <div class="image-counter" id="imageCounter">1/5 images</div>
+    <div id="imageCounter" style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">1/5 images</div>
 </div>
         <label id="fieldWebsite"><span data-i18n="website_label">Project Website URL</span><input type="url" id="addFieldWebsite" placeholder="https://..."></label>
         <label id="fieldTwitter"><span data-i18n="twitter_label">Project Twitter URL</span><input type="url" id="addFieldTwitter" placeholder="https://x.com/..."></label>
@@ -697,7 +703,67 @@
     }
 </script>
 <script type="module">
+// ===== MULTI-IMAGE FUNCTIONS =====
+window.addImageInput = function(value = '') {
+    const container = document.getElementById('imageInputsContainer');
+    const rows = container.querySelectorAll('.image-input-row');
+    if (rows.length >= 5) return;
+    
+    const row = document.createElement('div');
+    row.className = 'image-input-row';
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    row.innerHTML = `
+        <input type="url" class="addFieldImage" placeholder="https://...image.png" value="${value}" style="flex:1; background:rgba(10,14,26,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);">
+        <button type="button" class="remove-image-btn" style="background:var(--alert-red);color:#fff;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;">×</button>
+    `;
+    
+    row.querySelector('.remove-image-btn').addEventListener('click', () => {
+        row.remove();
+        updateImageCounter();
+    });
+    
+    container.appendChild(row);
+    updateImageCounter();
+}
 
+function updateImageCounter() {
+    const count = document.querySelectorAll('.addFieldImage').length;
+    const counter = document.getElementById('imageCounter');
+    if (counter) counter.textContent = `${count}/5 images`;
+}
+
+function getImagesFromInputs() {
+    return Array.from(document.querySelectorAll('.addFieldImage'))
+        .map(input => input.value.trim())
+        .filter(url => url.length > 0);
+}
+
+function clearImageInputs() {
+    const container = document.getElementById('imageInputsContainer');
+    container.innerHTML = `
+        <div class="image-input-row" style="display:flex;gap:8px;align-items:center;">
+            <input type="url" class="addFieldImage" placeholder="https://...image.png" style="flex:1; background:rgba(10,14,26,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);">
+            <button type="button" class="add-image-btn" onclick="window.addImageInput()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;">+</button>
+        </div>
+    `;
+    updateImageCounter();
+}
+
+function populateImageInputs(images) {
+    clearImageInputs();
+    const inputs = document.querySelectorAll('.addFieldImage');
+    images.forEach((url, i) => {
+        if (i === 0 && inputs[0]) inputs[0].value = url;
+        else window.addImageInput(url);
+    });
+    updateImageCounter();
+}
+
+// Make globally available
+window.getImagesFromInputs = getImagesFromInputs;
+window.clearImageInputs = clearImageInputs;
+window.populateImageInputs = populateImageInputs;
+window.updateImageCounter = updateImageCounter;
 // ===== LANGUAGE SYSTEM =====
 let currentLanguage = 'en';
 const LANGUAGE_KEY = 'robin_language_v1';
@@ -907,68 +973,7 @@ async function autoTranslate(text, targetLang) {
         return text;
     }
 }
-// ===== MULTI-IMAGE FUNCTIONS =====
-window.addImageInput = function(value = '') {
-    const container = document.getElementById('imageInputsContainer');
-    const rows = container.querySelectorAll('.image-input-row');
-    if (rows.length >= 5) return;
-    
-    const row = document.createElement('div');
-    row.className = 'image-input-row';
-    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
-    row.innerHTML = `
-        <input type="url" class="addFieldImage" placeholder="https://...image.png" value="${value}" style="flex:1;background:rgba(10,14,26,0.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);">
-        <button type="button" class="remove-image-btn" style="background:var(--alert-red);color:white;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;">×</button>
-    `;
-    
-    row.querySelector('.remove-image-btn').addEventListener('click', () => {
-        row.remove();
-        window.updateImageCounter();
-    });
-    
-    container.appendChild(row);
-    window.updateImageCounter();
-}
 
-function updateImageCounter() {
-    const count = document.querySelectorAll('.addFieldImage').length;
-    const counter = document.getElementById('imageCounter');
-    if (counter) counter.textContent = `${count}/5 images`;
-}
-
-function getImagesFromInputs() {
-    return Array.from(document.querySelectorAll('.addFieldImage'))
-        .map(input => input.value.trim())
-        .filter(url => url.length > 0);
-}
-
-function clearImageInputs() {
-    const container = document.getElementById('imageInputsContainer');
-    container.innerHTML = `
-        <div class="image-input-row" style="display:flex;gap:8px;align-items:center;">
-            <input type="url" class="addFieldImage" placeholder="https://...image.png" style="flex:1;background:rgba(10,14,26,0.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);">
-            <button type="button" class="add-image-btn" onclick="window.addImageInput()" style="background:var(--accent);color:white;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;">+</button>
-        </div>
-    `;
-    window.updateImageCounter();
-}
-
-function populateImageInputs(images) {
-    clearImageInputs();
-    const inputs = document.querySelectorAll('.addFieldImage');
-    if (images.length > 0 && inputs[0]) {
-        inputs[0].value = images[0];
-    }
-    for (let i = 1; i < images.length; i++) {
-        window.addImageInput(images[i]);
-    }
-    window.updateImageCounter();
-}
-
-// Make functions available globally
-window.getImagesFromInputs = getImagesFromInputs;
-window.clearImageInputs = clearImageInputs;
-window.populateImageInputs = populateImageInputs;
 // ===== TOAST =====
 function showToast(message, type = 'info') {
     const container = document.getElementById('robinToastContainer');
@@ -1011,7 +1016,7 @@ function updateThemeBtn() {
 let currentLightboxData = null;
 let currentLightboxLang = 'en';
 
-function openLightbox(imageUrl, title, tooltip, linkUrl, linkLabel, linkIcon, descriptions = {}) {
+function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex = 0, descriptions = {}) {
     const overlay = document.getElementById('robinLightboxOverlay');
     const img = document.getElementById('lightboxImage');
     const titleEl = document.getElementById('lightboxTitle');
@@ -1019,33 +1024,112 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, linkLabel, linkIcon, de
     const linkEl = document.getElementById('lightboxLink');
     const langToggle = document.getElementById('lightboxLangToggle');
     
-    img.src = imageUrl; img.alt = title; titleEl.textContent = title;
+    currentLightboxData = { title, descriptions, tooltip, linkUrl };
+    currentLightboxLang = currentLanguage;
     
-    currentLightboxData = {
-        title: title,
-        descriptions: descriptions,
-        linkUrl: linkUrl,
-        linkLabel: linkLabel || getTranslation('go_to_mint'),
-        linkIcon: linkIcon
-    };
+    overlay.dataset.images = JSON.stringify(images);
+    overlay.dataset.currentIndex = startIndex;
     
-    const hasDescriptions = descriptions && (descriptions.en || descriptions.ua);
+    const currentImage = images.length > 0 ? images[startIndex] : imageUrl;
     
-    if (hasDescriptions) {
+    img.src = currentImage;
+    titleEl.textContent = title;
+    linkEl.href = linkUrl;
+    linkEl.innerHTML = `<i class="fas fa-external-link-alt"></i> ${t('go_to_mint')}`;
+    
+    const hasDesc = descriptions && (descriptions.en || descriptions.ua);
+    if (hasDesc) {
         langToggle.style.display = 'flex';
-        currentLightboxLang = currentLanguage;
-        updateLightboxCaption(currentLanguage);
-        updateLightboxLangButtons();
+        updateLightboxCaption(currentLightboxLang);
+        updateLightboxLangBtns();
     } else {
         langToggle.style.display = 'none';
         captionEl.textContent = tooltip || '';
     }
     
-    linkEl.href = linkUrl; 
-    linkEl.innerHTML = `<i class="fas fa-${linkIcon || 'external-link-alt'}"></i> ${linkLabel || getTranslation('go_to_mint')}`;
+    document.getElementById('lightboxLeft')?.remove();
+    document.getElementById('lightboxRight')?.remove();
+    document.getElementById('lightboxImageIndicator')?.remove();
     
-    overlay.classList.add('open'); 
+    if (images.length > 1) {
+        const content = document.querySelector('.lightbox-content');
+        
+        const leftArrow = document.createElement('button');
+        leftArrow.id = 'lightboxLeft';
+        leftArrow.innerHTML = '←';
+        leftArrow.style.cssText = 'position:absolute;left:20px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.2rem;z-index:10;transition:all 0.2s;';
+        
+        const rightArrow = document.createElement('button');
+        rightArrow.id = 'lightboxRight';
+        rightArrow.innerHTML = '→';
+        rightArrow.style.cssText = 'position:absolute;right:20px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.2rem;z-index:10;transition:all 0.2s;';
+        
+        const indicator = document.createElement('div');
+        indicator.id = 'lightboxImageIndicator';
+        indicator.style.cssText = 'position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10;';
+        indicator.innerHTML = images.map((_, i) => `
+            <button class="lightbox-dot ${i === startIndex ? 'active' : ''}" 
+                    data-index="${i}"
+                    style="width:10px;height:10px;border-radius:50%;border:none;cursor:pointer;background:${i === startIndex ? 'var(--accent)' : 'rgba(255,255,255,0.3)'};transition:all 0.2s;">
+            </button>
+        `).join('');
+        
+        content.appendChild(leftArrow);
+        content.appendChild(rightArrow);
+        content.appendChild(indicator);
+        
+        leftArrow.onclick = (e) => { e.stopPropagation(); navigateLightbox(-1); };
+        rightArrow.onclick = (e) => { e.stopPropagation(); navigateLightbox(1); };
+        
+        indicator.querySelectorAll('.lightbox-dot').forEach(dot => {
+            dot.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(dot.dataset.index);
+                overlay.dataset.currentIndex = idx;
+                updateLightboxImage();
+            });
+        });
+    }
+    
+    overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
+    
+    overlay.onwheel = (e) => {
+        if (images.length > 1) {
+            e.preventDefault();
+            if (e.deltaY > 0) navigateLightbox(1);
+            else navigateLightbox(-1);
+        }
+    };
+}
+
+function navigateLightbox(direction) {
+    const overlay = document.getElementById('robinLightboxOverlay');
+    const images = JSON.parse(overlay.dataset.images || '[]');
+    if (images.length <= 1) return;
+    
+    let current = parseInt(overlay.dataset.currentIndex || '0');
+    current = (current + direction + images.length) % images.length;
+    overlay.dataset.currentIndex = current;
+    
+    updateLightboxImage();
+}
+
+function updateLightboxImage() {
+    const overlay = document.getElementById('robinLightboxOverlay');
+    const images = JSON.parse(overlay.dataset.images || '[]');
+    const current = parseInt(overlay.dataset.currentIndex || '0');
+    
+    const img = document.getElementById('lightboxImage');
+    img.classList.add('changing');
+    setTimeout(() => {
+        img.src = images[current];
+        img.classList.remove('changing');
+    }, 150);
+    
+    document.querySelectorAll('.lightbox-dot').forEach((dot, i) => {
+        dot.style.background = i === current ? 'var(--accent)' : 'rgba(255,255,255,0.3)';
+    });
 }
 
 function updateLightboxCaption(lang) {
@@ -1074,6 +1158,7 @@ function closeLightbox() {
     currentLightboxLang = 'en';
 }
 
+// НАЙДИТЕ ЭТОТ КОД (примерно строка 320):
 function initLightbox() {
     document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
     document.getElementById('robinLightboxOverlay').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeLightbox(); });
@@ -1090,27 +1175,39 @@ function initLightbox() {
     
     // Right-click context menu
     document.querySelectorAll('.link-inline[data-image]').forEach(link => {
-    if (link.dataset.lightboxBound) return;
-    link.addEventListener('contextmenu', (e) => {
-        const imageUrl = link.getAttribute('data-image');
-        if (!imageUrl) return;
-        e.preventDefault();
-        const title = getLinkTitle(link);
-        const tooltip = link.getAttribute('data-tooltip') || '';
-        
-        const descriptions = {
-            en: link.getAttribute('data-desc-en') || tooltip || '',
-            ua: link.getAttribute('data-desc-ua') || tooltip || '' // Используем ua!
-        };
-        
-        const isNftMint = link.classList.contains('track-once') && !link.classList.contains('track-once-info') && !link.classList.contains('track-daily');
-        const linkLabel = isNftMint ? getTranslation('go_to_mint') : getTranslation('go_to_website');
-        const linkIcon = isNftMint ? 'external-link-alt' : 'globe';
-        openLightbox(imageUrl, title, tooltip, link.href, linkLabel, linkIcon, descriptions);
-    });
-    link.dataset.lightboxBound = 'true';
-});
-}
+        if (link.dataset.lightboxBound) return;
+        link.addEventListener('contextmenu', (e) => {
+            const imagesAttr = link.getAttribute('data-images');
+            let images = [];
+            if (imagesAttr) {
+                try { images = JSON.parse(imagesAttr); } catch(err){}
+            }
+            
+            const currentIdx = parseInt(link.getAttribute('data-image-index') || '0');
+            const singleImage = link.getAttribute('data-image');
+            const allImages = images.length > 0 ? images : (singleImage ? [singleImage] : []);
+            
+            if (allImages.length > 0) {
+                e.preventDefault();
+                const descriptions = {
+                    en: link.getAttribute('data-desc-en') || '',
+                    ua: link.getAttribute('data-desc-ua') || ''
+                };
+                
+                openLightbox(
+                    allImages[currentIdx],
+                    getLinkTitle(link),
+                    link.getAttribute('data-tooltip') || '',
+                    link.href,
+                    allImages,
+                    currentIdx,
+                    descriptions
+                );
+            }
+        });
+        link.dataset.lightboxBound = 'true'; // ДОБАВЬТЕ ЭТУ СТРОЧКУ
+    }); // ДОБАВЬТЕ ЗАКРЫВАЮЩУЮ СКОБКУ ЗДЕСЬ
+} // И ЗДЕСЬ
 
 function initCardAnimations() {
     const observer = new IntersectionObserver((entries) => {
@@ -1822,14 +1919,13 @@ function openModal(title, fields) {
     });
     document.getElementById('addFieldTooltipEn').value = '';
     document.getElementById('addFieldTooltipUa').value = '';
-    
+    clearImageInputs();
     currentModalLang = 'en';
     document.querySelectorAll('.lang-tab').forEach(t => t.classList.toggle('active', t.dataset.lang === 'en'));
     document.getElementById('descFieldEn').classList.remove('field-hidden');
     document.getElementById('descFieldUa').classList.add('field-hidden');
     
     overlayEl().classList.add('open');
-    clearImageInputs();
 }
 
 function closeModal() {
@@ -1876,53 +1972,53 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
 
     try {
         if (isEdit && currentEditTarget) {
-            const id = currentEditTarget.id; 
-            const link = currentEditTarget.link;
-            const newTitle = document.getElementById('addFieldTitle').value.trim(); 
-            const newUrl = document.getElementById('addFieldUrl').value.trim();
-            const newTooltipEn = document.getElementById('addFieldTooltipEn').value.trim();
-            const newTooltipUa = document.getElementById('addFieldTooltipUa').value.trim();
-            const newImages = getImagesFromInputs();
-            
-            if (!newTitle || !newUrl) { alert('Title and URL are required!'); return; }
+    const id = currentEditTarget.id; 
+    const link = currentEditTarget.link;
+    const newTitle = document.getElementById('addFieldTitle').value.trim(); 
+    const newUrl = document.getElementById('addFieldUrl').value.trim();
+    const newTooltipEn = document.getElementById('addFieldTooltipEn').value.trim();
+    const newTooltipUa = document.getElementById('addFieldTooltipUa').value.trim();
+    const newImages = getImagesFromInputs(); // ИСПРАВЛЕНО: используем массив
+    
+    if (!newTitle || !newUrl) { alert('Title and URL are required!'); return; }
 
-            let isUserItem = false;
-            for (const zone in userItemsData.items) {
-                const items = userItemsData.items[zone]; if (!items) continue;
-                const found = items.find(i => i.id === id);
-                if (found) { 
-                    found.title = newTitle; 
-                    found.url = newUrl; 
-                    found.descEn = newTooltipEn;
-                    found.descUa = newTooltipUa;
-                    found.tooltip = currentModalLang === 'en' ? newTooltipEn : newTooltipUa;
-                    found.images = newImages;
-                    isUserItem = true; 
-                    await saveRobinUserItems(); 
-                    break; 
-                }
-            }
+    let isUserItem = false;
+    for (const zone in userItemsData.items) {
+        const items = userItemsData.items[zone]; if (!items) continue;
+        const found = items.find(i => i.id === id);
+        if (found) { 
+            found.title = newTitle; 
+            found.url = newUrl; 
+            found.descEn = newTooltipEn;
+            found.descUa = newTooltipUa;
+            found.tooltip = currentModalLang === 'en' ? newTooltipEn : newTooltipUa;
+            found.images = newImages; // ИСПРАВЛЕНО: сохраняем массив
+            isUserItem = true; 
+            await saveRobinUserItems(); 
+            break; 
+        }
+    }
 
-            if (!isUserItem) { 
-                editsOverride[id] = { 
-                    title: newTitle, 
-                    url: newUrl, 
-                    descEn: newTooltipEn, 
-                    descUa: newTooltipUa,
-                    tooltip: newTooltipEn || newTooltipUa, 
-                    images: newImages
-                }; 
-                await saveRobinEditsOverride(); 
-            }
-            
-            applyRobinOverrideToLink(link, { 
-                title: newTitle, 
-                url: newUrl, 
-                descEn: newTooltipEn, 
-                descUa: newTooltipUa,
-                tooltip: newTooltipEn || newTooltipUa, 
-                images: newImages
-            });
+    if (!isUserItem) { 
+        editsOverride[id] = { 
+            title: newTitle, 
+            url: newUrl, 
+            descEn: newTooltipEn, 
+            descUa: newTooltipUa,
+            tooltip: newTooltipEn || newTooltipUa, 
+            images: newImages // ИСПРАВЛЕНО: сохраняем массив
+        }; 
+        await saveRobinEditsOverride(); 
+    }
+    
+    applyRobinOverrideToLink(link, { 
+        title: newTitle, 
+        url: newUrl, 
+        descEn: newTooltipEn, 
+        descUa: newTooltipUa,
+        tooltip: newTooltipEn || newTooltipUa, 
+        images: newImages // ИСПРАВЛЕНО: передаем массив
+    });
             
             if (favoritesState[id]) { 
                 favoritesState[id].title = newTitle; 
@@ -1961,7 +2057,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                 tooltip, 
                 descEn,
                 descUa,
-                images: newImages, 
+                images: newImages,
                 trackType: config.trackType, 
                 addedAt: Date.now() 
             };
@@ -2211,14 +2307,16 @@ function applyRobinOverrideToLink(link, ov) {
     if (ov.descEn !== undefined) { if (ov.descEn) link.setAttribute('data-desc-en', ov.descEn); else link.removeAttribute('data-desc-en'); }
     if (ov.descUa !== undefined) { if (ov.descUa) link.setAttribute('data-desc-ua', ov.descUa); else link.removeAttribute('data-desc-ua'); }
     if (ov.images !== undefined) { 
-    if (ov.images && ov.images.length > 0) {
-        link.setAttribute('data-images', JSON.stringify(ov.images));
-        link.setAttribute('data-image-index', '0');
-    } else {
-        link.removeAttribute('data-images');
-        link.removeAttribute('data-image-index');
+        if (ov.images && ov.images.length > 0) {
+            link.setAttribute('data-images', JSON.stringify(ov.images));
+            link.setAttribute('data-image-index', '0');
+            link.removeAttribute('data-image'); // Удаляем старый атрибут если есть
+        } else {
+            link.removeAttribute('data-images');
+            link.removeAttribute('data-image-index');
+            link.removeAttribute('data-image');
+        }
     }
-}
 }
 
 function applyRobinAllOverrides() {
@@ -2254,7 +2352,9 @@ function removeRobinEditButtons() {
 }
 
 function openRobinEditModal(link) {
-    const id = link.dataset.id; const title = getLinkTitle(link); currentEditTarget = { id, link };
+    const id = link.dataset.id; 
+    const title = getLinkTitle(link); 
+    currentEditTarget = { id, link };
     document.getElementById('addModalTitle').textContent = 'Edit: ' + title; 
     showFields(['fieldTitle', 'fieldUrl', 'fieldImage', 'descFieldEn', 'descFieldUa']);
     
@@ -2262,14 +2362,17 @@ function openRobinEditModal(link) {
     document.getElementById('addFieldUrl').value = link.href;
     document.getElementById('addFieldTooltipEn').value = link.getAttribute('data-desc-en') || '';
     document.getElementById('addFieldTooltipUa').value = link.getAttribute('data-desc-ua') || '';
+    
+    // ИСПРАВЛЕННАЯ ЧАСТЬ ДЛЯ ИЗОБРАЖЕНИЙ:
     const imagesAttr = link.getAttribute('data-images');
-let images = [];
-if (imagesAttr) {
-    try { images = JSON.parse(imagesAttr); } catch(err) {}
-} else if (link.getAttribute('data-image')) {
-    images = [link.getAttribute('data-image')];
-}
-populateImageInputs(images);
+    let images = [];
+    if (imagesAttr) {
+        try { images = JSON.parse(imagesAttr); } catch(err) {}
+    } else if (link.getAttribute('data-image')) {
+        // Поддержка старых одиночных изображений
+        images = [link.getAttribute('data-image')];
+    }
+    populateImageInputs(images);
     
     document.getElementById('descFieldEn').classList.remove('field-hidden');
     document.getElementById('descFieldUa').classList.remove('field-hidden');
@@ -2278,6 +2381,9 @@ populateImageInputs(images);
     saveBtn.textContent = getTranslation('save'); 
     saveBtn.dataset.editMode = 'true';
     overlayEl().classList.add('open');
+}
+        function t(key) {
+    return getTranslation(key);
 }
 
 async function uploadConfigToGithub() {
