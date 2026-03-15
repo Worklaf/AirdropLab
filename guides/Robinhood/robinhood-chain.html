@@ -1179,12 +1179,14 @@ function initLightbox() {
     });
     
     // Mouse wheel navigation
-    document.getElementById('robinLightboxOverlay').addEventListener('wheel', (e) => {
+    const wheelHandler = (e) => {
         if (!currentLightboxData || !currentLightboxData.images || currentLightboxData.images.length <= 1) return;
         e.preventDefault();
         if (e.deltaY > 0) navigateLightbox(1);
         else navigateLightbox(-1);
-    }, { passive: false });
+    };
+    
+    document.getElementById('robinLightboxOverlay').addEventListener('wheel', wheelHandler, { passive: false });
     
     // Right-click context menu для всех ссылок
     document.addEventListener('contextmenu', (e) => {
@@ -1256,20 +1258,24 @@ function showTooltip(e) {
     ensureTooltipElement();
     activeTooltipTarget = target;
 
-    const imageUrl = target.getAttribute('data-image');
+    // ИСПРАВЛЕНО: Работа с массивом изображений
+    const imagesAttr = target.getAttribute('data-images');
+    let images = [];
+    if (imagesAttr) {
+        try { images = JSON.parse(imagesAttr); } catch(err) {}
+    }
+    
+    const imageUrl = images.length > 0 ? images[0] : target.getAttribute('data-image');
     const tooltip = target.getAttribute('data-tooltip') || '';
     const descEn = target.getAttribute('data-desc-en') || '';
-    const descUa = target.getAttribute('data-desc-ua') || ''; // Используем ua!
+    const descUa = target.getAttribute('data-desc-ua') || '';
 
-    // Нормализуем язык: если вдруг лежит 'ru', считаем как 'ua'
     const lang = (currentLanguage === 'ru') ? 'ua' : currentLanguage;
 
     let text;
     if (lang === 'ua') {
-        // Для української: приоритет descUa → tooltip → descEn
         text = descUa || tooltip || descEn;
     } else {
-        // Для английского: приоритет descEn → tooltip → descUa
         text = descEn || tooltip || descUa;
     }
 
