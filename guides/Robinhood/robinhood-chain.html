@@ -13,13 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
    <style>
-       .lightbox-image {
-    transition: opacity 0.15s ease;
-}
-
-.lightbox-image.changing {
-    opacity: 0.5;
-}
+       
         :root {
             --bg-color: #0a0e1a;
             --card-bg: #121826;
@@ -517,16 +511,7 @@
         </div>
         
         <label id="fieldUrl"><span data-i18n="url_label">URL Link</span> *<input type="url" id="addFieldUrl" placeholder="https://..." required></label>
-        <div id="fieldImage" class="field-hidden" style="display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--text-muted);font-weight:600;">
-    <span><span data-i18n="image_label">Images (for NFT)</span> (up to 5)</span>
-    <div id="imageInputsContainer" style="display:flex;flex-direction:column;gap:8px;">
-        <div class="image-input-row" style="display:flex;gap:8px;align-items:center;">
-            <input type="url" class="addFieldImage" placeholder="https://...image.png" style="flex:1; background:rgba(10,14,26,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);">
-            <button type="button" class="add-image-btn" onclick="window.addImageInput()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;">+</button>
-        </div>
-    </div>
-    <div id="imageCounter" style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">1/5 images</div>
-</div>
+        <label id="fieldImage"><span data-i18n="image_label">Image URL (for NFT)</span><input type="url" id="addFieldImage" placeholder="https://...image.png"></label>
         <label id="fieldWebsite"><span data-i18n="website_label">Project Website URL</span><input type="url" id="addFieldWebsite" placeholder="https://..."></label>
         <label id="fieldTwitter"><span data-i18n="twitter_label">Project Twitter URL</span><input type="url" id="addFieldTwitter" placeholder="https://x.com/..."></label>
         <label id="fieldDescription"><span data-i18n="description_label">Action Description</span><input type="text" id="addFieldDescription" placeholder="Description..."></label>
@@ -703,9 +688,10 @@
     }
 </script>
 <script type="module">
-// ===== MULTI-IMAGE FUNCTIONS =====
+// ===== MULTI-IMAGE FUNCTIONS (добавить в самый начало) =====
 window.addImageInput = function(value = '') {
     const container = document.getElementById('imageInputsContainer');
+    if (!container) return;
     const rows = container.querySelectorAll('.image-input-row');
     if (rows.length >= 5) return;
     
@@ -740,6 +726,7 @@ function getImagesFromInputs() {
 
 function clearImageInputs() {
     const container = document.getElementById('imageInputsContainer');
+    if (!container) return;
     container.innerHTML = `
         <div class="image-input-row" style="display:flex;gap:8px;align-items:center;">
             <input type="url" class="addFieldImage" placeholder="https://...image.png" style="flex:1; background:rgba(10,14,26,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);">
@@ -759,7 +746,6 @@ function populateImageInputs(images) {
     updateImageCounter();
 }
 
-// Make globally available
 window.getImagesFromInputs = getImagesFromInputs;
 window.clearImageInputs = clearImageInputs;
 window.populateImageInputs = populateImageInputs;
@@ -1012,9 +998,10 @@ function updateThemeBtn() {
     btn.innerHTML = `<i class="fas fa-${isLight ? 'moon' : 'sun'}"></i> <span data-i18n="${isLight ? 'dark_theme' : 'light_theme'}">${getTranslation(isLight ? 'dark_theme' : 'light_theme')}</span>`;
 }
 
-// ========== LIGHTBOX WITH MULTILANGUAGE ==========
+// ========== LIGHTBOX WITH MULTIPLE IMAGES & WHEEL SCROLL ==========
 let currentLightboxData = null;
 let currentLightboxLang = 'en';
+let currentImageIndex = 0;
 
 function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex = 0, descriptions = {}) {
     const overlay = document.getElementById('robinLightboxOverlay');
@@ -1024,50 +1011,64 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
     const linkEl = document.getElementById('lightboxLink');
     const langToggle = document.getElementById('lightboxLangToggle');
     
-    currentLightboxData = { title, descriptions, tooltip, linkUrl };
+    // Используем массив изображений если есть, иначе одиночное
+    const allImages = (images && images.length > 0) ? images : (imageUrl ? [imageUrl] : []);
+    
+    currentLightboxData = { 
+        title: title, 
+        descriptions: descriptions, 
+        linkUrl: linkUrl,
+        images: allImages
+    };
+    currentImageIndex = startIndex;
     currentLightboxLang = currentLanguage;
     
-    overlay.dataset.images = JSON.stringify(images);
-    overlay.dataset.currentIndex = startIndex;
+    // Показываем первое изображение
+    if (allImages.length > 0) {
+        img.src = allImages[currentImageIndex];
+        img.alt = title;
+    }
     
-    const currentImage = images.length > 0 ? images[startIndex] : imageUrl;
-    
-    img.src = currentImage;
     titleEl.textContent = title;
     linkEl.href = linkUrl;
     linkEl.innerHTML = `<i class="fas fa-external-link-alt"></i> ${getTranslation('go_to_mint')}`;
     
-    const hasDesc = descriptions && (descriptions.en || descriptions.ua);
-    if (hasDesc) {
+    // Показываем языковой переключатель если есть описания
+    const hasDescriptions = descriptions && (descriptions.en || descriptions.ua);
+    if (hasDescriptions) {
         langToggle.style.display = 'flex';
-        updateLightboxCaption(currentLightboxLang);
+        updateLightboxCaption(currentLanguage);
         updateLightboxLangBtns();
     } else {
         langToggle.style.display = 'none';
         captionEl.textContent = tooltip || '';
     }
     
+    // Удаляем старые кнопки навигации если есть
     document.getElementById('lightboxLeft')?.remove();
     document.getElementById('lightboxRight')?.remove();
     document.getElementById('lightboxImageIndicator')?.remove();
     
-    if (images.length > 1) {
+    // Добавляем навигацию если несколько изображений
+    if (allImages.length > 1) {
         const content = document.querySelector('.lightbox-content');
         
         const leftArrow = document.createElement('button');
         leftArrow.id = 'lightboxLeft';
         leftArrow.innerHTML = '←';
         leftArrow.style.cssText = 'position:absolute;left:20px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.2rem;z-index:10;transition:all 0.2s;';
+        leftArrow.onclick = (e) => { e.stopPropagation(); navigateLightbox(-1); };
         
         const rightArrow = document.createElement('button');
         rightArrow.id = 'lightboxRight';
         rightArrow.innerHTML = '→';
         rightArrow.style.cssText = 'position:absolute;right:20px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.2rem;z-index:10;transition:all 0.2s;';
+        rightArrow.onclick = (e) => { e.stopPropagation(); navigateLightbox(1); };
         
         const indicator = document.createElement('div');
         indicator.id = 'lightboxImageIndicator';
         indicator.style.cssText = 'position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10;';
-        indicator.innerHTML = images.map((_, i) => `
+        indicator.innerHTML = allImages.map((_, i) => `
             <button class="lightbox-dot ${i === startIndex ? 'active' : ''}" 
                     data-index="${i}"
                     style="width:10px;height:10px;border-radius:50%;border:none;cursor:pointer;background:${i === startIndex ? 'var(--accent)' : 'rgba(255,255,255,0.3)'};transition:all 0.2s;">
@@ -1078,14 +1079,11 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
         content.appendChild(rightArrow);
         content.appendChild(indicator);
         
-        leftArrow.onclick = (e) => { e.stopPropagation(); navigateLightbox(-1); };
-        rightArrow.onclick = (e) => { e.stopPropagation(); navigateLightbox(1); };
-        
         indicator.querySelectorAll('.lightbox-dot').forEach(dot => {
             dot.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const idx = parseInt(dot.dataset.index);
-                overlay.dataset.currentIndex = idx;
+                currentImageIndex = idx;
                 updateLightboxImage();
             });
         });
@@ -1093,49 +1091,36 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
     
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
-    
-    overlay.onwheel = (e) => {
-        if (images.length > 1) {
-            e.preventDefault();
-            if (e.deltaY > 0) navigateLightbox(1);
-            else navigateLightbox(-1);
-        }
-    };
 }
 
 function navigateLightbox(direction) {
-    const overlay = document.getElementById('robinLightboxOverlay');
-    const images = JSON.parse(overlay.dataset.images || '[]');
+    if (!currentLightboxData || !currentLightboxData.images) return;
+    const images = currentLightboxData.images;
     if (images.length <= 1) return;
     
-    let current = parseInt(overlay.dataset.currentIndex || '0');
-    current = (current + direction + images.length) % images.length;
-    overlay.dataset.currentIndex = current;
-    
+    currentImageIndex = (currentImageIndex + direction + images.length) % images.length;
     updateLightboxImage();
 }
 
 function updateLightboxImage() {
-    const overlay = document.getElementById('robinLightboxOverlay');
-    const images = JSON.parse(overlay.dataset.images || '[]');
-    const current = parseInt(overlay.dataset.currentIndex || '0');
-    
+    if (!currentLightboxData || !currentLightboxData.images) return;
+    const images = currentLightboxData.images;
     const img = document.getElementById('lightboxImage');
+    
     img.classList.add('changing');
     setTimeout(() => {
-        img.src = images[current];
+        img.src = images[currentImageIndex];
         img.classList.remove('changing');
     }, 150);
     
     document.querySelectorAll('.lightbox-dot').forEach((dot, i) => {
-        dot.style.background = i === current ? 'var(--accent)' : 'rgba(255,255,255,0.3)';
+        dot.style.background = i === currentImageIndex ? 'var(--accent)' : 'rgba(255,255,255,0.3)';
     });
 }
 
 function updateLightboxCaption(lang) {
     const captionEl = document.getElementById('lightboxCaption');
     if (currentLightboxData && currentLightboxData.descriptions) {
-        // Нормализуем язык
         const normalizedLang = (lang === 'ru') ? 'ua' : lang;
         const text = currentLightboxData.descriptions[normalizedLang] || 
                      currentLightboxData.descriptions['en'] || 
@@ -1152,12 +1137,12 @@ function updateLightboxLangBtns() {
 
 function closeLightbox() {
     const overlay = document.getElementById('robinLightboxOverlay');
-    overlay.classList.remove('open'); 
+    overlay.classList.remove('open');
     document.body.style.overflow = '';
     currentLightboxData = null;
     currentLightboxLang = 'en';
+    currentImageIndex = 0;
 }
-
 
 function initLightbox() {
     document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
@@ -1177,7 +1162,22 @@ function initLightbox() {
         });
     });
     
-    // Right-click context menu для всех ссылок с картинками
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (!currentLightboxData) return;
+        if (e.key === 'ArrowLeft') navigateLightbox(-1);
+        if (e.key === 'ArrowRight') navigateLightbox(1);
+    });
+    
+    // Mouse wheel navigation
+    document.getElementById('robinLightboxOverlay').addEventListener('wheel', (e) => {
+        if (!currentLightboxData || !currentLightboxData.images || currentLightboxData.images.length <= 1) return;
+        e.preventDefault();
+        if (e.deltaY > 0) navigateLightbox(1);
+        else navigateLightbox(-1);
+    }, { passive: false });
+    
+    // Right-click context menu для всех ссылок
     document.addEventListener('contextmenu', (e) => {
         const link = e.target.closest('.link-inline');
         if (!link) return;
@@ -1186,7 +1186,7 @@ function initLightbox() {
         let images = [];
         if (imagesAttr) {
             try { images = JSON.parse(imagesAttr); } 
-            catch(err){}
+            catch(err) {}
         }
         
         const currentIdx = parseInt(link.getAttribute('data-image-index') || '0');
@@ -1211,13 +1211,6 @@ function initLightbox() {
             );
         }
     });
-    
-    link.dataset.lightboxBound = 'true';
-} // ЗАКРЫВАЮЩАЯ СКОБКА
-
-// ДОБАВЬТЕ ЭТУ ФУНКЦИЮ (она отсутствовала!)
-function t(key) {
-    return getTranslation(key);
 }
 
 function initCardAnimations() {
@@ -1925,12 +1918,13 @@ function openModal(title, fields) {
     document.getElementById('addModalTitle').textContent = title; 
     showFields(fields);
     
-    ['addFieldTitle', 'addFieldUrl', 'addFieldImage', 'addFieldWebsite', 'addFieldTwitter', 'addFieldDescription'].forEach(id => {
+    ['addFieldTitle', 'addFieldUrl', 'addFieldWebsite', 'addFieldTwitter', 'addFieldDescription'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
     });
     document.getElementById('addFieldTooltipEn').value = '';
     document.getElementById('addFieldTooltipUa').value = '';
-    clearImageInputs();
+    clearImageInputs(); // ДОБАВЛЕНО
+    
     currentModalLang = 'en';
     document.querySelectorAll('.lang-tab').forEach(t => t.classList.toggle('active', t.dataset.lang === 'en'));
     document.getElementById('descFieldEn').classList.remove('field-hidden');
@@ -1983,53 +1977,53 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
 
     try {
         if (isEdit && currentEditTarget) {
-    const id = currentEditTarget.id; 
-    const link = currentEditTarget.link;
-    const newTitle = document.getElementById('addFieldTitle').value.trim(); 
-    const newUrl = document.getElementById('addFieldUrl').value.trim();
-    const newTooltipEn = document.getElementById('addFieldTooltipEn').value.trim();
-    const newTooltipUa = document.getElementById('addFieldTooltipUa').value.trim();
-    const newImages = getImagesFromInputs(); // ИСПРАВЛЕНО: используем массив
-    
-    if (!newTitle || !newUrl) { alert('Title and URL are required!'); return; }
+            const id = currentEditTarget.id; 
+            const link = currentEditTarget.link;
+            const newTitle = document.getElementById('addFieldTitle').value.trim(); 
+            const newUrl = document.getElementById('addFieldUrl').value.trim();
+            const newTooltipEn = document.getElementById('addFieldTooltipEn').value.trim();
+            const newTooltipUa = document.getElementById('addFieldTooltipUa').value.trim();
+            const newImages = getImagesFromInputs(); // ИЗМЕНЕНО
+            
+            if (!newTitle || !newUrl) { alert('Title and URL are required!'); return; }
 
-    let isUserItem = false;
-    for (const zone in userItemsData.items) {
-        const items = userItemsData.items[zone]; if (!items) continue;
-        const found = items.find(i => i.id === id);
-        if (found) { 
-            found.title = newTitle; 
-            found.url = newUrl; 
-            found.descEn = newTooltipEn;
-            found.descUa = newTooltipUa;
-            found.tooltip = currentModalLang === 'en' ? newTooltipEn : newTooltipUa;
-            found.images = newImages; // ИСПРАВЛЕНО: сохраняем массив
-            isUserItem = true; 
-            await saveRobinUserItems(); 
-            break; 
-        }
-    }
+            let isUserItem = false;
+            for (const zone in userItemsData.items) {
+                const items = userItemsData.items[zone]; if (!items) continue;
+                const found = items.find(i => i.id === id);
+                if (found) { 
+                    found.title = newTitle; 
+                    found.url = newUrl; 
+                    found.descEn = newTooltipEn;
+                    found.descUa = newTooltipUa;
+                    found.tooltip = currentModalLang === 'en' ? newTooltipEn : newTooltipUa;
+                    found.images = newImages; // ИЗМЕНЕНО
+                    isUserItem = true; 
+                    await saveRobinUserItems(); 
+                    break; 
+                }
+            }
 
-    if (!isUserItem) { 
-        editsOverride[id] = { 
-            title: newTitle, 
-            url: newUrl, 
-            descEn: newTooltipEn, 
-            descUa: newTooltipUa,
-            tooltip: newTooltipEn || newTooltipUa, 
-            images: newImages // ИСПРАВЛЕНО: сохраняем массив
-        }; 
-        await saveRobinEditsOverride(); 
-    }
-    
-    applyRobinOverrideToLink(link, { 
-        title: newTitle, 
-        url: newUrl, 
-        descEn: newTooltipEn, 
-        descUa: newTooltipUa,
-        tooltip: newTooltipEn || newTooltipUa, 
-        images: newImages // ИСПРАВЛЕНО: передаем массив
-    });
+            if (!isUserItem) { 
+                editsOverride[id] = { 
+                    title: newTitle, 
+                    url: newUrl, 
+                    descEn: newTooltipEn, 
+                    descUa: newTooltipUa,
+                    tooltip: newTooltipEn || newTooltipUa, 
+                    images: newImages // ИЗМЕНЕНО
+                }; 
+                await saveRobinEditsOverride(); 
+            }
+            
+            applyRobinOverrideToLink(link, { 
+                title: newTitle, 
+                url: newUrl, 
+                descEn: newTooltipEn, 
+                descUa: newTooltipUa,
+                tooltip: newTooltipEn || newTooltipUa, 
+                images: newImages // ИЗМЕНЕНО
+            });
             
             if (favoritesState[id]) { 
                 favoritesState[id].title = newTitle; 
@@ -2052,7 +2046,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
         const descEn = document.getElementById('addFieldTooltipEn').value.trim();
         const descUa = document.getElementById('addFieldTooltipUa').value.trim();
         const tooltip = descEn || descUa;
-        const newImages = getImagesFromInputs();
+        const newImages = getImagesFromInputs(); // ИЗМЕНЕНО
         const website = document.getElementById('addFieldWebsite').value.trim(); 
         const twitter = document.getElementById('addFieldTwitter').value.trim();
         const description = document.getElementById('addFieldDescription').value.trim();
@@ -2068,7 +2062,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                 tooltip, 
                 descEn,
                 descUa,
-                images: newImages,
+                images: newImages, // ИЗМЕНЕНО
                 trackType: config.trackType, 
                 addedAt: Date.now() 
             };
@@ -2148,10 +2142,14 @@ function createUserLink(item, zone) {
     if (item.tooltip) link.setAttribute('data-tooltip', item.tooltip);
     if (item.descEn) link.setAttribute('data-desc-en', item.descEn);
     if (item.descUa) link.setAttribute('data-desc-ua', item.descUa);
+    
+    // ИЗМЕНЕНО: Работа с массивом изображений
     if (item.images && item.images.length > 0) {
-    link.setAttribute('data-images', JSON.stringify(item.images));
-    link.setAttribute('data-image-index', '0');
-}
+        link.setAttribute('data-images', JSON.stringify(item.images));
+        link.setAttribute('data-image-index', '0');
+    } else if (item.image) {
+        link.setAttribute('data-image', item.image);
+    }
     
     link.textContent = item.title;
     wrapper.appendChild(link);
@@ -2312,16 +2310,21 @@ function loadRobinEditsOverride() {
 
 function applyRobinOverrideToLink(link, ov) {
     if (!link || !ov) return;
-    if (ov.title) { Array.from(link.childNodes).forEach(n => { if (n.nodeType === Node.TEXT_NODE) n.remove(); }); link.insertBefore(document.createTextNode(ov.title), link.firstChild); }
+    if (ov.title) { 
+        Array.from(link.childNodes).forEach(n => { if (n.nodeType === Node.TEXT_NODE) n.remove(); }); 
+        link.insertBefore(document.createTextNode(ov.title), link.firstChild); 
+    }
     if (ov.url) link.href = ov.url;
     if (ov.tooltip !== undefined) { if (ov.tooltip) link.setAttribute('data-tooltip', ov.tooltip); else link.removeAttribute('data-tooltip'); }
     if (ov.descEn !== undefined) { if (ov.descEn) link.setAttribute('data-desc-en', ov.descEn); else link.removeAttribute('data-desc-en'); }
     if (ov.descUa !== undefined) { if (ov.descUa) link.setAttribute('data-desc-ua', ov.descUa); else link.removeAttribute('data-desc-ua'); }
+    
+    // ИЗМЕНЕНО: Работа с массивом изображений
     if (ov.images !== undefined) { 
         if (ov.images && ov.images.length > 0) {
             link.setAttribute('data-images', JSON.stringify(ov.images));
             link.setAttribute('data-image-index', '0');
-            link.removeAttribute('data-image'); // Удаляем старый атрибут если есть
+            link.removeAttribute('data-image');
         } else {
             link.removeAttribute('data-images');
             link.removeAttribute('data-image-index');
@@ -2374,13 +2377,12 @@ function openRobinEditModal(link) {
     document.getElementById('addFieldTooltipEn').value = link.getAttribute('data-desc-en') || '';
     document.getElementById('addFieldTooltipUa').value = link.getAttribute('data-desc-ua') || '';
     
-    // ИСПРАВЛЕННАЯ ЧАСТЬ ДЛЯ ИЗОБРАЖЕНИЙ:
+    // ИСПРАВЛЕНО: Работа с массивом изображений
     const imagesAttr = link.getAttribute('data-images');
     let images = [];
     if (imagesAttr) {
         try { images = JSON.parse(imagesAttr); } catch(err) {}
     } else if (link.getAttribute('data-image')) {
-        // Поддержка старых одиночных изображений
         images = [link.getAttribute('data-image')];
     }
     populateImageInputs(images);
@@ -2393,7 +2395,7 @@ function openRobinEditModal(link) {
     saveBtn.dataset.editMode = 'true';
     overlayEl().classList.add('open');
 }
-       
+
 async function uploadConfigToGithub() {
     try {
         await saveRobinUserItems();
