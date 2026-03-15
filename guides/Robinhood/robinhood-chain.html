@@ -910,9 +910,26 @@ function toggleLanguage() {
     localStorage.setItem(LANGUAGE_KEY, currentLanguage);
     if (currentUser) saveToCloud({ robinLanguage: currentLanguage, robinLanguageTimestamp: Date.now() });
     updateAllTranslations();
+    updateAllLinkDescriptions(); // ← ДОБАВЬТЕ ЭТУ СТРОКУ
     showToast(currentLanguage === 'en' ? 'Language: English' : 'Мова: Українська', 'info');
 }
-
+// ============================================
+// UPDATE ALL DESCRIPTIONS ON LANGUAGE CHANGE
+// ============================================
+function updateAllLinkDescriptions() {
+    // Обновляем все ссылки с правильными описаниями
+    document.querySelectorAll('a.link-inline[data-id]').forEach(link => {
+        const descEn = link.getAttribute('data-desc-en') || '';
+        const descUa = link.getAttribute('data-desc-ua') || '';
+        
+        // Выбираем правильное описание в зависимости от языка
+        const newTooltip = currentLanguage === 'ua' ? (descUa || descEn) : (descEn || descUa);
+        
+        if (newTooltip) {
+            link.setAttribute('data-tooltip', newTooltip);
+        }
+    });
+}
 async function loadLanguagePreference() {
     let localLang = localStorage.getItem(LANGUAGE_KEY);
     if (localLang) currentLanguage = (localLang === 'uk') ? 'ua' : localLang;
@@ -932,6 +949,7 @@ async function loadLanguagePreference() {
         } catch (e) { console.error("Error loading language:", e); }
     }
     updateAllTranslations();
+    updateAllDescriptionsFromData(); // ← ДОБАВЬТЕ ЭТУ СТРОКУ
 }
 
 // ============================================
@@ -2562,6 +2580,7 @@ function renderRobinUserItems() {
     initializeTooltips();
     initLightbox();
     updateUI();
+    updateAllDescriptionsFromData();
 }
 
 function loadRobinEditsOverride() {
@@ -2612,7 +2631,34 @@ function applyRobinAllOverrides() {
         if (link) applyRobinOverrideToLink(link, editsOverride[id]);
     });
 }
-
+function updateAllDescriptionsFromData() {
+    // Обновляем описания для всех элементов из userItemsData
+    document.querySelectorAll('a.link-inline[data-id]').forEach(link => {
+        const id = link.dataset.id;
+        
+        // Ищем элемент в userItemsData
+        let item = null;
+        for (const zone in userItemsData.items) {
+            const found = userItemsData.items[zone]?.find(i => i.id === id);
+            if (found) { item = found; break; }
+        }
+        
+        if (!item) return;
+        
+        // Обновляем атрибуты с правильными описаниями
+        if (item.descEn) link.setAttribute('data-desc-en', item.descEn);
+        if (item.descUa) link.setAttribute('data-desc-ua', item.descUa);
+        
+        // Обновляем текущий tooltip
+        const newTooltip = currentLanguage === 'ua' 
+            ? (item.descUa || item.descEn || item.tooltip)
+            : (item.descEn || item.descUa || item.tooltip);
+            
+        if (newTooltip) {
+            link.setAttribute('data-tooltip', newTooltip);
+        }
+    });
+}
 function toggleRobinEditMode() {
     editModeActive = !editModeActive;
     document.body.classList.toggle('edit-mode', editModeActive);
