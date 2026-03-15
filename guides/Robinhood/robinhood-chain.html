@@ -2393,10 +2393,7 @@ function openRobinEditModal(link) {
     saveBtn.dataset.editMode = 'true';
     overlayEl().classList.add('open');
 }
-        function t(key) {
-    return getTranslation(key);
-}
-
+       
 async function uploadConfigToGithub() {
     try {
         await saveRobinUserItems();
