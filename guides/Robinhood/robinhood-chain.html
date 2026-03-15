@@ -1515,15 +1515,16 @@ onAuthStateChanged(auth, async (user) => {
     }
     
    if (!initialAuthCheckComplete) {
-        initialAuthCheckComplete = true;
-        await loadLanguagePreference();
-        await loadRobinSharedData();
-        await loadRobinNewIndicators();
-        await loadRobinData();
-        renderRobinUserItems();
-        updateRobinNewIndicators();
-        isDataLoaded = true;
-    }
+    initialAuthCheckComplete = true;
+    await loadLanguagePreference();
+    await loadRobinUserItems();           // ← async функция, загружает из Firebase
+    await loadRobinSharedData();          // ← загружает из GitHub для non-admin
+    await loadRobinNewIndicators();
+    await loadRobinData();
+    renderRobinUserItems();               // ← теперь будут данные из Firebase
+    updateRobinNewIndicators();
+    isDataLoaded = true;
+}
 });
 
 // ===== HELPERS =====
@@ -1828,9 +1829,48 @@ function normalizeDeployTrackTypes() {
 let userItemsData = { items: {}, collections: [], dappCategories: [] };
 let currentAddContext = null;
 
-function loadRobinUserItems() {
-    try { const raw = localStorage.getItem(USER_ITEMS_KEY); if (raw) { const p = JSON.parse(raw); userItemsData = { items: p.items||{}, collections: p.collections||[], dappCategories: p.dappCategories||[] }; } } 
-    catch(e) { console.error(e); }
+async function loadRobinUserItems() {
+    // Сначала загружаем из localStorage
+    try {
+        const raw = localStorage.getItem(USER_ITEMS_KEY);
+        if (raw) {
+            const p = JSON.parse(raw);
+            userItemsData = { 
+                items: p.items || {}, 
+                collections: p.collections || [], 
+                dappCategories: p.dappCategories || [] 
+            };
+        }
+    } catch (e) {
+        console.error('LocalStorage load error:', e);
+    }
+    
+    // Затем загружаем из Firebase (если есть пользователь)
+    if (currentUser) {
+        try {
+            const docRef = doc(db, "users", currentUser.uid);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists() && docSnap.data().robinUserItems) {
+                const cloudItemsTs = parseInt(docSnap.data().robinUserItemsTimestamp || '0', 10);
+                const localItemsTs = parseInt(localStorage.getItem('robin_user_items_timestamp') || '0', 10);
+                
+                if (cloudItemsTs > localItemsTs) {
+                    const cloudData = docSnap.data().robinUserItems;
+                    userItemsData = { 
+                        items: cloudData.items || {}, 
+                        collections: cloudData.collections || [], 
+                        dappCategories: cloudData.dappCategories || [] 
+                    };
+                    localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
+                    localStorage.setItem('robin_user_items_timestamp', String(cloudItemsTs));
+                    console.log('✓ User items loaded from Firebase');
+                }
+            }
+        } catch (e) {
+            console.error('Firebase user items load error:', e);
+        }
+    }
 }
 
 async function saveRobinUserItems() {
