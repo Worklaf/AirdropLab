@@ -1158,12 +1158,6 @@ function closeLightbox() {
     currentLightboxLang = 'en';
 }
 
-// НАЙДИТЕ ЭТОТ КОД (примерно строка 320):
-function updateLightboxLangBtns() {
-    document.querySelectorAll('.lightbox-lang-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === currentLightboxLang);
-    });
-}
 
 function initLightbox() {
     document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
