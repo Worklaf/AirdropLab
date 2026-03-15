@@ -2343,10 +2343,11 @@ function renderUserDappCategory(cat) {
     addBtn.title = `${getTranslation('add_to')} ${cat.title}`; 
     addBtn.innerHTML = '<span class="btn-plus">+</span>';
     addBtn.addEventListener('click', (e) => { 
-        e.stopPropagation(); 
-        currentAddContext = { zone: cat.id, config: ZONE_CONFIG[cat.id] || { type:'link-item', label: cat.title, trackType:'track-daily' } }; 
-        openModal(`${getTranslation('add_to')}: ${cat.title}`, ['fieldTitle','descFieldEn','descFieldUa']); 
-    });
+    e.stopPropagation(); 
+    currentAddContext = { zone: cat.id, config: ZONE_CONFIG[cat.id] || { type:'link-item', label: cat.title, trackType:'track-daily' } }; 
+    // ✅ ИСПРАВЛЕНО: Добавлены fieldUrl и fieldImage
+    openModal(`${getTranslation('add_to')}: ${cat.title}`, ['fieldTitle','fieldUrl','fieldImage','descFieldEn','descFieldUa']); 
+});
     tdLinks.appendChild(addBtn); 
     tr.appendChild(tdLinks);
     
