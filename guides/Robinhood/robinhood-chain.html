@@ -2361,7 +2361,10 @@ function removeRobinEditButtons() {
 }
 
 function openRobinEditModal(link) {
-    const id = link.dataset.id; const title = getLinkTitle(link); currentEditTarget = { id, link };
+    const id = link.dataset.id; 
+    const title = getLinkTitle(link); 
+    currentEditTarget = { id, link };
+    
     document.getElementById('addModalTitle').textContent = 'Edit: ' + title; 
     showFields(['fieldTitle', 'fieldUrl', 'fieldImage', 'descFieldEn', 'descFieldUa']);
     
@@ -2369,7 +2372,8 @@ function openRobinEditModal(link) {
     document.getElementById('addFieldUrl').value = link.href;
     document.getElementById('addFieldTooltipEn').value = link.getAttribute('data-desc-en') || '';
     document.getElementById('addFieldTooltipUa').value = link.getAttribute('data-desc-ua') || '';
-    document.getElementById('addFieldImage').value = link.getAttribute('data-image') || '';
+    
+    // УБРАНО: document.getElementById('addFieldImage').value = ... (этого элемента больше нет)
     
     document.getElementById('descFieldEn').classList.remove('field-hidden');
     document.getElementById('descFieldUa').classList.remove('field-hidden');
@@ -2378,14 +2382,16 @@ function openRobinEditModal(link) {
     saveBtn.textContent = getTranslation('save'); 
     saveBtn.dataset.editMode = 'true';
     overlayEl().classList.add('open');
+    
+    // Заполняем поля для картинок через новую систему
     const imagesAttr = link.getAttribute('data-images');
-let images = [];
-if (imagesAttr) {
-    try { images = JSON.parse(imagesAttr); } catch(e){}
-} else if (link.getAttribute('data-image')) {
-    images = [link.getAttribute('data-image')];
-}
-populateImageInputs(images);
+    let images = [];
+    if (imagesAttr) {
+        try { images = JSON.parse(imagesAttr); } catch(e){}
+    } else if (link.getAttribute('data-image')) {
+        images = [link.getAttribute('data-image')];
+    }
+    populateImageInputs(images);
 }
 
 async function uploadConfigToGithub() {
