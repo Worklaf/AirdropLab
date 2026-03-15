@@ -1,0 +1,16 @@
+{
+  "editsOverride": {
+    "dep_volt_adv": {
+      "title": "VoltPlayground",
+      "image": "",
+      "url": "https://voltplayground.xyz/terminal?network=TEMPO",
+      "tooltip": "VoltPlayground — расширенный деплой с поддержкой сложных контрактов."
+    },
+    "caset_fuzz": {
+      "title": "Fuzz",
+      "url": "https://www.caset.network/fuzz",
+      "image": "https://www.caset.network/images/nfts/fuzz.jpeg",
+      "tooltip": "Fuzz4"
+    }
+  }
+}
