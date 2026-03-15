@@ -1219,7 +1219,7 @@ async function loadTempoSharedData() {
     if (isAdmin) return;
     
     try {
-        const itemsResp = await fetch('https://raw.githubusercontent.com/Worklaf/main/guides/Tempo/tempo_shared_items.json?v=' + Date.now());
+        const itemsResp = await fetch('https://raw.githubusercontent.com/Worklaf/AirdropLab/main/guides/Tempo/tempo_shared_items.json?v=' + Date.now());
         if (itemsResp.ok) {
             const data = await itemsResp.json();
             userItemsData = { items: data.items || {}, collections: data.collections || [], dappCategories: data.dappCategories || [] };
@@ -1230,7 +1230,7 @@ async function loadTempoSharedData() {
     }
 
     try {
-        const editsResp = await fetch('https://raw.githubusercontent.com/Worklaf/main/guides/Tempo/tempo_shared_edits.json?v=' + Date.now());
+        const editsResp = await fetch('https://raw.githubusercontent.com/Worklaf/AirdropLab/main/guides/Tempo/tempo_shared_edits.json?v=' + Date.now());
         if (editsResp.ok) {
             const data = await editsResp.json();
             editsOverride = data.editsOverride || {};
@@ -2256,7 +2256,7 @@ async function loadTempoTwitterResults() {
     const list = document.getElementById('tempoMonitorList'); const status = document.getElementById('tempoMonitorStatus'); const badge = document.getElementById('tempoMonitorBadge');
     if (!list || !status || !badge) return;
     try {
-        const response = await fetch('https://raw.githubusercontent.com/Worklaf/main/guides/Tempo/tempo_twitter_results.json?v=' + Date.now());
+        const response = await fetch('https://raw.githubusercontent.com/Worklaf/AirdropLab/main/guides/Tempo/tempo_twitter_results.json?v=' + Date.now());
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         
