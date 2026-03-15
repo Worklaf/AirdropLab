@@ -32,7 +32,7 @@
                 title: 'Arc Testnet',
                 descKey: 'guide_arc_desc',
                 logo: 'https://givemebit.com/wp-content/uploads/2025/11/arc-testnet-logo-1024x235.jpg',
-                link: '../AirdropLab/guides/Arc/Arc_Testnet_by_Circle.html',
+                link: './guides/Arc/Arc_Testnet_by_Circle.html',
                 status: 'active',
                 difficultyKey: 'guide_difficulty_easy'
             },
@@ -41,7 +41,7 @@
                 title: 'Tempo Testnet',
                 descKey: 'guide_tempo_desc',
                 logo: 'https://givemebit.com/wp-content/uploads/2025/12/tempo-testnet-logo-1024x235.jpg',
-                link: '../AirdropLab/guides/Tempo/Tempo_Testnet.html',
+                link: './guides/Tempo/Tempo_Testnet.html',
                 status: 'active',
                 difficultyKey: 'guide_difficulty_medium'
             },
@@ -50,7 +50,7 @@
                 title: 'Robinhood Chain',
                 descKey: 'guide_robinhood_desc',
                 logo: 'https://cryptocurrencyjobs.co/startups/assets/logos/robinhood.e4ca7c6b17d08763d0714e8a061cf5ba65950fe4d236e3c2db812421997fb743_hu_e366a75e4d388edb.jpg',
-                link: '../AirdropLab/guides/Robinhood/robinhood-chain.html',
+                link: './guides/Robinhood/robinhood-chain.html',
                 status: 'new',
                 difficultyKey: 'guide_difficulty_easy'
             }
