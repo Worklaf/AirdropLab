@@ -1035,7 +1035,7 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
     img.src = currentImage;
     titleEl.textContent = title;
     linkEl.href = linkUrl;
-    linkEl.innerHTML = `<i class="fas fa-external-link-alt"></i> ${t('go_to_mint')}`;
+    linkEl.innerHTML = `<i class="fas fa-external-link-alt"></i> ${getTranslation('go_to_mint')}`;
     
     const hasDesc = descriptions && (descriptions.en || descriptions.ua);
     if (hasDesc) {
@@ -1144,7 +1144,7 @@ function updateLightboxCaption(lang) {
     }
 }
 
-function updateLightboxLangButtons() {
+function updateLightboxLangBtns() {
     document.querySelectorAll('.lightbox-lang-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.lang === currentLightboxLang);
     });
@@ -1159,55 +1159,72 @@ function closeLightbox() {
 }
 
 // НАЙДИТЕ ЭТОТ КОД (примерно строка 320):
+function updateLightboxLangBtns() {
+    document.querySelectorAll('.lightbox-lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === currentLightboxLang);
+    });
+}
+
 function initLightbox() {
     document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
-    document.getElementById('robinLightboxOverlay').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeLightbox(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+    document.getElementById('robinLightboxOverlay').addEventListener('click', (e) => { 
+        if (e.target === e.currentTarget) closeLightbox(); 
+    });
+    document.addEventListener('keydown', (e) => { 
+        if (e.key === 'Escape') closeLightbox(); 
+    });
     
     // Lightbox language toggle
     document.querySelectorAll('.lightbox-lang-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             currentLightboxLang = btn.dataset.lang;
             updateLightboxCaption(currentLightboxLang);
-            updateLightboxLangButtons();
+            updateLightboxLangBtns();
         });
     });
     
-    // Right-click context menu
-    document.querySelectorAll('.link-inline[data-image]').forEach(link => {
-        if (link.dataset.lightboxBound) return;
-        link.addEventListener('contextmenu', (e) => {
-            const imagesAttr = link.getAttribute('data-images');
-            let images = [];
-            if (imagesAttr) {
-                try { images = JSON.parse(imagesAttr); } catch(err){}
-            }
+    // Right-click context menu для всех ссылок с картинками
+    document.addEventListener('contextmenu', (e) => {
+        const link = e.target.closest('.link-inline');
+        if (!link) return;
+        
+        const imagesAttr = link.getAttribute('data-images');
+        let images = [];
+        if (imagesAttr) {
+            try { images = JSON.parse(imagesAttr); } 
+            catch(err){}
+        }
+        
+        const currentIdx = parseInt(link.getAttribute('data-image-index') || '0');
+        const singleImage = link.getAttribute('data-image');
+        const allImages = images.length > 0 ? images : (singleImage ? [singleImage] : []);
+        
+        if (allImages.length > 0) {
+            e.preventDefault();
+            const descriptions = {
+                en: link.getAttribute('data-desc-en') || '',
+                ua: link.getAttribute('data-desc-ua') || ''
+            };
             
-            const currentIdx = parseInt(link.getAttribute('data-image-index') || '0');
-            const singleImage = link.getAttribute('data-image');
-            const allImages = images.length > 0 ? images : (singleImage ? [singleImage] : []);
-            
-            if (allImages.length > 0) {
-                e.preventDefault();
-                const descriptions = {
-                    en: link.getAttribute('data-desc-en') || '',
-                    ua: link.getAttribute('data-desc-ua') || ''
-                };
-                
-                openLightbox(
-                    allImages[currentIdx],
-                    getLinkTitle(link),
-                    link.getAttribute('data-tooltip') || '',
-                    link.href,
-                    allImages,
-                    currentIdx,
-                    descriptions
-                );
-            }
-        });
-        link.dataset.lightboxBound = 'true'; // ДОБАВЬТЕ ЭТУ СТРОЧКУ
-    }); // ДОБАВЬТЕ ЗАКРЫВАЮЩУЮ СКОБКУ ЗДЕСЬ
-} // И ЗДЕСЬ
+            openLightbox(
+                allImages[currentIdx],
+                getLinkTitle(link),
+                link.getAttribute('data-tooltip') || '',
+                link.href,
+                allImages,
+                currentIdx,
+                descriptions
+            );
+        }
+    });
+    
+    link.dataset.lightboxBound = 'true';
+} // ЗАКРЫВАЮЩАЯ СКОБКА
+
+// ДОБАВЬТЕ ЭТУ ФУНКЦИЮ (она отсутствовала!)
+function t(key) {
+    return getTranslation(key);
+}
 
 function initCardAnimations() {
     const observer = new IntersectionObserver((entries) => {
