@@ -2604,6 +2604,58 @@ window.reloadFirebaseData = async function() {
     console.log('Коллекции:', userItemsData.collections.length);
     console.log('Итемы:', Object.keys(userItemsData.items).length);
 }
+    // ===== КОНСОЛЬ ФУНКЦИИ =====
+window.addMissingCollections = async function() {
+    const missingCollections = [
+      {
+        "id": "u_mm4lvafo_47vid",
+        "title": "Clara",
+        "parentZone": "nfts",
+        "website": "https://www.clarachain.net/",
+        "twitter": "https://x.com/clarachainxyz",
+        "items": [],
+        "addedAt": 1772179418004
+      },
+      {
+        "id": "u_mm6nlaz0_h7fp0",
+        "title": "Caset",
+        "parentZone": "nfts",
+        "website": "https://www.caset.network",
+        "twitter": "https://x.com/casetnetwork",
+        "items": [],
+        "addedAt": 1772303243724
+      },
+      {
+        "id": "u_mm9exlet_he4b2",
+        "title": "Arkle",
+        "parentZone": "nfts",
+        "website": "https://www.arklelab.xyz/",
+        "twitter": "https://x.com/0xarkle",
+        "items": [],
+        "addedAt": 1772470099109
+      },
+      {
+        "id": "u_mmf9iutv_qm92z",
+        "title": "Dezzle",
+        "parentZone": "nfts",
+        "website": "https://www.dezzle.xyz/",
+        "twitter": "https://x.com/0xDezzle",
+        "items": [],
+        "addedAt": 1772823810451
+      }
+    ];
+
+    userItemsData.collections.push(...missingCollections);
+    await saveRobinUserItems();
+    console.log('✅ 4 коллекции добавлены в Firebase!');
+    console.log('Всього коллекцій:', userItemsData.collections.length);
+    
+    // Оновлюємо на сторінці
+    setTimeout(async () => {
+        await window.reloadFirebaseData();
+        console.log('✅ Сторінка оновлена!');
+    }, 1000);
+}
 </script>
 
 <!-- LOGIN MODAL -->
