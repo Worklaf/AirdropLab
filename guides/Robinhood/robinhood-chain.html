@@ -1180,15 +1180,16 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     if (!initialAuthCheckComplete) {
-        initialAuthCheckComplete = true;
-        await loadLanguagePreference();
-        await loadRobinSharedData();
-        await loadRobinNewIndicators();
-        await loadRobinData();
-        renderRobinUserItems();
-        updateRobinNewIndicators();
-        isDataLoaded = true;
-    }
+    initialAuthCheckComplete = true;
+    await loadLanguagePreference();
+    await loadRobinSharedData();
+    await loadRobinNewIndicators();
+    await loadRobinData();
+    renderRobinUserItems();
+    updateRobinNewIndicators();
+    updateAllTranslations();
+    isDataLoaded = true;
+}
 });
 
 // ===== HELPERS =====
@@ -2197,6 +2198,7 @@ function renderRobinUserItems() {
     initializeTooltips();
     initLightbox();
     updateUI();
+    updateAllTranslations();
 }
 
 function loadRobinEditsOverride() {
@@ -2413,6 +2415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     applyLegendState(isLegendCollapsed);
     initializeTooltips();
     updateBadgeVisibility();
+    updateAllTranslations();
 });
 
 // ===== TWITTER MONITOR =====
