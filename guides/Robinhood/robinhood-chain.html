@@ -1100,6 +1100,13 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
     
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
+    overlay.onwheel = (e) => {
+        if (images.length > 1) {
+            e.preventDefault();
+            if (e.deltaY > 0) navigateLightbox(1);
+            else navigateLightbox(-1);
+        }
+    };
 }
 
 function navigateLightbox(direction) {
@@ -1148,9 +1155,14 @@ function closeLightbox() {
     const overlay = document.getElementById('robinLightboxOverlay');
     overlay.classList.remove('open');
     document.body.style.overflow = '';
+    
+    // ✅ ДОБАВЬТЕ ЭТО - очищаем обработчик
+    overlay.onwheel = null;
+    
+    document.getElementById('lightboxLeft')?.remove();
+    document.getElementById('lightboxRight')?.remove();
+    document.getElementById('lightboxImageIndicator')?.remove();
     currentLightboxData = null;
-    currentLightboxLang = 'en';
-    currentImageIndex = 0;
 }
 
 function initLightbox() {
@@ -1177,21 +1189,7 @@ function initLightbox() {
         if (e.key === 'ArrowLeft') navigateLightbox(-1);
         if (e.key === 'ArrowRight') navigateLightbox(1);
     });
-    
-    // Mouse wheel navigation - добавляем на document, чтобы работало везде
-const wheelHandler = (e) => {
-    const overlay = document.getElementById('robinLightboxOverlay');
-    // Проверяем, открыт ли лайтбокс
-    if (!overlay.classList.contains('open')) return;
-    if (!currentLightboxData || !currentLightboxData.images || currentLightboxData.images.length <= 1) return;
-    
-    e.preventDefault();
-    if (e.deltaY > 0) navigateLightbox(1);
-    else navigateLightbox(-1);
-};
-
-document.addEventListener('wheel', wheelHandler, { passive: false });
-    
+        
     // Right-click context menu для всех ссылок
     document.addEventListener('contextmenu', (e) => {
         const link = e.target.closest('.link-inline');
