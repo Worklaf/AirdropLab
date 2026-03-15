@@ -2465,11 +2465,11 @@ async function uploadConfigToGithub() {
 // ===== DOM CONTENT LOADED =====
 document.addEventListener('DOMContentLoaded', () => {
     loadTheme(); 
+    initLightbox();
     loadRobinEditsOverride(); 
     applyRobinAllOverrides(); 
     attachFavoriteControls(); 
     bindTrackingHandlersToAll();
-    initLightbox(); 
     initCardAnimations();
     
     setupModalLanguageTabs();
