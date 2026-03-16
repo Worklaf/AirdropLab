@@ -745,6 +745,7 @@ async function loadUsers() {
         var firstName = profile.firstName  || raw.firstName  || userData.firstName  || '';
         var lastName  = profile.lastName   || raw.lastName   || userData.lastName   || '';
         var username  = profile.username   || raw.username   || userData.username || raw.displayName || '';
+        var twitterUsername = raw.twitterUsername || '';
 
 // Если это Twitter и нет username - используй displayName
 if (!username && raw.provider === 'twitter.com' && raw.displayName) {
@@ -1135,11 +1136,8 @@ function renderTable() {
         if (currentTab === 'main') {
             return '<tr class="'+rowCl+'">'+cbEl+userCell+
                var emailOrTwitter = user.email;
-if (!emailOrTwitter && user.provider === 'twitter.com' && user.raw?.providerData?.length > 0) {
-    const twitterProvider = user.raw.providerData.find(p => p.providerId === 'twitter.com');
-    if (twitterProvider?.displayName) {
-        emailOrTwitter = '@' + twitterProvider.displayName;
-    }
+if (!emailOrTwitter && user.provider === 'twitter.com' && user.raw?.twitterUsername) {
+    emailOrTwitter = '@' + user.raw.twitterUsername;
 }
             '<td><span class="text-xs font-mono text-slate-500" title="'+user.id+'">'+user.id.substring(0,10)+'…</span></td>'+
                 '<td class="text-xs text-slate-300">'+esc(emailOrTwitter || '—')+'</td>'+
