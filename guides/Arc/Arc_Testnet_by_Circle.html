@@ -263,6 +263,103 @@
         @media(max-width:520px){.link-inline{font-size:.9rem}.link-inline.link-compact{font-size:.86rem}.link-inline .click-info{font-size:.65rem}}
         .import-file-input{display:none}
         .lang-tab,.language-toggle-btn,#languageToggleText,.lightbox-lang-btn{font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif!important}
+        /* ===== SWAP PREVIEW BTN ===== */
+.preview-swap-btn {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    background: transparent;
+    border: 1px solid rgba(0,208,158,0.4);
+    border-radius: 6px;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    margin-left: 6px;
+    transition: all 0.2s;
+}
+
+body.edit-mode .preview-swap-btn {
+    display: inline-flex;
+}
+
+.preview-swap-btn:hover {
+    background: rgba(0,208,158,0.1);
+}
+
+.preview-swap-btn.active {
+    border-color: rgba(234,179,8,0.6);
+    color: #eab308;
+}
+
+/* ===== LIGHTBOX MEDIA ===== */
+#arcLightboxMedia {
+    width: 100%;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    transition: opacity 0.15s ease;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#arcLightboxMedia video {
+    max-width: 100%;
+    max-height: 60vh;
+    border-radius: 8px;
+}
+
+#arcLightboxMedia img.lightbox-image {
+    max-width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/* ===== TOOLTIP VIDEO ===== */
+.floating-tooltip .tooltip-image-container video {
+    width: 100%;
+    max-height: 200px;
+    border-radius: 6px;
+    object-fit: contain;
+}
+
+/* ===== NFT SORTABLE ===== */
+.sortable-ghost {
+    opacity: 0.3;
+    background: rgba(0,208,158,0.1);
+    border-radius: 14px;
+}
+
+.sortable-drag {
+    opacity: 0.6;
+    transform: scale(0.97);
+    box-shadow: 0 8px 30px rgba(0,208,158,0.3);
+}
+
+body.edit-mode [data-section-id="nfts"] .resource-header {
+    cursor: grab;
+}
+
+body.edit-mode [data-section-id="nfts"] .resource-header:active {
+    cursor: grabbing;
+}
+
+/* ===== LIGHTBOX DOT для видео ===== */
+.lightbox-dot {
+    transition: all 0.2s;
+}
+
+.lightbox-dot:hover {
+    background: rgba(0,208,158,0.6) !important;
+    transform: scale(1.2);
+}
+
+.lightbox-dot.active {
+    background: var(--accent) !important;
+}
     </style>
 </head>
 <body>
@@ -831,7 +928,7 @@ window.handleRegister = async()=>{
 };
 window.logout = ()=>signOut(auth);
 
-onAuthStateChanged(auth, async(user)=>{
+onAuthStateChanged(auth, async(user) => {
     currentUser = user;
     const lo = document.getElementById('arcLoggedOutView');
     const li = document.getElementById('arcLoggedInView');
@@ -840,26 +937,91 @@ onAuthStateChanged(auth, async(user)=>{
         lo.style.display='none'; li.style.display='';
         nm.textContent = user.displayName || user.email?.split('@')[0] || 'User';
         checkAdmin(user);
-        setTimeout(()=>initNewIndicatorsRealtime(), 2000);
-        if (user.uid===ADMIN_UID) setTimeout(initTwitterMonitor, 1000);
+        setTimeout(() => initNewIndicatorsRealtime(), 2000);
+        if (user.uid === ADMIN_UID) setTimeout(initTwitterMonitor, 1000);
     } else {
         lo.style.display=''; li.style.display='none';
         checkAdmin(null);
-        if (newIndicatorsUnsubscribe) { newIndicatorsUnsubscribe(); newIndicatorsUnsubscribe=null; }
+        if (newIndicatorsUnsubscribe) { newIndicatorsUnsubscribe(); newIndicatorsUnsubscribe = null; }
     }
+    
     if (!initialAuthCheckComplete) {
         initialAuthCheckComplete = true;
         await loadLanguagePref();
         loadUserItems();
         loadEditsOverride();
+        
+        // ✅ НОВОЕ: загружаем порядок коллекций
+        await loadArcNFTCollectionsOrder();
+        
         await loadSharedData();
         await loadNewIndicators();
         await loadArcData();
+        
+        // ✅ Применяем порядок ПОСЛЕ рендера
         renderAll();
+        
+        // ✅ НОВОЕ: применяем сохранённый порядок
+        setTimeout(() => {
+            applyArcNFTSortOrder();
+            initArcNFTCollectionsSort();
+            initArcNFTOrderRealtime();
+        }, 300);
+        
         updateNewIndicators();
     }
 });
+// ===== MEDIA TYPE DETECTION =====
+function getMediaType(url) {
+    if (!url) return 'unknown';
+    const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
+    const lowerUrl = url.toLowerCase();
+    if (videoExts.some(ext => lowerUrl.includes(ext))) return 'video';
+    return 'image';
+}
 
+function createMediaElement(url, alt = '', className = '', autoplay = true) {
+    const isVideo = getMediaType(url) === 'video';
+    
+    if (isVideo) {
+        const container = document.createElement('div');
+        container.className = className;
+        container.style.cssText = `
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #000;
+        `;
+        
+        const video = document.createElement('video');
+        video.src = url;
+        video.style.cssText = 'width:100%;max-height:100%;object-fit:contain;';
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        
+        if (autoplay) {
+            video.autoplay = true;
+            setTimeout(() => video.play().catch(e => console.log('Autoplay blocked:', e)), 100);
+        }
+        
+        container.appendChild(video);
+        return container;
+    } else {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = alt;
+        img.className = className;
+        img.loading = 'lazy';
+        img.onerror = () => img.style.display = 'none';
+        return img;
+    }
+}
 // ===========================
 // SHARED DATA (GITHUB + FIREBASE)
 // ===========================
@@ -870,41 +1032,60 @@ async function loadSharedData() {
         return;
     }
 
+    // Проверяем флаг импорта
+    const importLock = parseInt(localStorage.getItem('arc_import_lock') || '0', 10);
+    const now = Date.now();
+    if (importLock > now - 5 * 60 * 1000) {
+        console.log('🔒 Import lock active — skipping public data override');
+        localStorage.removeItem('arc_import_lock');
+        return;
+    }
+
     try {
         const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
             const data = docSnap.data();
-            userItemsData = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
-            editsOverride = data.editsOverride || {};
             
-            localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
-            localStorage.setItem(EDITS_KEY, JSON.stringify(editsOverride));
+            // Проверяем timestamp
+            const publicTs = data.lastUpdated || 0;
+            const localTs = parseInt(localStorage.getItem('arc_uit') || '0', 10);
+            
+            if (publicTs >= localTs) {
+                userItemsData = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
+                editsOverride = data.editsOverride || {};
+                localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
+                localStorage.setItem(EDITS_KEY, JSON.stringify(editsOverride));
+                console.log('✅ Public data loaded, collections:', userItemsData.collections.length);
+            } else {
+                console.log('ℹ️ Local data is newer, keeping local');
+            }
             return;
         }
     } catch (e) {
         console.warn("Firebase error, using GitHub fallback:", e);
     }
 
+    // GitHub fallback
     try {
         const r = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${GITHUB_ITEMS_PATH}?v=${Date.now()}`);
         if (r.ok) { 
             const d = await r.json(); 
             userItemsData = { items:d.items||{}, collections:d.collections||[], dappCategories:d.dappCategories||[] }; 
-            localStorage.setItem(USER_ITEMS_KEY,JSON.stringify(userItemsData)); 
+            localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData)); 
         }
-    } catch(e) { }
+    } catch(e) {}
+    
     try {
         const r2 = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${GITHUB_EDITS_PATH}?v=${Date.now()}`);
         if (r2.ok) { 
             const d2 = await r2.json(); 
             editsOverride = d2.editsOverride||{}; 
-            localStorage.setItem(EDITS_KEY,JSON.stringify(editsOverride)); 
+            localStorage.setItem(EDITS_KEY, JSON.stringify(editsOverride)); 
         }
-    } catch(e) { }
+    } catch(e) {}
 }
-
 // ===========================
 // RENDER ALL
 // ===========================
@@ -1837,18 +2018,33 @@ function initNewIndicatorsRealtime(){
     });
 }
 
-function updateNewIndicators(){
-    document.querySelectorAll('[data-id]').forEach(el=>{
-        const id=el.dataset.id;
-        const show=newIndicatorsState.globalNew.has(id)&&!newIndicatorsState.clickedByUser.has(id);
-        if(show){
-            el.setAttribute('data-new','true'); el.classList.add('has-new-flag');
-            if(!el.querySelector('.new-flag')){ const f=document.createElement('span'); f.className='new-flag'; f.textContent=t('new_indicator'); el.appendChild(f); }
+function updateNewIndicators() {
+    if (!newIndicatorsState || !newIndicatorsState.globalNew) return;
+    
+    document.querySelectorAll('[data-id]').forEach(el => {
+        const id = el.dataset.id;
+        if (!id) return;
+        
+        const shouldShow = newIndicatorsState.globalNew.has(id) && 
+                          !newIndicatorsState.clickedByUser.has(id);
+        
+        if (shouldShow) {
+            el.setAttribute('data-new', 'true');
+            el.classList.add('has-new-flag');
+            if (!el.querySelector('.new-flag')) {
+                const flag = document.createElement('span');
+                flag.className = 'new-flag';
+                // ✅ Используем t() функцию Arc
+                flag.textContent = t('new_indicator');
+                el.appendChild(flag);
+            }
         } else {
-            el.removeAttribute('data-new'); el.classList.remove('has-new-flag');
+            el.removeAttribute('data-new');
+            el.classList.remove('has-new-flag');
             el.querySelector('.new-flag')?.remove();
         }
     });
+    
     updateSectionBadges();
 }
 
@@ -1912,7 +2108,7 @@ function showTooltip(e) {
     const currentIdx = parseInt(target.getAttribute('data-image-index') || '0');
     const imageUrl = images.length > 0 ? images[currentIdx] : null;
     
-    const lang = (currentLanguage === 'uk') ? 'ua' : currentLanguage;
+    const lang = currentLanguage;
     const descEn = target.getAttribute('data-desc-en') || '';
     const descUa = target.getAttribute('data-desc-ua') || '';
     const tooltip = target.getAttribute('data-tooltip') || '';
@@ -1922,15 +2118,38 @@ function showTooltip(e) {
     
     if (imageUrl) {
         tooltipEl.classList.add('has-image');
-        const plural = images.length > 1 ? ` (${currentIdx + 1}/${images.length})` : '';
-        tooltipEl.innerHTML = `
-            <div class="tooltip-image-container">
-                <img src="${imageUrl}" class="tooltip-image" loading="lazy" onerror="this.style.display='none'">
-                ${images.length > 1 ? `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#fff;padding:4px 8px;border-radius:4px;font-size:0.75rem;">${currentIdx + 1}/${images.length}</div>` : ''}
-                ${text ? `<div class="tooltip-text">${text}${plural}</div>` : ''}
-                ${images.length > 1 ? '<div style="font-size:0.7rem;color:#94a3b8;text-align:center;margin-top:4px;">Right-click for gallery</div>' : ''}
-            </div>
-        `;
+        
+        // ✅ Используем createMediaElement вместо просто img
+        const mediaEl = createMediaElement(imageUrl, text || 'Media', 'tooltip-image', false);
+        
+        const container = document.createElement('div');
+        container.className = 'tooltip-image-container';
+        
+        container.appendChild(mediaEl);
+        
+        if (images.length > 1) {
+            const indicator = document.createElement('div');
+            indicator.style.cssText = 'font-size:0.75rem;color:#fff;text-align:center;margin-top:4px;';
+            indicator.textContent = `${currentIdx + 1}/${images.length}`;
+            container.appendChild(indicator);
+        }
+        
+        if (text) {
+            const textDiv = document.createElement('div');
+            textDiv.className = 'tooltip-text';
+            textDiv.textContent = text;
+            container.appendChild(textDiv);
+        }
+        
+        if (images.length > 1) {
+            const hint = document.createElement('div');
+            hint.style.cssText = 'font-size:0.7rem;color:#94a3b8;text-align:center;margin-top:4px;';
+            hint.textContent = '📸 Right-click for gallery';
+            container.appendChild(hint);
+        }
+        
+        tooltipEl.innerHTML = '';
+        tooltipEl.appendChild(container);
     } else {
         tooltipEl.classList.remove('has-image');
         tooltipEl.textContent = text;
@@ -1959,28 +2178,47 @@ let currentLightboxData=null, currentLightboxLang='en';
 
 function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex = 0, descriptions = {}) {
     const overlay = document.getElementById('arcLightboxOverlay');
-    const img = document.getElementById('lightboxImage');
     const titleEl = document.getElementById('lightboxTitle');
     const captionEl = document.getElementById('lightboxCaption');
     const linkEl = document.getElementById('lightboxLink');
     const langToggle = document.getElementById('lightboxLangToggle');
     
-    // Сохраняем данные для языкового переключения
-    currentLightboxData = { title, descriptions, tooltip, linkUrl };
-    currentLightboxLang = currentLanguage;
+    const allImages = (images && images.length > 0) ? images : (imageUrl ? [imageUrl] : []);
     
-    // Сохраняем массив картинок
-    overlay.dataset.images = JSON.stringify(images);
+    currentLightboxData = { title, descriptions, tooltip, linkUrl, images: allImages };
+    currentLightboxLang = currentLanguage;
     overlay.dataset.currentIndex = startIndex;
     
-    const currentImage = images.length > 0 ? images[startIndex] : imageUrl;
+    // ✅ Находим или создаём медиа-контейнер
+    let mediaWrapper = document.getElementById('arcLightboxMedia');
+    if (!mediaWrapper) {
+        mediaWrapper = document.createElement('div');
+        mediaWrapper.id = 'arcLightboxMedia';
+        mediaWrapper.style.cssText = 'width:100%;min-height:200px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;transition:opacity 0.15s ease;';
+        
+        // Скрываем старый img если есть
+        const oldImg = document.getElementById('lightboxImage');
+        if (oldImg) {
+            oldImg.style.display = 'none';
+            oldImg.parentNode.insertBefore(mediaWrapper, oldImg);
+        } else {
+            const content = document.querySelector('.lightbox-content');
+            const closeBtn = document.getElementById('lightboxClose');
+            content.insertBefore(mediaWrapper, closeBtn.nextSibling);
+        }
+    }
     
-    img.src = currentImage;
+    // ✅ Отображаем медиа
+    if (allImages.length > 0) {
+        const mediaEl = createMediaElement(allImages[startIndex], title, 'lightbox-image', true);
+        mediaWrapper.innerHTML = '';
+        mediaWrapper.appendChild(mediaEl);
+    }
+    
     titleEl.textContent = title;
     linkEl.href = linkUrl;
     linkEl.innerHTML = `<i class="fas fa-external-link-alt"></i> ${t('go_to_mint')}`;
     
-    // Показываем переключатель языков если есть описания
     const hasDesc = descriptions && (descriptions.en || descriptions.ua);
     if (hasDesc) {
         langToggle.style.display = 'flex';
@@ -1991,43 +2229,48 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
         captionEl.textContent = tooltip || '';
     }
     
-    // Удаляем старые стрелки и индикаторы если есть
+    // Удаляем старые стрелки
     document.getElementById('lightboxLeft')?.remove();
     document.getElementById('lightboxRight')?.remove();
     document.getElementById('lightboxImageIndicator')?.remove();
     
-    // Добавляем навигацию по картинкам если их несколько
-    if (images.length > 1) {
+    // ✅ Навигация если несколько медиа
+    if (allImages.length > 1) {
         const content = document.querySelector('.lightbox-content');
         
-        // Стрелки
         const leftArrow = document.createElement('button');
         leftArrow.id = 'lightboxLeft';
         leftArrow.innerHTML = '←';
-        leftArrow.style.cssText = 'position:absolute;left:20px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.2rem;z-index:10;transition:all 0.2s;';
+        leftArrow.style.cssText = 'position:absolute;left:20px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.6);color:#fff;border:none;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.3rem;z-index:10;transition:all 0.2s;';
+        leftArrow.onmouseenter = () => leftArrow.style.background = 'rgba(0,208,158,0.8)';
+        leftArrow.onmouseleave = () => leftArrow.style.background = 'rgba(0,0,0,0.6)';
+        leftArrow.onclick = (e) => { e.stopPropagation(); navigateLightbox(-1); };
         
         const rightArrow = document.createElement('button');
         rightArrow.id = 'lightboxRight';
         rightArrow.innerHTML = '→';
-        rightArrow.style.cssText = 'position:absolute;right:20px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.2rem;z-index:10;transition:all 0.2s;';
+        rightArrow.style.cssText = 'position:absolute;right:20px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.6);color:#fff;border:none;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.3rem;z-index:10;transition:all 0.2s;';
+        rightArrow.onmouseenter = () => rightArrow.style.background = 'rgba(0,208,158,0.8)';
+        rightArrow.onmouseleave = () => rightArrow.style.background = 'rgba(0,0,0,0.6)';
+        rightArrow.onclick = (e) => { e.stopPropagation(); navigateLightbox(1); };
         
-        // Индикаторы точки
         const indicator = document.createElement('div');
         indicator.id = 'lightboxImageIndicator';
-        indicator.style.cssText = 'position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10;';
-        indicator.innerHTML = images.map((_, i) => `
-            <button class="lightbox-dot ${i === startIndex ? 'active' : ''}" 
-                    data-index="${i}"
-                    style="width:10px;height:10px;border-radius:50%;border:none;cursor:pointer;background:${i === startIndex ? 'var(--accent)' : 'rgba(255,255,255,0.3)'};transition:all 0.2s;">
-            </button>
-        `).join('');
+        indicator.style.cssText = 'position:absolute;bottom:80px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10;';
+        indicator.innerHTML = allImages.map((url, i) => {
+            const isVideo = getMediaType(url) === 'video';
+            const icon = isVideo ? '▶' : '';
+            return `<button class="lightbox-dot ${i === startIndex ? 'active' : ''}" 
+                data-index="${i}"
+                title="${isVideo ? 'Video' : 'Image'} ${i+1}"
+                style="width:${isVideo?'auto':'10px'};height:10px;${isVideo?'padding:0 6px;':''}border-radius:${isVideo?'4px':'50%'};border:none;cursor:pointer;
+                background:${i === startIndex ? 'var(--accent)' : 'rgba(255,255,255,0.3)'};
+                color:#fff;font-size:0.65rem;transition:all 0.2s;">${icon}</button>`;
+        }).join('');
         
         content.appendChild(leftArrow);
         content.appendChild(rightArrow);
         content.appendChild(indicator);
-        
-        leftArrow.onclick = (e) => { e.stopPropagation(); navigateLightbox(-1); };
-        rightArrow.onclick = (e) => { e.stopPropagation(); navigateLightbox(1); };
         
         indicator.querySelectorAll('.lightbox-dot').forEach(dot => {
             dot.addEventListener('click', (e) => {
@@ -2042,50 +2285,63 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
     
-    // Колесико мыши для переключения картинок
+    // Колесико мыши
     overlay.onwheel = (e) => {
-        if (images.length > 1) {
+        if (allImages.length > 1) {
             e.preventDefault();
-            if (e.deltaY > 0) navigateLightbox(1);
-            else navigateLightbox(-1);
+            navigateLightbox(e.deltaY > 0 ? 1 : -1);
         }
     };
 }
 
 function navigateLightbox(direction) {
     const overlay = document.getElementById('arcLightboxOverlay');
-    const images = JSON.parse(overlay.dataset.images || '[]');
+    if (!currentLightboxData?.images) return;
+    const images = currentLightboxData.images;
     if (images.length <= 1) return;
     
     let current = parseInt(overlay.dataset.currentIndex || '0');
     current = (current + direction + images.length) % images.length;
     overlay.dataset.currentIndex = current;
-    
     updateLightboxImage();
 }
 
 function updateLightboxImage() {
     const overlay = document.getElementById('arcLightboxOverlay');
-    const images = JSON.parse(overlay.dataset.images || '[]');
+    if (!currentLightboxData?.images) return;
+    const images = currentLightboxData.images;
     const current = parseInt(overlay.dataset.currentIndex || '0');
     
-    const img = document.getElementById('lightboxImage');
-    img.classList.add('changing');
+    const mediaWrapper = document.getElementById('arcLightboxMedia');
+    if (!mediaWrapper) return;
+    
+    // Fade out
+    mediaWrapper.style.opacity = '0';
+    
     setTimeout(() => {
-        img.src = images[current];
-        img.classList.remove('changing');
+        const newMedia = createMediaElement(images[current], currentLightboxData.title, 'lightbox-image', true);
+        mediaWrapper.innerHTML = '';
+        mediaWrapper.appendChild(newMedia);
+        // Fade in
+        setTimeout(() => mediaWrapper.style.opacity = '1', 50);
     }, 150);
     
     // Обновляем точки
     document.querySelectorAll('.lightbox-dot').forEach((dot, i) => {
-        dot.style.background = i === current ? 'var(--accent)' : 'rgba(255,255,255,0.3)';
+        const isActive = i === current;
+        dot.style.background = isActive ? 'var(--accent)' : 'rgba(255,255,255,0.3)';
+        dot.classList.toggle('active', isActive);
     });
 }
 
 function updateLightboxCaption(lang) {
     const captionEl = document.getElementById('lightboxCaption');
+    if (!captionEl) return;
     if (currentLightboxData?.descriptions) {
-        const txt = currentLightboxData.descriptions[lang] || currentLightboxData.descriptions.en || currentLightboxData.tooltip || '';
+        const txt = currentLightboxData.descriptions[lang] || 
+                    currentLightboxData.descriptions.en || 
+                    currentLightboxData.descriptions.ua ||
+                    currentLightboxData.tooltip || '';
         captionEl.textContent = txt;
     } else {
         captionEl.textContent = currentLightboxData?.tooltip || '';
@@ -2102,11 +2358,18 @@ function closeLightbox() {
     const overlay = document.getElementById('arcLightboxOverlay');
     overlay.classList.remove('open');
     document.body.style.overflow = '';
+    overlay.onwheel = null;
+    
+    // Останавливаем видео если есть
+    const mediaWrapper = document.getElementById('arcLightboxMedia');
+    if (mediaWrapper) {
+        const videos = mediaWrapper.querySelectorAll('video');
+        videos.forEach(v => { v.pause(); v.src = ''; });
+    }
     
     document.getElementById('lightboxLeft')?.remove();
     document.getElementById('lightboxRight')?.remove();
     document.getElementById('lightboxImageIndicator')?.remove();
-    overlay.onwheel = null;
     currentLightboxData = null;
 }
 
@@ -2212,20 +2475,135 @@ function exportArcJSON(){
     showToast(t('data_exported'),'success');
 }
 
-function importArcJSON(file){
-    const reader=new FileReader();
-    reader.onload=async(e)=>{
-        try{
-            const d=JSON.parse(e.target.result);
-            if(d.arcData){ arcData=d.arcData; localStorage.setItem(STORAGE_KEY,JSON.stringify(arcData)); }
-            if(d.favoritesState){ favoritesState=d.favoritesState; localStorage.setItem(FAV_KEY,JSON.stringify(favoritesState)); }
-            if(d.favoritesOrder){ favoritesOrder=d.favoritesOrder; localStorage.setItem(FAV_ORDER_KEY,JSON.stringify(favoritesOrder)); }
-            if(d.userItems){ userItemsData=d.userItems; localStorage.setItem(USER_ITEMS_KEY,JSON.stringify(userItemsData)); }
-            if(d.theme){ localStorage.setItem(THEME_KEY,d.theme); if(d.theme==='light') document.body.classList.add('light-theme'); else document.body.classList.remove('light-theme'); updateThemeBtn(); }
-            if(d.language){ currentLanguage=d.language; localStorage.setItem(LANG_KEY,currentLanguage); updateAllTranslations(); }
-            showToast(t('data_imported'),'success');
-            setTimeout(()=>location.reload(),1500);
-        }catch(err){ showToast(t('error_import')+': '+err.message,'error'); }
+function importArcJSON(file) {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            const hasUserItems = data.items || data.userItems || data.collections;
+            const hasTrackingData = data.arcData || data.favoritesState;
+            
+            if (!hasUserItems && !hasTrackingData) {
+                throw new Error('Invalid format - no recognized data found');
+            }
+
+            // ШАГ 1: Отключаем все realtime listeners
+            if (typeof sharedDataUnsubscribe !== 'undefined' && sharedDataUnsubscribe) {
+                sharedDataUnsubscribe();
+                sharedDataUnsubscribe = null;
+                console.log('⏸️ Shared data listener stopped');
+            }
+            if (newIndicatorsUnsubscribe) {
+                newIndicatorsUnsubscribe();
+                newIndicatorsUnsubscribe = null;
+                console.log('⏸️ New indicators listener stopped');
+            }
+
+            // ШАГ 2: Восстанавливаем userItemsData
+            if (data.userItems) {
+                userItemsData = {
+                    items: data.userItems.items || {},
+                    collections: data.userItems.collections || [],
+                    dappCategories: data.userItems.dappCategories || []
+                };
+            } else if (data.items || data.collections) {
+                userItemsData = {
+                    items: data.items || {},
+                    collections: data.collections || [],
+                    dappCategories: data.dappCategories || []
+                };
+            }
+
+            if (data.arcData) arcData = data.arcData;
+            if (data.favoritesState) favoritesState = data.favoritesState;
+            if (data.favoritesOrder) favoritesOrder = data.favoritesOrder;
+
+            // ШАГ 3: Записываем в localStorage с БУДУЩИМ timestamp
+            const importTimestamp = Date.now() + 60000; // +1 минута в будущем
+            
+            localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
+            localStorage.setItem('arc_uit', String(importTimestamp));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(arcData));
+            localStorage.setItem(FAV_KEY, JSON.stringify(favoritesState));
+            localStorage.setItem(FAV_ORDER_KEY, JSON.stringify(favoritesOrder));
+            
+            // Флаг блокировки импорта
+            localStorage.setItem('arc_import_lock', String(importTimestamp));
+            
+            if (data.theme) {
+                localStorage.setItem(THEME_KEY, data.theme);
+                if (data.theme === 'light') document.body.classList.add('light-theme');
+                else document.body.classList.remove('light-theme');
+                updateThemeBtn();
+            }
+            if (data.language) {
+                currentLanguage = data.language;
+                localStorage.setItem(LANG_KEY, currentLanguage);
+                updateAllTranslations();
+            }
+
+            console.log('✅ localStorage updated, timestamp:', importTimestamp);
+            console.log('📦 Collections:', userItemsData.collections.length);
+
+            // ШАГ 4: Сохраняем в Firebase
+            if (currentUser) {
+                const ts = importTimestamp;
+                const docRef = doc(db, "users", currentUser.uid);
+                
+                const existingSnap = await getDoc(docRef);
+                const existingData = existingSnap.exists() ? existingSnap.data() : {};
+                
+                const fullDoc = {
+                    ...existingData,
+                    arcUserItems: userItemsData,
+                    arcUserItemsTimestamp: ts,
+                    arcGuideStats: arcData,
+                    arcFavoritesState: favoritesState,
+                    arcFavoritesOrder: favoritesOrder,
+                    arcFavoritesTimestamp: ts
+                };
+                
+                // Полная замена документа без merge
+                await setDoc(docRef, fullDoc);
+                console.log('✅ Private Firebase updated');
+                
+                // Верификация
+                const verify = await getDoc(docRef);
+                const savedCount = verify.data()?.arcUserItems?.collections?.length || 0;
+                console.log('✅ Verified collections in Firebase:', savedCount);
+                
+                // Публичное сохранение (только для админа)
+                if (isAdmin) {
+                    try {
+                        await setDoc(
+                            doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC),
+                            {
+                                userItemsData: userItemsData,
+                                editsOverride: editsOverride,
+                                lastUpdated: ts,
+                                updatedBy: currentUser.uid
+                            }
+                            // БЕЗ merge:true — полная замена
+                        );
+                        console.log('✅ Public Firebase updated');
+                    } catch (publicErr) {
+                        console.warn('⚠️ Public save failed:', publicErr.message);
+                    }
+                }
+            }
+
+            const collCount = userItemsData.collections.length;
+            showToast(`✅ Imported ${collCount} collections`, 'success');
+            
+            // ШАГ 5: Ждём и перезагружаемся
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            location.reload();
+
+        } catch (err) {
+            console.error('Import error:', err);
+            showToast(t('error_import') + ': ' + err.message, 'error');
+        }
     };
     reader.readAsText(file);
 }
@@ -2401,6 +2779,135 @@ document.addEventListener('DOMContentLoaded', ()=>{
     initializeTooltips();
     initLightbox();
 });
+    // ===== NFT COLLECTIONS ORDER (Arc) =====
+const ARC_NFT_ORDER_KEY = 'arc_nft_collections_order_v1';
+let arcNftCollectionsOrder = [];
+let arcNftOrderUnsubscribe = null;
+
+async function loadArcNFTCollectionsOrder() {
+    const local = JSON.parse(localStorage.getItem(ARC_NFT_ORDER_KEY) || '[]');
+    arcNftCollectionsOrder = local;
+    
+    if (currentUser) {
+        try {
+            const snap = await getDoc(doc(db, "users", currentUser.uid));
+            if (snap.exists() && snap.data().arcNFTCollectionsOrder) {
+                const cloudTs = snap.data().arcNFTCollectionsOrderTimestamp || 0;
+                const localTs = parseInt(localStorage.getItem(ARC_NFT_ORDER_KEY + '_ts') || '0', 10);
+                if (cloudTs > localTs) {
+                    arcNftCollectionsOrder = snap.data().arcNFTCollectionsOrder;
+                    localStorage.setItem(ARC_NFT_ORDER_KEY, JSON.stringify(arcNftCollectionsOrder));
+                    localStorage.setItem(ARC_NFT_ORDER_KEY + '_ts', String(cloudTs));
+                }
+            }
+        } catch(e) { console.error('Load arc nft order error:', e); }
+    }
+}
+
+async function saveArcNFTCollectionsOrder() {
+    const grid = document.getElementById('nfts-grid');
+    if (!grid) return;
+    
+    const order = [];
+    grid.querySelectorAll('.user-collection-card').forEach(card => {
+        if (card.dataset.zone) order.push(card.dataset.zone);
+    });
+    
+    arcNftCollectionsOrder = order;
+    const timestamp = Date.now();
+    localStorage.setItem(ARC_NFT_ORDER_KEY, JSON.stringify(order));
+    localStorage.setItem(ARC_NFT_ORDER_KEY + '_ts', String(timestamp));
+    
+    if (currentUser) {
+        try {
+            await setDoc(doc(db, PUBLIC_DATA_COLLECTION, 'arc_nft_order_v1'), {
+                order,
+                timestamp,
+                updatedBy: currentUser.uid
+            }, { merge: true });
+            console.log('✅ Arc NFT order saved:', order);
+        } catch(e) {
+            console.error('⚠️ Arc NFT order save error:', e);
+        }
+    }
+}
+
+function initArcNFTCollectionsSort() {
+    if (!isAdmin) return;
+    
+    const grid = document.getElementById('nfts-grid');
+    if (!grid || typeof Sortable === 'undefined') return;
+    
+    // Уничтожаем старый если есть
+    if (grid._sortable) {
+        grid._sortable.destroy();
+        grid._sortable = null;
+    }
+    
+    grid._sortable = new Sortable(grid, {
+        animation: 200,
+        ghostClass: 'sortable-ghost',
+        dragClass: 'sortable-drag',
+        handle: '.resource-header',
+        filter: '.add-item-btn, .section-add-btn, .user-collection-delete-top',
+        onEnd: async () => {
+            await saveArcNFTCollectionsOrder();
+            showToast('✅ NFT collections reordered!', 'success');
+        }
+    });
+    
+    console.log('✅ Arc NFT sort initialized');
+}
+
+function initArcNFTOrderRealtime() {
+    if (arcNftOrderUnsubscribe) return;
+    
+    try {
+        const docRef = doc(db, PUBLIC_DATA_COLLECTION, 'arc_nft_order_v1');
+        arcNftOrderUnsubscribe = onSnapshot(docRef, (snap) => {
+            if (!snap.exists()) return;
+            
+            const cloudOrder = snap.data().order || [];
+            const cloudTs = snap.data().timestamp || 0;
+            const localTs = parseInt(localStorage.getItem(ARC_NFT_ORDER_KEY + '_ts') || '0', 10);
+            
+            if (cloudTs > localTs && JSON.stringify(cloudOrder) !== JSON.stringify(arcNftCollectionsOrder)) {
+                console.log('🔄 Arc NFT order updated in real-time!');
+                arcNftCollectionsOrder = cloudOrder;
+                localStorage.setItem(ARC_NFT_ORDER_KEY, JSON.stringify(arcNftCollectionsOrder));
+                localStorage.setItem(ARC_NFT_ORDER_KEY + '_ts', String(cloudTs));
+                
+                applyArcNFTSortOrder();
+                showToast('📡 NFT collections reordered!', 'info');
+            }
+        }, (error) => {
+            console.error('❌ Arc NFT order listener error:', error);
+        });
+    } catch(e) {
+        console.error('❌ Failed to init arc NFT order listener:', e);
+    }
+}
+
+function applyArcNFTSortOrder() {
+    const grid = document.getElementById('nfts-grid');
+    if (!grid || arcNftCollectionsOrder.length === 0) return;
+    
+    const cards = Array.from(grid.querySelectorAll('.user-collection-card'));
+    
+    cards.sort((a, b) => {
+        const iA = arcNftCollectionsOrder.indexOf(a.dataset.zone);
+        const iB = arcNftCollectionsOrder.indexOf(b.dataset.zone);
+        if (iA === -1) return 1;
+        if (iB === -1) return -1;
+        return iA - iB;
+    });
+    
+    const fragment = document.createDocumentFragment();
+    cards.forEach(card => fragment.appendChild(card));
+    grid.appendChild(fragment);
+    
+    console.log('✅ Arc NFT grid reordered');
+}
 </script>
 
 <!-- LOGIN MODAL -->
