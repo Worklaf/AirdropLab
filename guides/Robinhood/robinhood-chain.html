@@ -483,6 +483,28 @@ body.edit-mode [data-section-zone="nfts"] .resource-header:active {
 #languageToggleText {
     font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif !important;
 }
+       .lightbox-image { 
+    max-width:100%; 
+    max-height:60vh; 
+    border-radius:12px; 
+    object-fit:contain; 
+    margin-bottom:12px; 
+}
+
+/* ✅ VIDEO SUPPORT */
+video.lightbox-image,
+video.tooltip-image {
+    background: rgba(0,0,0,0.3);
+}
+
+#lightboxMedia {
+    transition: opacity 0.15s ease;
+}
+
+.tooltip-image video {
+    max-width: 100%;
+    max-height: 200px;
+}
     </style>
 </head>
 <body>
@@ -492,7 +514,7 @@ body.edit-mode [data-section-zone="nfts"] .resource-header:active {
 <div class="lightbox-overlay" id="robinLightboxOverlay">
     <div class="lightbox-content">
         <button class="lightbox-close" id="lightboxClose">×</button>
-        <img class="lightbox-image" id="lightboxImage" src="" alt="">
+       <div id="lightboxMedia"></div>
         <div class="lightbox-title" id="lightboxTitle"></div>
         
         <!-- Language toggle for lightbox -->
@@ -754,7 +776,43 @@ function getImagesFromInputs() {
         .map(input => input.value.trim())
         .filter(url => url.length > 0);
 }
+// ===== MEDIA TYPE DETECTION =====
+function getMediaType(url) {
+    if (!url) return 'unknown';
+    const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
+    const lowerUrl = url.toLowerCase();
+    if (videoExts.some(ext => lowerUrl.includes(ext))) return 'video';
+    return 'image';
+}
 
+function createMediaElement(url, alt = '', className = '', autoplay = false) {
+    const mediaType = getMediaType(url);
+    
+    if (mediaType === 'video') {
+        const video = document.createElement('video');
+        video.className = className;
+        video.controls = true;
+        video.loop = true;
+        video.muted = autoplay; // Muted для autoplay (браузеры требуют)
+        video.playsinline = true;
+        if (autoplay) video.autoplay = true;
+        
+        const source = document.createElement('source');
+        source.src = url;
+        source.type = 'video/mp4';
+        video.appendChild(source);
+        
+        return video;
+    } else {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = alt;
+        img.className = className;
+        img.loading = 'lazy';
+        img.onerror = () => img.style.display = 'none';
+        return img;
+    }
+}
 function clearImageInputs() {
     const container = document.getElementById('imageInputsContainer');
     if (!container) return;
@@ -1058,13 +1116,12 @@ let currentImageIndex = 0;
 
 function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex = 0, descriptions = {}) {
     const overlay = document.getElementById('robinLightboxOverlay');
-    const img = document.getElementById('lightboxImage');
+    const imgContainer = document.querySelector('.lightbox-content'); // Контейнер
     const titleEl = document.getElementById('lightboxTitle');
     const captionEl = document.getElementById('lightboxCaption');
     const linkEl = document.getElementById('lightboxLink');
     const langToggle = document.getElementById('lightboxLangToggle');
     
-    // Используем массив изображений если есть, иначе одиночное
     const allImages = (images && images.length > 0) ? images : (imageUrl ? [imageUrl] : []);
     
     currentLightboxData = { 
@@ -1076,17 +1133,27 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
     currentImageIndex = startIndex;
     currentLightboxLang = currentLanguage;
     
-    // Показываем первое изображение
+    // ✅ СОЗДАЕМ ИЛИ ОБНОВЛЯЕМ МЕДИА ЭЛЕМЕНТ
+    let mediaEl = document.getElementById('lightboxMedia');
+    if (!mediaEl) {
+        mediaEl = document.createElement('div');
+        mediaEl.id = 'lightboxMedia';
+        const oldImg = document.getElementById('lightboxImage');
+        if (oldImg && oldImg.parentNode) {
+            oldImg.parentNode.replaceChild(mediaEl, oldImg);
+        }
+    }
+    
     if (allImages.length > 0) {
-        img.src = allImages[currentImageIndex];
-        img.alt = title;
+        const currentMedia = createMediaElement(allImages[currentImageIndex], title, 'lightbox-image', false);
+        mediaEl.innerHTML = '';
+        mediaEl.appendChild(currentMedia);
     }
     
     titleEl.textContent = title;
     linkEl.href = linkUrl;
     linkEl.innerHTML = `<i class="fas fa-external-link-alt"></i> ${getTranslation('go_to_mint')}`;
     
-    // Показываем языковой переключатель если есть описания
     const hasDescriptions = descriptions && (descriptions.en || descriptions.ua);
     if (hasDescriptions) {
         langToggle.style.display = 'flex';
@@ -1097,12 +1164,10 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
         captionEl.textContent = tooltip || '';
     }
     
-    // Удаляем старые кнопки навигации если есть
     document.getElementById('lightboxLeft')?.remove();
     document.getElementById('lightboxRight')?.remove();
     document.getElementById('lightboxImageIndicator')?.remove();
     
-    // Добавляем навигацию если несколько изображений
     if (allImages.length > 1) {
         const content = document.querySelector('.lightbox-content');
         
@@ -1145,7 +1210,7 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
     overlay.onwheel = (e) => {
-        if (images.length > 1) {
+        if (allImages.length > 1) {
             e.preventDefault();
             if (e.deltaY > 0) navigateLightbox(1);
             else navigateLightbox(-1);
@@ -1165,12 +1230,25 @@ function navigateLightbox(direction) {
 function updateLightboxImage() {
     if (!currentLightboxData || !currentLightboxData.images) return;
     const images = currentLightboxData.images;
-    const img = document.getElementById('lightboxImage');
+    const mediaContainer = document.getElementById('lightboxMedia');
+    if (!mediaContainer) return;
     
-    img.classList.add('changing');
+    // ✅ Добавляем fade-out эффект
+    mediaContainer.style.opacity = '0';
+    
     setTimeout(() => {
-        img.src = images[currentImageIndex];
-        img.classList.remove('changing');
+        const newMedia = createMediaElement(
+            images[currentImageIndex], 
+            currentLightboxData.title, 
+            'lightbox-image', 
+            false
+        );
+        
+        mediaContainer.innerHTML = '';
+        mediaContainer.appendChild(newMedia);
+        
+        // Fade-in
+        setTimeout(() => mediaContainer.style.opacity = '1', 50);
     }, 150);
     
     document.querySelectorAll('.lightbox-dot').forEach((dot, i) => {
@@ -1296,7 +1374,6 @@ function positionTooltip(target) {
     tooltipEl.style.left = left + 'px'; tooltipEl.style.top = top + 'px';
 }
 
-// ===== TOOLTIP LANGUAGE AWARE =====
 function showTooltip(e) {
     const target = e.target.closest('[data-tooltip]');
     if (!target) return;
@@ -1331,18 +1408,39 @@ function showTooltip(e) {
         const currentIdx = parseInt(target.getAttribute('data-image-index') || '0');
         const plural = images.length > 1 ? ` (${currentIdx + 1}/${images.length})` : '';
         
-        tooltipEl.innerHTML = `
-            <div class="tooltip-image-container">
-                <img src="${imageUrl}" alt="${text || 'Image'}"
-                     class="tooltip-image"
-                     loading="lazy"
-                     onerror="this.style.display='none'"
-                     style="position:relative;z-index:1;">
-                ${images.length > 1 ? `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#fff;padding:4px 8px;border-radius:4px;font-size:0.75rem;z-index:2;">${currentIdx + 1}/${images.length}</div>` : ''}
-                ${text ? `<div class="tooltip-text">${text}${plural}</div>` : ''}
-                ${images.length > 1 ? '<div style="font-size:0.7rem;color:#94a3b8;text-align:center;margin-top:6px;margin-bottom:-4px;">📸 Right-click for gallery</div>' : ''}
-            </div>
-        `;
+        // ✅ СОЗДАЕМ МЕДИА ЭЛЕМЕНТ (img или video)
+        const mediaEl = createMediaElement(imageUrl, text || 'Media', 'tooltip-image', true);
+        
+        const container = document.createElement('div');
+        container.className = 'tooltip-image-container';
+        container.style.cssText = 'display:flex;flex-direction:column;gap:8px;background:rgba(10,14,26,0.98);border:1px solid rgba(0,208,158,0.5);border-radius:12px;padding:10px;box-shadow:0 12px 48px rgba(0,208,158,0.25);';
+        
+        mediaEl.style.cssText = 'position:relative;z-index:1;';
+        container.appendChild(mediaEl);
+        
+        if (images.length > 1) {
+            const indicator = document.createElement('div');
+            indicator.style.cssText = 'position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#fff;padding:4px 8px;border-radius:4px;font-size:0.75rem;z-index:2;';
+            indicator.textContent = `${currentIdx + 1}/${images.length}`;
+            container.appendChild(indicator);
+        }
+        
+        if (text) {
+            const textDiv = document.createElement('div');
+            textDiv.className = 'tooltip-text';
+            textDiv.textContent = text + plural;
+            container.appendChild(textDiv);
+        }
+        
+        if (images.length > 1) {
+            const hint = document.createElement('div');
+            hint.style.cssText = 'font-size:0.7rem;color:#94a3b8;text-align:center;margin-top:6px;margin-bottom:-4px;';
+            hint.textContent = '📸 Right-click for gallery';
+            container.appendChild(hint);
+        }
+        
+        tooltipEl.innerHTML = '';
+        tooltipEl.appendChild(container);
     } else {
         tooltipEl.classList.remove('has-image');
         tooltipEl.textContent = text;
