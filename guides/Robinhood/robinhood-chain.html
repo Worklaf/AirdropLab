@@ -1907,7 +1907,7 @@ function initRobinNewIndicatorsRealtime() {
     
     const newIndicatorsRef = doc(db, CONFIG_COLLECTION, NEW_INDICATORS_DOC);
     
-    newIndicatorsUnsubscribe = onSnapshot(newIndicatorsRef, (docSnap) => {
+    sharedDataUnsubscribe = onSnapshot(newIndicatorsRef, (docSnap) => {
         if (!docSnap.exists()) {
             console.log('📭 Global NEW doc is empty');
             return;
