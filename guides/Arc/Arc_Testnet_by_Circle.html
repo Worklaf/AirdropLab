@@ -2528,14 +2528,12 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
     currentLightboxLang = currentLanguage;
     overlay.dataset.currentIndex = startIndex;
     
-    // ✅ Находим или создаём медиа-контейнер
     let mediaWrapper = document.getElementById('arcLightboxMedia');
     if (!mediaWrapper) {
         mediaWrapper = document.createElement('div');
         mediaWrapper.id = 'arcLightboxMedia';
         mediaWrapper.style.cssText = 'width:100%;min-height:200px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;transition:opacity 0.15s ease;';
         
-        // Скрываем старый img если есть
         const oldImg = document.getElementById('lightboxImage');
         if (oldImg) {
             oldImg.style.display = 'none';
@@ -2547,7 +2545,12 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
         }
     }
     
-    // ✅ Отображаем медиа
+    // ✅ Если это Twitter видео, сразу открываем в новой вкладке (обход 403)
+    if (allImages.length > 0 && getMediaType(allImages[startIndex]) === 'hls' && allImages[startIndex].includes('twimg.com')) {
+        window.open(allImages[startIndex], '_blank');
+        return;
+    }
+
     if (allImages.length > 0) {
         const mediaEl = createMediaElement(allImages[startIndex], title, 'lightbox-image', true);
         mediaWrapper.innerHTML = '';
@@ -2568,13 +2571,11 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
         captionEl.textContent = tooltip || '';
     }
     
-        // Удаляем старые элементы
     document.getElementById('lightboxLeft')?.remove();
     document.getElementById('lightboxRight')?.remove();
     document.getElementById('lightboxImageIndicator')?.remove();
-    document.querySelector('.lightbox-nav-container')?.remove(); // Удаляем старый контейнер кнопок
+    document.querySelector('.lightbox-nav-container')?.remove();
     
-    // ✅ Навигация ПОД медиа
     if (allImages.length > 1) {
         const content = document.querySelector('.lightbox-content');
         const navContainer = document.createElement('div');
@@ -2594,16 +2595,12 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
         
         navContainer.appendChild(leftArrow);
         navContainer.appendChild(rightArrow);
+        content.insertBefore(navContainer, captionEl);
         
-        // Вставляем контейнер кнопок ПЕРЕД описанием (caption)
-        content.insertBefore(navContainer, document.getElementById('lightboxCaption'));
-        
-        // Индикатор точек
         const indicator = document.createElement('div');
         indicator.id = 'lightboxImageIndicator';
         indicator.style.cssText = 'display:flex;justify-content:center;gap:8px;margin-bottom:10px;';
         indicator.innerHTML = allImages.map((url, i) => {
-            const isVideo = getMediaType(url) === 'video' || getMediaType(url) === 'hls';
             return `<button class="lightbox-dot ${i === startIndex ? 'active' : ''}" 
                 data-index="${i}"
                 style="width:10px;height:10px;border-radius:50%;border:none;cursor:pointer;
@@ -2611,11 +2608,6 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
         }).join('');
         
         content.insertBefore(indicator, navContainer);
-    }
-        
-        content.appendChild(leftArrow);
-        content.appendChild(rightArrow);
-        content.appendChild(indicator);
         
         indicator.querySelectorAll('.lightbox-dot').forEach(dot => {
             dot.addEventListener('click', (e) => {
@@ -2629,14 +2621,7 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
     
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
-    
-    // Колесико мыши
-    overlay.onwheel = (e) => {
-        if (allImages.length > 1) {
-            e.preventDefault();
-            navigateLightbox(e.deltaY > 0 ? 1 : -1);
-        }
-    };
+}
 
 function navigateLightbox(direction) {
     const overlay = document.getElementById('arcLightboxOverlay');
