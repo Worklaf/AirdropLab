@@ -1712,7 +1712,6 @@ onAuthStateChanged(auth, async (user) => {
         nameEl.textContent = user.displayName || user.email?.split('@')[0] || 'User';
         checkAdmin(user);
         
-        // ✅ Realtime запускаем только после небольшой задержки
         setTimeout(() => { 
             initRobinNewIndicatorsRealtime(); 
         }, 2000);
@@ -1725,7 +1724,6 @@ onAuthStateChanged(auth, async (user) => {
         loggedIn.style.display = 'none';
         checkAdmin(null);
         
-        // ✅ Для гостей тоже запускаем realtime
         setTimeout(() => { 
             initRobinNewIndicatorsRealtime(); 
         }, 2000);
@@ -1739,16 +1737,16 @@ onAuthStateChanged(auth, async (user) => {
         await loadNFTCollectionsOrder();
         await loadRobinSharedData();
         
-        // ✅ ВАЖНО: Загружаем NEW индикаторы ДО отрисовки
         await loadRobinNewIndicators();
         
         await loadRobinData();
         renderRobinUserItems();
         
-        // ✅ ВАЖНО: Обновляем NEW метки ПОСЛЕ рендера
         updateRobinNewIndicators();
         
-        // ✅ Realtime для всех
+        // ✅ ДОБАВИТЬ - инициализируем realtime синхронизацию порядка
+        initNFTCollectionsOrderRealtime();
+        
         initRobinSharedDataRealtime();
         
         isDataLoaded = true;
@@ -3072,7 +3070,112 @@ window.reloadFirebaseData = async function() {
     console.log('Коллекции:', userItemsData.collections.length);
     console.log('Итемы:', Object.keys(userItemsData.items).length);
 }
-   
+   // ===== NFT COLLECTIONS ORDER REALTIME SYNC =====
+let nftOrderUnsubscribe = null;
+
+// 🔄 Realtime listener для порядка коллекций (для ВСЕХ пользователей)
+function initNFTCollectionsOrderRealtime() {
+    if (nftOrderUnsubscribe) return; // Не дублируем подписку
+    
+    try {
+        const docRef = doc(db, PUBLIC_DATA_COLLECTION, 'nft_collections_order_v1');
+        
+        nftOrderUnsubscribe = onSnapshot(docRef, (snap) => {
+            if (!snap.exists()) {
+                console.log('📭 NFT order doc is empty');
+                return;
+            }
+            
+            const cloudOrder = snap.data().order || [];
+            const cloudTs = snap.data().timestamp || 0;
+            const localTs = parseInt(localStorage.getItem(NFT_COLLECTIONS_ORDER_KEY + '_ts') || '0', 10);
+            
+            // ✅ Применяем изменения с облака если они свежее
+            if (cloudTs > localTs && JSON.stringify(cloudOrder) !== JSON.stringify(nftCollectionsOrder)) {
+                console.log('🔄 NFT order updated in real-time!');
+                nftCollectionsOrder = cloudOrder;
+                localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(nftCollectionsOrder));
+                localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY + '_ts', String(cloudTs));
+                
+                // ✅ ВАЖНО: Пересортировываем элементы на странице
+                applySortOrderToGrid();
+                showToast('📡 NFT collections reordered!', 'info');
+            }
+        }, (error) => {
+            console.error('❌ NFT order listener error:', error);
+        });
+    } catch (e) {
+        console.error('❌ Failed to init NFT order listener:', e);
+    }
+}
+
+// 📍 Применяем порядок коллекций к DOM
+function applySortOrderToGrid() {
+    const grid = document.querySelector('[data-section-zone="nfts"] .resource-grid');
+    if (!grid) return;
+    
+    const cards = Array.from(grid.querySelectorAll('.user-collection-card'));
+    
+    // Сортируем по nftCollectionsOrder
+    cards.sort((a, b) => {
+        const indexA = nftCollectionsOrder.indexOf(a.dataset.zone);
+        const indexB = nftCollectionsOrder.indexOf(b.dataset.zone);
+        
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+    });
+    
+    // Перемещаем элементы в новый порядок
+    const fragment = document.createDocumentFragment();
+    cards.forEach(card => {
+        fragment.appendChild(card);
+    });
+    
+    // Ищем точку вставки (перед первой кнопкой добавления если есть)
+    const addBtn = grid.querySelector('.section-add-btn');
+    if (addBtn) {
+        grid.insertBefore(fragment, addBtn);
+    } else {
+        grid.appendChild(fragment);
+    }
+    
+    console.log('✅ Grid reordered:', nftCollectionsOrder);
+}
+
+// 💾 Сохраняем порядок коллекций (обновлено)
+async function saveNFTCollectionsOrder() {
+    const grid = document.querySelector('[data-section-zone="nfts"] .resource-grid');
+    if (!grid) return;
+    
+    const order = [];
+    grid.querySelectorAll('.user-collection-card').forEach(card => {
+        order.push(card.dataset.zone);
+    });
+    
+    nftCollectionsOrder = order;
+    
+    // ✅ Всегда сохраняем (для ВСЕХ пользователей, не только админов)
+    const timestamp = Date.now();
+    localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(order));
+    localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY + '_ts', String(timestamp));
+    
+    // ✅ Сохраняем в Firebase PUBLIC для синхронизации (для ВСЕХ)
+    if (currentUser) {
+        try {
+            await setDoc(doc(db, PUBLIC_DATA_COLLECTION, 'nft_collections_order_v1'), {
+                order: order,
+                timestamp: timestamp,
+                updatedBy: currentUser.uid,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+            
+            console.log('✅ NFT order saved to cloud:', order);
+        } catch(e) { 
+            console.error('⚠️ NFT order save error:', e); 
+        }
+    }
+}
 </script>
 
 <!-- LOGIN MODAL -->
