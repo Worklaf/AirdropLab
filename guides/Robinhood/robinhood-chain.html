@@ -2651,27 +2651,7 @@ function renderUserCollection(coll) {
     requestAnimationFrame(() => card.classList.add('anim-visible'));
     saveNFTCollectionsOrder();
 }
-async function saveNFTCollectionsOrder() {
-    const grid = document.querySelector('[data-section-zone="nfts"] .resource-grid');
-    if (!grid) return;
-    
-    const order = [];
-    grid.querySelectorAll('.user-collection-card').forEach(card => {
-        order.push(card.dataset.zone);
-    });
-    
-    nftCollectionsOrder = order;
-    localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(order));
-    
-    if (currentUser && isAdmin) {
-        try {
-            await saveToCloud({ 
-                robinNFTCollectionsOrder: order,
-                robinNFTCollectionsOrderTimestamp: Date.now()
-            });
-        } catch(e) { console.error('Order save error:', e); }
-    }
-}
+
 
 // ✅ ЗАГРУЗКА порядка при инициализации (ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ)
 async function loadNFTCollectionsOrder() {
