@@ -516,6 +516,34 @@ video.tooltip-image {
     max-width: 100%;
     max-height: 200px;
 }
+       /* ===== КНОПКА СМЕНЫ ПРЕВЬЮ КАРТИНОК ===== */
+.preview-swap-btn {
+    background: none;
+    border: none;
+    padding: 0 6px;
+    cursor: pointer;
+    color: #64748b;
+    font-size: 0.9rem;
+    transition: color 0.2s ease, transform 0.2s ease;
+    border-radius: 6px;
+}
+
+.preview-swap-btn:hover {
+    color: #00d09e;
+    transform: scale(1.1);
+}
+
+.preview-swap-btn.active {
+    color: #00d09e;
+    background: rgba(0, 208, 158, 0.1);
+}
+
+.preview-swap-btn .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 2px;
+}
     </style>
 </head>
 <body>
@@ -1432,28 +1460,31 @@ function showTooltip(e) {
         try { images = JSON.parse(imagesAttr); } catch(err) {}
     }
     
-    const imageUrl = images.length > 0 ? images[0] : target.getAttribute('data-image');
+    // ✅ ЛОГИКА ВЫБОРА КАРТИНКИ (С учетом previewIndex)
+    let index = 0;
+    const collectionId = target.closest('.user-collection-card')?.dataset.zone;
+    const coll = userItemsData.collections.find(c => c.id === collectionId);
+    
+    if (coll && typeof coll.previewIndex === 'number') {
+        index = coll.previewIndex;
+    }
+    // Защита: если индекс больше массива (например, выбрали 2-ю, а она одна), берем 0
+    if (index >= images.length) index = 0;
+
+    const imageUrl = images.length > 0 ? images[index] : target.getAttribute('data-image');
     const tooltip = target.getAttribute('data-tooltip') || '';
     const descEn = target.getAttribute('data-desc-en') || '';
     const descUa = target.getAttribute('data-desc-ua') || '';
 
     const lang = (currentLanguage === 'ru') ? 'ua' : currentLanguage;
-
-    let text;
-    if (lang === 'ua') {
-        text = descUa || tooltip || descEn;
-    } else {
-        text = descEn || tooltip || descUa;
-    }
+    let text = lang === 'ua' ? (descUa || tooltip || descEn) : (descEn || tooltip || descUa);
 
     if (!text && !imageUrl) return;
 
     if (imageUrl) {
         tooltipEl.classList.add('has-image');
-        const currentIdx = parseInt(target.getAttribute('data-image-index') || '0');
-        const plural = images.length > 1 ? ` (${currentIdx + 1}/${images.length})` : '';
+        const plural = images.length > 1 ? ` (${index + 1}/${images.length})` : '';
         
-        // ✅ СОЗДАЕМ МЕДИА ЭЛЕМЕНТ (img или video)
         const mediaEl = createMediaElement(imageUrl, text || 'Media', 'tooltip-image', true);
         
         const container = document.createElement('div');
@@ -1466,7 +1497,7 @@ function showTooltip(e) {
         if (images.length > 1) {
             const indicator = document.createElement('div');
             indicator.style.cssText = 'position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#fff;padding:4px 8px;border-radius:4px;font-size:0.75rem;z-index:2;';
-            indicator.textContent = `${currentIdx + 1}/${images.length}`;
+            indicator.textContent = `${index + 1}/${images.length}`;
             container.appendChild(indicator);
         }
         
@@ -1498,6 +1529,25 @@ function showTooltip(e) {
 function hideTooltip() { activeTooltipTarget = null; if (tooltipEl) tooltipEl.classList.remove('visible'); }
 
 function initializeTooltips() {
+    function getPreviewImage(imagesStr, collectionId) {
+        if (!imagesStr) return null;
+        let images = [];
+        try { images = JSON.parse(imagesStr); } catch(e) {}
+        if (!Array.isArray(images) || images.length === 0) return null;
+
+        let index = 0;
+        if (collectionId) {
+            const coll = userItemsData.collections.find(c => c.id === collectionId);
+            if (coll && typeof coll.previewIndex === 'number') {
+                index = coll.previewIndex;
+            }
+        }
+        
+        // Гарантируем, что индекс не выходит за рамки
+        if (index >= images.length) index = 0;
+        
+        return images[index];
+    }
     document.querySelectorAll('[data-tooltip]').forEach(el => {
         if (el.dataset.tooltipBound === 'true') return;
         el.addEventListener('mouseenter', showTooltip); el.addEventListener('mouseleave', hideTooltip);
@@ -2843,33 +2893,113 @@ function renderUserItemInZone(zone, item) {
 }
 
 function renderUserCollection(coll) {
-    const sectionContent = document.querySelector(`[data-section-zone="${coll.parentZone}"]`); if (!sectionContent) return;
-    const grid = sectionContent.querySelector('.resource-grid'); if (!grid) return;
-    const card = document.createElement('div'); card.className = 'resource-item user-collection-card'; card.dataset.zone = coll.id;
+    const sectionContent = document.querySelector(`[data-section-zone="${coll.parentZone}"]`); 
+    if (!sectionContent) return;
+    const grid = sectionContent.querySelector('.resource-grid'); 
+    if (!grid) return;
+
+    const card = document.createElement('div'); 
+    card.className = 'resource-item user-collection-card'; 
+    card.dataset.zone = coll.id;
+    
+    // ✅ 1. Кнопка удаления (крестик)
     const delTop = document.createElement('button'); 
-delTop.type = 'button'; 
-delTop.className = 'user-collection-delete-top';  delTop.title = getTranslation('delete_collection'); delTop.innerHTML = '×';
+    delTop.type = 'button'; 
+    delTop.className = 'user-collection-delete-top admin-only'; 
+    delTop.title = getTranslation('delete_collection'); 
+    delTop.innerHTML = '×';
     delTop.addEventListener('click', async () => {
         if (!confirm(getTranslation('confirm_delete'))) return;
-        userItemsData.collections = userItemsData.collections.filter(c => c.id !== coll.id); delete userItemsData.items[coll.id]; delete ZONE_CONFIG[coll.id];
-        await saveRobinUserItems(); card.remove(); showToast(getTranslation('collection_removed') + ': ' + coll.title, 'info');
-        
+        userItemsData.collections = userItemsData.collections.filter(c => c.id !== coll.id); 
+        delete userItemsData.items[coll.id]; 
+        delete ZONE_CONFIG[coll.id];
+        await saveRobinUserItems(); 
+        card.remove(); 
+        showToast(getTranslation('collection_removed') + ': ' + coll.title, 'info');
     });
     card.appendChild(delTop);
-    const header = document.createElement('div'); header.className = 'resource-header';
-    const titleSpan = document.createElement('span'); titleSpan.className = 'resource-title'; titleSpan.textContent = coll.title; header.appendChild(titleSpan);
+    
+    // ✅ 2. Хедер коллекции
+    const header = document.createElement('div'); 
+    header.className = 'resource-header';
+
+    const titleSpan = document.createElement('span'); 
+    titleSpan.className = 'resource-title'; 
+    titleSpan.textContent = coll.title; 
+    header.appendChild(titleSpan);
+
+    // ✅ 3. НОВАЯ КНОПКА: Swap Images
+    // Показываем только если включен режим редактирования и есть картинки у элементов
+    const swapBtn = document.createElement('button');
+    swapBtn.type = 'button';
+    swapBtn.className = 'preview-swap-btn admin-only edit-only';
+    swapBtn.title = 'Swap Preview Images: 0 -> 1 -> 0';
+    swapBtn.dataset.swapId = coll.id;
+    swapBtn.innerHTML = '<span class="icon"><i class="fas fa-shuffle"></i></span> <span class="swap-label">1st</span>';
+    
+    // Проверяем текущий статус и применяем
+    if (coll.previewIndex === 1) {
+        swapBtn.classList.add('active');
+        swapBtn.querySelector('.swap-label').textContent = '2nd';
+    }
+
+    swapBtn.addEventListener('click', async () => {
+        // Находим коллекцию в данных
+        const collectionData = userItemsData.collections.find(c => c.id === coll.id);
+        if (!collectionData) return;
+
+        // Меняем индекс
+        collectionData.previewIndex = collectionData.previewIndex === 0 ? 1 : 0;
+        
+        // Обновляем внешний вид кнопки
+        swapBtn.classList.toggle('active', collectionData.previewIndex === 1);
+        swapBtn.querySelector('.swap-label').textContent = collectionData.previewIndex === 1 ? '2nd' : '1st';
+
+        // Сохраняем изменение
+        await saveRobinUserItems();
+        
+        // Показываем уведомление
+        const msg = collectionData.previewIndex === 1 
+            ? "🖼️ Preview changed to 2nd image" 
+            : "🖼️ Preview changed to 1st image";
+        showToast(msg, 'info');
+    });
+    
+    header.appendChild(swapBtn);
+
+    // Социальные иконки
     if (coll.website || coll.twitter) {
-        const icons = document.createElement('span'); icons.className = 'social-icons';
+        const icons = document.createElement('span'); 
+        icons.className = 'social-icons';
         if (coll.website) icons.innerHTML += `<a href="${coll.website}" target="_blank" class="site-icon" title="Website"><i class="fas fa-globe"></i></a>`;
         if (coll.twitter) icons.innerHTML += `<a href="${coll.twitter}" target="_blank" class="collection-social-link" title="Twitter"><i class="fab fa-x-twitter"></i></a>`;
         header.appendChild(icons);
     }
-    const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.className = 'add-item-btn admin-only'; addBtn.title = `${getTranslation('add_nft')} ${coll.title}`; addBtn.innerHTML = '<span class="btn-plus">+</span>';
-    addBtn.addEventListener('click', (e) => { e.stopPropagation(); currentAddContext = { zone: coll.id, config: ZONE_CONFIG[coll.id] || { type:'nft-item', label: coll.title, trackType:'track-once' } }; openModal(`${getTranslation('add_to')}: ${getTranslation('add_nft')} ${coll.title}`, ['fieldTitle','fieldUrl','fieldImage','descFieldEn','descFieldUa']); });
-    header.appendChild(addBtn); card.appendChild(header);
-    const linkColl = document.createElement('div'); linkColl.className = 'link-collection'; card.appendChild(linkColl); grid.appendChild(card);
-    const items = userItemsData.items[coll.id] || []; items.forEach(item => renderUserItemInZone(coll.id, item));
+    
+    // Кнопка добавления
+    const addBtn = document.createElement('button'); 
+    addBtn.type = 'button'; 
+    addBtn.className = 'add-item-btn admin-only'; 
+    addBtn.title = `${getTranslation('add_nft')} ${coll.title}`; 
+    addBtn.innerHTML = '<span class="btn-plus">+</span>';
+    addBtn.addEventListener('click', (e) => { 
+        e.stopPropagation(); 
+        currentAddContext = { zone: coll.id, config: ZONE_CONFIG[coll.id] || { type:'nft-item', label: coll.title, trackType:'track-once' } }; 
+        openModal(`${getTranslation('add_to')}: ${getTranslation('add_nft')} ${coll.title}`, ['fieldTitle','fieldUrl','fieldImage','descFieldEn','descFieldUa']); 
+    });
+    header.appendChild(addBtn); 
+    card.appendChild(header);
+    
+    const linkColl = document.createElement('div'); 
+    linkColl.className = 'link-collection'; 
+    card.appendChild(linkColl); 
+    grid.appendChild(card);
+    
+    const items = userItemsData.items[coll.id] || []; 
+    items.forEach(item => renderUserItemInZone(coll.id, item));
     requestAnimationFrame(() => card.classList.add('anim-visible'));
+    
+    // Обновляем порядок в общем списке
     saveNFTCollectionsOrder();
 }
 
