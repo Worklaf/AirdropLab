@@ -1790,14 +1790,22 @@ async function saveUserData(user) {
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
     
+    // ✅ Получаем Twitter username из провайдера
     let twitterUsername = '';
-    let twitterId = '';
-    
-    // Получаем данные Twitter если есть
-    const twitterProvider = user.providerData?.find(p => p.providerId === 'twitter.com');
-    if (twitterProvider) {
-      twitterId = twitterProvider.uid;
-      twitterUsername = twitterId?.startsWith('@') ? twitterId.substring(1) : twitterId;
+    if (user.providerData && user.providerData.length > 0) {
+        const twitterProvider = user.providerData.find(p => p.providerId === 'twitter.com');
+        if (twitterProvider) {
+            // Twitter обычно хранит username в uid (формат: @username или просто username)
+            let uid = twitterProvider.uid || '';
+            if (uid.startsWith('@')) {
+                twitterUsername = uid.substring(1);
+            } else {
+                twitterUsername = uid;
+            }
+            
+            console.log('✅ Twitter UID:', twitterProvider.uid);
+            console.log('✅ Extracted username:', twitterUsername);
+        }
     }
     
     if (!userSnap.exists()) {
@@ -1805,7 +1813,6 @@ async function saveUserData(user) {
         email: user.email || '',
         displayName: user.displayName || 'Аноним',
         username: twitterUsername || null,
-        twitterId: twitterId || null,
         photoURL: user.photoURL || null, 
         firstLogin: serverTimestamp(), 
         provider: user.providerData[0]?.providerId || 'unknown', 
@@ -1819,15 +1826,18 @@ async function saveUserData(user) {
       const updates = { lastLogin: serverTimestamp() };
       if (!userData.firstLogin) updates.firstLogin = serverTimestamp();
       if (!userData.provider && user.providerData[0]) updates.provider = user.providerData[0].providerId;
+      
+      // Обновляем username только если его нет или пришёл новый
       if (twitterUsername && !userData.username) {
         updates.username = twitterUsername;
-        updates.twitterId = twitterId;
       }
+      
       await updateDoc(userRef, updates);
     }
-  } catch (e) { console.error('Error saving user:', e); }
+  } catch (e) { 
+    console.error('Error saving user:', e); 
+  }
 }
-
 async function syncLocalStorageToFirestore(userId) {
   try {
     const userRef = doc(db, "users", userId);
