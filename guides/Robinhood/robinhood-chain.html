@@ -1510,8 +1510,8 @@ window.logout = function() { signOut(auth); };
 
 async function loadRobinSharedData() {
     if (isAdmin) {
-        loadRobinUserItems();
-        loadRobinEditsOverride();
+        await loadRobinUserItems();
+        await loadRobinEditsOverride();
         return;
     }
 
@@ -1675,17 +1675,15 @@ onAuthStateChanged(auth, async (user) => {
     if (!initialAuthCheckComplete) {
     initialAuthCheckComplete = true;
     await loadLanguagePreference();
-    loadRobinUserItems();
-    loadRobinEditsOverride();
-    await loadRobinSharedData();  // ← сначала загружаем коллекции
-    await loadNFTCollectionsOrder();  // ← потом загружаем их порядок
-    
+    await loadRobinUserItems();        // ← раньше было без await
+    await loadRobinEditsOverride();
+    await loadRobinSharedData();
+    await loadNFTCollectionsOrder();
     await loadRobinNewIndicators();
     await loadRobinData();
     renderRobinUserItems();
     updateRobinNewIndicators();
     initRobinSharedDataRealtime();
-    
     isDataLoaded = true;
 }
 });
