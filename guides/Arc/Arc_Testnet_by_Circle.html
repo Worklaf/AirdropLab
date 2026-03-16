@@ -1212,9 +1212,25 @@ function renderNFTs() {
     const grid = document.getElementById('nfts-grid');
     if (!grid) return;
     grid.innerHTML = '';
-    const nftCollections = userItemsData.collections.filter(c => 
+
+    let nftCollections = userItemsData.collections.filter(c => 
         c.parentZone === 'nfts' || (!c.parentZone && String(c.id).startsWith('nft_'))
     );
+
+    // ✅ Применяем порядок если он есть
+    if (arcNftCollectionsOrder.length > 0) {
+        nftCollections.sort((a, b) => {
+            const iA = arcNftCollectionsOrder.indexOf(a.id);
+            const iB = arcNftCollectionsOrder.indexOf(b.id);
+            // Новые коллекции (не в порядке) — в конец
+            if (iA === -1 && iB === -1) return 0;
+            if (iA === -1) return 1;
+            if (iB === -1) return -1;
+            return iA - iB;
+        });
+        console.log('✅ Rendering NFTs in saved order');
+    }
+
     nftCollections.forEach(coll => {
         renderNFTCard(coll, grid);
     });
@@ -2992,10 +3008,11 @@ let arcNftCollectionsOrder = [];
 let arcNftOrderUnsubscribe = null;
 
 async function loadArcNFTCollectionsOrder() {
+    // Сначала берём из localStorage как fallback
     const local = JSON.parse(localStorage.getItem(ARC_NFT_ORDER_KEY) || '[]');
     arcNftCollectionsOrder = local || [];
 
-    // Главный источник — публичный документ (видят все пользователи)
+    // Всегда загружаем из публичного документа (свежие данные)
     try {
         const publicRef = doc(db, PUBLIC_DATA_COLLECTION, 'arc_nft_order_v1');
         const publicSnap = await getDoc(publicRef);
@@ -3003,39 +3020,17 @@ async function loadArcNFTCollectionsOrder() {
         if (publicSnap.exists()) {
             const cloudOrder = publicSnap.data().order || [];
             const cloudTs = publicSnap.data().timestamp || 0;
-            const localTs = parseInt(localStorage.getItem(ARC_NFT_ORDER_KEY + '_ts') || '0', 10);
             
-            if (cloudTs > localTs && cloudOrder.length > 0) {
+            if (cloudOrder.length > 0) {
+                // ✅ Всегда берём из облака — это публичные данные
                 arcNftCollectionsOrder = cloudOrder;
                 localStorage.setItem(ARC_NFT_ORDER_KEY, JSON.stringify(cloudOrder));
                 localStorage.setItem(ARC_NFT_ORDER_KEY + '_ts', String(cloudTs));
-                console.log('✅ Arc NFT order loaded from PUBLIC document');
-                return;
+                console.log('✅ Arc NFT order loaded:', cloudOrder.length, 'collections');
             }
         }
     } catch (e) {
-        console.warn('Public NFT order load failed:', e);
-    }
-
-    // Fallback — из личного документа пользователя
-    if (currentUser) {
-        try {
-            const snap = await getDoc(doc(db, "users", currentUser.uid));
-            if (snap.exists() && snap.data().arcNFTCollectionsOrder) {
-                const cloudOrder = snap.data().arcNFTCollectionsOrder;
-                const cloudTs = snap.data().arcNFTCollectionsOrderTimestamp || 0;
-                const localTs = parseInt(localStorage.getItem(ARC_NFT_ORDER_KEY + '_ts') || '0', 10);
-                
-                if (cloudTs > localTs) {
-                    arcNftCollectionsOrder = cloudOrder;
-                    localStorage.setItem(ARC_NFT_ORDER_KEY, JSON.stringify(cloudOrder));
-                    localStorage.setItem(ARC_NFT_ORDER_KEY + '_ts', String(cloudTs));
-                    console.log('✅ Arc NFT order loaded from user document');
-                }
-            }
-        } catch(e) { 
-            console.error('Load arc nft order error:', e); 
-        }
+        console.warn('⚠️ NFT order load failed, using local:', e.message);
     }
 }
 async function saveArcNFTCollectionsOrder() {
@@ -3097,41 +3092,59 @@ function initArcNFTCollectionsSort() {
 function initArcNFTOrderRealtime() {
     if (arcNftOrderUnsubscribe) return;
     
-    try {
-        const docRef = doc(db, PUBLIC_DATA_COLLECTION, 'arc_nft_order_v1');
-        arcNftOrderUnsubscribe = onSnapshot(docRef, (snap) => {
-            if (!snap.exists()) return;
+    const docRef = doc(db, PUBLIC_DATA_COLLECTION, 'arc_nft_order_v1');
+    
+    arcNftOrderUnsubscribe = onSnapshot(docRef, (snap) => {
+        if (!snap.exists()) return;
+
+        const cloudOrder = snap.data().order || [];
+        const cloudTs = snap.data().timestamp || 0;
+
+        // ✅ Сравниваем только с тем что сейчас на экране
+        const currentOrderStr = JSON.stringify(arcNftCollectionsOrder);
+        const cloudOrderStr = JSON.stringify(cloudOrder);
+
+        if (cloudOrderStr !== currentOrderStr && cloudOrder.length > 0) {
+            console.log('🔄 NFT order changed, applying...');
+            arcNftCollectionsOrder = cloudOrder;
+
+            // Обновляем localStorage
+            localStorage.setItem(ARC_NFT_ORDER_KEY, JSON.stringify(cloudOrder));
+            localStorage.setItem(ARC_NFT_ORDER_KEY + '_ts', String(cloudTs));
+
+            applyArcNFTSortOrder();
             
-            const cloudOrder = snap.data().order || [];
-            const cloudTs = snap.data().timestamp || 0;
-            const localTs = parseInt(localStorage.getItem(ARC_NFT_ORDER_KEY + '_ts') || '0', 10);
-            
-            if (cloudTs > localTs && JSON.stringify(cloudOrder) !== JSON.stringify(arcNftCollectionsOrder)) {
-                console.log('🔄 Arc NFT order updated in real-time!');
-                arcNftCollectionsOrder = cloudOrder;
-                localStorage.setItem(ARC_NFT_ORDER_KEY, JSON.stringify(arcNftCollectionsOrder));
-                localStorage.setItem(ARC_NFT_ORDER_KEY + '_ts', String(cloudTs));
-                
-                applyArcNFTSortOrder();
-                showToast('📡 NFT collections reordered!', 'info');
+            // Тост только если страница уже загружена (не первая загрузка)
+            if (document.readyState === 'complete') {
+                showToast('📡 NFT order updated!', 'info');
             }
-        }, (error) => {
-            console.error('❌ Arc NFT order listener error:', error);
-        });
-    } catch(e) {
-        console.error('❌ Failed to init arc NFT order listener:', e);
-    }
+        }
+    }, (error) => {
+        console.error('❌ Arc NFT order listener error:', error);
+    });
+    
+    console.log('✅ Arc NFT order realtime started');
 }
 
 function applyArcNFTSortOrder() {
     const grid = document.getElementById('nfts-grid');
-    if (!grid || arcNftCollectionsOrder.length === 0) return;
+    if (!grid) return;
     
     const cards = Array.from(grid.querySelectorAll('.user-collection-card'));
+    if (cards.length === 0) {
+        console.log('⚠️ No cards to sort yet');
+        return;
+    }
+    
+    if (arcNftCollectionsOrder.length === 0) {
+        console.log('⚠️ No saved order');
+        return;
+    }
     
     cards.sort((a, b) => {
         const iA = arcNftCollectionsOrder.indexOf(a.dataset.zone);
         const iB = arcNftCollectionsOrder.indexOf(b.dataset.zone);
+        if (iA === -1 && iB === -1) return 0;
         if (iA === -1) return 1;
         if (iB === -1) return -1;
         return iA - iB;
@@ -3141,7 +3154,7 @@ function applyArcNFTSortOrder() {
     cards.forEach(card => fragment.appendChild(card));
     grid.appendChild(fragment);
     
-    console.log('✅ Arc NFT grid reordered');
+    console.log('✅ Arc NFT grid reordered to:', arcNftCollectionsOrder.slice(0, 3), '...');
 }
 </script>
 
