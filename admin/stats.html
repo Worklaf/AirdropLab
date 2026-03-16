@@ -741,16 +741,10 @@ async function loadUsers() {
 
         var profile  = raw.profile  || {};
         var userData = raw.userData || {};
-
+var twitterUsername = raw.username || '';
         var firstName = profile.firstName  || raw.firstName  || userData.firstName  || '';
         var lastName  = profile.lastName   || raw.lastName   || userData.lastName   || '';
-        var username  = profile.username   || raw.username   || userData.username || raw.displayName || '';
-        var twitterUsername = raw.twitterUsername || '';
-
-// Если это Twitter и нет username - используй displayName
-if (!username && raw.provider === 'twitter.com' && raw.displayName) {
-    username = raw.displayName;
-}
+        var username  = profile.username   || raw.username   || userData.username   || '';
         var telegram  = profile.telegram   || raw.telegram   || userData.telegram   || '';
         var birthdate = profile.birthdate  || raw.birthdate  || userData.birthdate  || '';
         var gender    = profile.gender     || raw.gender     || userData.gender     || '';
@@ -792,6 +786,7 @@ if (!username && raw.provider === 'twitter.com' && raw.displayName) {
             reagents:      raw.reagents      || 0,
             streak:        raw.streak        || 0,
             invitedUsers:  [],   // заполним ниже
+            twitterUsername: twitterUsername,
             raw
         });
     });
@@ -1134,19 +1129,24 @@ function renderTable() {
             '</div></div></td>';
 
         if (currentTab === 'main') {
-            return '<tr class="'+rowCl+'">'+cbEl+userCell+
-               var emailOrTwitter = user.email;
-if (!emailOrTwitter && user.provider === 'twitter.com' && user.raw?.twitterUsername) {
-    emailOrTwitter = '@' + user.raw.twitterUsername;
+
+    var displayEmail = user.email;
+    if (user.provider === 'twitter.com' && user.raw?.username) {
+        displayEmail = '@' + user.raw.username;
+    } else if (!displayEmail && user.raw?.displayName) {
+        displayEmail = user.raw.displayName;
+    }
+
+    return '<tr class="'+rowCl+'">'+cbEl+userCell+
+        '<td><span class="text-xs font-mono text-slate-500" title="'+user.id+'">'+user.id.substring(0,10)+'…</span></td>'+
+        '<td class="text-xs text-slate-300">'+esc(displayEmail || '—')+'</td>'+
+        '<td class="text-xs text-slate-300">'+fmtDate(user.firstLogin)+'</td>'+
+        '<td class="text-xs '+(isRecent(user.lastLogin)?'text-emerald-400':'text-slate-300')+'">'+fmtDate(user.lastLogin)+'</td>'+
+        '<td>'+provBadge(user.provider)+'</td>'+
+        '<td>'+(user.isOnline?'<span class="badge badge-green">Online</span>':'<span class="text-slate-600 text-xs">—</span>')+'</td>'+
+        '</tr>';
 }
-            '<td><span class="text-xs font-mono text-slate-500" title="'+user.id+'">'+user.id.substring(0,10)+'…</span></td>'+
-                '<td class="text-xs text-slate-300">'+esc(emailOrTwitter || '—')+'</td>'+
-                '<td class="text-xs text-slate-300">'+fmtDate(user.firstLogin)+'</td>'+
-                '<td class="text-xs '+(isRecent(user.lastLogin)?'text-emerald-400':'text-slate-300')+'">'+fmtDate(user.lastLogin)+'</td>'+
-                '<td>'+provBadge(user.provider)+'</td>'+
-                '<td>'+(user.isOnline?'<span class="badge badge-green">Online</span>':'<span class="text-slate-600 text-xs">—</span>')+'</td>'+
-                '</tr>';
-        }
+
         if (currentTab === 'profile') {
             return '<tr class="'+rowCl+'">'+cbEl+userCell+
                 '<td class="text-sm">'+(user.firstName?esc(user.firstName):dsh())+'</td>'+
@@ -1264,7 +1264,7 @@ window.openProfile = function(userId) {
                     '<span class="font-mono bg-slate-800 px-2 py-0.5 rounded cursor-pointer" onclick="copyAccountUID(\''+user.id+'\')">' +
                         user.id.substring(0,12)+'…' +
                     '</span>' +
-                    '<span class="text-slate-500">'+esc(user.email)+'</span>' +
+                    '<span class="text-slate-500">'+esc(user.twitterUsername ? '@' + user.twitterUsername : user.email)+'</span>' +
                 '</div>' +
                 '<div class="flex items-center gap-2 mt-2 flex-wrap">' +
                     (user.isOnline?'<span class="badge badge-green">Online</span>':'')+
