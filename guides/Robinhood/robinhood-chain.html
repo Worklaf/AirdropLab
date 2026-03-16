@@ -1479,28 +1479,31 @@ window.handleRegister = async function() {
 window.logout = function() { signOut(auth); };
 
 async function loadRobinSharedData() {
-    // ✅ НОВЫЙ КОД: Загружаем из Firebase вместо GitHub
-    if (!isAdmin && currentUser) {
-        try {
-            const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
-            const docSnap = await getDoc(docRef);
-            
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                userItemsData = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
-                editsOverride = data.editsOverride || {};
-                
-                localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
-                localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
-                console.log('✓ Data loaded from Firebase (real-time)');
-                return;
-            }
-        } catch (e) {
-            console.warn("Firebase load error:", e);
-        }
+    if (isAdmin) {
+        loadRobinUserItems();
+        loadRobinEditsOverride();
+        return;
     }
 
-    // Fallback для offline или если Firebase недоступна
+    // ✅ БЕЗ проверки currentUser — читаем для ВСЕХ
+    try {
+        const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            userItemsData = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
+            editsOverride = data.editsOverride || {};
+            localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
+            localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
+            console.log('✅ Public data loaded');
+            return;
+        }
+    } catch (e) {
+        console.warn("Firebase error, fallback:", e);
+    }
+
+    // Fallback
     loadRobinUserItems();
     loadRobinEditsOverride();
 }
@@ -1562,19 +1565,17 @@ onAuthStateChanged(auth, async (user) => {
    if (!initialAuthCheckComplete) {
     initialAuthCheckComplete = true;
     await loadLanguagePreference();
-    
-    // Загружаем шаровые данные из Firebase
-    await loadRobinSharedData();
-    
-    // ✅ ДОБАВЬТЕ: Слушаем реальное время
-    if (!isAdmin && currentUser) {
-        initRobinSharedDataRealtime();
-    }
-    
+    loadRobinUserItems();        // Локальные данные
+    loadRobinEditsOverride();
+    await loadRobinSharedData(); // Публичные данные (перезапишут)
     await loadRobinNewIndicators();
     await loadRobinData();
     renderRobinUserItems();
     updateRobinNewIndicators();
+    
+    // ✅ Realtime для ВСЕХ (не только залогиненных)
+    initRobinSharedDataRealtime();
+    
     isDataLoaded = true;
 }
 });
@@ -2507,7 +2508,6 @@ function clearAllUserItems() {
 }
 
 function renderRobinUserItems() {
-    loadRobinUserItems();
     normalizeDeployTrackTypes();
     Object.entries(userItemsData.items || {}).forEach(([zone, list]) => {
         if (!isDeployZone(zone)) return;
