@@ -1904,34 +1904,60 @@ async function loadRobinUserItems() {
             const docSnap = await getDoc(docRef);
             
             if (docSnap.exists() && docSnap.data().robinUserItems) {
-                const cloudItemsTs = parseInt(docSnap.data().robinUserItemsTimestamp || '0', 10);
+                const cloudData = docSnap.data().robinUserItems;
+                // Проверяем временную метку
+                const cloudItemsTs = parseInt(cloudData.robinUserItemsTimestamp || '0', 10);
                 const localItemsTs = parseInt(localStorage.getItem('robin_user_items_timestamp') || '0', 10);
                 
+                // Если в облаке свежее, используем его
                 if (cloudItemsTs > localItemsTs) {
-                    const cloudData = docSnap.data().robinUserItems;
-                    userItemsData = { 
-                        items: cloudData.items || {}, 
-                        collections: cloudData.collections || [], 
-                        dappCategories: cloudData.dappCategories || [] 
-                    };
+                    userItemsData = { items: cloudData.items || {}, collections: cloudData.collections || [], dappCategories: cloudData.dappCategories || [] };
                     localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
                     localStorage.setItem('robin_user_items_timestamp', String(cloudItemsTs));
-                    console.log('✓ User items loaded from Firebase');
+                    console.log('✓ User items loaded from Firebase (Private)');
                 }
             }
         } catch (e) {
             console.error('Firebase user items load error:', e);
         }
     }
+
+    // 🆕 ИСПРАВЛЕНИЕ: Загружаем из публичной коллекции, если данные всё еще пусты
+    // Это нужно, если localStorage пустой, а мы пропустили загрузку shared data
+    if (!userItemsData || !userItemsData.collections || userItemsData.collections.length === 0) {
+        console.log('🔴 Private data empty, trying Public Collection...');
+        try {
+            const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists() && docSnap.data().userItemsData) {
+                const publicData = docSnap.data().userItemsData;
+                if (publicData && (publicData.collections || []).length > 0) {
+                    userItemsData = publicData;
+                    console.log('✅ User items loaded from Public Collection (Fallback)');
+                    // Не сохраняем в localStorage гостей, чтобы не кэшировать старое
+                    // Но обновляем переменную для рендера
+                }
+            }
+        } catch (e) {
+            console.warn("Public fallback error:", e);
+        }
+    }
+    
+    // Гарантируем структуру
+    if (!userItemsData) userItemsData = { items: {}, collections: [], dappCategories: [] };
+    if (!userItemsData.items) userItemsData.items = {};
+    if (!userItemsData.collections) userItemsData.collections = [];
+    if (!userItemsData.dappCategories) userItemsData.dappCategories = [];
 }
 async function saveRobinUserItems() {
     localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
     if (currentUser) {
         try { 
-            // Сохраняем и в приватный документ пользователя
+            // Сохраняем в личный документ
             await saveToCloud({ robinUserItems: userItemsData, robinUserItemsTimestamp: Date.now() }); 
             
-            // ✅ ДОБАВЬТЕ: Сохраняем в публичный документ если admin
+            // ✅ ОБЯЗАТЕЛЬНО: Сохраняем в публичный документ если ADMIN
             if (isAdmin) {
                 await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
                     userItemsData: userItemsData,
@@ -1941,7 +1967,9 @@ async function saveRobinUserItems() {
                 }, { merge: true });
                 console.log('✅ Shared data updated in Firebase');
             }
-        } catch (e) { showToast('⚠️ Saved locally only', 'error'); }
+        } catch (e) { 
+            showToast('⚠️ Saved locally only', 'error'); 
+        }
     }
 }
     async function saveRobinEditsOverride() {
