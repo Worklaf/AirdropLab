@@ -1390,6 +1390,8 @@ function exportRobinJSON() {
 function importRobinJSON(file) {
     const reader = new FileReader();
     reader.onload = async (e) => {
+
+        isImportingJSON = true;
         try {
             const data = JSON.parse(e.target.result);
             
@@ -1468,12 +1470,12 @@ function importRobinJSON(file) {
                 // ✅ Если админ - сохраняем в PUBLIC коллекцию
                 if (isAdmin) {
                     try {
-                        await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
-                            userItemsData: userItemsData,
-                            editsOverride: editsOverride,
-                            lastUpdated: Date.now(),
-                            updatedBy: currentUser.uid
-                        }, { merge: true });
+                       await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
+    userItemsData: userItemsData,
+    editsOverride: editsOverride,
+    lastUpdated: Date.now(),
+    updatedBy: currentUser.uid
+}, { merge: false });
                         console.log('✅ Public data updated');
                     } catch (e) {
                         console.error("❌ Public save error:", e);
@@ -1482,7 +1484,8 @@ function importRobinJSON(file) {
             }
 
             showToast(getTranslation('data_imported') + ` (${userItemsData.collections.length} collections)`, 'success');
-            
+            isImportingJSON = false;
+
             // ✅ Перезагружаем после небольшой задержки
             setTimeout(() => {
                 console.log('🔄 Reloading page...');
@@ -1628,7 +1631,7 @@ async function loadRobinSharedData() {
 
 // ===== ФЛАГ ДЛЯ ОТКЛЮЧЕНИЯ СОХРАНЕНИЯ ИЗ REALTIME =====
 let isUpdatingFromRealtime = false;
-
+let isImportingJSON = false;
 function initRobinSharedDataRealtime() {
     if (sharedDataUnsubscribe) return;
     const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
@@ -1645,7 +1648,7 @@ function initRobinSharedDataRealtime() {
         const itemsChanged = JSON.stringify(newItems) !== JSON.stringify(userItemsData);
         const editsChanged = JSON.stringify(newEdits) !== JSON.stringify(editsOverride);
         
-        if (itemsChanged || editsChanged) {
+       if (!isImportingJSON && (itemsChanged || editsChanged)) {
             console.log('🔄 Shared data updated in real-time!');
             userItemsData = newItems;
             editsOverride = newEdits;
