@@ -1510,6 +1510,8 @@ window.logout = function() { signOut(auth); };
 
 async function loadRobinSharedData() {
     if (isAdmin) {
+        loadRobinUserItems();
+        loadRobinEditsOverride();
         return;
     }
 
@@ -1524,15 +1526,16 @@ async function loadRobinSharedData() {
             editsOverride = data.editsOverride || {};
             localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
             localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
-            console.log('✅ Public data loaded for guest');
+            console.log('✅ Public data loaded');
             return;
         }
     } catch (e) {
-        console.warn("Firebase error, fallback to local:", e);
+        console.warn("Firebase error, fallback:", e);
     }
 
-    // Fallback если публичные данные пусты
-    console.log('🔴 No public data, using local storage');
+    // Fallback
+    loadRobinUserItems();
+    loadRobinEditsOverride();
 }
 
 // ===== ФЛАГ ДЛЯ ОТКЛЮЧЕНИЯ СОХРАНЕНИЯ ИЗ REALTIME =====
@@ -1650,6 +1653,7 @@ onAuthStateChanged(auth, async (user) => {
         nameEl.textContent = user.displayName || user.email?.split('@')[0] || 'User';
         checkAdmin(user);
         
+        // ✅ Realtime запускаем только после небольшой задержки
         setTimeout(() => { 
             initRobinNewIndicatorsRealtime(); 
         }, 2000);
@@ -1662,6 +1666,7 @@ onAuthStateChanged(auth, async (user) => {
         loggedIn.style.display = 'none';
         checkAdmin(null);
         
+        // ✅ Для гостей тоже запускаем realtime
         setTimeout(() => { 
             initRobinNewIndicatorsRealtime(); 
         }, 2000);
@@ -1669,35 +1674,25 @@ onAuthStateChanged(auth, async (user) => {
     
     if (!initialAuthCheckComplete) {
         initialAuthCheckComplete = true;
-        
-        // ✅ ПРАВИЛЬНЫЙ ПОРЯДОК ЗАГРУЗКИ
         await loadLanguagePreference();
-        
-        // Загружаем пользовательские данные ДО renderRobinUserItems
+        loadRobinUserItems();
         loadRobinEditsOverride();
-        
-        // Выбираем источник данных в зависимости от типа пользователя
-        if (isAdmin) {
-            await loadRobinUserItems();  // Админ: загружаем свои данные
-        } else {
-            await loadRobinSharedData();  // Обычный пользователь: загружаем публичные данные
-        }
-        
-        // Загружаем остальное
         await loadNFTCollectionsOrder();
-        await loadRobinNewIndicators();
-        await loadRobinData();
+        await loadRobinSharedData();
         
-        // ✅ РЕНДЕР только после всех загрузок
+        // ✅ ВАЖНО: Загружаем NEW индикаторы ДО отрисовки
+        await loadRobinNewIndicators();
+        
+        await loadRobinData();
         renderRobinUserItems();
+        
+        // ✅ ВАЖНО: Обновляем NEW метки ПОСЛЕ рендера
         updateRobinNewIndicators();
         
+        // ✅ Realtime для всех
         initRobinSharedDataRealtime();
-        isDataLoaded = true;
         
-        console.log('✅ All data loaded successfully');
-        console.log('Collections:', userItemsData.collections.length);
-        console.log('Items:', Object.keys(userItemsData.items).length);
+        isDataLoaded = true;
     }
 });
 
@@ -1899,7 +1894,6 @@ function updateRobinNewIndicators() {
     });
     updateRobinSectionBadges();
 }
-
 async function clearRobinNewLink(id) {
     newIndicatorsState.clickedByUser.add(id); newIndicatorsState.lastSync = Date.now();
     const saveData = { globalNew: [...newIndicatorsState.globalNew], clickedByUser: [...newIndicatorsState.clickedByUser], lastSync: newIndicatorsState.lastSync };
@@ -2612,64 +2606,38 @@ async function saveNFTCollectionsOrder() {
     nftCollectionsOrder = order;
     localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(order));
     
-    console.log('💾 Saving order:', order);
-    
-    if (isAdmin && currentUser) {
+    if (currentUser && isAdmin) {
         try {
-            const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
-            await setDoc(docRef, {
-                nftCollectionsOrder: order,
-                nftCollectionsOrderTimestamp: Date.now()
-            }, { merge: true });
-            console.log('✅ Order saved to Firebase successfully');
-        } catch(e) { 
-            console.error('❌ Order save error:', e); 
-        }
+            await saveToCloud({ 
+                robinNFTCollectionsOrder: order,
+                robinNFTCollectionsOrderTimestamp: Date.now()
+            });
+        } catch(e) { console.error('Order save error:', e); }
     }
 }
 
-// ✅ Загружает порядок из публичной Firebase для ВСЕХ
+// ✅ ЗАГРУЗКА порядка при инициализации (ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ)
 async function loadNFTCollectionsOrder() {
     const localOrder = JSON.parse(localStorage.getItem(NFT_COLLECTIONS_ORDER_KEY) || '[]');
     nftCollectionsOrder = localOrder;
     
-    console.log('📦 Loading NFT order... localOrder:', localOrder);
-    
-    try {
-        const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            console.log('📋 Firebase doc data:', {
-                hasOrder: !!data.nftCollectionsOrder,
-                order: data.nftCollectionsOrder,
-                timestamp: data.nftCollectionsOrderTimestamp
-            });
+    // ✅ УБИРАЕМ проверку isAdmin - загружаем для всех
+    if (currentUser) {
+        try {
+            const docRef = doc(db, "users", currentUser.uid);
+            const docSnap = await getDoc(docRef);
             
-            if (data.nftCollectionsOrder && data.nftCollectionsOrder.length > 0) {
-                const cloudOrder = data.nftCollectionsOrder;
-                const cloudTs = data.nftCollectionsOrderTimestamp || 0;
+            if (docSnap.exists() && docSnap.data().robinNFTCollectionsOrder) {
+                const cloudTs = docSnap.data().robinNFTCollectionsOrderTimestamp || 0;
                 const localTs = parseInt(localStorage.getItem(NFT_COLLECTIONS_ORDER_KEY + '_ts') || '0', 10);
                 
-                console.log('⏰ Timestamps - Cloud:', cloudTs, 'Local:', localTs);
-                
                 if (cloudTs > localTs) {
-                    nftCollectionsOrder = cloudOrder;
+                    nftCollectionsOrder = docSnap.data().robinNFTCollectionsOrder;
                     localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(nftCollectionsOrder));
                     localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY + '_ts', String(cloudTs));
-                    console.log('✅ Order loaded from Firebase:', nftCollectionsOrder);
-                } else {
-                    console.log('ℹ️ Local order is newer, using local');
                 }
-            } else {
-                console.log('⚠️ No order in Firebase, using local');
             }
-        } else {
-            console.log('⚠️ Firebase doc not found');
-        }
-    } catch (e) { 
-        console.error('❌ Load order error:', e); 
+        } catch (e) { console.error('Load order error:', e); }
     }
 }
 function renderUserDappCategory(cat) {
@@ -3045,32 +3013,7 @@ window.reloadFirebaseData = async function() {
     console.log('Коллекции:', userItemsData.collections.length);
     console.log('Итемы:', Object.keys(userItemsData.items).length);
 }
-   // ===== ДЛЯ ОТЛАДКИ =====
-window.debugLoad = async function() {
-    console.log('=== DEBUG START ===');
-    console.log('isAdmin:', isAdmin);
-    console.log('currentUser:', currentUser?.uid);
-    
-    // Проверим публичные данные
-    try {
-        const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
-        const docSnap = await getDoc(docRef);
-        console.log('Public doc exists:', docSnap.exists());
-        if (docSnap.exists()) {
-            console.log('Public data keys:', Object.keys(docSnap.data()));
-            console.log('userItemsData in doc:', docSnap.data().userItemsData);
-            console.log('collections count:', docSnap.data().userItemsData?.collections?.length);
-        }
-    } catch(e) {
-        console.error('Error reading public doc:', e);
-    }
-    
-    // Проверим локальные данные
-    console.log('LocalStorage USER_ITEMS_KEY:', localStorage.getItem(USER_ITEMS_KEY)?.slice(0, 200));
-    
-    console.log('userItemsData:', userItemsData);
-    console.log('=== DEBUG END ===');
-}
+   
 </script>
 
 <!-- LOGIN MODAL -->
@@ -3092,4 +3035,4 @@ window.debugLoad = async function() {
   </div>
 </div>
 </body>
-</html>
+</html> 
