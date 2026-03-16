@@ -1390,8 +1390,6 @@ function exportRobinJSON() {
 function importRobinJSON(file) {
     const reader = new FileReader();
     reader.onload = async (e) => {
-
-        isImportingJSON = true;
         try {
             const data = JSON.parse(e.target.result);
             
@@ -1402,7 +1400,7 @@ function importRobinJSON(file) {
                 throw new Error('Invalid format - no recognized data found');
             }
 
-            // ✅ ПОЛНАЯ ЗАМЕНА userItemsData
+            // ✅ Восстанавливаем userItemsData
             if (data.items || data.collections) {
                 userItemsData = {
                     items: data.items || {},
@@ -1410,10 +1408,10 @@ function importRobinJSON(file) {
                     dappCategories: data.dappCategories || []
                 };
                 localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
-                localStorage.setItem('robin_user_items_timestamp', String(Date.now()));
                 console.log('✅ User items imported:', userItemsData.collections.length, 'collections');
             }
 
+            // ✅ Восстанавливаем данные отслеживания кликов
             if (data.robinData) {
                 robinData = data.robinData;
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(robinData));
@@ -1427,6 +1425,7 @@ function importRobinJSON(file) {
                 localStorage.setItem(FAVORITES_ORDER_KEY, JSON.stringify(favoritesOrder));
             }
 
+            // ✅ Остальные настройки
             if (data.sections) {
                 localStorage.setItem(SECTION_COLLAPSE_KEY, JSON.stringify(data.sections));
             }
@@ -1448,47 +1447,15 @@ function importRobinJSON(file) {
                 updateAllTranslations();
             }
 
-            // ✅ ГЛАВНОЕ: Сохраняем с ПОЛНОЙ ЗАМЕНОЙ в Firebase
+            // ✅ ГЛАВНОЕ: Сохраняем со СКОРОСТЬЮ в Firebase с ПОЛНОЙ ЗАМЕНОЙ
             if (currentUser) {
-                try {
-                    // ✅ Полная замена в Firebase без merge
-                    await setDoc(doc(db, "users", currentUser.uid), {
-                        robinUserItems: userItemsData,
-                        robinUserItemsTimestamp: Date.now(),
-                        robinGuideStats: robinData,
-                        robinFavoritesState: favoritesState,
-                        robinFavoritesOrder: favoritesOrder,
-                        robinFavoritesTimestamp: Date.now()
-                    }, { merge: false }); // ← ВАЖНО: merge: false для ПОЛНОЙ ЗАМЕНЫ
-                    
-                    console.log('✅ Data saved to Firebase with FULL REPLACEMENT');
-                } catch(e) {
-                    console.error('❌ Firebase save error:', e);
-                    showToast('⚠️ Firebase save error: ' + e.message, 'error');
-                }
-
-                // ✅ Если админ - сохраняем в PUBLIC коллекцию
-                if (isAdmin) {
-                    try {
-                       await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
-    userItemsData: userItemsData,
-    editsOverride: editsOverride,
-    lastUpdated: Date.now(),
-    updatedBy: currentUser.uid
-}, { merge: false });
-                        console.log('✅ Public data updated');
-                    } catch (e) {
-                        console.error("❌ Public save error:", e);
-                    }
-                }
+                await importDataToFirebase();
             }
 
             showToast(getTranslation('data_imported') + ` (${userItemsData.collections.length} collections)`, 'success');
-            isImportingJSON = false;
-
-            // ✅ Перезагружаем после небольшой задержки
+            
+            // ✅ Перезагружаем разметку
             setTimeout(() => {
-                console.log('🔄 Reloading page...');
                 location.reload();
             }, 1500);
 
@@ -1499,7 +1466,6 @@ function importRobinJSON(file) {
     };
     reader.readAsText(file);
 }
-
 async function loadRobinData() {
     const localStats = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     const localFav = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}');
@@ -1631,7 +1597,7 @@ async function loadRobinSharedData() {
 
 // ===== ФЛАГ ДЛЯ ОТКЛЮЧЕНИЯ СОХРАНЕНИЯ ИЗ REALTIME =====
 let isUpdatingFromRealtime = false;
-let isImportingJSON = false;
+
 function initRobinSharedDataRealtime() {
     if (sharedDataUnsubscribe) return;
     const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
@@ -1648,7 +1614,7 @@ function initRobinSharedDataRealtime() {
         const itemsChanged = JSON.stringify(newItems) !== JSON.stringify(userItemsData);
         const editsChanged = JSON.stringify(newEdits) !== JSON.stringify(editsOverride);
         
-       if (!isImportingJSON && (itemsChanged || editsChanged)) {
+        if (itemsChanged || editsChanged) {
             console.log('🔄 Shared data updated in real-time!');
             userItemsData = newItems;
             editsOverride = newEdits;
@@ -2974,7 +2940,49 @@ async function uploadConfigToGithub() {
         showToast('GitHub upload error: ' + e.message, 'error');
     }
 }
-
+// ===== ИМПОРТ ДАННЫХ С ПОЛНОЙ ЗАМЕНОЙ =====
+async function importDataToFirebase() {
+    if (!currentUser) return;
+    
+    try {
+        const timestamp = Date.now();
+        
+        // ✅ ПОЛНАЯ ЗАМЕНА без merge:true
+        const docRef = doc(db, "users", currentUser.uid);
+        
+        // Сначала берём остальные данные пользователя (аутентификацию, настройки и т.д.)
+        const existingDoc = await getDoc(docRef);
+        const existingData = existingDoc.exists() ? existingDoc.data() : {};
+        
+        // ✅ ЗАМЕНЯЕМ ТОЛЬКО НУЖНЫЕ ПОЛЯ (оставляем остальное)
+        const updateData = {
+            ...existingData, // Сохраняем все остальное
+            robinUserItems: userItemsData,
+            robinUserItemsTimestamp: timestamp,
+            robinGuideStats: robinData,
+            robinFavoritesState: favoritesState,
+            robinFavoritesOrder: favoritesOrder,
+            robinFavoritesTimestamp: timestamp,
+            lastImportTime: new Date().toISOString(),
+            lastImportedBy: currentUser.email
+        };
+        
+        // ✅ ЗАПИСЫВАЕМ с merge: false (ПОЛНАЯ ЗАМЕНА ПОЛЕЙ)
+        await setDoc(docRef, updateData, { merge: false });
+        
+        console.log('✅ Data successfully imported to Firebase (FULL REPLACEMENT)');
+        console.log('📊 Imported:', {
+            collections: userItemsData.collections.length,
+            items: Object.keys(userItemsData.items).length,
+            stats: Object.keys(robinData).length
+        });
+        
+    } catch (e) {
+        console.error('❌ Import to Firebase error:', e);
+        showToast('⚠️ Firebase import failed: ' + e.message, 'error');
+        throw e;
+    }
+}
 // ===== DOM CONTENT LOADED =====
 document.addEventListener('DOMContentLoaded', () => {
     loadTheme(); 
@@ -3167,12 +3175,13 @@ async function saveNFTCollectionsOrder() {
     
     nftCollectionsOrder = order;
     
+    // ✅ Всегда сохраняем (для ВСЕХ пользователей, не только админов)
     const timestamp = Date.now();
     localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(order));
     localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY + '_ts', String(timestamp));
     
-    // ✅ Сохраняем в Firebase - только если админ
-    if (currentUser && isAdmin) {  // ← ДОБАВЬ ПРОВЕРКУ isAdmin
+    // ✅ Сохраняем в Firebase PUBLIC для синхронизации (для ВСЕХ)
+    if (currentUser) {
         try {
             await setDoc(doc(db, PUBLIC_DATA_COLLECTION, 'nft_collections_order_v1'), {
                 order: order,
@@ -3183,10 +3192,8 @@ async function saveNFTCollectionsOrder() {
             
             console.log('✅ NFT order saved to cloud:', order);
         } catch(e) { 
-            console.error('⚠️ NFT order save error:', e);
+            console.error('⚠️ NFT order save error:', e); 
         }
-    } else if (currentUser && !isAdmin) {
-        console.warn('⛔ Only admins can save NFT order to cloud');
     }
 }
 </script>
