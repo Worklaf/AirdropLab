@@ -2856,7 +2856,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (legendToggle) { legendToggle.addEventListener('click', () => { if (window.innerWidth <= 768) { isLegendCollapsed = !isLegendCollapsed; localStorage.setItem(LEGEND_COLLAPSE_KEY, isLegendCollapsed ? 'true' : 'false'); applyLegendState(isLegendCollapsed); } }); }
     window.addEventListener('resize', () => { const wasMobile = isMobile; isMobile = window.innerWidth <= 768; if (isMobile && !wasMobile) { storedLegend = localStorage.getItem(LEGEND_COLLAPSE_KEY); isLegendCollapsed = storedLegend === 'true' || storedLegend === null; } if (!isMobile) isLegendCollapsed = false; applyLegendState(isLegendCollapsed); });
     applyLegendState(isLegendCollapsed); initializeTooltips(); updateBadgeVisibility();
-    f (isDataLoaded) {
+    if (isDataLoaded) {
     setTimeout(() => {
         updateRobinNewIndicators();
         console.log('✅ Initial NEW indicators loaded');
