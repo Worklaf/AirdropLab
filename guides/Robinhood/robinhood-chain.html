@@ -3045,7 +3045,32 @@ window.reloadFirebaseData = async function() {
     console.log('Коллекции:', userItemsData.collections.length);
     console.log('Итемы:', Object.keys(userItemsData.items).length);
 }
-   
+   // ===== ДЛЯ ОТЛАДКИ =====
+window.debugLoad = async function() {
+    console.log('=== DEBUG START ===');
+    console.log('isAdmin:', isAdmin);
+    console.log('currentUser:', currentUser?.uid);
+    
+    // Проверим публичные данные
+    try {
+        const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
+        const docSnap = await getDoc(docRef);
+        console.log('Public doc exists:', docSnap.exists());
+        if (docSnap.exists()) {
+            console.log('Public data keys:', Object.keys(docSnap.data()));
+            console.log('userItemsData in doc:', docSnap.data().userItemsData);
+            console.log('collections count:', docSnap.data().userItemsData?.collections?.length);
+        }
+    } catch(e) {
+        console.error('Error reading public doc:', e);
+    }
+    
+    // Проверим локальные данные
+    console.log('LocalStorage USER_ITEMS_KEY:', localStorage.getItem(USER_ITEMS_KEY)?.slice(0, 200));
+    
+    console.log('userItemsData:', userItemsData);
+    console.log('=== DEBUG END ===');
+}
 </script>
 
 <!-- LOGIN MODAL -->
