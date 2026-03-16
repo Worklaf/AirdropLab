@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="referrer" content="no-referrer">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Robinhood Chain Hub - Complete Catalog</title>
@@ -777,7 +778,6 @@ function getImagesFromInputs() {
         .filter(url => url.length > 0);
 }
 // ===== MEDIA TYPE DETECTION =====
-// ===== MEDIA TYPE DETECTION =====
 function getMediaType(url) {
     if (!url) return 'unknown';
     const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
@@ -786,85 +786,58 @@ function getMediaType(url) {
     return 'image';
 }
 
-function createMediaElement(url, alt = '', className = '', autoplay = false) {
+function createMediaElement(url, alt = '', className = '', autoplay = true) {  // Изменили autoplay по умолчанию на true
     const isVideo = getMediaType(url) === 'video';
     
     if (isVideo) {
-        // ✅ ЕСЛИ ЭТО TWITTER ВИДЕО (Обходим ошибку 403)
-        if (url.includes('twimg.com')) {
-            const container = document.createElement('div');
-            container.className = className;
-            container.style.cssText = `
-                position: relative;
-                width: 100%;
-                min-height: 160px;
-                border-radius: 8px;
-                overflow: hidden;
-                background: linear-gradient(135deg, #1da1f2 0%, #0a0e1a 100%);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-            `;
-            
-            container.innerHTML = `
-                <i class="fab fa-twitter" style="font-size: 1.5rem; color: rgba(255,255,255,0.3); position: absolute; top: 10px; right: 10px;"></i>
-                <div style="
-                    width: 50px; height: 50px; 
-                    background: rgba(0,208,158,0.9); 
-                    border-radius: 50%; 
-                    display: flex; align-items: center; justify-content: center; 
-                    font-size: 1.2rem; color: white;
-                    box-shadow: 0 4px 15px rgba(0,208,158,0.5);
-                    transition: transform 0.2s;
-                " class="play-btn">
-                    <i class="fas fa-play" style="margin-left: 3px;"></i>
-                </div>
-                <div style="margin-top: 12px; color: white; font-weight: bold; font-size: 0.85rem;">
-                    Watch Video
-                </div>
-            `;
-            
-            container.onmouseenter = () => {
-                const btn = container.querySelector('.play-btn');
-                if (btn) btn.style.transform = 'scale(1.15)';
-            };
-            container.onmouseleave = () => {
-                const btn = container.querySelector('.play-btn');
-                if (btn) btn.style.transform = 'scale(1)';
-            };
-            
-            // ✅ МАГИЯ ЗДЕСЬ: 'noreferrer' скрывает от Твиттера твой сайт, и 403 пропадает!
-            container.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                window.open(url, '_blank', 'noreferrer,noopener');
-            };
-            
-            return container;
-        } 
-        // ✅ ЕСЛИ ЭТО ОБЫЧНОЕ ЛОКАЛЬНОЕ ВИДЕО
-        else {
-            const video = document.createElement('video');
-            video.className = className;
-            video.controls = true;
-            video.loop = true;
-            video.muted = autoplay; // Обязательно muted для autoplay
-            video.playsinline = true;
-            video.style.cssText = 'max-width:100%; border-radius:8px; background:#000;';
-            if (autoplay) video.autoplay = true;
-            
-            const source = document.createElement('source');
-            source.src = url;
-            source.type = 'video/mp4';
-            video.appendChild(source);
-            
-            return video;
+        // Для всех видео, включая Twitter
+        const container = document.createElement('div');
+        container.className = className;
+        container.style.cssText = `
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #000;
+        `;
+        
+        const video = document.createElement('video');
+        video.src = url;
+        video.style.cssText = 'width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;';
+        video.loop = true;
+        video.muted = true;
+        video.playsinline = true;
+        video.autoplay = autoplay; // Автоплей по умолчанию
+        
+        // Принудительный старт для некоторых браузеров
+        if (autoplay) {
+            setTimeout(() => video.play().catch(e => console.log('Autoplay blocked:', e)), 100);
         }
+        
+        // Иконка Twitter в углу
+        if (url.includes('twimg.com')) {
+            const icon = document.createElement('i');
+            icon.className = 'fab fa-twitter';
+            icon.style.cssText = 'position: absolute; top: 10px; right: 10px; color: rgba(255,255,255,0.7); font-size: 1.2rem; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);';
+            container.appendChild(icon);
+        }
+
+        // Клик открывает оригинальный URL
+        container.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(url, '_blank', 'noreferrer,noopener');
+        };
+        
+        container.appendChild(video);
+        return container;
     } 
-    // ✅ ДЛЯ ИЗОБРАЖЕНИЙ (Как было раньше)
+    // Для изображений
     else {
         const img = document.createElement('img');
         img.src = url;
@@ -874,57 +847,6 @@ function createMediaElement(url, alt = '', className = '', autoplay = false) {
         img.onerror = () => img.style.display = 'none';
         return img;
     }
-}
-
-// ✅ ОПЦИОНАЛЬНО: Функция для открытия видео в модальном окне
-function openTwitterVideoModal(videoUrl, title = '') {
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.9);
-        z-index: 25000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    `;
-    
-    const iframe = document.createElement('iframe');
-    iframe.src = videoUrl;
-    iframe.style.cssText = `
-        width: 100%;
-        max-width: 900px;
-        height: 600px;
-        border: none;
-        border-radius: 12px;
-    `;
-    
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '✕';
-    closeBtn.style.cssText = `
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 40px;
-        height: 40px;
-        background: rgba(255,255,255,0.2);
-        border: none;
-        color: white;
-        font-size: 24px;
-        border-radius: 50%;
-        cursor: pointer;
-        z-index: 25001;
-    `;
-    
-    closeBtn.onclick = () => modal.remove();
-    modal.onclick = (e) => {
-        if (e.target === modal) modal.remove();
-    };
-    
-    modal.appendChild(iframe);
-    modal.appendChild(closeBtn);
-    document.body.appendChild(modal);
 }
 function clearImageInputs() {
     const container = document.getElementById('imageInputsContainer');
@@ -1258,7 +1180,7 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
     }
     
     if (allImages.length > 0) {
-        const currentMedia = createMediaElement(allImages[currentImageIndex], title, 'lightbox-image', false);
+        const currentMedia = createMediaElement(allImages[currentImageIndex], title, 'lightbox-image', true); // Автоплей в Lightbox
         mediaEl.innerHTML = '';
         mediaEl.appendChild(currentMedia);
     }
@@ -1351,11 +1273,11 @@ function updateLightboxImage() {
     
     setTimeout(() => {
         const newMedia = createMediaElement(
-            images[currentImageIndex], 
-            currentLightboxData.title, 
-            'lightbox-image', 
-            false
-        );
+    images[currentImageIndex], 
+    currentLightboxData.title, 
+    'lightbox-image', 
+    true  // Автоплей в Lightbox
+);
         
         mediaContainer.innerHTML = '';
         mediaContainer.appendChild(newMedia);
