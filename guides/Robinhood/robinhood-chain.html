@@ -14,6 +14,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
    <style>
+       /* Скрываем кнопки удаления по умолчанию */
+.user-item-delete, .user-collection-delete-top {
+    display: none !important;
+}
+
+/* Показываем только в режиме редактирования */
+body.edit-mode .user-item-delete,
+body.edit-mode .user-collection-delete-top {
+    display: inline-flex !important;
+}
        /* Sortable для NFT коллекций */
 .sortable-drag {
     opacity: 0.5;
@@ -2799,8 +2809,8 @@ function createUserLink(item, zone) {
     wrapper.appendChild(link);
 
     const delBtn = document.createElement('button');
-    delBtn.type = 'button';
-    delBtn.className = 'user-item-delete admin-only';
+delBtn.type = 'button'; 
+delBtn.className = 'user-item-delete'; 
     delBtn.title = getTranslation('delete_item');
     delBtn.innerHTML = '×';
     delBtn.addEventListener('click', async (e) => {
@@ -2836,7 +2846,9 @@ function renderUserCollection(coll) {
     const sectionContent = document.querySelector(`[data-section-zone="${coll.parentZone}"]`); if (!sectionContent) return;
     const grid = sectionContent.querySelector('.resource-grid'); if (!grid) return;
     const card = document.createElement('div'); card.className = 'resource-item user-collection-card'; card.dataset.zone = coll.id;
-    const delTop = document.createElement('button'); delTop.type = 'button'; delTop.className = 'user-collection-delete-top admin-only'; delTop.title = getTranslation('delete_collection'); delTop.innerHTML = '×';
+    const delTop = document.createElement('button'); 
+delTop.type = 'button'; 
+delTop.className = 'user-collection-delete-top';  delTop.title = getTranslation('delete_collection'); delTop.innerHTML = '×';
     delTop.addEventListener('click', async () => {
         if (!confirm(getTranslation('confirm_delete'))) return;
         userItemsData.collections = userItemsData.collections.filter(c => c.id !== coll.id); delete userItemsData.items[coll.id]; delete ZONE_CONFIG[coll.id];
@@ -3044,14 +3056,21 @@ function applyRobinAllOverrides() {
 }
 
 function toggleRobinEditMode() {
-    editModeActive = !editModeActive; document.body.classList.toggle('edit-mode', editModeActive);
+    editModeActive = !editModeActive; 
+    document.body.classList.toggle('edit-mode', editModeActive);
     const btn = document.getElementById('editModeBtn');
     if (btn) { 
         btn.classList.toggle('active', editModeActive); 
         btn.innerHTML = `<i class="fas fa-${editModeActive ? 'check' : 'pen'}"></i> <span data-i18n="${editModeActive ? 'finish_editing' : 'edit_mode'}">${getTranslation(editModeActive ? 'finish_editing' : 'edit_mode')}</span>`; 
     }
-    if (editModeActive) { injectRobinEditButtons(); showToast(getTranslation('edit_mode_activated'), 'info'); }
-    else { removeRobinEditButtons(); showToast(getTranslation('edit_mode_finished'), 'info'); }
+    if (editModeActive) { 
+        injectRobinEditButtons(); 
+        showToast(getTranslation('edit_mode_activated'), 'info'); 
+    }
+    else { 
+        removeRobinEditButtons(); 
+        showToast(getTranslation('edit_mode_finished'), 'info'); 
+    }
 }
 
 function injectRobinEditButtons() {
