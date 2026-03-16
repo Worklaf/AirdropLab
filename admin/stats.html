@@ -744,7 +744,12 @@ async function loadUsers() {
 
         var firstName = profile.firstName  || raw.firstName  || userData.firstName  || '';
         var lastName  = profile.lastName   || raw.lastName   || userData.lastName   || '';
-        var username  = profile.username   || raw.username   || userData.username   || '';
+        var username  = profile.username   || raw.username   || userData.username || raw.displayName || '';
+
+// Если это Twitter и нет username - используй displayName
+if (!username && raw.provider === 'twitter.com' && raw.displayName) {
+    username = raw.displayName;
+}
         var telegram  = profile.telegram   || raw.telegram   || userData.telegram   || '';
         var birthdate = profile.birthdate  || raw.birthdate  || userData.birthdate  || '';
         var gender    = profile.gender     || raw.gender     || userData.gender     || '';
