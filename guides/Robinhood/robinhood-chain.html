@@ -13,7 +13,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
    <style>
-       
+       /* Sortable для NFT коллекций */
+.sortable-drag {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+.sortable-ghost {
+    opacity: 0.3;
+    background: rgba(0,208,158,0.1);
+    border-radius: 14px;
+}
+
+.user-collection-card {
+    transition: all 0.2s ease;
+}
+
+body.edit-mode [data-section-zone="nfts"] .resource-header {
+    cursor: grab;
+}
+
+body.edit-mode [data-section-zone="nfts"] .resource-header:active {
+    cursor: grabbing;
+}
         :root {
             --bg-color: #0a0e1a;
             --card-bg: #121826;
@@ -941,7 +963,9 @@ const USER_ITEMS_KEY = 'robin_user_items_v1';
 const EDITS_OVERRIDE_KEY = 'robin_edits_v1';
 const PUBLIC_DATA_COLLECTION = 'robinhood_public_data';
 const SHARED_ITEMS_DOC = 'shared_items_v1';
-
+const NFT_COLLECTIONS_ORDER_KEY = 'robin_nft_collections_order_v1';
+let nftCollectionsOrder = []; // Сохраняет порядок коллекций
+    
 let newIndicatorsState = { globalNew: new Set(), clickedByUser: new Set(), lastSync: 0 };
 let newIndicatorsUnsubscribe = null;
     let sharedDataUnsubscribe = null;
@@ -1280,7 +1304,6 @@ function showTooltip(e) {
     ensureTooltipElement();
     activeTooltipTarget = target;
 
-    // ИСПРАВЛЕНО: Работа с массивом изображений
     const imagesAttr = target.getAttribute('data-images');
     let images = [];
     if (imagesAttr) {
@@ -1305,13 +1328,19 @@ function showTooltip(e) {
 
     if (imageUrl) {
         tooltipEl.classList.add('has-image');
+        const currentIdx = parseInt(target.getAttribute('data-image-index') || '0');
+        const plural = images.length > 1 ? ` (${currentIdx + 1}/${images.length})` : '';
+        
         tooltipEl.innerHTML = `
             <div class="tooltip-image-container">
                 <img src="${imageUrl}" alt="${text || 'Image'}"
                      class="tooltip-image"
                      loading="lazy"
-                     onerror="this.style.display='none'">
-                ${text ? `<div class="tooltip-text">${text}</div>` : ''}
+                     onerror="this.style.display='none'"
+                     style="position:relative;z-index:1;">
+                ${images.length > 1 ? `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#fff;padding:4px 8px;border-radius:4px;font-size:0.75rem;z-index:2;">${currentIdx + 1}/${images.length}</div>` : ''}
+                ${text ? `<div class="tooltip-text">${text}${plural}</div>` : ''}
+                ${images.length > 1 ? '<div style="font-size:0.7rem;color:#94a3b8;text-align:center;margin-top:6px;margin-bottom:-4px;">📸 Right-click for gallery</div>' : ''}
             </div>
         `;
     } else {
@@ -1563,7 +1592,16 @@ function renderRobinUserItems() {
     clearAllUserItems();
     userItemsData.collections.forEach(coll => { if (!ZONE_CONFIG[coll.id]) { const isNft = coll.parentZone === 'nfts'; ZONE_CONFIG[coll.id] = { type: isNft ? 'nft-item' : 'link-item', label: coll.title, trackType: isNft ? 'track-once' : 'track-once track-once-info' }; } });
     userItemsData.dappCategories.forEach(cat => { if (!ZONE_CONFIG[cat.id]) ZONE_CONFIG[cat.id] = { type:'link-item', label: cat.title, trackType:'track-daily' }; });
-    userItemsData.collections.forEach(coll => { if (coll.parentZone === 'nfts') renderUserCollection(coll); else if (coll.parentZone === 'deploy') renderUserDeployGroup(coll); });
+    // ✅ СОРТИРУЕМ коллекции по сохраненному порядку
+const nftCollections = userItemsData.collections.filter(c => c.parentZone === 'nfts');
+nftCollections.sort((a, b) => {
+    const indexA = nftCollectionsOrder.indexOf(a.id);
+    const indexB = nftCollectionsOrder.indexOf(b.id);
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+});
+nftCollections.forEach(coll => renderUserCollection(coll)); else if (coll.parentZone === 'deploy') renderUserDeployGroup(coll); });
     userItemsData.dappCategories.forEach(cat => renderUserDappCategory(cat));
     Object.keys(userItemsData.items).forEach(zone => { const items = userItemsData.items[zone]; if (!items || !items.length) return; items.forEach(item => renderUserItemInZone(zone, item)); });
     injectAddButtons(); 
@@ -1577,11 +1615,29 @@ function renderRobinUserItems() {
     requestAnimationFrame(() => {
         setTimeout(() => {
             updateRobinNewIndicators();
-            console.log('✅ NEW indicators applied');
+            initNFTCollectionsSort(); // ← НОВОЕ
+            console.log('✅ NEW indicators and sort initialized');
         }, 100);
     });
 }
-
+function initNFTCollectionsSort() {
+    if (!isAdmin) return; // Только для админов
+    
+    const grid = document.querySelector('[data-section-zone="nfts"] .resource-grid');
+    if (!grid || typeof Sortable === 'undefined') return;
+    
+    new Sortable(grid, {
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        dragClass: 'sortable-drag',
+        handle: '.resource-header', // Можно перемещать за заголовок
+        onEnd: async () => {
+            await saveNFTCollectionsOrder();
+            showToast('✅ NFT collections reordered!', 'success');
+        },
+        filter: '.add-item-btn', // Не перемещаем кнопку добавления
+    });
+}
 let isDataLoaded = false;
 let initialAuthCheckComplete = false;
 
@@ -1621,6 +1677,7 @@ onAuthStateChanged(auth, async (user) => {
         await loadLanguagePreference();
         loadRobinUserItems();
         loadRobinEditsOverride();
+        await loadNFTCollectionsOrder();
         await loadRobinSharedData();
         
         // ✅ ВАЖНО: Загружаем NEW индикаторы ДО отрисовки
@@ -2527,6 +2584,7 @@ function renderUserCollection(coll) {
         if (!confirm(getTranslation('confirm_delete'))) return;
         userItemsData.collections = userItemsData.collections.filter(c => c.id !== coll.id); delete userItemsData.items[coll.id]; delete ZONE_CONFIG[coll.id];
         await saveRobinUserItems(); card.remove(); showToast(getTranslation('collection_removed') + ': ' + coll.title, 'info');
+        
     });
     card.appendChild(delTop);
     const header = document.createElement('div'); header.className = 'resource-header';
@@ -2543,8 +2601,53 @@ function renderUserCollection(coll) {
     const linkColl = document.createElement('div'); linkColl.className = 'link-collection'; card.appendChild(linkColl); grid.appendChild(card);
     const items = userItemsData.items[coll.id] || []; items.forEach(item => renderUserItemInZone(coll.id, item));
     requestAnimationFrame(() => card.classList.add('anim-visible'));
+    saveNFTCollectionsOrder();
+}
+async function saveNFTCollectionsOrder() {
+    const grid = document.querySelector('[data-section-zone="nfts"] .resource-grid');
+    if (!grid) return;
+    
+    const order = [];
+    grid.querySelectorAll('.user-collection-card').forEach(card => {
+        order.push(card.dataset.zone);
+    });
+    
+    nftCollectionsOrder = order;
+    localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(order));
+    
+    if (currentUser && isAdmin) {
+        try {
+            await saveToCloud({ 
+                robinNFTCollectionsOrder: order,
+                robinNFTCollectionsOrderTimestamp: Date.now()
+            });
+        } catch(e) { console.error('Order save error:', e); }
+    }
 }
 
+// ✅ ЗАГРУЗКА порядка при инициализации
+async function loadNFTCollectionsOrder() {
+    const localOrder = JSON.parse(localStorage.getItem(NFT_COLLECTIONS_ORDER_KEY) || '[]');
+    nftCollectionsOrder = localOrder;
+    
+    if (currentUser && isAdmin) {
+        try {
+            const docRef = doc(db, "users", currentUser.uid);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists() && docSnap.data().robinNFTCollectionsOrder) {
+                const cloudTs = docSnap.data().robinNFTCollectionsOrderTimestamp || 0;
+                const localTs = parseInt(localStorage.getItem(NFT_COLLECTIONS_ORDER_KEY + '_ts') || '0', 10);
+                
+                if (cloudTs > localTs) {
+                    nftCollectionsOrder = docSnap.data().robinNFTCollectionsOrder;
+                    localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(nftCollectionsOrder));
+                    localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY + '_ts', String(cloudTs));
+                }
+            }
+        } catch (e) { console.error('Load order error:', e); }
+    }
+}
 function renderUserDappCategory(cat) {
     const sectionContent = document.querySelector(`[data-section-zone="${cat.parentZone}"]`); 
     if (!sectionContent) return;
