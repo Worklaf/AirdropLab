@@ -939,6 +939,8 @@ const NEW_INDICATORS_DOC = 'robin_new_indicators_global';
 const NEW_INDICATORS_KEY = 'robin_new_indicators_v1';
 const USER_ITEMS_KEY = 'robin_user_items_v1';
 const EDITS_OVERRIDE_KEY = 'robin_edits_v1';
+const PUBLIC_DATA_COLLECTION = 'robinhood_public_data';
+const SHARED_ITEMS_DOC = 'shared_items_v1';
 
 let newIndicatorsState = { globalNew: new Set(), clickedByUser: new Set(), lastSync: 0 };
 let newIndicatorsUnsubscribe = null;
@@ -1477,37 +1479,63 @@ window.handleRegister = async function() {
 window.logout = function() { signOut(auth); };
 
 async function loadRobinSharedData() {
-    // Try loading from local first, then from GitHub
-    loadRobinUserItems();
-    loadRobinEditsOverride();
-    
-    if (isAdmin) {
-        return;
-    }
-    
-    // For non-admin users, try loading from GitHub
-    try {
-        const itemsResp = await fetch('https://raw.githubusercontent.com/Worklaf/AirdropLab/main/guides/Robinhood/robin_shared_items.json?v=' + Date.now());
-        if (itemsResp.ok) {
-            const data = await itemsResp.json();
-            userItemsData = { items: data.items || {}, collections: data.collections || [], dappCategories: data.dappCategories || [] };
-            localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
-            console.log('✓ Data loaded from GitHub');
+    // ✅ НОВЫЙ КОД: Загружаем из Firebase вместо GitHub
+    if (!isAdmin && currentUser) {
+        try {
+            const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                userItemsData = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
+                editsOverride = data.editsOverride || {};
+                
+                localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
+                localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
+                console.log('✓ Data loaded from Firebase (real-time)');
+                return;
+            }
+        } catch (e) {
+            console.warn("Firebase load error:", e);
         }
-    } catch (e) {
-        console.log('Using local user items data');
     }
 
-    try {
-        const editsResp = await fetch('https://raw.githubusercontent.com/Worklaf/AirdropLab/main/guides/Robinhood/robin_shared_edits.json?v=' + Date.now());
-        if (editsResp.ok) {
-            const data = await editsResp.json();
-            editsOverride = data.editsOverride || {};
+    // Fallback для offline или если Firebase недоступна
+    loadRobinUserItems();
+    loadRobinEditsOverride();
+}
+
+// ✅ ДОБАВЬТЕ: Реальная синхронизация для non-admin пользователей
+function initRobinSharedDataRealtime() {
+    if (isAdmin || !currentUser) return;
+    
+    const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
+    const unsubscribe = onSnapshot(docRef, (snap) => {
+        if (!snap.exists()) return;
+        
+        const data = snap.data();
+        const newItems = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
+        const newEdits = data.editsOverride || {};
+        
+        // Проверяем есть ли реальные изменения
+        const itemsChanged = JSON.stringify(newItems) !== JSON.stringify(userItemsData);
+        const editsChanged = JSON.stringify(newEdits) !== JSON.stringify(editsOverride);
+        
+        if (itemsChanged || editsChanged) {
+            console.log('🔄 Shared data updated in real-time');
+            userItemsData = newItems;
+            editsOverride = newEdits;
+            
+            localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
             localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
+            
+            // Перерисовываем с новыми данными
+            renderRobinUserItems();
+            showToast('📡 New projects loaded!', 'info');
         }
-    } catch (e) {
-        console.log('Using local edits data');
-    }
+    });
+    
+    return unsubscribe;
 }
 
 let isDataLoaded = false;
@@ -1534,11 +1562,18 @@ onAuthStateChanged(auth, async (user) => {
    if (!initialAuthCheckComplete) {
     initialAuthCheckComplete = true;
     await loadLanguagePreference();
-    await loadRobinUserItems();           // ← async функция, загружает из Firebase
-    await loadRobinSharedData();          // ← загружает из GitHub для non-admin
+    
+    // Загружаем шаровые данные из Firebase
+    await loadRobinSharedData();
+    
+    // ✅ ДОБАВЬТЕ: Слушаем реальное время
+    if (!isAdmin && currentUser) {
+        initRobinSharedDataRealtime();
+    }
+    
     await loadRobinNewIndicators();
     await loadRobinData();
-    renderRobinUserItems();               // ← теперь будут данные из Firebase
+    renderRobinUserItems();
     updateRobinNewIndicators();
     isDataLoaded = true;
 }
@@ -1892,16 +1927,37 @@ async function loadRobinUserItems() {
 async function saveRobinUserItems() {
     localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
     if (currentUser) {
-        try { await saveToCloud({ robinUserItems: userItemsData, robinUserItemsTimestamp: Date.now() }); } 
-        catch (e) { showToast('⚠️ Saved locally, cloud unavailable', 'error'); }
+        try { 
+            // Сохраняем и в приватный документ пользователя
+            await saveToCloud({ robinUserItems: userItemsData, robinUserItemsTimestamp: Date.now() }); 
+            
+            // ✅ ДОБАВЬТЕ: Сохраняем в публичный документ если admin
+            if (isAdmin) {
+                await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
+                    userItemsData: userItemsData,
+                    editsOverride: editsOverride,
+                    lastUpdated: Date.now(),
+                    updatedBy: currentUser.uid
+                }, { merge: true });
+                console.log('✅ Shared data updated in Firebase');
+            }
+        } catch (e) { showToast('⚠️ Saved locally only', 'error'); }
     }
 }
-
-async function saveRobinEditsOverride() {
+    async function saveRobinEditsOverride() {
     localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
     if (currentUser) {
-        try { await saveToCloud({ robinEditsOverride: editsOverride, robinEditsTimestamp: Date.now() }); }
-        catch (e) {}
+        try { 
+            await saveToCloud({ robinEditsOverride: editsOverride, robinEditsTimestamp: Date.now() });
+            
+            // ✅ ДОБАВЬТЕ: Обновляем в публичный документ если admin
+            if (isAdmin) {
+                await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
+                    editsOverride: editsOverride,
+                    lastUpdated: Date.now()
+                }, { merge: true });
+            }
+        } catch(e) {}
     }
 }
 
