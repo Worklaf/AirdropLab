@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-03-16T15:40:53.331835Z",
-  "total": 3,
+  "timestamp": "2026-03-16T15:45:53.803998Z",
+  "total": 5,
   "nfts": [
     {
       "project": "caset",
@@ -18,6 +18,21 @@
       ]
     },
     {
+      "project": "clara",
+      "twitter": "clarachainxyz",
+      "zone": "nft_clara",
+      "text": "Free Mint NFT on Robinhood Testnet \n\n\"MOON QUEEN\" on CLARA \n\nMint: \nclarachain.net/moonqueen\n\nRT & Paste Your Wallet Address Below ",
+      "url": "https://x.com/clarachainxyz/status/2033280418632663314",
+      "time_ago": "19h",
+      "datetime": "2026-03-15T20:33:22.000Z",
+      "likes": 69,
+      "retweets": 66,
+      "triggerText": "NFT On Robinhood",
+      "mint_links": [
+        "clarachain.net/moonqueen"
+      ]
+    },
+    {
       "project": "caset",
       "twitter": "casetnetwork",
       "zone": "nft_caset",
@@ -30,6 +45,21 @@
       "triggerText": "NFT On Robinhood",
       "mint_links": [
         "caset.network/hamer"
+      ]
+    },
+    {
+      "project": "dezzle",
+      "twitter": "0xDezzle",
+      "zone": "u_mmf9iutv_qm92z",
+      "text": "Free Mint 'ESCAPE' NFT On Robinhood Testnet \n\n ESCAPE: \ndezzle.xyz/escape\n\nRT & Paste Your Wallet Address Below \n@tempo",
+      "url": "https://x.com/0xDezzle/status/2029704157045870808",
+      "time_ago": "10d",
+      "datetime": "2026-03-05T23:42:35.000Z",
+      "likes": 77,
+      "retweets": 84,
+      "triggerText": "NFT On Robinhood",
+      "mint_links": [
+        "dezzle.xyz/escape"
       ]
     },
     {
