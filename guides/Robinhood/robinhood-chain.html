@@ -1508,37 +1508,40 @@ async function loadRobinSharedData() {
     loadRobinEditsOverride();
 }
 
-// ✅ ДОБАВЬТЕ: Реальная синхронизация для non-admin пользователей
 function initRobinSharedDataRealtime() {
-    if (isAdmin || !currentUser) return;
+    // ✅ Allow realtime for EVERYONE (admin, logged-in users, and guests)
+    // For guests: currentUser will be null but they can still listen to public collection
     
     const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
-    const unsubscribe = onSnapshot(docRef, (snap) => {
-        if (!snap.exists()) return;
+    newIndicatorsUnsubscribe = onSnapshot(docRef, (snap) => {
+        if (!snap.exists()) {
+            console.log('📭 Public doc is empty');
+            return;
+        }
         
         const data = snap.data();
         const newItems = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
         const newEdits = data.editsOverride || {};
         
-        // Проверяем есть ли реальные изменения
+        // Check for real changes
         const itemsChanged = JSON.stringify(newItems) !== JSON.stringify(userItemsData);
         const editsChanged = JSON.stringify(newEdits) !== JSON.stringify(editsOverride);
         
         if (itemsChanged || editsChanged) {
-            console.log('🔄 Shared data updated in real-time');
+            console.log('🔄 Shared data updated in real-time!');
             userItemsData = newItems;
             editsOverride = newEdits;
             
             localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
             localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
             
-            // Перерисовываем с новыми данными
+            // Re-render the page
             renderRobinUserItems();
             showToast('📡 New projects loaded!', 'info');
         }
+    }, (error) => {
+        console.error('❌ Realtime listener error:', error);
     });
-    
-    return unsubscribe;
 }
 
 let isDataLoaded = false;
@@ -1951,42 +1954,51 @@ async function loadRobinUserItems() {
     if (!userItemsData.collections) userItemsData.collections = [];
     if (!userItemsData.dappCategories) userItemsData.dappCategories = [];
 }
-async function saveRobinUserItems() {
-    localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
-    if (currentUser) {
-        try { 
-            // Сохраняем в личный документ
-            await saveToCloud({ robinUserItems: userItemsData, robinUserItemsTimestamp: Date.now() }); 
-            
-            // ✅ ОБЯЗАТЕЛЬНО: Сохраняем в публичный документ если ADMIN
-            if (isAdmin) {
-                await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
-                    userItemsData: userItemsData,
-                    editsOverride: editsOverride,
-                    lastUpdated: Date.now(),
-                    updatedBy: currentUser.uid
-                }, { merge: true });
-                console.log('✅ Shared data updated in Firebase');
-            }
-        } catch (e) { 
-            showToast('⚠️ Saved locally only', 'error'); 
-        }
+// ===== ОТДЕЛЬНАЯ ФУНКЦИЯ для публичного сохранения (как в Arc) =====
+async function saveSharedDataToFirebase() {
+    if (!isAdmin || !currentUser) return;
+    try {
+        await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
+            userItemsData: userItemsData,
+            editsOverride: editsOverride,
+            lastUpdated: Date.now(),
+            updatedBy: currentUser.uid
+        }, { merge: true });
+        console.log('✅ Public data updated in Firebase');
+    } catch (e) {
+        console.error("❌ Firebase shared update error:", e);
+        showToast('⚠️ Public save failed: ' + e.message, 'error');
     }
 }
-    async function saveRobinEditsOverride() {
+
+async function saveRobinUserItems() {
+    localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
+    localStorage.setItem('robin_user_items_timestamp', String(Date.now()));
+    if (currentUser) {
+        try {
+            await saveToCloud({ 
+                robinUserItems: userItemsData, 
+                robinUserItemsTimestamp: Date.now() 
+            });
+        } catch(e) { 
+            showToast('⚠️ Private save error', 'error'); 
+        }
+        // ✅ ОТДЕЛЬНЫЙ try/catch — публичное сохранение НЕ зависит от приватного
+        if (isAdmin) await saveSharedDataToFirebase();
+    }
+}
+
+async function saveRobinEditsOverride() {
     localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
     if (currentUser) {
         try { 
-            await saveToCloud({ robinEditsOverride: editsOverride, robinEditsTimestamp: Date.now() });
-            
-            // ✅ ДОБАВЬТЕ: Обновляем в публичный документ если admin
-            if (isAdmin) {
-                await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
-                    editsOverride: editsOverride,
-                    lastUpdated: Date.now()
-                }, { merge: true });
-            }
+            await saveToCloud({ 
+                robinEditsOverride: editsOverride, 
+                robinEditsTimestamp: Date.now() 
+            });
         } catch(e) {}
+        // ✅ ОТДЕЛЬНЫЙ try/catch
+        if (isAdmin) await saveSharedDataToFirebase();
     }
 }
 
