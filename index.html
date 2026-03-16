@@ -1729,23 +1729,34 @@ async function saveUserData(user) {
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
     
+    // ✅ Получаем Twitter username если логин через Twitter
+    let twitterUsername = '';
+    if (user.providerData && user.providerData.length > 0) {
+        const twitterProvider = user.providerData.find(p => p.providerId === 'twitter.com');
+        if (twitterProvider?.displayName) {
+            twitterUsername = twitterProvider.displayName;
+        }
+    }
+    
     if (!userSnap.exists()) {
       await setDoc(userRef, { 
         email: user.email || null,
-        displayName: user.displayName || 'Аноним', 
+        displayName: user.displayName || twitterUsername || 'Аноним', 
         photoURL: user.photoURL || null, 
         firstLogin: serverTimestamp(), 
         provider: user.providerData[0]?.providerId || 'unknown',
         lastLogin: serverTimestamp(), 
         favorites: [], 
         completed: [], 
-        arcGuideStats: {}
+        arcGuideStats: {},
+        twitterUsername: twitterUsername || null  // ✅ СОХРАНЯЕМ
       });
     } else {
       const userData = userSnap.data();
       const updates = { lastLogin: serverTimestamp() };
       if (!userData.firstLogin) updates.firstLogin = serverTimestamp();
       if (!userData.provider && user.providerData[0]) updates.provider = user.providerData[0].providerId;
+      if (twitterUsername && !userData.twitterUsername) updates.twitterUsername = twitterUsername; // ✅ СОХРАНЯЕМ
       await updateDoc(userRef, updates);
     }
   } catch (e) { console.error('Error saving user:', e); }
