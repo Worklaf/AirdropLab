@@ -1393,7 +1393,6 @@ function importRobinJSON(file) {
         try {
             const data = JSON.parse(e.target.result);
             
-            // ✅ ПРОВЕРКА: есть ли вообще какие-то данные
             const hasUserItems = data.items || data.userItems || data.collections;
             const hasTrackingData = data.robinData || data.favoritesState;
             
@@ -1401,7 +1400,7 @@ function importRobinJSON(file) {
                 throw new Error('Invalid format - no recognized data found');
             }
 
-            // ✅ Восстанавливаем userItemsData (ГЛАВНОЕ!)
+            // ✅ ПОЛНАЯ ЗАМЕНА userItemsData
             if (data.items || data.collections) {
                 userItemsData = {
                     items: data.items || {},
@@ -1409,10 +1408,10 @@ function importRobinJSON(file) {
                     dappCategories: data.dappCategories || []
                 };
                 localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
+                localStorage.setItem('robin_user_items_timestamp', String(Date.now()));
                 console.log('✅ User items imported:', userItemsData.collections.length, 'collections');
             }
 
-            // ✅ Восстанавливаем данные отслеживания кликов
             if (data.robinData) {
                 robinData = data.robinData;
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(robinData));
@@ -1426,7 +1425,6 @@ function importRobinJSON(file) {
                 localStorage.setItem(FAVORITES_ORDER_KEY, JSON.stringify(favoritesOrder));
             }
 
-            // ✅ Остальные настройки
             if (data.sections) {
                 localStorage.setItem(SECTION_COLLAPSE_KEY, JSON.stringify(data.sections));
             }
@@ -1448,15 +1446,46 @@ function importRobinJSON(file) {
                 updateAllTranslations();
             }
 
-            // ✅ Сохраняем всё в облако
-            await saveRobinStats();
-            await saveRobinFavorites();
-            await saveRobinUserItems();
+            // ✅ ГЛАВНОЕ: Сохраняем с ПОЛНОЙ ЗАМЕНОЙ в Firebase
+            if (currentUser) {
+                try {
+                    // ✅ Полная замена в Firebase без merge
+                    await setDoc(doc(db, "users", currentUser.uid), {
+                        robinUserItems: userItemsData,
+                        robinUserItemsTimestamp: Date.now(),
+                        robinGuideStats: robinData,
+                        robinFavoritesState: favoritesState,
+                        robinFavoritesOrder: favoritesOrder,
+                        robinFavoritesTimestamp: Date.now()
+                    }, { merge: false }); // ← ВАЖНО: merge: false для ПОЛНОЙ ЗАМЕНЫ
+                    
+                    console.log('✅ Data saved to Firebase with FULL REPLACEMENT');
+                } catch(e) {
+                    console.error('❌ Firebase save error:', e);
+                    showToast('⚠️ Firebase save error: ' + e.message, 'error');
+                }
+
+                // ✅ Если админ - сохраняем в PUBLIC коллекцию
+                if (isAdmin) {
+                    try {
+                        await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
+                            userItemsData: userItemsData,
+                            editsOverride: editsOverride,
+                            lastUpdated: Date.now(),
+                            updatedBy: currentUser.uid
+                        }, { merge: true });
+                        console.log('✅ Public data updated');
+                    } catch (e) {
+                        console.error("❌ Public save error:", e);
+                    }
+                }
+            }
 
             showToast(getTranslation('data_imported') + ` (${userItemsData.collections.length} collections)`, 'success');
             
-            // ✅ ГЛАВНОЕ: перезагружаем разметку!
+            // ✅ Перезагружаем после небольшой задержки
             setTimeout(() => {
+                console.log('🔄 Reloading page...');
                 location.reload();
             }, 1500);
 
