@@ -1601,7 +1601,7 @@ nftCollections.sort((a, b) => {
     if (indexB === -1) return -1;
     return indexA - indexB;
 });
-nftCollections.forEach(coll => renderUserCollection(coll)); else if (coll.parentZone === 'deploy') renderUserDeployGroup(coll); });
+nftCollections.forEach(coll => renderUserCollection(coll)); 
     userItemsData.dappCategories.forEach(cat => renderUserDappCategory(cat));
     Object.keys(userItemsData.items).forEach(zone => { const items = userItemsData.items[zone]; if (!items || !items.length) return; items.forEach(item => renderUserItemInZone(zone, item)); });
     injectAddButtons(); 
