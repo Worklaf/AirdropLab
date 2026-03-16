@@ -923,68 +923,7 @@ window.handleModalMouseUp = function(e) {
 window.openLoginModal = function() { document.getElementById('loginModal').classList.add('active'); };
 window.closeLoginModal = function() { document.getElementById('loginModal').classList.remove('active'); };
 window.loginGoogle = async function() { try { await signInWithPopup(auth, new GoogleAuthProvider()); closeLoginModal(); showToast('Вход: Google'); } catch(e) { showToast(e.message); } };
-window.loginTwitter = async function() { 
-  try { 
-    const result = await signInWithPopup(auth, new TwitterAuthProvider()); 
-    
-    // ✅ НОВОЕ: Получаем Twitter username через API
-    await fetchTwitterUsername(result.user);
-    
-    closeLoginModal(); 
-    showToast('Вход: Twitter'); 
-  } catch(e) { 
-    showToast(e.message); 
-  } 
-};
-
-// ✅ НОВАЯ ФУНКЦИЯ: Получение никнейма через Twitter API
-async function fetchTwitterUsername(user) {
-  try {
-    const token = await user.getIdTokenResult();
-    
-    // Пытаемся получить данные из провайдера
-    const twitterProvider = user.providerData.find(p => p.providerId === 'twitter.com');
-    
-    if (twitterProvider) {
-      // Twitter иногда возвращает username в uid (обычно это @username)
-      let username = twitterProvider.uid || twitterProvider.displayName;
-      
-      // Если uid содержит @, удаляем его
-      if (username?.startsWith('@')) {
-        username = username.substring(1);
-      }
-      
-      // ✅ Сохраняем в Firestore
-      const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, { 
-        username: username,
-        twitterId: twitterProvider.uid,
-        provider: 'twitter.com'
-      }).catch(async (e) => {
-        // Если документ не существует - создаём
-        if (e.code === 'not-found') {
-          await setDoc(userRef, {
-            email: user.email || '',
-            displayName: user.displayName || 'Аноним',
-            username: username,
-            twitterId: twitterProvider.uid,
-            photoURL: user.photoURL || null,
-            firstLogin: serverTimestamp(),
-            provider: 'twitter.com',
-            lastLogin: serverTimestamp(),
-            favorites: [],
-            completed: [],
-            arcGuideStats: {}
-          });
-        }
-      });
-      
-      console.log('✅ Twitter username сохранён:', username);
-    }
-  } catch (e) {
-    console.warn('⚠️ Ошибка получения Twitter username:', e);
-  }
-}
+window.loginTwitter = async function() { try { await signInWithPopup(auth, new TwitterAuthProvider()); closeLoginModal(); showToast('Вход: Twitter'); } catch(e) { showToast(e.message); } };
 window.handleEmailAuth = async function(e) { e.preventDefault(); const email = document.getElementById('emailInput').value; const pass = document.getElementById('passInput').value; try { await signInWithEmailAndPassword(auth, email, pass); closeLoginModal(); showToast('Вход выполнен'); } catch(e) { showToast(e.message); } };
 window.handleRegister = async function() { const email = document.getElementById('emailInput').value; const pass = document.getElementById('passInput').value; try { await createUserWithEmailAndPassword(auth, email, pass); closeLoginModal(); showToast('Аккаунт создан!'); } catch(e) { showToast(e.message); } };
 window.logout = function() { signOut(auth).then(() => { showToast('Выход'); localStorage.removeItem('favorites_backup'); localStorage.removeItem(STORAGE_KEY); userFavorites = []; userCompleted = []; arcData = {}; }); };
@@ -1789,55 +1728,18 @@ async function saveUserData(user) {
   try {
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
-    
-    // ✅ Получаем Twitter username из провайдера
-    let twitterUsername = '';
-    if (user.providerData && user.providerData.length > 0) {
-        const twitterProvider = user.providerData.find(p => p.providerId === 'twitter.com');
-        if (twitterProvider) {
-            // Twitter обычно хранит username в uid (формат: @username или просто username)
-            let uid = twitterProvider.uid || '';
-            if (uid.startsWith('@')) {
-                twitterUsername = uid.substring(1);
-            } else {
-                twitterUsername = uid;
-            }
-            
-            console.log('✅ Twitter UID:', twitterProvider.uid);
-            console.log('✅ Extracted username:', twitterUsername);
-        }
-    }
-    
     if (!userSnap.exists()) {
-      await setDoc(userRef, { 
-        email: user.email || '',
-        displayName: user.displayName || 'Аноним',
-        username: twitterUsername || null,
-        photoURL: user.photoURL || null, 
-        firstLogin: serverTimestamp(), 
-        provider: user.providerData[0]?.providerId || 'unknown', 
-        lastLogin: serverTimestamp(), 
-        favorites: [], 
-        completed: [], 
-        arcGuideStats: {} 
-      });
+      await setDoc(userRef, { email: user.email, displayName: user.displayName || 'Аноним', photoURL: user.photoURL || null, firstLogin: serverTimestamp(), provider: user.providerData[0]?.providerId || 'unknown', lastLogin: serverTimestamp(), favorites: [], completed: [], arcGuideStats: {} });
     } else {
       const userData = userSnap.data();
       const updates = { lastLogin: serverTimestamp() };
       if (!userData.firstLogin) updates.firstLogin = serverTimestamp();
       if (!userData.provider && user.providerData[0]) updates.provider = user.providerData[0].providerId;
-      
-      // Обновляем username только если его нет или пришёл новый
-      if (twitterUsername && !userData.username) {
-        updates.username = twitterUsername;
-      }
-      
       await updateDoc(userRef, updates);
     }
-  } catch (e) { 
-    console.error('Error saving user:', e); 
-  }
+  } catch (e) { console.error('Error saving user:', e); }
 }
+
 async function syncLocalStorageToFirestore(userId) {
   try {
     const userRef = doc(db, "users", userId);
@@ -1900,21 +1802,7 @@ onAuthStateChanged(auth, async function(user) {
         document.getElementById('guestWarning').classList.add('hidden');
         document.getElementById('userAvatar').src = user.photoURL
             || 'https://ui-avatars.com/api/?name=' + (user.email || 'User') + '&background=random';
-        // ✅ Показываем Twitter username или email/displayName
-// В onAuthStateChanged после загрузки пользователя:
-const displayUserName = () => {
-  if (currentUser?.providerData) {
-    const twitterProvider = currentUser.providerData.find(p => p.providerId === 'twitter.com');
-    if (twitterProvider?.uid) {
-      let username = twitterProvider.uid;
-      if (username.startsWith('@')) username = username.substring(1);
-      return '@' + username;
-    }
-  }
-  return currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
-};
-
-document.getElementById('userName').textContent = displayUserName();
+        document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
 
         initUserSync(user.uid);
         initNotificationsListener(user.uid);
