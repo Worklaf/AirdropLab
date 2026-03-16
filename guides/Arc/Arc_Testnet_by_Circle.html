@@ -2572,7 +2572,7 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
         
         const indicator = document.createElement('div');
         indicator.id = 'lightboxImageIndicator';
-        indicator.style.cssText = 'position:absolute;bottom:80px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10;';
+        indicator.style.cssText = 'position:relative;margin:10px auto;display:flex;gap:8px;justify-content:center;';
         indicator.innerHTML = allImages.map((url, i) => {
             const isVideo = getMediaType(url) === 'video';
             const icon = isVideo ? '▶' : '';
