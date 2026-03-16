@@ -1508,10 +1508,10 @@ async function loadRobinSharedData() {
     loadRobinEditsOverride();
 }
 
+// ===== ФЛАГ ДЛЯ ОТКЛЮЧЕНИЯ СОХРАНЕНИЯ ИЗ REALTIME =====
+let isUpdatingFromRealtime = false;
+
 function initRobinSharedDataRealtime() {
-    // ✅ Allow realtime for EVERYONE (admin, logged-in users, and guests)
-    // For guests: currentUser will be null but they can still listen to public collection
-    
     const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
     newIndicatorsUnsubscribe = onSnapshot(docRef, (snap) => {
         if (!snap.exists()) {
@@ -1523,7 +1523,7 @@ function initRobinSharedDataRealtime() {
         const newItems = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
         const newEdits = data.editsOverride || {};
         
-        // Check for real changes
+        // Проверяем есть ли реальные изменения
         const itemsChanged = JSON.stringify(newItems) !== JSON.stringify(userItemsData);
         const editsChanged = JSON.stringify(newEdits) !== JSON.stringify(editsOverride);
         
@@ -1535,13 +1535,44 @@ function initRobinSharedDataRealtime() {
             localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
             localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
             
-            // Re-render the page
+            // ✅ Флаг: не сохраняем при обновлении из listener
+            isUpdatingFromRealtime = true;
             renderRobinUserItems();
+            isUpdatingFromRealtime = false;
+            
             showToast('📡 New projects loaded!', 'info');
         }
     }, (error) => {
         console.error('❌ Realtime listener error:', error);
     });
+}
+
+// ===== МОДИФИЦИРОВАННЫЙ РЕНДЕР =====
+function renderRobinUserItems() {
+    normalizeDeployTrackTypes();
+    Object.entries(userItemsData.items || {}).forEach(([zone, list]) => {
+        if (!isDeployZone(zone)) return;
+        list.forEach(({ id }) => { if (robinData[id]?.visited) delete robinData[id].visited; });
+    });
+    saveRobinStats();
+    
+    // ✅ Не сохраняем userItems если это обновление из realtime listener
+    if (!isUpdatingFromRealtime) {
+        saveRobinUserItems();
+    }
+    
+    clearAllUserItems();
+    userItemsData.collections.forEach(coll => { if (!ZONE_CONFIG[coll.id]) { const isNft = coll.parentZone === 'nfts'; ZONE_CONFIG[coll.id] = { type: isNft ? 'nft-item' : 'link-item', label: coll.title, trackType: isNft ? 'track-once' : 'track-once track-once-info' }; } });
+    userItemsData.dappCategories.forEach(cat => { if (!ZONE_CONFIG[cat.id]) ZONE_CONFIG[cat.id] = { type:'link-item', label: cat.title, trackType:'track-daily' }; });
+    userItemsData.collections.forEach(coll => { if (coll.parentZone === 'nfts') renderUserCollection(coll); else if (coll.parentZone === 'deploy') renderUserDeployGroup(coll); });
+    userItemsData.dappCategories.forEach(cat => renderUserDappCategory(cat));
+    Object.keys(userItemsData.items).forEach(zone => { const items = userItemsData.items[zone]; if (!items || !items.length) return; items.forEach(item => renderUserItemInZone(zone, item)); });
+    injectAddButtons(); 
+    bindTrackingHandlersToAll(); 
+    attachFavoriteControls(); 
+    initializeTooltips(); 
+    initLightbox(); 
+    updateUI();
 }
 
 let isDataLoaded = false;
@@ -2517,23 +2548,6 @@ function clearAllUserItems() {
     document.querySelectorAll('.user-collection-card').forEach(el => el.remove());
     document.querySelectorAll('.dapp-table tbody tr').forEach(tr => { const zone = tr.dataset.zone; if (zone && zone.startsWith('u_')) tr.remove(); });
     document.querySelectorAll('.add-item-btn, .section-add-btn').forEach(btn => btn.remove());
-}
-
-function renderRobinUserItems() {
-    normalizeDeployTrackTypes();
-    Object.entries(userItemsData.items || {}).forEach(([zone, list]) => {
-        if (!isDeployZone(zone)) return;
-        list.forEach(({ id }) => { if (robinData[id]?.visited) delete robinData[id].visited; });
-    });
-    saveRobinStats();
-    saveRobinUserItems();
-    clearAllUserItems();
-    userItemsData.collections.forEach(coll => { if (!ZONE_CONFIG[coll.id]) { const isNft = coll.parentZone === 'nfts'; ZONE_CONFIG[coll.id] = { type: isNft ? 'nft-item' : 'link-item', label: coll.title, trackType: isNft ? 'track-once' : 'track-once track-once-info' }; } });
-    userItemsData.dappCategories.forEach(cat => { if (!ZONE_CONFIG[cat.id]) ZONE_CONFIG[cat.id] = { type:'link-item', label: cat.title, trackType:'track-daily' }; });
-    userItemsData.collections.forEach(coll => { if (coll.parentZone === 'nfts') renderUserCollection(coll); else if (coll.parentZone === 'deploy') renderUserDeployGroup(coll); });
-    userItemsData.dappCategories.forEach(cat => renderUserDappCategory(cat));
-    Object.keys(userItemsData.items).forEach(zone => { const items = userItemsData.items[zone]; if (!items || !items.length) return; items.forEach(item => renderUserItemInZone(zone, item)); });
-    injectAddButtons(); bindTrackingHandlersToAll(); attachFavoriteControls(); initializeTooltips(); initLightbox(); updateUI();
 }
 
 function loadRobinEditsOverride() {
