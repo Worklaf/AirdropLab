@@ -14,29 +14,6 @@
     <script src="languages.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        /* Обертка для кнопок навигации в лайтбоксе */
-.lightbox-nav-container {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 15px;
-    margin-bottom: 10px;
-}
-.lightbox-nav-btn {
-    background: rgba(96,165,250,0.2);
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 1.3rem;
-    transition: all 0.2s;
-}
-.lightbox-nav-btn:hover {
-    background: var(--accent);
-    color: #fff;
-}
         .lightbox-image { transition: opacity 0.3s ease; }
         #lightboxLeft:hover, #lightboxRight:hover { background: var(--accent) !important; transform: translateY(-50%) scale(1.1); }
         .lightbox-dot:hover { transform: scale(1.3); }
@@ -2467,7 +2444,12 @@ function showTooltip(e) {
         const container = document.createElement('div');
         container.className = 'tooltip-image-container';
         container.appendChild(mediaEl);
-
+if (images.length > 1) {
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:0.68rem;color:#64748b;text-align:center;margin-top:8px;';
+    hint.textContent = '🖱️ Right-click for gallery';
+    container.appendChild(hint);
+}
         if (images.length > 1) {
             const indicator = document.createElement('div');
             indicator.style.cssText = 'font-size:0.72rem;color:#94a3b8;text-align:center;margin-top:4px;';
@@ -2481,12 +2463,7 @@ function showTooltip(e) {
             textDiv.textContent = text;
             container.appendChild(textDiv);
         }
-if (images.length > 1) {
-    const hint = document.createElement('div');
-    hint.style.cssText = 'font-size:0.68rem;color:#64748b;text-align:center;margin-top:8px;';
-    hint.textContent = '🖱️ Right-click for gallery';
-    container.appendChild(hint);
-}
+
         tooltipEl.innerHTML = '';
         tooltipEl.appendChild(container);
     } else {
@@ -2528,12 +2505,14 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
     currentLightboxLang = currentLanguage;
     overlay.dataset.currentIndex = startIndex;
     
+    // ✅ Находим или создаём медиа-контейнер
     let mediaWrapper = document.getElementById('arcLightboxMedia');
     if (!mediaWrapper) {
         mediaWrapper = document.createElement('div');
         mediaWrapper.id = 'arcLightboxMedia';
         mediaWrapper.style.cssText = 'width:100%;min-height:200px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;transition:opacity 0.15s ease;';
         
+        // Скрываем старый img если есть
         const oldImg = document.getElementById('lightboxImage');
         if (oldImg) {
             oldImg.style.display = 'none';
@@ -2545,12 +2524,7 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
         }
     }
     
-    // ✅ Если это Twitter видео, сразу открываем в новой вкладке (обход 403)
-    if (allImages.length > 0 && getMediaType(allImages[startIndex]) === 'hls' && allImages[startIndex].includes('twimg.com')) {
-        window.open(allImages[startIndex], '_blank');
-        return;
-    }
-
+    // ✅ Отображаем медиа
     if (allImages.length > 0) {
         const mediaEl = createMediaElement(allImages[startIndex], title, 'lightbox-image', true);
         mediaWrapper.innerHTML = '';
@@ -2571,43 +2545,48 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
         captionEl.textContent = tooltip || '';
     }
     
+    // Удаляем старые стрелки
     document.getElementById('lightboxLeft')?.remove();
     document.getElementById('lightboxRight')?.remove();
     document.getElementById('lightboxImageIndicator')?.remove();
-    document.querySelector('.lightbox-nav-container')?.remove();
     
+    // ✅ Навигация если несколько медиа
     if (allImages.length > 1) {
         const content = document.querySelector('.lightbox-content');
-        const navContainer = document.createElement('div');
-        navContainer.className = 'lightbox-nav-container';
-
+        
         const leftArrow = document.createElement('button');
         leftArrow.id = 'lightboxLeft';
-        leftArrow.className = 'lightbox-nav-btn';
         leftArrow.innerHTML = '←';
+        leftArrow.style.cssText = 'position:absolute;left:20px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.6);color:#fff;border:none;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.3rem;z-index:10;transition:all 0.2s;';
+        leftArrow.onmouseenter = () => leftArrow.style.background = 'rgba(0,208,158,0.8)';
+        leftArrow.onmouseleave = () => leftArrow.style.background = 'rgba(0,0,0,0.6)';
         leftArrow.onclick = (e) => { e.stopPropagation(); navigateLightbox(-1); };
         
         const rightArrow = document.createElement('button');
         rightArrow.id = 'lightboxRight';
-        rightArrow.className = 'lightbox-nav-btn';
         rightArrow.innerHTML = '→';
+        rightArrow.style.cssText = 'position:absolute;right:20px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.6);color:#fff;border:none;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.3rem;z-index:10;transition:all 0.2s;';
+        rightArrow.onmouseenter = () => rightArrow.style.background = 'rgba(0,208,158,0.8)';
+        rightArrow.onmouseleave = () => rightArrow.style.background = 'rgba(0,0,0,0.6)';
         rightArrow.onclick = (e) => { e.stopPropagation(); navigateLightbox(1); };
-        
-        navContainer.appendChild(leftArrow);
-        navContainer.appendChild(rightArrow);
-        content.insertBefore(navContainer, captionEl);
         
         const indicator = document.createElement('div');
         indicator.id = 'lightboxImageIndicator';
-        indicator.style.cssText = 'display:flex;justify-content:center;gap:8px;margin-bottom:10px;';
+        indicator.style.cssText = 'position:absolute;bottom:80px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10;';
         indicator.innerHTML = allImages.map((url, i) => {
+            const isVideo = getMediaType(url) === 'video';
+            const icon = isVideo ? '▶' : '';
             return `<button class="lightbox-dot ${i === startIndex ? 'active' : ''}" 
                 data-index="${i}"
-                style="width:10px;height:10px;border-radius:50%;border:none;cursor:pointer;
-                background:${i === startIndex ? 'var(--accent)' : 'rgba(255,255,255,0.3)'};"></button>`;
+                title="${isVideo ? 'Video' : 'Image'} ${i+1}"
+                style="width:${isVideo?'auto':'10px'};height:10px;${isVideo?'padding:0 6px;':''}border-radius:${isVideo?'4px':'50%'};border:none;cursor:pointer;
+                background:${i === startIndex ? 'var(--accent)' : 'rgba(255,255,255,0.3)'};
+                color:#fff;font-size:0.65rem;transition:all 0.2s;">${icon}</button>`;
         }).join('');
         
-        content.insertBefore(indicator, navContainer);
+        content.appendChild(leftArrow);
+        content.appendChild(rightArrow);
+        content.appendChild(indicator);
         
         indicator.querySelectorAll('.lightbox-dot').forEach(dot => {
             dot.addEventListener('click', (e) => {
@@ -2621,6 +2600,14 @@ function openLightbox(imageUrl, title, tooltip, linkUrl, images = [], startIndex
     
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
+    
+    // Колесико мыши
+    overlay.onwheel = (e) => {
+        if (allImages.length > 1) {
+            e.preventDefault();
+            navigateLightbox(e.deltaY > 0 ? 1 : -1);
+        }
+    };
 }
 
 function navigateLightbox(direction) {
