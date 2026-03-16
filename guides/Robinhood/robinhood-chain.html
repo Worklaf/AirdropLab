@@ -1556,7 +1556,6 @@ function renderRobinUserItems() {
     });
     saveRobinStats();
     
-    // ✅ Не сохраняем userItems если это обновление из realtime listener
     if (!isUpdatingFromRealtime) {
         saveRobinUserItems();
     }
@@ -1573,6 +1572,14 @@ function renderRobinUserItems() {
     initializeTooltips(); 
     initLightbox(); 
     updateUI();
+    
+    // ✅ ДОБАВЬ ЗАДЕРЖКУ - это критично!
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            updateRobinNewIndicators();
+            console.log('✅ NEW indicators applied');
+        }, 100);
+    });
 }
 
 let isDataLoaded = false;
@@ -1807,17 +1814,33 @@ function applySectionState(sec, collapsed) {
 
 function updateRobinNewIndicators() {
     if (!newIndicatorsState || !newIndicatorsState.globalNew) return;
+    
+    // ✅ Debug log
+    console.log('🔍 Searching for [data-id] elements...');
+    const elements = document.querySelectorAll('[data-id]');
+    console.log(`Found ${elements.length} elements with data-id`);
+    console.log('Global NEW:', [...newIndicatorsState.globalNew]);
+    console.log('Clicked by user:', [...newIndicatorsState.clickedByUser]);
+    
     document.querySelectorAll('[data-id]').forEach(el => {
         const id = el.dataset.id;
         const shouldShowNew = newIndicatorsState.globalNew.has(id) && !newIndicatorsState.clickedByUser.has(id);
+        console.log(`${id}: global=${newIndicatorsState.globalNew.has(id)}, clicked=${newIndicatorsState.clickedByUser.has(id)}, show=${shouldShowNew}`);
+        
         if (shouldShowNew) {
-            el.setAttribute('data-new', 'true'); el.classList.add('has-new-flag');
+            el.setAttribute('data-new', 'true'); 
+            el.classList.add('has-new-flag');
             if (!el.querySelector('.new-flag')) {
-                const flag = document.createElement('span'); flag.className = 'new-flag'; flag.innerHTML = `<span class="new-flag-text">${getTranslation('new_indicator')}</span>`; el.appendChild(flag);
+                const flag = document.createElement('span'); 
+                flag.className = 'new-flag'; 
+                flag.innerHTML = `<span class="new-flag-text">${getTranslation('new_indicator')}</span>`; 
+                el.appendChild(flag);
             }
         } else {
-            el.removeAttribute('data-new'); el.classList.remove('has-new-flag');
-            const f = el.querySelector('.new-flag'); if (f) f.remove();
+            el.removeAttribute('data-new'); 
+            el.classList.remove('has-new-flag');
+            const f = el.querySelector('.new-flag'); 
+            if (f) f.remove();
         }
     });
     updateRobinSectionBadges();
@@ -2833,6 +2856,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (legendToggle) { legendToggle.addEventListener('click', () => { if (window.innerWidth <= 768) { isLegendCollapsed = !isLegendCollapsed; localStorage.setItem(LEGEND_COLLAPSE_KEY, isLegendCollapsed ? 'true' : 'false'); applyLegendState(isLegendCollapsed); } }); }
     window.addEventListener('resize', () => { const wasMobile = isMobile; isMobile = window.innerWidth <= 768; if (isMobile && !wasMobile) { storedLegend = localStorage.getItem(LEGEND_COLLAPSE_KEY); isLegendCollapsed = storedLegend === 'true' || storedLegend === null; } if (!isMobile) isLegendCollapsed = false; applyLegendState(isLegendCollapsed); });
     applyLegendState(isLegendCollapsed); initializeTooltips(); updateBadgeVisibility();
+    f (isDataLoaded) {
+    setTimeout(() => {
+        updateRobinNewIndicators();
+        console.log('✅ Initial NEW indicators loaded');
+    }, 200);
+}
 });
 
 // ===== TWITTER MONITOR =====
