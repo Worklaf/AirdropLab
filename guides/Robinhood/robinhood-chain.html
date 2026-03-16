@@ -1515,7 +1515,7 @@ let isUpdatingFromRealtime = false;
 function initRobinSharedDataRealtime() {
     if (sharedDataUnsubscribe) return;
     const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
-    newIndicatorsUnsubscribe = onSnapshot(docRef, (snap) => {
+    sharedDataUnsubscribe = onSnapshot(docRef, (snap) => {
         if (!snap.exists()) {
             console.log('📭 Public doc is empty');
             return;
@@ -1525,7 +1525,6 @@ function initRobinSharedDataRealtime() {
         const newItems = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
         const newEdits = data.editsOverride || {};
         
-        // Проверяем есть ли реальные изменения
         const itemsChanged = JSON.stringify(newItems) !== JSON.stringify(userItemsData);
         const editsChanged = JSON.stringify(newEdits) !== JSON.stringify(editsOverride);
         
@@ -1537,7 +1536,6 @@ function initRobinSharedDataRealtime() {
             localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
             localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
             
-            // ✅ Флаг: не сохраняем при обновлении из listener
             isUpdatingFromRealtime = true;
             renderRobinUserItems();
             isUpdatingFromRealtime = false;
