@@ -777,6 +777,7 @@ function getImagesFromInputs() {
         .filter(url => url.length > 0);
 }
 // ===== MEDIA TYPE DETECTION =====
+// ===== MEDIA TYPE DETECTION =====
 function getMediaType(url) {
     if (!url) return 'unknown';
     const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
@@ -785,86 +786,74 @@ function getMediaType(url) {
     return 'image';
 }
 
-ffunction createMediaElement(url, alt = '', className = '', autoplay = false) {
-    const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
-    const lowerUrl = url.toLowerCase();
-    const isVideo = videoExts.some(ext => lowerUrl.includes(ext));
+function createMediaElement(url, alt = '', className = '', autoplay = false) {
+    const isVideo = getMediaType(url) === 'video';
     
     if (isVideo) {
-        // ✅ ЕСЛИ ЭТО TWITTER ВИДЕО
-        if (url.includes('video.twimg.com')) {
+        // ✅ ЕСЛИ ЭТО TWITTER ВИДЕО (Обходим ошибку 403)
+        if (url.includes('twimg.com')) {
             const container = document.createElement('div');
+            container.className = className;
             container.style.cssText = `
                 position: relative;
                 width: 100%;
-                aspect-ratio: 16/9;
-                border-radius: 12px;
+                min-height: 160px;
+                border-radius: 8px;
                 overflow: hidden;
-                background: linear-gradient(135deg, rgba(0,0,0,0.5), rgba(0,0,0,0.3));
+                background: linear-gradient(135deg, #1da1f2 0%, #0a0e1a 100%);
                 display: flex;
+                flex-direction: column;
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
-                border: 2px solid rgba(0,208,158,0.3);
-                transition: all 0.3s;
+                box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
             `;
             
-            // Кнопка Play
-            const playBtn = document.createElement('div');
-            playBtn.style.cssText = `
-                width: 80px;
-                height: 80px;
-                background: rgba(0,208,158,0.9);
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 2.5rem;
-                color: white;
-                box-shadow: 0 8px 24px rgba(0,208,158,0.4);
-                transition: all 0.3s;
-                position: relative;
-                z-index: 5;
+            container.innerHTML = `
+                <i class="fab fa-twitter" style="font-size: 1.5rem; color: rgba(255,255,255,0.3); position: absolute; top: 10px; right: 10px;"></i>
+                <div style="
+                    width: 50px; height: 50px; 
+                    background: rgba(0,208,158,0.9); 
+                    border-radius: 50%; 
+                    display: flex; align-items: center; justify-content: center; 
+                    font-size: 1.2rem; color: white;
+                    box-shadow: 0 4px 15px rgba(0,208,158,0.5);
+                    transition: transform 0.2s;
+                " class="play-btn">
+                    <i class="fas fa-play" style="margin-left: 3px;"></i>
+                </div>
+                <div style="margin-top: 12px; color: white; font-weight: bold; font-size: 0.85rem;">
+                    Watch Video
+                </div>
             `;
-            playBtn.innerHTML = '<i class="fas fa-play"></i>';
             
-            container.appendChild(playBtn);
+            container.onmouseenter = () => {
+                const btn = container.querySelector('.play-btn');
+                if (btn) btn.style.transform = 'scale(1.15)';
+            };
+            container.onmouseleave = () => {
+                const btn = container.querySelector('.play-btn');
+                if (btn) btn.style.transform = 'scale(1)';
+            };
             
-            // Hover эффект
-            container.addEventListener('mouseenter', () => {
-                playBtn.style.transform = 'scale(1.15)';
-                playBtn.style.boxShadow = '0 12px 32px rgba(0,208,158,0.6)';
-                container.style.borderColor = 'rgba(0,208,158,0.6)';
-            });
-            
-            container.addEventListener('mouseleave', () => {
-                playBtn.style.transform = 'scale(1)';
-                playBtn.style.boxShadow = '0 8px 24px rgba(0,208,158,0.4)';
-                container.style.borderColor = 'rgba(0,208,158,0.3)';
-            });
-            
-            // ✅ КЛИК - ОТКРЫВАЕТ В НОВОМ ОКНЕ или открывает iframe
+            // ✅ МАГИЯ ЗДЕСЬ: 'noreferrer' скрывает от Твиттера твой сайт, и 403 пропадает!
             container.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                
-                // Вариант 1: Новая вкладка (текущий)
-                window.open(url, '_blank', 'width=900,height=600');
-                
-                // Вариант 2: Если нужна галерея - раскомментируй:
-                // openTwitterVideoModal(url, alt);
+                window.open(url, '_blank', 'noreferrer,noopener');
             };
             
             return container;
         } 
-        // ✅ ЕСЛИ ЭТО ЛОКАЛЬНОЕ ВИДЕО
+        // ✅ ЕСЛИ ЭТО ОБЫЧНОЕ ЛОКАЛЬНОЕ ВИДЕО
         else {
             const video = document.createElement('video');
             video.className = className;
             video.controls = true;
             video.loop = true;
-            video.muted = autoplay;
+            video.muted = autoplay; // Обязательно muted для autoplay
             video.playsinline = true;
+            video.style.cssText = 'max-width:100%; border-radius:8px; background:#000;';
             if (autoplay) video.autoplay = true;
             
             const source = document.createElement('source');
@@ -872,22 +861,16 @@ ffunction createMediaElement(url, alt = '', className = '', autoplay = false) {
             source.type = 'video/mp4';
             video.appendChild(source);
             
-            const fallback = document.createElement('p');
-            fallback.textContent = 'Your browser does not support HTML5 video.';
-            fallback.style.color = 'var(--text-muted)';
-            video.appendChild(fallback);
-            
             return video;
         }
     } 
-    // ✅ ДЛЯ ИЗОБРАЖЕНИЙ
+    // ✅ ДЛЯ ИЗОБРАЖЕНИЙ (Как было раньше)
     else {
         const img = document.createElement('img');
         img.src = url;
         img.alt = alt;
         img.className = className;
         img.loading = 'lazy';
-        img.style.cssText = 'max-width:100%;max-height:200px;border-radius:8px;object-fit:contain;';
         img.onerror = () => img.style.display = 'none';
         return img;
     }
