@@ -2665,20 +2665,25 @@ function closeLightbox() {
     overlay.classList.remove('open');
     document.body.style.overflow = '';
     overlay.onwheel = null;
+    
+    // ✅ Исправлено: одна переменная mediaWrapper
     const mediaWrapper = document.getElementById('arcLightboxMedia');
     if (mediaWrapper) {
+        // Очищаем HLS если есть
         const hlsContainer = mediaWrapper.querySelector('div[_hls]');
         if (hlsContainer && hlsContainer._hls) {
             hlsContainer._hls.destroy();
             hlsContainer._hls = null;
         }
-        mediaWrapper.innerHTML = '';
-    }
-    // Останавливаем видео если есть
-    const mediaWrapper = document.getElementById('arcLightboxMedia');
-    if (mediaWrapper) {
+        
+        // Останавливаем обычные видео
         const videos = mediaWrapper.querySelectorAll('video');
-        videos.forEach(v => { v.pause(); v.src = ''; });
+        videos.forEach(v => { 
+            v.pause(); 
+            v.src = ''; 
+        });
+        
+        mediaWrapper.innerHTML = '';
     }
     
     document.getElementById('lightboxLeft')?.remove();
