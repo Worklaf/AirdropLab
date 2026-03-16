@@ -2393,11 +2393,13 @@ function showTooltip(e) {
     if (!target) return;
 
     ensureTooltipEl();
+    // Очистка старого HLS
     const oldHlsContainer = tooltipEl.querySelector('div[_hls]');
     if (oldHlsContainer && oldHlsContainer._hls) {
         oldHlsContainer._hls.destroy();
         oldHlsContainer._hls = null;
     }
+    
     activeTooltipTarget = target;
 
     const imagesAttr = target.getAttribute('data-images');
@@ -2408,23 +2410,20 @@ function showTooltip(e) {
         images = [target.getAttribute('data-image')];
     }
 
-    // ✅ Если есть видео (.m3u8 / .mp4 / .webm), берём его для tooltip
+    // ✅ ИСПРАВЛЕНИЕ: Всегда ищем индекс видео, если оно есть
     let currentIdx = 0;
     if (images.length > 0) {
-        // Ищем первый элемент, который распознаётся как видео / HLS
+        // Ищем индекс любого элемента, который является видео или HLS
         const videoIndex = images.findIndex(url => {
             const t = getMediaType(url);
             return t === 'video' || t === 'hls';
         });
-        if (videoIndex !== -1) {
-            currentIdx = videoIndex;
-        } else {
-            // Если видео нет — используем data-image-index / 0
-            currentIdx = Math.min(
-                parseInt(target.getAttribute('data-image-index') || '0'),
-                Math.max(0, images.length - 1)
-            );
-        }
+        
+        // Если видео найдено — показываем его, иначе — то, что выбрано пользователем (data-image-index)
+        currentIdx = videoIndex !== -1 ? videoIndex : Math.min(
+            parseInt(target.getAttribute('data-image-index') || '0'),
+            Math.max(0, images.length - 1)
+        );
     }
 
     const imageUrl = images.length > 0 ? images[currentIdx] : null;
@@ -2439,14 +2438,13 @@ function showTooltip(e) {
 
     if (imageUrl) {
         tooltipEl.classList.add('has-image');
-
-        const mediaEl = createMediaElement(imageUrl, text || 'Media', 'tooltip-image', false);
+        // Передаем true для autoplay, чтобы HLS начал играть сразу
+        const mediaEl = createMediaElement(imageUrl, text || 'Media', 'tooltip-image', true);
 
         const container = document.createElement('div');
         container.className = 'tooltip-image-container';
         container.appendChild(mediaEl);
 
-        // Индикатор если несколько элементов
         if (images.length > 1) {
             const indicator = document.createElement('div');
             indicator.style.cssText = 'font-size:0.72rem;color:#94a3b8;text-align:center;margin-top:4px;';
@@ -2459,13 +2457,6 @@ function showTooltip(e) {
             textDiv.className = 'tooltip-text';
             textDiv.textContent = text;
             container.appendChild(textDiv);
-        }
-
-        if (images.length > 1) {
-            const hint = document.createElement('div');
-            hint.style.cssText = 'font-size:0.68rem;color:#64748b;text-align:center;margin-top:3px;';
-            hint.textContent = '🖱️ Right-click for gallery';
-            container.appendChild(hint);
         }
 
         tooltipEl.innerHTML = '';
