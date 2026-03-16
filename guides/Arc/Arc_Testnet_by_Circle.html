@@ -263,33 +263,46 @@
         @media(max-width:520px){.link-inline{font-size:.9rem}.link-inline.link-compact{font-size:.86rem}.link-inline .click-info{font-size:.65rem}}
         .import-file-input{display:none}
         .lang-tab,.language-toggle-btn,#languageToggleText,.lightbox-lang-btn{font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif!important}
-        /* ===== SWAP PREVIEW BTN ===== */
+      /* ===== SWAP PREVIEW BTN ===== */
 .preview-swap-btn {
     display: none;
     align-items: center;
     gap: 4px;
     background: transparent;
-    border: 1px solid rgba(0,208,158,0.4);
+    border: 1px solid rgba(96,165,250,0.4);
     border-radius: 6px;
     color: var(--accent);
     cursor: pointer;
     font-size: 0.72rem;
+    font-weight: 600;
     padding: 3px 8px;
     margin-left: 6px;
     transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
+/* Показываем только в режиме редактирования */
 body.edit-mode .preview-swap-btn {
-    display: inline-flex;
+    display: inline-flex !important;
 }
 
+/* Ховер */
 .preview-swap-btn:hover {
-    background: rgba(0,208,158,0.1);
+    background: rgba(96,165,250,0.12);
+    border-color: var(--accent);
+    transform: translateY(-1px);
 }
 
+/* Активное состояние — 2-я картинка выбрана */
 .preview-swap-btn.active {
-    border-color: rgba(234,179,8,0.6);
+    border-color: rgba(234,179,8,0.7);
     color: #eab308;
+    background: rgba(234,179,8,0.08);
+}
+
+.preview-swap-btn.active:hover {
+    background: rgba(234,179,8,0.15);
 }
 
 /* ===== LIGHTBOX MEDIA ===== */
@@ -928,47 +941,44 @@ window.handleRegister = async()=>{
 };
 window.logout = ()=>signOut(auth);
 
-onAuthStateChanged(auth, async(user) => {
+onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     const lo = document.getElementById('arcLoggedOutView');
     const li = document.getElementById('arcLoggedInView');
     const nm = document.getElementById('arcUserName');
+
     if (user) {
-        lo.style.display='none'; li.style.display='';
+        lo.style.display = 'none'; li.style.display = '';
         nm.textContent = user.displayName || user.email?.split('@')[0] || 'User';
         checkAdmin(user);
-        setTimeout(() => initNewIndicatorsRealtime(), 2000);
         if (user.uid === ADMIN_UID) setTimeout(initTwitterMonitor, 1000);
     } else {
-        lo.style.display=''; li.style.display='none';
+        lo.style.display = ''; li.style.display = 'none';
         checkAdmin(null);
-        if (newIndicatorsUnsubscribe) { newIndicatorsUnsubscribe(); newIndicatorsUnsubscribe = null; }
     }
-    
+
+    // ✅ Запускаем realtime для ВСЕХ (и анонимных)
+    setTimeout(() => initNewIndicatorsRealtime(), 2000);
+
     if (!initialAuthCheckComplete) {
         initialAuthCheckComplete = true;
         await loadLanguagePref();
         loadUserItems();
         loadEditsOverride();
-        
-        // ✅ НОВОЕ: загружаем порядок коллекций
         await loadArcNFTCollectionsOrder();
-        
         await loadSharedData();
         await loadNewIndicators();
         await loadArcData();
-        
-        // ✅ Применяем порядок ПОСЛЕ рендера
+
         renderAll();
-        
-        // ✅ НОВОЕ: применяем сохранённый порядок
+
         setTimeout(() => {
             applyArcNFTSortOrder();
             initArcNFTCollectionsSort();
             initArcNFTOrderRealtime();
+            updateNewIndicators();
+            console.log('✅ Arc fully initialized');
         }, 300);
-        
-        updateNewIndicators();
     }
 });
 // ===== MEDIA TYPE DETECTION =====
@@ -1217,18 +1227,19 @@ function renderNFTCard(coll, grid) {
     card.className = 'resource-item user-collection-card';
     card.dataset.zone = coll.id;
 
+    // Кнопка удаления коллекции
     const delBtn = document.createElement('button');
     delBtn.type = 'button';
     delBtn.className = 'user-collection-delete-top admin-only';
     delBtn.title = t('delete_collection');
     delBtn.innerHTML = '×';
-    delBtn.addEventListener('click', async()=>{
+    delBtn.addEventListener('click', async () => {
         if (!confirm(t('confirm_delete'))) return;
-        userItemsData.collections = userItemsData.collections.filter(c=>c.id!==coll.id);
+        userItemsData.collections = userItemsData.collections.filter(c => c.id !== coll.id);
         delete userItemsData.items[coll.id];
         await saveUserItems();
         card.remove();
-        showToast(t('collection_removed')+': '+coll.title, 'info');
+        showToast(t('collection_removed') + ': ' + coll.title, 'info');
     });
     card.appendChild(delBtn);
 
@@ -1237,20 +1248,89 @@ function renderNFTCard(coll, grid) {
 
     const titleSpan = document.createElement('span');
     titleSpan.className = 'resource-title';
-    titleSpan.textContent = currentLanguage==='ua' && coll.titleUa ? coll.titleUa : coll.title;
+    titleSpan.textContent = currentLanguage === 'ua' && coll.titleUa ? coll.titleUa : coll.title;
     header.appendChild(titleSpan);
 
+    // ✅ КНОПКА SWAP PREVIEW IMAGE
+    const swapBtn = document.createElement('button');
+    swapBtn.type = 'button';
+    swapBtn.className = 'preview-swap-btn admin-only';
+
+    // Читаем текущий previewIndex из данных коллекции
+    const currentPreviewIndex = coll.previewIndex || 0;
+    swapBtn.innerHTML = `<i class="fas fa-images"></i> <span class="swap-label">${currentPreviewIndex === 1 ? '2nd' : '1st'}</span>`;
+    swapBtn.title = 'Switch which image shows on hover (1st or 2nd)';
+
+    // Если сейчас выбрана 2-я — визуально выделяем
+    if (currentPreviewIndex === 1) {
+        swapBtn.classList.add('active');
+    }
+
+    swapBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        // Находим коллекцию в данных
+        const collData = userItemsData.collections.find(c => c.id === coll.id);
+        if (!collData) return;
+
+        // Переключаем 0 ↔ 1
+        collData.previewIndex = (collData.previewIndex || 0) === 0 ? 1 : 0;
+
+        // Обновляем текст кнопки
+        const label = swapBtn.querySelector('.swap-label');
+        if (label) label.textContent = collData.previewIndex === 1 ? '2nd' : '1st';
+
+        // Обновляем стиль кнопки
+        swapBtn.classList.toggle('active', collData.previewIndex === 1);
+
+        // ✅ Обновляем data-image-index на всех ссылках в этой коллекции
+        const zone = coll.id;
+        const items = userItemsData.items[zone] || [];
+        items.forEach(item => {
+            const link = card.querySelector(`a[data-id="${item.id}"]`);
+            if (!link) return;
+
+            const imagesAttr = link.getAttribute('data-images');
+            if (!imagesAttr) return;
+
+            let images = [];
+            try { images = JSON.parse(imagesAttr); } catch(err) { return; }
+
+            if (images.length > 1) {
+                const newIdx = collData.previewIndex === 1 ? 1 : 0;
+                link.setAttribute('data-image-index', String(newIdx));
+            }
+        });
+
+        await saveUserItems();
+        showToast(
+            collData.previewIndex === 1
+                ? '🖼️ Hover preview: 2nd image'
+                : '🖼️ Hover preview: 1st image',
+            'info'
+        );
+    });
+
+    header.appendChild(swapBtn);
+
+    // Социальные ссылки
     if (coll.website || coll.twitter) {
         const icons = document.createElement('span');
         icons.className = 'social-icons';
-        if (coll.website) icons.innerHTML += `<a href="${coll.website}" target="_blank" class="site-icon" title="Website"><i class="fas fa-globe"></i></a>`;
-        if (coll.twitter) icons.innerHTML += `<a href="${coll.twitter}" target="_blank" class="collection-social-link" title="Twitter"><i class="fab fa-x-twitter"></i></a>`;
+        if (coll.website) {
+            icons.innerHTML += `<a href="${coll.website}" target="_blank" class="site-icon" title="Website"><i class="fas fa-globe"></i></a>`;
+        }
+        if (coll.twitter) {
+            icons.innerHTML += `<a href="${coll.twitter}" target="_blank" class="collection-social-link" title="Twitter"><i class="fab fa-x-twitter"></i></a>`;
+        }
         header.appendChild(icons);
     }
 
-    const addBtn = createAddBtn(`${t('add_nft')} ${coll.title}`, ()=>{
-        currentAddContext = { zone: coll.id, trackType:'track-once', isNft:true };
-        openModal(`${t('add_to')}: ${coll.title}`, ['fieldTitle','fieldUrl','fieldImage','descFieldEn','descFieldUa']);
+    // Кнопка добавить NFT
+    const addBtn = createAddBtn(`${t('add_nft')} ${coll.title}`, () => {
+        currentAddContext = { zone: coll.id, trackType: 'track-once', isNft: true };
+        openModal(`${t('add_to')}: ${coll.title}`, ['fieldTitle', 'fieldUrl', 'fieldImage', 'descFieldEn', 'descFieldUa']);
     });
     header.appendChild(addBtn);
     card.appendChild(header);
@@ -1260,13 +1340,30 @@ function renderNFTCard(coll, grid) {
     card.appendChild(linkColl);
     grid.appendChild(card);
 
+    // ✅ Рендерим items с учётом previewIndex коллекции
     const items = userItemsData.items[coll.id] || [];
     items.forEach(item => {
         const w = createItemWrapper(item, coll.id, 'track-once');
+
+        // Применяем previewIndex сразу при рендере
+        const link = w.querySelector('a[data-id]');
+        if (link) {
+            const imagesAttr = link.getAttribute('data-images');
+            if (imagesAttr) {
+                try {
+                    const images = JSON.parse(imagesAttr);
+                    if (images.length > 1) {
+                        const idx = coll.previewIndex || 0;
+                        link.setAttribute('data-image-index', String(idx));
+                    }
+                } catch(err) {}
+            }
+        }
+
         linkColl.appendChild(w);
     });
 
-    requestAnimationFrame(()=>card.classList.add('anim-visible'));
+    requestAnimationFrame(() => card.classList.add('anim-visible'));
 }
 
 // ===========================
@@ -1985,36 +2082,97 @@ function applyLegendState(collapsed){
 // ===========================
 // NEW INDICATORS
 // ===========================
-async function loadNewIndicators(){
-    const local=JSON.parse(localStorage.getItem(NEW_IND_KEY)||'{}');
-    newIndicatorsState={ globalNew:new Set(local.globalNew||[]), clickedByUser:new Set(local.clickedByUser||[]), lastSync:local.lastSync||0 };
-    if(currentUser){
-        try{
-            const snap=await getDoc(doc(db,"users",currentUser.uid));
-            if(snap.exists()&&snap.data().arcNewIndicators){
-                const cts=snap.data().arcNewIndicatorsTimestamp||0;
-                if(cts>newIndicatorsState.lastSync){
-                    newIndicatorsState={ globalNew:new Set(snap.data().arcNewIndicators.globalNew||[]), clickedByUser:new Set(snap.data().arcNewIndicators.clickedByUser||[]), lastSync:cts };
-                    localStorage.setItem(NEW_IND_KEY,JSON.stringify(snap.data().arcNewIndicators));
+async function loadNewIndicators() {
+    // Загружаем из localStorage
+    const local = JSON.parse(localStorage.getItem(NEW_IND_KEY) || '{}');
+    newIndicatorsState = {
+        globalNew: new Set(local.globalNew || []),
+        clickedByUser: new Set(local.clickedByUser || []),
+        lastSync: local.lastSync || 0
+    };
+
+    // ✅ Загружаем globalNew из Firebase для ВСЕХ (анонимных тоже)
+    try {
+        const globalRef = doc(db, CONFIG_COLLECTION, NEW_IND_DOC);
+        const globalSnap = await getDoc(globalRef);
+
+        if (globalSnap.exists()) {
+            const globalNew = new Set(globalSnap.data().globalNew || []);
+            newIndicatorsState.globalNew = globalNew;
+            console.log('✅ Arc Global NEW loaded:', globalNew.size, 'items');
+        }
+    } catch (e) {
+        console.warn('⚠️ Arc Global NEW load error:', e);
+    }
+
+    // ✅ Если есть пользователь — загружаем его персональные клики
+    if (currentUser) {
+        try {
+            const snap = await getDoc(doc(db, "users", currentUser.uid));
+            if (snap.exists() && snap.data().arcNewIndicators) {
+                const cts = snap.data().arcNewIndicatorsTimestamp || 0;
+                if (cts > newIndicatorsState.lastSync) {
+                    const cloudClicked = new Set(snap.data().arcNewIndicators.clickedByUser || []);
+                    newIndicatorsState.clickedByUser = cloudClicked;
+                    newIndicatorsState.lastSync = cts;
+                    console.log('✅ Arc user clicks synced:', cloudClicked.size);
                 }
             }
-        }catch(e){}
+        } catch (e) {
+            console.error('⚠️ Arc user NEW sync error:', e);
+        }
     }
-    newIndicatorsState.lastSync=newIndicatorsState.lastSync||Date.now();
+
+    // Сохраняем в localStorage
+    const saveData = {
+        globalNew: [...newIndicatorsState.globalNew],
+        clickedByUser: [...newIndicatorsState.clickedByUser],
+        lastSync: newIndicatorsState.lastSync || Date.now()
+    };
+    localStorage.setItem(NEW_IND_KEY, JSON.stringify(saveData));
+    newIndicatorsState.lastSync = newIndicatorsState.lastSync || Date.now();
 }
 
-function initNewIndicatorsRealtime(){
-    if(!currentUser) return;
-    const ref=doc(db,CONFIG_COLLECTION,NEW_IND_DOC);
-    newIndicatorsUnsubscribe=onSnapshot(ref,(snap)=>{
-        if(!snap.exists()) return;
-        const gn=new Set(snap.data().globalNew||[]);
-        const changed=[...gn].some(id=>!newIndicatorsState.globalNew.has(id))||[...newIndicatorsState.globalNew].some(id=>!gn.has(id));
-        if(changed&&newIndicatorsState.lastSync>0){
-            newIndicatorsState.globalNew=gn;
-            localStorage.setItem(NEW_IND_KEY,JSON.stringify({globalNew:[...gn],clickedByUser:[...newIndicatorsState.clickedByUser],lastSync:Date.now()}));
-            updateNewIndicators(); showToast(t('new_elements_updated'),'info');
+function initNewIndicatorsRealtime() {
+    // ✅ Убираем проверку currentUser — запускаем для ВСЕХ
+    if (newIndicatorsUnsubscribe) return; // уже подписаны
+
+    const ref = doc(db, CONFIG_COLLECTION, NEW_IND_DOC);
+
+    newIndicatorsUnsubscribe = onSnapshot(ref, (snap) => {
+        if (!snap.exists()) {
+            console.log('📭 Arc Global NEW doc is empty');
+            return;
         }
+
+        const gn = new Set(snap.data().globalNew || []);
+
+        // Первая загрузка — не показываем тост
+        if (newIndicatorsState.lastSync === 0) {
+            newIndicatorsState.globalNew = gn;
+            newIndicatorsState.lastSync = Date.now();
+            console.log('✅ Arc Initial NEW loaded:', gn.size);
+            updateNewIndicators();
+            return;
+        }
+
+        // Проверяем реальные изменения
+        const hasChanges = [...gn].some(id => !newIndicatorsState.globalNew.has(id)) ||
+                          [...newIndicatorsState.globalNew].some(id => !gn.has(id));
+
+        if (hasChanges) {
+            newIndicatorsState.globalNew = gn;
+            localStorage.setItem(NEW_IND_KEY, JSON.stringify({
+                globalNew: [...gn],
+                clickedByUser: [...newIndicatorsState.clickedByUser],
+                lastSync: Date.now()
+            }));
+            updateNewIndicators();
+            showToast('📡 ' + t('new_elements_updated'), 'info');
+            console.log('✅ Arc NEW updated in real-time:', gn.size);
+        }
+    }, (error) => {
+        console.error('❌ Arc NEW realtime error:', error);
     });
 }
 
@@ -2048,22 +2206,66 @@ function updateNewIndicators() {
     updateSectionBadges();
 }
 
-async function clearNewLink(id){
-    newIndicatorsState.clickedByUser.add(id); newIndicatorsState.lastSync=Date.now();
-    const sd={globalNew:[...newIndicatorsState.globalNew],clickedByUser:[...newIndicatorsState.clickedByUser],lastSync:newIndicatorsState.lastSync};
-    localStorage.setItem(NEW_IND_KEY,JSON.stringify(sd));
-    if(currentUser) try{ await saveToCloud({arcNewIndicators:sd,arcNewIndicatorsTimestamp:newIndicatorsState.lastSync}); }catch(e){}
+async function clearNewLink(id) {
+    if (!id) return;
+
+    // Добавляем в "кликнутые пользователем"
+    newIndicatorsState.clickedByUser.add(id);
+    newIndicatorsState.lastSync = Date.now();
+
+    const saveData = {
+        globalNew: [...newIndicatorsState.globalNew],
+        clickedByUser: [...newIndicatorsState.clickedByUser],
+        lastSync: newIndicatorsState.lastSync
+    };
+    localStorage.setItem(NEW_IND_KEY, JSON.stringify(saveData));
+
+    // Сохраняем в Firebase если залогинен
+    if (currentUser) {
+        try {
+            await saveToCloud({
+                arcNewIndicators: saveData,
+                arcNewIndicatorsTimestamp: newIndicatorsState.lastSync
+            });
+        } catch (e) {
+            console.warn('clearNewLink save error:', e);
+        }
+    }
+
     updateNewIndicators();
 }
 
-async function addToGlobalNew(itemId){
-    if(!isAdmin||newIndicatorsState.globalNew.has(itemId)) return;
-    try{
+async function addToGlobalNew(itemId) {
+    if (!isAdmin || !currentUser) return;
+    if (newIndicatorsState.globalNew.has(itemId)) return;
+
+    try {
         newIndicatorsState.globalNew.add(itemId);
-        await setDoc(doc(db,CONFIG_COLLECTION,NEW_IND_DOC),{globalNew:[...newIndicatorsState.globalNew],lastUpdated:Date.now(),updatedBy:currentUser.uid},{merge:true});
-        localStorage.setItem(NEW_IND_KEY,JSON.stringify({globalNew:[...newIndicatorsState.globalNew],clickedByUser:[...newIndicatorsState.clickedByUser],lastSync:Date.now()}));
+
+        // ✅ Пишем в arc_config (не в users)
+        await setDoc(
+            doc(db, CONFIG_COLLECTION, NEW_IND_DOC),
+            {
+                globalNew: [...newIndicatorsState.globalNew],
+                lastUpdated: Date.now(),
+                updatedBy: currentUser.uid
+            },
+            { merge: true }
+        );
+
+        // Обновляем localStorage
+        localStorage.setItem(NEW_IND_KEY, JSON.stringify({
+            globalNew: [...newIndicatorsState.globalNew],
+            clickedByUser: [...newIndicatorsState.clickedByUser],
+            lastSync: Date.now()
+        }));
+
         updateNewIndicators();
-    }catch(e){ showToast(t('error_adding_indicator'),'error'); }
+        console.log('✅ Arc NEW indicator added:', itemId);
+    } catch (e) {
+        console.error('❌ addToGlobalNew error:', e);
+        showToast(t('error_adding_indicator'), 'error');
+    }
 }
 
 function updateSectionBadges(){
@@ -2093,68 +2295,72 @@ function positionTooltip(target){
 function showTooltip(e) {
     const target = e.target.closest('[data-tooltip], [data-images], [data-image]');
     if (!target) return;
-    
+
     ensureTooltipEl();
     activeTooltipTarget = target;
-    
+
     const imagesAttr = target.getAttribute('data-images');
     let images = [];
     if (imagesAttr) {
-        try { images = JSON.parse(imagesAttr); } catch(e){}
+        try { images = JSON.parse(imagesAttr); } catch(err) {}
     } else if (target.getAttribute('data-image')) {
         images = [target.getAttribute('data-image')];
     }
-    
-    const currentIdx = parseInt(target.getAttribute('data-image-index') || '0');
+
+    // ✅ Читаем data-image-index (может быть изменён кнопкой Swap)
+    const currentIdx = Math.min(
+        parseInt(target.getAttribute('data-image-index') || '0'),
+        Math.max(0, images.length - 1)
+    );
     const imageUrl = images.length > 0 ? images[currentIdx] : null;
-    
+
     const lang = currentLanguage;
     const descEn = target.getAttribute('data-desc-en') || '';
     const descUa = target.getAttribute('data-desc-ua') || '';
     const tooltip = target.getAttribute('data-tooltip') || '';
     const text = lang === 'ua' ? (descUa || tooltip || descEn) : (descEn || tooltip || descUa);
-    
+
     if (!text && !imageUrl) return;
-    
+
     if (imageUrl) {
         tooltipEl.classList.add('has-image');
-        
-        // ✅ Используем createMediaElement вместо просто img
+
         const mediaEl = createMediaElement(imageUrl, text || 'Media', 'tooltip-image', false);
-        
+
         const container = document.createElement('div');
         container.className = 'tooltip-image-container';
-        
         container.appendChild(mediaEl);
-        
+
+        // Индикатор если несколько картинок
         if (images.length > 1) {
             const indicator = document.createElement('div');
-            indicator.style.cssText = 'font-size:0.75rem;color:#fff;text-align:center;margin-top:4px;';
-            indicator.textContent = `${currentIdx + 1}/${images.length}`;
+            indicator.style.cssText = 'font-size:0.72rem;color:#94a3b8;text-align:center;margin-top:4px;';
+            indicator.textContent = `${currentIdx + 1} / ${images.length}`;
             container.appendChild(indicator);
         }
-        
+
         if (text) {
             const textDiv = document.createElement('div');
             textDiv.className = 'tooltip-text';
             textDiv.textContent = text;
             container.appendChild(textDiv);
         }
-        
+
+        // Подсказка про правый клик (только если несколько картинок)
         if (images.length > 1) {
             const hint = document.createElement('div');
-            hint.style.cssText = 'font-size:0.7rem;color:#94a3b8;text-align:center;margin-top:4px;';
-            hint.textContent = '📸 Right-click for gallery';
+            hint.style.cssText = 'font-size:0.68rem;color:#64748b;text-align:center;margin-top:3px;';
+            hint.textContent = '🖱️ Right-click for gallery';
             container.appendChild(hint);
         }
-        
+
         tooltipEl.innerHTML = '';
         tooltipEl.appendChild(container);
     } else {
         tooltipEl.classList.remove('has-image');
         tooltipEl.textContent = text;
     }
-    
+
     positionTooltip(target);
     tooltipEl.classList.add('visible');
 }
