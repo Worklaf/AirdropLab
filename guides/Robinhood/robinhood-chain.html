@@ -1445,16 +1445,7 @@ async function loadRobinData() {
                     await saveToCloud({ robinFavoritesState: localFav, robinFavoritesOrder: localOrder, robinFavoritesTimestamp: localTimestamp });
                 }
                 
-                if (cloudData.robinUserItems) {
-                    const cloudItemsTs = parseInt(cloudData.robinUserItemsTimestamp || '0', 10);
-                    const localItemsTs = parseInt(localStorage.getItem('robin_user_items_timestamp') || '0', 10);
-                    
-                    if (cloudItemsTs > localItemsTs) {
-                        userItemsData = { items: cloudData.robinUserItems.items || {}, collections: cloudData.robinUserItems.collections || [], dappCategories: cloudData.robinUserItems.dappCategories || [] };
-                        localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
-                        localStorage.setItem('robin_user_items_timestamp', String(cloudItemsTs));
-                    }
-                }
+                
                 
                 if (cloudData.robinEditsOverride) {
                     const cloudEditsTs = parseInt(cloudData.robinEditsTimestamp || '0', 10);
@@ -1510,12 +1501,12 @@ window.logout = function() { signOut(auth); };
 
 async function loadRobinSharedData() {
     if (isAdmin) {
-        await loadRobinUserItems();
-        await loadRobinEditsOverride();
+        // ✅ Данные уже загружены в loadRobinUserItems() выше
+        // Только обновляем edits (sync)
+        loadRobinEditsOverride();
         return;
     }
 
-    // ✅ БЕЗ проверки currentUser — читаем для ВСЕХ
     try {
         const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
         const docSnap = await getDoc(docRef);
@@ -1526,18 +1517,16 @@ async function loadRobinSharedData() {
             editsOverride = data.editsOverride || {};
             localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
             localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
-            console.log('✅ Public data loaded');
+            // ✅ УБРАЛИ console.log
             return;
         }
     } catch (e) {
         console.warn("Firebase error, fallback:", e);
     }
 
-    // Fallback
     loadRobinUserItems();
     loadRobinEditsOverride();
 }
-
 // ===== ФЛАГ ДЛЯ ОТКЛЮЧЕНИЯ СОХРАНЕНИЯ ИЗ REALTIME =====
 let isUpdatingFromRealtime = false;
 
@@ -1585,25 +1574,46 @@ function renderRobinUserItems() {
     });
     saveRobinStats();
     
-    if (!isUpdatingFromRealtime) {
-        saveRobinUserItems();
-    }
+    // ✅ УБРАЛИ saveRobinUserItems() отсюда — он вызывается только при реальном изменении данных
     
     clearAllUserItems();
-    userItemsData.collections.forEach(coll => { if (!ZONE_CONFIG[coll.id]) { const isNft = coll.parentZone === 'nfts'; ZONE_CONFIG[coll.id] = { type: isNft ? 'nft-item' : 'link-item', label: coll.title, trackType: isNft ? 'track-once' : 'track-once track-once-info' }; } });
-    userItemsData.dappCategories.forEach(cat => { if (!ZONE_CONFIG[cat.id]) ZONE_CONFIG[cat.id] = { type:'link-item', label: cat.title, trackType:'track-daily' }; });
-    // ✅ СОРТИРУЕМ коллекции по сохраненному порядку
-const nftCollections = userItemsData.collections.filter(c => c.parentZone === 'nfts');
-nftCollections.sort((a, b) => {
-    const indexA = nftCollectionsOrder.indexOf(a.id);
-    const indexB = nftCollectionsOrder.indexOf(b.id);
-    if (indexA === -1) return 1;
-    if (indexB === -1) return -1;
-    return indexA - indexB;
-});
-nftCollections.forEach(coll => renderUserCollection(coll)); 
+    
+    userItemsData.collections.forEach(coll => { 
+        if (!ZONE_CONFIG[coll.id]) { 
+            const isNft = coll.parentZone === 'nfts'; 
+            ZONE_CONFIG[coll.id] = { 
+                type: isNft ? 'nft-item' : 'link-item', 
+                label: coll.title, 
+                trackType: isNft ? 'track-once' : 'track-once track-once-info' 
+            }; 
+        } 
+    });
+    userItemsData.dappCategories.forEach(cat => { 
+        if (!ZONE_CONFIG[cat.id]) ZONE_CONFIG[cat.id] = { type:'link-item', label: cat.title, trackType:'track-daily' }; 
+    });
+    
+    // ✅ NFT коллекции с сортировкой
+    const nftCollections = userItemsData.collections.filter(c => c.parentZone === 'nfts');
+    nftCollections.sort((a, b) => {
+        const indexA = nftCollectionsOrder.indexOf(a.id);
+        const indexB = nftCollectionsOrder.indexOf(b.id);
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+    });
+    nftCollections.forEach(coll => renderUserCollection(coll));
+    
+    // ✅ ДОБАВЛЕНО: Deploy коллекции (раньше вообще не рендерились!)
+    const deployCollections = userItemsData.collections.filter(c => c.parentZone === 'deploy');
+    deployCollections.forEach(grp => renderUserDeployGroup(grp));
+    
     userItemsData.dappCategories.forEach(cat => renderUserDappCategory(cat));
-    Object.keys(userItemsData.items).forEach(zone => { const items = userItemsData.items[zone]; if (!items || !items.length) return; items.forEach(item => renderUserItemInZone(zone, item)); });
+    Object.keys(userItemsData.items).forEach(zone => { 
+        const items = userItemsData.items[zone]; 
+        if (!items || !items.length) return; 
+        items.forEach(item => renderUserItemInZone(zone, item)); 
+    });
+    
     injectAddButtons(); 
     bindTrackingHandlersToAll(); 
     attachFavoriteControls(); 
@@ -1611,12 +1621,10 @@ nftCollections.forEach(coll => renderUserCollection(coll));
     initLightbox(); 
     updateUI();
     
-    // ✅ ДОБАВЬ ЗАДЕРЖКУ - это критично!
     requestAnimationFrame(() => {
         setTimeout(() => {
             updateRobinNewIndicators();
-            initNFTCollectionsSort(); // ← НОВОЕ
-            console.log('✅ NEW indicators and sort initialized');
+            initNFTCollectionsSort();
         }, 100);
     });
 }
@@ -1971,7 +1979,7 @@ function initRobinNewIndicatorsRealtime() {
     
     const newIndicatorsRef = doc(db, CONFIG_COLLECTION, NEW_INDICATORS_DOC);
     
-    sharedDataUnsubscribe = onSnapshot(newIndicatorsRef, (docSnap) => {
+    newIndicatorsUnsubscribe = onSnapshot(newIndicatorsRef, (docSnap) => {
         if (!docSnap.exists()) {
             console.log('📭 Global NEW doc is empty');
             return;
@@ -2126,12 +2134,13 @@ async function loadRobinUserItems() {
             
             if (docSnap.exists() && docSnap.data().userItemsData) {
                 const publicData = docSnap.data().userItemsData;
-                if (publicData && (publicData.collections || []).length > 0) {
-                    userItemsData = publicData;
-                    console.log('✅ User items loaded from Public Collection (Fallback)');
-                    // Не сохраняем в localStorage гостей, чтобы не кэшировать старое
-                    // Но обновляем переменную для рендера
-                }
+if (publicData && (publicData.collections || []).length > 0) {
+    userItemsData = publicData;
+    console.log('✅ User items loaded from Public Collection (Fallback)');
+    // ✅ ДОБАВЬ ЭТИ 2 СТРОКИ:
+    localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
+    localStorage.setItem('robin_user_items_timestamp', String(Date.now()));
+}
             }
         } catch (e) {
             console.warn("Public fallback error:", e);
