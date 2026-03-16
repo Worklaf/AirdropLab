@@ -2601,16 +2601,18 @@ async function saveNFTCollectionsOrder() {
     nftCollectionsOrder = order;
     localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(order));
     
-    // ✅ Сохраняем в ПУБЛИЧНУЮ коллекцию для всех пользователей
+    console.log('💾 Saving order:', order);
+    
     if (isAdmin && currentUser) {
         try {
-            await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
+            const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
+            await setDoc(docRef, {
                 nftCollectionsOrder: order,
                 nftCollectionsOrderTimestamp: Date.now()
             }, { merge: true });
-            console.log('✅ Order saved to public Firebase');
+            console.log('✅ Order saved to Firebase successfully');
         } catch(e) { 
-            console.error('Order save error:', e); 
+            console.error('❌ Order save error:', e); 
         }
     }
 }
@@ -2620,24 +2622,43 @@ async function loadNFTCollectionsOrder() {
     const localOrder = JSON.parse(localStorage.getItem(NFT_COLLECTIONS_ORDER_KEY) || '[]');
     nftCollectionsOrder = localOrder;
     
-    // Загружаем из ПУБЛИЧНОЙ коллекции для всех
+    console.log('📦 Loading NFT order... localOrder:', localOrder);
+    
     try {
         const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
         const docSnap = await getDoc(docRef);
         
-        if (docSnap.exists() && docSnap.data().nftCollectionsOrder) {
-            const cloudOrder = docSnap.data().nftCollectionsOrder;
-            const cloudTs = docSnap.data().nftCollectionsOrderTimestamp || 0;
-            const localTs = parseInt(localStorage.getItem(NFT_COLLECTIONS_ORDER_KEY + '_ts') || '0', 10);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            console.log('📋 Firebase doc data:', {
+                hasOrder: !!data.nftCollectionsOrder,
+                order: data.nftCollectionsOrder,
+                timestamp: data.nftCollectionsOrderTimestamp
+            });
             
-            if (cloudTs > localTs) {
-                nftCollectionsOrder = cloudOrder;
-                localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(nftCollectionsOrder));
-                localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY + '_ts', String(cloudTs));
+            if (data.nftCollectionsOrder && data.nftCollectionsOrder.length > 0) {
+                const cloudOrder = data.nftCollectionsOrder;
+                const cloudTs = data.nftCollectionsOrderTimestamp || 0;
+                const localTs = parseInt(localStorage.getItem(NFT_COLLECTIONS_ORDER_KEY + '_ts') || '0', 10);
+                
+                console.log('⏰ Timestamps - Cloud:', cloudTs, 'Local:', localTs);
+                
+                if (cloudTs > localTs) {
+                    nftCollectionsOrder = cloudOrder;
+                    localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(nftCollectionsOrder));
+                    localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY + '_ts', String(cloudTs));
+                    console.log('✅ Order loaded from Firebase:', nftCollectionsOrder);
+                } else {
+                    console.log('ℹ️ Local order is newer, using local');
+                }
+            } else {
+                console.log('⚠️ No order in Firebase, using local');
             }
+        } else {
+            console.log('⚠️ Firebase doc not found');
         }
     } catch (e) { 
-        console.error('Load order error:', e); 
+        console.error('❌ Load order error:', e); 
     }
 }
 function renderUserDappCategory(cat) {
