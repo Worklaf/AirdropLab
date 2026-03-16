@@ -890,51 +890,31 @@ async function loadLanguagePreference() {
         currentLanguage = (localLang === 'uk') ? 'ua' : localLang;
     }
     
-    // ✅ ГАРАНТИРОВАННАЯ ЗАПИСЬ в Firebase
-if (currentUser) {
-    const ts = Date.now();
-    const docRef = doc(db, "users", currentUser.uid);
-    
-    // 1️⃣ Сначала пишем ТОЛЬКО robin-поля (без merge - полная замена)
-    const robinDoc = {
-        robinUserItems: userItemsData,
-        robinUserItemsTimestamp: ts,
-        robinGuideStats: robinData,
-        robinFavoritesState: favoritesState,
-        robinFavoritesOrder: favoritesOrder,
-        robinFavoritesTimestamp: ts,
-        robinEditsOverride: editsOverride,
-        robinEditsTimestamp: ts
-    };
-    
-    // 2️⃣ merge: true - добавляем/обновляем ТОЛЬКО эти поля, остальное не трогаем
-    await setDoc(docRef, robinDoc, { merge: true });
-    console.log('✅ Firebase setDoc done');
-    
-    // 3️⃣ ПРОВЕРЯЕМ что действительно записалось
-    const verify = await getDoc(docRef);
-    console.log('✅ Verify - items count:', verify.data()?.robinUserItems?.collections?.length);
-    
-    // 4️⃣ Public только если админ
-    if (isAdmin) {
+    if (currentUser) {
         try {
-            await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
-                userItemsData: userItemsData,
-                editsOverride: editsOverride,
-                lastUpdated: ts,
-                updatedBy: currentUser.uid
-            }, { merge: true });
-        } catch (publicErr) {
-            console.warn('⚠️ Public save skipped:', publicErr.message);
+            const docRef = doc(db, "users", currentUser.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists() && docSnap.data().robinLanguage) {
+                let cloudLang = docSnap.data().robinLanguage;
+                // Нормализация: uk → ua
+                cloudLang = (cloudLang === 'uk') ? 'ua' : cloudLang;
+                
+                const cloudTs = docSnap.data().robinLanguageTimestamp || 0;
+                const localTs = parseInt(localStorage.getItem(LANGUAGE_KEY + '_ts') || '0', 10);
+                
+                if (cloudTs > localTs) {
+                    currentLanguage = cloudLang;
+                    localStorage.setItem(LANGUAGE_KEY, currentLanguage);
+                    localStorage.setItem(LANGUAGE_KEY + '_ts', String(cloudTs));
+                }
+            }
+        } catch (e) {
+            console.error("Error loading language from Firebase:", e);
         }
     }
+    
+    updateAllTranslations();
 }
-
-// ✅ Ждём 2 сек (Firebase хочет времени на запись)
-await new Promise(resolve => setTimeout(resolve, 2000));
-
-console.log('🔄 Reloading...');
-location.reload();
 // ===== MAIN CODE =====
 let newLinksSet = new Set();
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -1417,57 +1397,75 @@ function importRobinJSON(file) {
             const hasTrackingData = data.robinData || data.favoritesState;
             
             if (!hasUserItems && !hasTrackingData) {
-                throw new Error('Invalid format');
+                throw new Error('Invalid format - no recognized data found');
             }
 
-            // ✅ ОТКЛЮЧАЕМ все realtime listeners
+            // ✅ ШАГ 1: Отключаем все realtime listeners
+            // чтобы они не перезаписали данные во время импорта
             if (sharedDataUnsubscribe) {
                 sharedDataUnsubscribe();
                 sharedDataUnsubscribe = null;
-                console.log('⏸️ Unsubscribed from shared data listener');
+                console.log('⏸️ Shared data listener stopped');
             }
             if (newIndicatorsUnsubscribe) {
                 newIndicatorsUnsubscribe();
                 newIndicatorsUnsubscribe = null;
-                console.log('⏸️ Unsubscribed from new indicators listener');
+                console.log('⏸️ New indicators listener stopped');
             }
             if (nftOrderUnsubscribe) {
                 nftOrderUnsubscribe();
                 nftOrderUnsubscribe = null;
-                console.log('⏸️ Unsubscribed from NFT order listener');
+                console.log('⏸️ NFT order listener stopped');
             }
 
-            // Загружаем данные в переменные
+            // ✅ ШАГ 2: Восстанавливаем userItemsData
             if (data.items || data.collections) {
                 userItemsData = {
                     items: data.items || {},
                     collections: data.collections || [],
                     dappCategories: data.dappCategories || []
                 };
+            } else if (data.userItems) {
+                userItemsData = {
+                    items: data.userItems.items || {},
+                    collections: data.userItems.collections || [],
+                    dappCategories: data.userItems.dappCategories || []
+                };
             }
+
             if (data.robinData) robinData = data.robinData;
             if (data.favoritesState) favoritesState = data.favoritesState;
             if (data.favoritesOrder) favoritesOrder = data.favoritesOrder;
             if (data.editsOverride) editsOverride = data.editsOverride;
 
-            // ✅ Сохраняем в localStorage сразу
-            const ts = Date.now();
+            // ✅ ШАГ 3: Записываем в localStorage с БУДУЩИМ timestamp
+            // Это гарантирует что при reload localStorage "выиграет" у Firebase
+            const importTimestamp = Date.now() + 60000; // +1 минута в будущем
+            
             localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
-            localStorage.setItem('robin_user_items_timestamp', String(ts));
+            localStorage.setItem('robin_user_items_timestamp', String(importTimestamp));
             localStorage.setItem(STORAGE_KEY, JSON.stringify(robinData));
             localStorage.setItem(FAVORITES_KEY, JSON.stringify(favoritesState));
             localStorage.setItem(FAVORITES_ORDER_KEY, JSON.stringify(favoritesOrder));
             localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
-            console.log('✅ localStorage updated');
+            
+            // Флаг что был импорт — loadRobinSharedData проверит его
+            localStorage.setItem('robin_import_lock', String(importTimestamp));
+            
+            console.log('✅ localStorage updated, timestamp:', importTimestamp);
+            console.log('📦 Collections:', userItemsData.collections.length);
 
-            // Сохраняем в Firebase
+            // ✅ ШАГ 4: Сохраняем в Firebase
             if (currentUser) {
+                const ts = importTimestamp;
                 const docRef = doc(db, "users", currentUser.uid);
+                
+                // Получаем существующий документ чтобы не затереть другие поля
                 const existingSnap = await getDoc(docRef);
-                const existing = existingSnap.exists() ? existingSnap.data() : {};
+                const existingData = existingSnap.exists() ? existingSnap.data() : {};
                 
                 const fullDoc = {
-                    ...existing,
+                    ...existingData,
                     robinUserItems: userItemsData,
                     robinUserItemsTimestamp: ts,
                     robinGuideStats: robinData,
@@ -1478,47 +1476,56 @@ function importRobinJSON(file) {
                     robinEditsTimestamp: ts
                 };
                 
+                // Полная замена документа (не merge — иначе старые поля останутся)
                 await setDoc(docRef, fullDoc);
-                console.log('✅ Private Firebase: FULL REPLACEMENT done');
+                console.log('✅ Private Firebase updated');
                 
-                // ✅ Публичное сохранение (отдельный try/catch)
+                // Верифицируем запись
+                const verify = await getDoc(docRef);
+                const savedCount = verify.data()?.robinUserItems?.collections?.length || 0;
+                console.log('✅ Verified collections in Firebase:', savedCount);
+                
+                // Публичное сохранение (только для админа)
                 if (isAdmin) {
                     try {
-                        await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
-                            userItemsData: userItemsData,
-                            editsOverride: editsOverride,
-                            lastUpdated: ts,
-                            updatedBy: currentUser.uid
-                        });
-                        console.log('✅ Public Firebase: FULL REPLACEMENT done');
+                        await setDoc(
+                            doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC),
+                            {
+                                userItemsData: userItemsData,
+                                editsOverride: editsOverride,
+                                lastUpdated: ts,
+                                updatedBy: currentUser.uid
+                            }
+                            // БЕЗ merge: true — полная замена публичных данных
+                        );
+                        console.log('✅ Public Firebase updated');
                     } catch (publicErr) {
-                        console.warn('⚠️ Public save skipped:', publicErr.message);
+                        console.warn('⚠️ Public save failed:', publicErr.message);
                     }
                 }
             }
 
-            // ✅ Ждём 1 сек чтобы Firebase точно записал
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const collCount = userItemsData.collections.length;
+            showToast(`✅ Imported ${collCount} collections`, 'success');
             
-            showToast('✅ Imported ' + userItemsData.collections.length + ' collections', 'success');
-            
-            // ✅ ПОТОМ перезагружаем (это переподключит listeners через onAuthStateChanged)
+            // ✅ ШАГ 5: Ждём подтверждения записи и перезагружаемся
+            await new Promise(resolve => setTimeout(resolve, 1500));
             location.reload();
 
         } catch (err) {
             console.error('Import error:', err);
             showToast('❌ Import error: ' + err.message, 'error');
             
-            // ✅ Переподключаем listeners если произошла ошибка
+            // При ошибке переподключаем listeners
             setTimeout(() => {
-                initRobinSharedDataRealtime();
-                initRobinNewIndicatorsRealtime();
-                initNFTCollectionsOrderRealtime();
+                if (!sharedDataUnsubscribe) initRobinSharedDataRealtime();
+                if (!newIndicatorsUnsubscribe) initRobinNewIndicatorsRealtime();
             }, 2000);
         }
     };
     reader.readAsText(file);
 }
+
 async function loadRobinData() {
     const localStats = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     const localFav = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}');
@@ -1625,25 +1632,43 @@ async function loadRobinSharedData() {
         return;
     }
 
-    // ✅ БЕЗ проверки currentUser — читаем для ВСЕХ
+    // ✅ Проверяем флаг импорта
+    // Если был недавний импорт (в течение 5 минут) — не перезаписываем
+    const importLock = parseInt(localStorage.getItem('robin_import_lock') || '0', 10);
+    const now = Date.now();
+    if (importLock > now - 5 * 60 * 1000) {
+        console.log('🔒 Import lock active — skipping public data override');
+        // Снимаем лок после использования
+        localStorage.removeItem('robin_import_lock');
+        return;
+    }
+
     try {
         const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
             const data = docSnap.data();
-            userItemsData = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
-            editsOverride = data.editsOverride || {};
-            localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
-            localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
-            console.log('✅ Public data loaded');
+            
+            // ✅ Проверяем timestamp — не перезаписываем если локальное свежее
+            const publicTs = data.lastUpdated || 0;
+            const localTs = parseInt(localStorage.getItem('robin_user_items_timestamp') || '0', 10);
+            
+            if (publicTs >= localTs) {
+                userItemsData = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
+                editsOverride = data.editsOverride || {};
+                localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
+                localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
+                console.log('✅ Public data loaded, collections:', userItemsData.collections.length);
+            } else {
+                console.log('ℹ️ Local data is newer, keeping local');
+            }
             return;
         }
     } catch (e) {
         console.warn("Firebase error, fallback:", e);
     }
 
-    // Fallback
     loadRobinUserItems();
     loadRobinEditsOverride();
 }
@@ -2993,49 +3018,7 @@ async function uploadConfigToGithub() {
         showToast('GitHub upload error: ' + e.message, 'error');
     }
 }
-// ===== ИМПОРТ ДАННЫХ С ПОЛНОЙ ЗАМЕНОЙ =====
-async function importDataToFirebase() {
-    if (!currentUser) return;
-    
-    try {
-        const timestamp = Date.now();
-        
-        // ✅ ПОЛНАЯ ЗАМЕНА без merge:true
-        const docRef = doc(db, "users", currentUser.uid);
-        
-        // Сначала берём остальные данные пользователя (аутентификацию, настройки и т.д.)
-        const existingDoc = await getDoc(docRef);
-        const existingData = existingDoc.exists() ? existingDoc.data() : {};
-        
-        // ✅ ЗАМЕНЯЕМ ТОЛЬКО НУЖНЫЕ ПОЛЯ (оставляем остальное)
-        const updateData = {
-            ...existingData, // Сохраняем все остальное
-            robinUserItems: userItemsData,
-            robinUserItemsTimestamp: timestamp,
-            robinGuideStats: robinData,
-            robinFavoritesState: favoritesState,
-            robinFavoritesOrder: favoritesOrder,
-            robinFavoritesTimestamp: timestamp,
-            lastImportTime: new Date().toISOString(),
-            lastImportedBy: currentUser.email
-        };
-        
-        // ✅ ЗАПИСЫВАЕМ с merge: false (ПОЛНАЯ ЗАМЕНА ПОЛЕЙ)
-        await setDoc(docRef, updateData, { merge: false });
-        
-        console.log('✅ Data successfully imported to Firebase (FULL REPLACEMENT)');
-        console.log('📊 Imported:', {
-            collections: userItemsData.collections.length,
-            items: Object.keys(userItemsData.items).length,
-            stats: Object.keys(robinData).length
-        });
-        
-    } catch (e) {
-        console.error('❌ Import to Firebase error:', e);
-        showToast('⚠️ Firebase import failed: ' + e.message, 'error');
-        throw e;
-    }
-}
+
 // ===== DOM CONTENT LOADED =====
 document.addEventListener('DOMContentLoaded', () => {
     loadTheme(); 
@@ -3216,6 +3199,7 @@ function applySortOrderToGrid() {
     console.log('✅ Grid reordered:', nftCollectionsOrder);
 }
 
+// 💾 Сохраняем порядок коллекций (обновлено)
 async function saveNFTCollectionsOrder() {
     const grid = document.querySelector('[data-section-zone="nfts"] .resource-grid');
     if (!grid) return;
@@ -3227,12 +3211,13 @@ async function saveNFTCollectionsOrder() {
     
     nftCollectionsOrder = order;
     
+    // ✅ Всегда сохраняем (для ВСЕХ пользователей, не только админов)
     const timestamp = Date.now();
     localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(order));
     localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY + '_ts', String(timestamp));
     
-    // ✅ ТОЛЬКО АДМИН может писать в public collection
-    if (currentUser && isAdmin) {
+    // ✅ Сохраняем в Firebase PUBLIC для синхронизации (для ВСЕХ)
+    if (currentUser) {
         try {
             await setDoc(doc(db, PUBLIC_DATA_COLLECTION, 'nft_collections_order_v1'), {
                 order: order,
