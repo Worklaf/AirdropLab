@@ -785,33 +785,163 @@ function getMediaType(url) {
     return 'image';
 }
 
-function createMediaElement(url, alt = '', className = '', autoplay = false) {
-    const mediaType = getMediaType(url);
+ffunction createMediaElement(url, alt = '', className = '', autoplay = false) {
+    const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
+    const lowerUrl = url.toLowerCase();
+    const isVideo = videoExts.some(ext => lowerUrl.includes(ext));
     
-    if (mediaType === 'video') {
-        const video = document.createElement('video');
-        video.className = className;
-        video.controls = true;
-        video.loop = true;
-        video.muted = autoplay; // Muted для autoplay (браузеры требуют)
-        video.playsinline = true;
-        if (autoplay) video.autoplay = true;
-        
-        const source = document.createElement('source');
-        source.src = url;
-        source.type = 'video/mp4';
-        video.appendChild(source);
-        
-        return video;
-    } else {
+    if (isVideo) {
+        // ✅ ЕСЛИ ЭТО TWITTER ВИДЕО
+        if (url.includes('video.twimg.com')) {
+            const container = document.createElement('div');
+            container.style.cssText = `
+                position: relative;
+                width: 100%;
+                aspect-ratio: 16/9;
+                border-radius: 12px;
+                overflow: hidden;
+                background: linear-gradient(135deg, rgba(0,0,0,0.5), rgba(0,0,0,0.3));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                border: 2px solid rgba(0,208,158,0.3);
+                transition: all 0.3s;
+            `;
+            
+            // Кнопка Play
+            const playBtn = document.createElement('div');
+            playBtn.style.cssText = `
+                width: 80px;
+                height: 80px;
+                background: rgba(0,208,158,0.9);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2.5rem;
+                color: white;
+                box-shadow: 0 8px 24px rgba(0,208,158,0.4);
+                transition: all 0.3s;
+                position: relative;
+                z-index: 5;
+            `;
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            
+            container.appendChild(playBtn);
+            
+            // Hover эффект
+            container.addEventListener('mouseenter', () => {
+                playBtn.style.transform = 'scale(1.15)';
+                playBtn.style.boxShadow = '0 12px 32px rgba(0,208,158,0.6)';
+                container.style.borderColor = 'rgba(0,208,158,0.6)';
+            });
+            
+            container.addEventListener('mouseleave', () => {
+                playBtn.style.transform = 'scale(1)';
+                playBtn.style.boxShadow = '0 8px 24px rgba(0,208,158,0.4)';
+                container.style.borderColor = 'rgba(0,208,158,0.3)';
+            });
+            
+            // ✅ КЛИК - ОТКРЫВАЕТ В НОВОМ ОКНЕ или открывает iframe
+            container.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Вариант 1: Новая вкладка (текущий)
+                window.open(url, '_blank', 'width=900,height=600');
+                
+                // Вариант 2: Если нужна галерея - раскомментируй:
+                // openTwitterVideoModal(url, alt);
+            };
+            
+            return container;
+        } 
+        // ✅ ЕСЛИ ЭТО ЛОКАЛЬНОЕ ВИДЕО
+        else {
+            const video = document.createElement('video');
+            video.className = className;
+            video.controls = true;
+            video.loop = true;
+            video.muted = autoplay;
+            video.playsinline = true;
+            if (autoplay) video.autoplay = true;
+            
+            const source = document.createElement('source');
+            source.src = url;
+            source.type = 'video/mp4';
+            video.appendChild(source);
+            
+            const fallback = document.createElement('p');
+            fallback.textContent = 'Your browser does not support HTML5 video.';
+            fallback.style.color = 'var(--text-muted)';
+            video.appendChild(fallback);
+            
+            return video;
+        }
+    } 
+    // ✅ ДЛЯ ИЗОБРАЖЕНИЙ
+    else {
         const img = document.createElement('img');
         img.src = url;
         img.alt = alt;
         img.className = className;
         img.loading = 'lazy';
+        img.style.cssText = 'max-width:100%;max-height:200px;border-radius:8px;object-fit:contain;';
         img.onerror = () => img.style.display = 'none';
         return img;
     }
+}
+
+// ✅ ОПЦИОНАЛЬНО: Функция для открытия видео в модальном окне
+function openTwitterVideoModal(videoUrl, title = '') {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.9);
+        z-index: 25000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    `;
+    
+    const iframe = document.createElement('iframe');
+    iframe.src = videoUrl;
+    iframe.style.cssText = `
+        width: 100%;
+        max-width: 900px;
+        height: 600px;
+        border: none;
+        border-radius: 12px;
+    `;
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '✕';
+    closeBtn.style.cssText = `
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        font-size: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        z-index: 25001;
+    `;
+    
+    closeBtn.onclick = () => modal.remove();
+    modal.onclick = (e) => {
+        if (e.target === modal) modal.remove();
+    };
+    
+    modal.appendChild(iframe);
+    modal.appendChild(closeBtn);
+    document.body.appendChild(modal);
 }
 function clearImageInputs() {
     const container = document.getElementById('imageInputsContainer');
