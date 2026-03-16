@@ -1032,9 +1032,13 @@
         "addedAt": 1734000000000,
         "descUa": "Тематичний персонаж Arc у стилі.",
         "descEn": "Thematic Arc character in style.",
-        "tooltip": "Arc Boy — тематичний персонаж Arc.",
+        "tooltip": "Thematic Arc character in style.",
         "id": "alze_boy",
-        "title": "Arc Boy"
+        "title": "Arc Boy",
+        "images": [
+          "https://i.ibb.co/jkbpPdCb/Arc-Boy-Nft.png",
+          "https://video.twimg.com/tweet_video/G6ThF7zbUAAKI54.mp4"
+        ]
       },
       {
         "descUa": "Інженерна серія NFT з технологічними елементами.",
@@ -1664,7 +1668,7 @@
     ],
     "nft_clara": [
       {
-        "tooltip": "Apepe — веселий персонаж.",
+        "tooltip": "Fun and energetic character.",
         "title": "Apepe",
         "id": "clara_apepe",
         "image": "https://pbs.twimg.com/media/G-amKRJbEAAdyBo?format=jpg&name=small",
@@ -1672,18 +1676,26 @@
         "url": "https://www.clarachain.net/apepe",
         "descEn": "Fun and energetic character.",
         "descUa": "Веселий та енергійний персонаж.",
-        "addedAt": 1734000000000
+        "addedAt": 1734000000000,
+        "images": [
+          "https://pbs.twimg.com/media/G-amKRJbEAAdyBo?format=jpg&name=small",
+          "https://www.clarachain.net/_next/image?url=%2Fimages%2Fnfts%2Fapepe.jpg&w=640&q=100"
+        ]
       },
       {
         "title": "Lykoi",
         "id": "clara_lykoi",
-        "tooltip": "Lykoi — біла кішка серед квітів.",
+        "tooltip": "White cat among flowers.",
         "descUa": "Біла кішка в оточенні квітів.",
         "addedAt": 1734000000000,
         "descEn": "White cat among flowers.",
         "url": "https://www.clarachain.net/lykoi",
         "trackType": "track-once",
-        "image": "https://pbs.twimg.com/media/G-ue9IDbgAANdvD?format=jpg&name=small"
+        "image": "https://pbs.twimg.com/media/G-ue9IDbgAANdvD?format=jpg&name=small",
+        "images": [
+          "https://pbs.twimg.com/media/G-ue9IDbgAANdvD?format=jpg&name=small",
+          "https://www.clarachain.net/_next/image?url=%2Fimages%2Fnfts%2Flykoi.jpg&w=640&q=100"
+        ]
       },
       {
         "trackType": "track-once",
@@ -1692,20 +1704,28 @@
         "descEn": "Person on top of a mountain.",
         "descUa": "Людина на вершині гори.",
         "addedAt": 1734000000000,
-        "tooltip": "Zenith — людина на скелі.",
+        "tooltip": "Person on top of a mountain.",
         "id": "clara_zenith",
-        "title": "Zenith"
+        "title": "Zenith",
+        "images": [
+          "https://pbs.twimg.com/media/G_DQiUJW4AA4SGk?format=jpg&name=small",
+          "https://www.clarachain.net/_next/image?url=%2Fimages%2Fnfts%2Fzenith.jpg&w=640&q=100"
+        ]
       },
       {
         "title": "Aurelia",
         "id": "clara_aurelia",
-        "tooltip": "Aurelia — світлячі метелики.",
+        "tooltip": "Glowing butterflies in the night sky.",
         "addedAt": 1734000000000,
         "descUa": "Світлячі метелики в нічному небі.",
         "descEn": "Glowing butterflies in the night sky.",
         "image": "https://pbs.twimg.com/media/G_ai5PLaIAAEEPS?format=jpg&name=small",
         "url": "https://www.clarachain.net/aurelia",
-        "trackType": "track-once"
+        "trackType": "track-once",
+        "images": [
+          "https://pbs.twimg.com/media/G_ai5PLaIAAEEPS?format=jpg&name=small",
+          "https://www.clarachain.net/_next/image?url=%2Fimages%2Fnfts%2Faurelia.jpg&w=640&q=100"
+        ]
       },
       {
         "image": "https://pbs.twimg.com/media/G_nVLtMWIAAVNjj?format=jpg&name=small",
@@ -1714,12 +1734,16 @@
         "descUa": "Засніжені вершини гір.",
         "addedAt": 1734000000000,
         "descEn": "Snow-capped mountain peaks.",
-        "tooltip": "Arwen — засніжені гори.",
+        "tooltip": "Snow-capped mountain peaks.",
         "id": "clara_arwen",
-        "title": "Arwen"
+        "title": "Arwen",
+        "images": [
+          "https://pbs.twimg.com/media/G_nVLtMWIAAVNjj?format=jpg&name=small",
+          "https://www.clarachain.net/_next/image?url=%2Fimages%2Fnfts%2Farwen.jpg&w=640&q=100"
+        ]
       },
       {
-        "tooltip": "Zoe — неонові відтінки.",
+        "tooltip": "Bright neon colors.",
         "title": "Zoe",
         "id": "clara_zoe",
         "image": "https://pbs.twimg.com/media/G_7GaEqaYAE3lm3?format=jpg&name=small",
@@ -1727,10 +1751,14 @@
         "url": "https://www.clarachain.net/zoe",
         "addedAt": 1734000000000,
         "descUa": "Яскраві неонові кольори.",
-        "descEn": "Bright neon colors."
+        "descEn": "Bright neon colors.",
+        "images": [
+          "https://pbs.twimg.com/media/G_7GaEqaYAE3lm3?format=jpg&name=small",
+          "https://www.clarachain.net/_next/image?url=%2Fimages%2Fnfts%2Fzoe.png&w=640&q=100"
+        ]
       },
       {
-        "tooltip": "Colorist — художник на заході сонця.",
+        "tooltip": "Artist painting at sunset.",
         "title": "Colorist",
         "id": "clara_colorist",
         "trackType": "track-once",
@@ -1738,21 +1766,29 @@
         "image": "https://pbs.twimg.com/media/HAFkwqfaMAAyah7?format=jpg&name=small",
         "addedAt": 1734000000000,
         "descUa": "Художник, що малює на заході сонця.",
-        "descEn": "Artist painting at sunset."
+        "descEn": "Artist painting at sunset.",
+        "images": [
+          "https://pbs.twimg.com/media/HAFkwqfaMAAyah7?format=jpg&name=small",
+          "https://www.clarachain.net/_next/image?url=%2Fimages%2Fnfts%2Fcolorist.jpg&w=640&q=100"
+        ]
       },
       {
         "id": "clara_amara",
         "title": "Amara",
-        "tooltip": "Amara — вершник у савані.",
+        "tooltip": "Rider on horseback in African savanna.",
         "descEn": "Rider on horseback in African savanna.",
         "descUa": "Вершник на коні в африканській савані.",
         "addedAt": 1734000000000,
         "url": "https://www.clarachain.net/amara",
         "trackType": "track-once",
-        "image": "https://pbs.twimg.com/media/HAkv5ebbAAA28HE?format=jpg&name=small"
+        "image": "https://pbs.twimg.com/media/HAkv5ebbAAA28HE?format=jpg&name=small",
+        "images": [
+          "https://pbs.twimg.com/media/HAkv5ebbAAA28HE?format=jpg&name=small",
+          "https://www.clarachain.net/_next/image?url=%2Fimages%2Fnfts%2Famara.png&w=640&q=100"
+        ]
       },
       {
-        "tooltip": "Солнечная долина с одиноким путником на скамье под деревом.",
+        "tooltip": "Riona — sunny valley with a lone traveler.",
         "title": "Riona",
         "id": "u_mlnsu5zm_i3ebz",
         "trackType": "track-once",
@@ -1761,10 +1797,14 @@
         "image": "https://pbs.twimg.com/media/HBG5SthakAAS5A8?format=jpg&name=large",
         "descUa": "Riona — сонячна долина з одиноким путником.",
         "addedAt": 1771163197906,
-        "descEn": "Riona — sunny valley with a lone traveler."
+        "descEn": "Riona — sunny valley with a lone traveler.",
+        "images": [
+          "https://pbs.twimg.com/media/HBG5SthakAAS5A8?format=jpg&name=large",
+          "https://www.clarachain.net/_next/image?url=%2Fimages%2Fnfts%2Friona.png&w=640&q=100"
+        ]
       },
       {
-        "tooltip": "Luka — спокойная и мистичная NFT-сцена.",
+        "tooltip": "Luka — calm and mystical scene.",
         "id": "u_mlvanqe4_ccswi",
         "title": "Luka",
         "image": "https://pbs.twimg.com/media/HBl-HSXasAARDR5?format=jpg&name=small",
@@ -1773,7 +1813,11 @@
         "trackType": "track-once",
         "descEn": "Luka — calm and mystical scene.",
         "addedAt": 1771616394077,
-        "descUa": "Luka — спокійна та містична сцена."
+        "descUa": "Luka — спокійна та містична сцена.",
+        "images": [
+          "https://pbs.twimg.com/media/HBl-HSXasAARDR5?format=jpg&name=small",
+          "https://www.clarachain.net/_next/image?url=%2Fimages%2Fnfts%2Fluka.jpg&w=640&q=100"
+        ]
       },
       {
         "url": "https://clarachain.net/valkyrie",
@@ -1784,7 +1828,25 @@
         "descEn": "A celestial Valkyrie NFT symbolizing strength, protection, and early participation in the Arc Testnet.",
         "tooltip": "A celestial Valkyrie NFT symbolizing strength, protection, and early participation in the Arc Testnet.",
         "id": "u_mmnfvzje_g76zv",
-        "title": "Valkyrie"
+        "title": "Valkyrie",
+        "images": [
+          "https://pbs.twimg.com/media/HC1K_9obgAAZD8p?format=jpg&name=small",
+          "https://clarachain.net/_next/image?url=%2Fimages%2Fnfts%2Fvalkyrie.jpg&w=640&q=100"
+        ]
+      },
+      {
+        "id": "u_mmsb2ivi_qygs2",
+        "title": "ARC GOLD",
+        "url": "https://clarachain.net/arcgold",
+        "descEn": "A Clara NFT featuring a glowing golden Arc logo on a dark background, promoting a free claim on the Arc network.",
+        "descUa": "Clara NFT зі сяючим золотистим логотипом Arc на темному тлі, що сприяє безкоштовній заявці в мережі Arc.",
+        "tooltip": "A Clara NFT featuring a glowing golden Arc logo on a dark background, promoting a free claim on the Arc network.",
+        "images": [
+          "https://pbs.twimg.com/media/HDTvbgOaMAUvPx-?format=jpg&name=small",
+          "https://clarachain.net/_next/image?url=%2Fimages%2Fnfts%2Fgold.jpg&w=640&q=100"
+        ],
+        "trackType": "track-once",
+        "addedAt": 1773612467982
       }
     ],
     "nft_other": [
