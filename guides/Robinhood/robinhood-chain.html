@@ -944,6 +944,7 @@ const SHARED_ITEMS_DOC = 'shared_items_v1';
 
 let newIndicatorsState = { globalNew: new Set(), clickedByUser: new Set(), lastSync: 0 };
 let newIndicatorsUnsubscribe = null;
+    let sharedDataUnsubscribe = null;
 
 async function githubGetFileSha(path, token) {
     const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}?ref=${GITHUB_BRANCH}`;
@@ -1512,6 +1513,7 @@ async function loadRobinSharedData() {
 let isUpdatingFromRealtime = false;
 
 function initRobinSharedDataRealtime() {
+    if (sharedDataUnsubscribe) return;
     const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
     newIndicatorsUnsubscribe = onSnapshot(docRef, (snap) => {
         if (!snap.exists()) {
@@ -1543,7 +1545,7 @@ function initRobinSharedDataRealtime() {
             showToast('📡 New projects loaded!', 'info');
         }
     }, (error) => {
-        console.error('❌ Realtime listener error:', error);
+        console.error('❌ Shared data listener error:', error);
     });
 }
 
