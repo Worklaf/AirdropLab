@@ -1585,33 +1585,51 @@ onAuthStateChanged(auth, async (user) => {
     const nameEl = document.getElementById('robinUserName');
     
     if (user) {
-        loggedOut.style.display = 'none'; loggedIn.style.display = '';
+        loggedOut.style.display = 'none'; 
+        loggedIn.style.display = '';
         nameEl.textContent = user.displayName || user.email?.split('@')[0] || 'User';
         checkAdmin(user);
-        setTimeout(() => { initRobinNewIndicatorsRealtime(); }, 2000);
-        if (user.uid === ADMIN_UID) { setTimeout(initRobinTwitterMonitor, 1000); }
+        
+        // ✅ Realtime запускаем только после небольшой задержки
+        setTimeout(() => { 
+            initRobinNewIndicatorsRealtime(); 
+        }, 2000);
+        
+        if (user.uid === ADMIN_UID) { 
+            setTimeout(initRobinTwitterMonitor, 1000); 
+        }
     } else {
-        loggedOut.style.display = ''; loggedIn.style.display = 'none';
+        loggedOut.style.display = ''; 
+        loggedIn.style.display = 'none';
         checkAdmin(null);
-        if (newIndicatorsUnsubscribe) { newIndicatorsUnsubscribe(); newIndicatorsUnsubscribe = null; }
+        
+        // ✅ Для гостей тоже запускаем realtime
+        setTimeout(() => { 
+            initRobinNewIndicatorsRealtime(); 
+        }, 2000);
     }
     
-   if (!initialAuthCheckComplete) {
-    initialAuthCheckComplete = true;
-    await loadLanguagePreference();
-    loadRobinUserItems();        // Локальные данные
-    loadRobinEditsOverride();
-    await loadRobinSharedData(); // Публичные данные (перезапишут)
-    await loadRobinNewIndicators();
-    await loadRobinData();
-    renderRobinUserItems();
-    updateRobinNewIndicators();
-    
-    // ✅ Realtime для ВСЕХ (не только залогиненных)
-    initRobinSharedDataRealtime();
-    
-    isDataLoaded = true;
-}
+    if (!initialAuthCheckComplete) {
+        initialAuthCheckComplete = true;
+        await loadLanguagePreference();
+        loadRobinUserItems();
+        loadRobinEditsOverride();
+        await loadRobinSharedData();
+        
+        // ✅ ВАЖНО: Загружаем NEW индикаторы ДО отрисовки
+        await loadRobinNewIndicators();
+        
+        await loadRobinData();
+        renderRobinUserItems();
+        
+        // ✅ ВАЖНО: Обновляем NEW метки ПОСЛЕ рендера
+        updateRobinNewIndicators();
+        
+        // ✅ Realtime для всех
+        initRobinSharedDataRealtime();
+        
+        isDataLoaded = true;
+    }
 });
 
 // ===== HELPERS =====
@@ -1748,30 +1766,18 @@ function bindTrackingHandler(el) {
 function bindTrackingHandlersToAll() { document.querySelectorAll('.track-daily, .track-once').forEach(bindTrackingHandler); }
 
 function handleClick(e) {
-    const btn = e.currentTarget; 
-    const id = btn.getAttribute('data-id'); 
-    if (!id) return;
-
-    // ✅ ДОБАВИТЬ: Если это новый элемент, отмечаем что пользователь его кликнул
-    if (newIndicatorsState.globalNew.has(id) && !newIndicatorsState.clickedByUser.has(id)) {
-        clearRobinNewLink(id);
-    }
-
+    const btn = e.currentTarget; const id = btn.getAttribute('data-id'); if (!id) return;
+    if (newIndicatorsState.globalNew.has(id) && !newIndicatorsState.clickedByUser.has(id)) { clearRobinNewLink(id); }
     const now = new Date().toISOString();
     if (!robinData[id]) robinData[id] = {};
     if (btn.classList.contains('track-daily')) {
         if (robinData[id].lastClick && isToday(robinData[id].lastClick)) return;
-        robinData[id].totalClicks = (robinData[id].totalClicks || 0) + 1; 
-        robinData[id].lastClick = now;
+        robinData[id].totalClicks = (robinData[id].totalClicks || 0) + 1; robinData[id].lastClick = now;
     } else if (btn.classList.contains('track-once')) {
         robinData[id].visited = true;
-        if (btn.classList.contains('track-once-info')) { 
-            robinData[id].totalClicks = (robinData[id].totalClicks || 0) + 1; 
-            robinData[id].lastClick = now; 
-        }
+        if (btn.classList.contains('track-once-info')) { robinData[id].totalClicks = (robinData[id].totalClicks || 0) + 1; robinData[id].lastClick = now; }
     }
-    saveRobinStats(); 
-    updateUI();
+    saveRobinStats(); updateUI();
 }
 
 window.resetRobinAll = async function() {
@@ -1801,27 +1807,17 @@ function applySectionState(sec, collapsed) {
 
 function updateRobinNewIndicators() {
     if (!newIndicatorsState || !newIndicatorsState.globalNew) return;
-    
     document.querySelectorAll('[data-id]').forEach(el => {
         const id = el.dataset.id;
-        // ✅ NEW видна если: в глобальном списке ИЛИ администратор добавил её
-        const shouldShowNew = newIndicatorsState.globalNew.has(id) && 
-                             !newIndicatorsState.clickedByUser.has(id);
-        
+        const shouldShowNew = newIndicatorsState.globalNew.has(id) && !newIndicatorsState.clickedByUser.has(id);
         if (shouldShowNew) {
-            el.setAttribute('data-new', 'true'); 
-            el.classList.add('has-new-flag');
+            el.setAttribute('data-new', 'true'); el.classList.add('has-new-flag');
             if (!el.querySelector('.new-flag')) {
-                const flag = document.createElement('span'); 
-                flag.className = 'new-flag'; 
-                flag.innerHTML = `<span class="new-flag-text">${getTranslation('new_indicator')}</span>`; 
-                el.appendChild(flag);
+                const flag = document.createElement('span'); flag.className = 'new-flag'; flag.innerHTML = `<span class="new-flag-text">${getTranslation('new_indicator')}</span>`; el.appendChild(flag);
             }
         } else {
-            el.removeAttribute('data-new'); 
-            el.classList.remove('has-new-flag');
-            const f = el.querySelector('.new-flag'); 
-            if (f) f.remove();
+            el.removeAttribute('data-new'); el.classList.remove('has-new-flag');
+            const f = el.querySelector('.new-flag'); if (f) f.remove();
         }
     });
     updateRobinSectionBadges();
@@ -1839,76 +1835,130 @@ async function clearRobinNewLink(id) {
 }
 
 async function loadRobinNewIndicators() {
+    // ✅ Сначала загружаем из localStorage
     const localData = JSON.parse(localStorage.getItem(NEW_INDICATORS_KEY) || '{}');
-    newIndicatorsState = { globalNew: new Set(localData.globalNew || []), clickedByUser: new Set(localData.clickedByUser || []), lastSync: localData.lastSync || 0 };
+    newIndicatorsState = { 
+        globalNew: new Set(localData.globalNew || []), 
+        clickedByUser: new Set(localData.clickedByUser || []), 
+        lastSync: localData.lastSync || 0 
+    };
+    
+    // ✅ Загружаем из Firebase для ВСЕХ (не только залогиненных)
+    try {
+        const globalRef = doc(db, CONFIG_COLLECTION, NEW_INDICATORS_DOC);
+        const globalSnap = await getDoc(globalRef);
+        
+        if (globalSnap.exists()) {
+            const globalData = globalSnap.data();
+            const globalNew = new Set(globalData.globalNew || []);
+            
+            // Обновляем глобальный список
+            newIndicatorsState.globalNew = globalNew;
+            console.log('✅ Global NEW loaded:', globalNew.size, 'items');
+        }
+    } catch (e) {
+        console.warn("⚠️ Global NEW load error:", e);
+    }
+    
+    // ✅ Если есть пользователь - загружаем его персональные клики
     if (currentUser) {
         try {
-            const docRef = doc(db, "users", currentUser.uid); const docSnap = await getDoc(docRef);
+            const docRef = doc(db, "users", currentUser.uid); 
+            const docSnap = await getDoc(docRef);
+            
             if (docSnap.exists() && docSnap.data().robinNewIndicators) {
                 const cloudTs = docSnap.data().robinNewIndicatorsTimestamp || 0;
+                
                 if (cloudTs > newIndicatorsState.lastSync) {
-                    newIndicatorsState = { globalNew: new Set(docSnap.data().robinNewIndicators.globalNew || []), clickedByUser: new Set(docSnap.data().robinNewIndicators.clickedByUser || []), lastSync: cloudTs };
-                    localStorage.setItem(NEW_INDICATORS_KEY, JSON.stringify(docSnap.data().robinNewIndicators));
+                    const cloudClicked = new Set(docSnap.data().robinNewIndicators.clickedByUser || []);
+                    newIndicatorsState.clickedByUser = cloudClicked;
+                    newIndicatorsState.lastSync = cloudTs;
+                    
+                    const saveData = { 
+                        globalNew: [...newIndicatorsState.globalNew], 
+                        clickedByUser: [...newIndicatorsState.clickedByUser], 
+                        lastSync: cloudTs 
+                    };
+                    localStorage.setItem(NEW_INDICATORS_KEY, JSON.stringify(saveData));
+                    console.log('✅ User clicks synced:', cloudClicked.size, 'clicked');
                 }
             }
-        } catch (e) { console.error("NEW indicators sync error:", e); }
+        } catch (e) { 
+            console.error("⚠️ User NEW sync error:", e); 
+        }
     }
+    
+    // ✅ Сохраняем в localStorage
+    const saveData = { 
+        globalNew: [...newIndicatorsState.globalNew], 
+        clickedByUser: [...newIndicatorsState.clickedByUser], 
+        lastSync: newIndicatorsState.lastSync || Date.now()
+    };
+    localStorage.setItem(NEW_INDICATORS_KEY, JSON.stringify(saveData));
+    
     newIndicatorsState.lastSync = newIndicatorsState.lastSync || Date.now();
 }
 
 function initRobinNewIndicatorsRealtime() {
-    if (!currentUser) return;
+    // ✅ Убираем проверку currentUser — запускаем для ВСЕХ
+    
+    // Если уже подписка есть - не дублируем
+    if (newIndicatorsUnsubscribe) return;
+    
     const newIndicatorsRef = doc(db, CONFIG_COLLECTION, NEW_INDICATORS_DOC);
-    newIndicatorsUnsubscribe = onSnapshot(newIndicatorsRef, (doc) => {
-        if (doc.exists()) {
-            const globalNew = new Set(doc.data().globalNew || []);
-            if (newIndicatorsState.lastSync === 0) return;
-            const hasRealChanges = [...globalNew].some(id => !newIndicatorsState.globalNew.has(id)) || [...newIndicatorsState.globalNew].some(id => !globalNew.has(id));
-            if (hasRealChanges) {
-                newIndicatorsState.globalNew = globalNew;
-                const saveData = { globalNew: [...newIndicatorsState.globalNew], clickedByUser: [...newIndicatorsState.clickedByUser], lastSync: Date.now() };
-                localStorage.setItem(NEW_INDICATORS_KEY, JSON.stringify(saveData));
-                updateRobinNewIndicators(); showToast(getTranslation('new_elements_updated'), 'info');
-            }
+    
+    newIndicatorsUnsubscribe = onSnapshot(newIndicatorsRef, (docSnap) => {
+        if (!docSnap.exists()) {
+            console.log('📭 Global NEW doc is empty');
+            return;
         }
+        
+        const globalNew = new Set(docSnap.data().globalNew || []);
+        
+        // ✅ Первая загрузка - не показываем тост
+        if (newIndicatorsState.lastSync === 0) {
+            newIndicatorsState.globalNew = globalNew;
+            newIndicatorsState.lastSync = Date.now();
+            console.log('✅ Initial NEW loaded:', globalNew.size);
+            updateRobinNewIndicators();
+            return;
+        }
+        
+        // ✅ Проверяем есть ли реальные изменения
+        const hasChanges = [...globalNew].some(id => !newIndicatorsState.globalNew.has(id)) || 
+                          [...newIndicatorsState.globalNew].some(id => !globalNew.has(id));
+        
+        if (hasChanges) {
+            newIndicatorsState.globalNew = globalNew;
+            
+            const saveData = { 
+                globalNew: [...newIndicatorsState.globalNew], 
+                clickedByUser: [...newIndicatorsState.clickedByUser], 
+                lastSync: Date.now() 
+            };
+            localStorage.setItem(NEW_INDICATORS_KEY, JSON.stringify(saveData));
+            
+            updateRobinNewIndicators(); 
+            showToast('📡 ' + getTranslation('new_elements_updated'), 'info');
+            console.log('✅ NEW updated in real-time:', globalNew.size);
+        }
+    }, (error) => {
+        console.error('❌ NEW realtime error:', error);
     });
 }
 
 async function addToRobinGlobalNewIndicators(itemId) {
     if (!isAdmin) return;
     try {
-        // ✅ Добавляем в локальное состояние
+        if (newIndicatorsState.globalNew.has(itemId)) return;
         newIndicatorsState.globalNew.add(itemId);
-        newIndicatorsState.lastSync = Date.now();
-        
-        // ✅ Сохраняем в localStorage
-        const saveData = { 
-            globalNew: [...newIndicatorsState.globalNew], 
-            clickedByUser: [...newIndicatorsState.clickedByUser], 
-            lastSync: newIndicatorsState.lastSync 
-        };
+        await setDoc(doc(db, CONFIG_COLLECTION, NEW_INDICATORS_DOC), { globalNew: [...newIndicatorsState.globalNew], lastUpdated: Date.now(), updatedBy: currentUser.uid }, { merge: true });
+        const saveData = { globalNew: [...newIndicatorsState.globalNew], clickedByUser: [...newIndicatorsState.clickedByUser], lastSync: Date.now() };
         localStorage.setItem(NEW_INDICATORS_KEY, JSON.stringify(saveData));
-        
-        // ✅ Отправляем в Firestore
-        await setDoc(
-            doc(db, CONFIG_COLLECTION, NEW_INDICATORS_DOC), 
-            { 
-                globalNew: [...newIndicatorsState.globalNew], 
-                lastUpdated: Date.now(), 
-                updatedBy: currentUser.uid 
-            }, 
-            { merge: true }
-        );
-        
-        // ✅ Обновляем UI сразу
         updateRobinNewIndicators();
-        debugLog('✅ Added NEW: ' + itemId, 'ok');
-        
-    } catch (e) { 
-        debugLog('❌ Error adding NEW: ' + e.message, 'err');
-        showToast('Ошибка добавления метки NEW', 'error'); 
-    }
+    } catch (e) { showToast(getTranslation('error_adding_indicator'), 'error'); }
 }
+
 function updateRobinSectionBadges() {
     document.querySelectorAll('.collapsible-section').forEach(sec => {
         const st = sec.querySelector('.section-status'); if (!st) return;
@@ -2298,32 +2348,28 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
         const description = document.getElementById('addFieldDescription').value.trim();
 
         if (currentAddContext.zone) {
-    if (!title || !url) { alert('Title and URL are required!'); return; }
-    const config = currentAddContext.config; 
-    const id = generateId();
-    const item = { 
-        id, 
-        title, 
-        url, 
-        tooltip, 
-        descEn,
-        descUa,
-        images: newImages,
-        trackType: config.trackType, 
-        addedAt: Date.now() 
-    };
-    if (!userItemsData.items[currentAddContext.zone]) 
-        userItemsData.items[currentAddContext.zone] = [];
-    userItemsData.items[currentAddContext.zone].push(item);
-    
-    // ✅ УБЕДИСЬ ЧТО ЭТА СТРОКА ЕСТЬ!
-    if (isAdmin) await addToRobinGlobalNewIndicators(id);
-    
-    await saveRobinUserItems(); 
-    renderUserItemInZone(currentAddContext.zone, item); 
-    showToast(getTranslation('element_added'), 'success');
-}
-    else if (currentAddContext.sectionZone) {
+            if (!title || !url) { alert('Title and URL are required!'); return; }
+            const config = currentAddContext.config; 
+            const id = generateId();
+            const item = { 
+                id, 
+                title, 
+                url, 
+                tooltip, 
+                descEn,
+                descUa,
+                images: newImages, // ИЗМЕНЕНО
+                trackType: config.trackType, 
+                addedAt: Date.now() 
+            };
+            if (!userItemsData.items[currentAddContext.zone]) userItemsData.items[currentAddContext.zone] = [];
+            userItemsData.items[currentAddContext.zone].push(item);
+            if (isAdmin) await addToRobinGlobalNewIndicators(id);
+            await saveRobinUserItems(); 
+            renderUserItemInZone(currentAddContext.zone, item); 
+            showToast(getTranslation('element_added'), 'success');
+            
+        } else if (currentAddContext.sectionZone) {
             const sConfig = currentAddContext.config;
             if (sConfig.type === 'nft-collection') {
                 if (!title) { alert('Title is required!'); return; }
