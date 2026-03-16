@@ -1872,17 +1872,9 @@ function applySectionState(sec, collapsed) {
 function updateRobinNewIndicators() {
     if (!newIndicatorsState || !newIndicatorsState.globalNew) return;
     
-    // ✅ Debug log
-    console.log('🔍 Searching for [data-id] elements...');
-    const elements = document.querySelectorAll('[data-id]');
-    console.log(`Found ${elements.length} elements with data-id`);
-    console.log('Global NEW:', [...newIndicatorsState.globalNew]);
-    console.log('Clicked by user:', [...newIndicatorsState.clickedByUser]);
-    
     document.querySelectorAll('[data-id]').forEach(el => {
         const id = el.dataset.id;
         const shouldShowNew = newIndicatorsState.globalNew.has(id) && !newIndicatorsState.clickedByUser.has(id);
-        console.log(`${id}: global=${newIndicatorsState.globalNew.has(id)}, clicked=${newIndicatorsState.clickedByUser.has(id)}, show=${shouldShowNew}`);
         
         if (shouldShowNew) {
             el.setAttribute('data-new', 'true'); 
@@ -2625,12 +2617,13 @@ async function saveNFTCollectionsOrder() {
     }
 }
 
-// ✅ ЗАГРУЗКА порядка при инициализации
+// ✅ ЗАГРУЗКА порядка при инициализации (ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ)
 async function loadNFTCollectionsOrder() {
     const localOrder = JSON.parse(localStorage.getItem(NFT_COLLECTIONS_ORDER_KEY) || '[]');
     nftCollectionsOrder = localOrder;
     
-    if (currentUser && isAdmin) {
+    // ✅ УБИРАЕМ проверку isAdmin - загружаем для всех
+    if (currentUser) {
         try {
             const docRef = doc(db, "users", currentUser.uid);
             const docSnap = await getDoc(docRef);
