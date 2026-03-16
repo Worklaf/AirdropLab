@@ -1452,20 +1452,24 @@ function importRobinJSON(file) {
                 
                 // 3) Если админ — обновляем публичные данные тоже
                 if (isAdmin) {
-                    await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
-                        userItemsData: userItemsData,
-                        editsOverride: editsOverride,
-                        lastUpdated: ts,
-                        updatedBy: currentUser.uid
-                    });
-                    console.log('✅ Public Firebase: FULL REPLACEMENT done');
-                }
-            }
+    try {
+        await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
+            userItemsData: userItemsData,
+            editsOverride: editsOverride,
+            lastUpdated: ts,
+            updatedBy: currentUser.uid
+        });
+        console.log('✅ Public Firebase: FULL REPLACEMENT done');
+    } catch (publicErr) {
+        console.warn('⚠️ Public save skipped:', publicErr.message);
+        // Не бросаем ошибку дальше — приватное уже сохранено
+    }
+}
 
-            showToast('✅ Imported ' + userItemsData.collections.length + ' collections', 'success');
-            
-            setTimeout(() => location.reload(), 1500);
-
+// ✅ Это должно быть ПОСЛЕ всех try/catch:
+showToast('✅ Imported ' + userItemsData.collections.length + ' collections', 'success');
+setTimeout(() => location.reload(), 1500);
+                
         } catch (err) {
             console.error('Import error:', err);
             showToast('❌ Import error: ' + err.message, 'error');
