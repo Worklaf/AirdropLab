@@ -1728,13 +1728,35 @@ async function saveUserData(user) {
   try {
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
+    
+    // ✅ Получаем Twitter username если логин через Twitter
+    let twitterUsername = '';
+    if (user.providerData && user.providerData.length > 0) {
+        const twitterProvider = user.providerData.find(p => p.providerId === 'twitter.com');
+        if (twitterProvider?.displayName) {
+            twitterUsername = twitterProvider.displayName;
+        }
+    }
+    
     if (!userSnap.exists()) {
-      await setDoc(userRef, { email: user.email, displayName: user.displayName || 'Аноним', photoURL: user.photoURL || null, firstLogin: serverTimestamp(), provider: user.providerData[0]?.providerId || 'unknown', lastLogin: serverTimestamp(), favorites: [], completed: [], arcGuideStats: {} });
+      await setDoc(userRef, { 
+        email: user.email || null,
+        displayName: user.displayName || twitterUsername || 'Аноним', 
+        photoURL: user.photoURL || null, 
+        firstLogin: serverTimestamp(), 
+        provider: user.providerData[0]?.providerId || 'unknown',
+        lastLogin: serverTimestamp(), 
+        favorites: [], 
+        completed: [], 
+        arcGuideStats: {},
+        username: twitterUsername || null  // ✅ Сохраняем Twitter username
+      });
     } else {
       const userData = userSnap.data();
       const updates = { lastLogin: serverTimestamp() };
       if (!userData.firstLogin) updates.firstLogin = serverTimestamp();
       if (!userData.provider && user.providerData[0]) updates.provider = user.providerData[0].providerId;
+      if (twitterUsername && !userData.username) updates.username = twitterUsername; // ✅ Сохраняем если нет
       await updateDoc(userRef, updates);
     }
   } catch (e) { console.error('Error saving user:', e); }
@@ -1802,7 +1824,14 @@ onAuthStateChanged(auth, async function(user) {
         document.getElementById('guestWarning').classList.add('hidden');
         document.getElementById('userAvatar').src = user.photoURL
             || 'https://ui-avatars.com/api/?name=' + (user.email || 'User') + '&background=random';
-        document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
+        let displayName = user.displayName;
+if (!displayName && user.providerData && user.providerData.length > 0) {
+    const twitterProvider = user.providerData.find(p => p.providerId === 'twitter.com');
+    if (twitterProvider?.displayName) {
+        displayName = twitterProvider.displayName;
+    }
+}
+document.getElementById('userName').textContent = displayName || user.email?.split('@')[0] || 'User';
 
         initUserSync(user.uid);
         initNotificationsListener(user.uid);
