@@ -1751,15 +1751,14 @@ function handleClick(e) {
     const btn = e.currentTarget; 
     const id = btn.getAttribute('data-id'); 
     if (!id) return;
-    
-    // ✅ Убираем метку NEW при клике
-    if (newIndicatorsState.globalNew.has(id) && !newIndicatorsState.clickedByUser.has(id)) { 
-        clearRobinNewLink(id); 
+
+    // ✅ ДОБАВИТЬ: Если это новый элемент, отмечаем что пользователь его кликнул
+    if (newIndicatorsState.globalNew.has(id) && !newIndicatorsState.clickedByUser.has(id)) {
+        clearRobinNewLink(id);
     }
-    
+
     const now = new Date().toISOString();
     if (!robinData[id]) robinData[id] = {};
-    
     if (btn.classList.contains('track-daily')) {
         if (robinData[id].lastClick && isToday(robinData[id].lastClick)) return;
         robinData[id].totalClicks = (robinData[id].totalClicks || 0) + 1; 
@@ -1802,17 +1801,27 @@ function applySectionState(sec, collapsed) {
 
 function updateRobinNewIndicators() {
     if (!newIndicatorsState || !newIndicatorsState.globalNew) return;
+    
     document.querySelectorAll('[data-id]').forEach(el => {
         const id = el.dataset.id;
-        const shouldShowNew = newIndicatorsState.globalNew.has(id) && !newIndicatorsState.clickedByUser.has(id);
+        // ✅ NEW видна если: в глобальном списке ИЛИ администратор добавил её
+        const shouldShowNew = newIndicatorsState.globalNew.has(id) && 
+                             !newIndicatorsState.clickedByUser.has(id);
+        
         if (shouldShowNew) {
-            el.setAttribute('data-new', 'true'); el.classList.add('has-new-flag');
+            el.setAttribute('data-new', 'true'); 
+            el.classList.add('has-new-flag');
             if (!el.querySelector('.new-flag')) {
-                const flag = document.createElement('span'); flag.className = 'new-flag'; flag.innerHTML = `<span class="new-flag-text">${getTranslation('new_indicator')}</span>`; el.appendChild(flag);
+                const flag = document.createElement('span'); 
+                flag.className = 'new-flag'; 
+                flag.innerHTML = `<span class="new-flag-text">${getTranslation('new_indicator')}</span>`; 
+                el.appendChild(flag);
             }
         } else {
-            el.removeAttribute('data-new'); el.classList.remove('has-new-flag');
-            const f = el.querySelector('.new-flag'); if (f) f.remove();
+            el.removeAttribute('data-new'); 
+            el.classList.remove('has-new-flag');
+            const f = el.querySelector('.new-flag'); 
+            if (f) f.remove();
         }
     });
     updateRobinSectionBadges();
@@ -1868,15 +1877,38 @@ function initRobinNewIndicatorsRealtime() {
 async function addToRobinGlobalNewIndicators(itemId) {
     if (!isAdmin) return;
     try {
-        if (newIndicatorsState.globalNew.has(itemId)) return;
+        // ✅ Добавляем в локальное состояние
         newIndicatorsState.globalNew.add(itemId);
-        await setDoc(doc(db, CONFIG_COLLECTION, NEW_INDICATORS_DOC), { globalNew: [...newIndicatorsState.globalNew], lastUpdated: Date.now(), updatedBy: currentUser.uid }, { merge: true });
-        const saveData = { globalNew: [...newIndicatorsState.globalNew], clickedByUser: [...newIndicatorsState.clickedByUser], lastSync: Date.now() };
+        newIndicatorsState.lastSync = Date.now();
+        
+        // ✅ Сохраняем в localStorage
+        const saveData = { 
+            globalNew: [...newIndicatorsState.globalNew], 
+            clickedByUser: [...newIndicatorsState.clickedByUser], 
+            lastSync: newIndicatorsState.lastSync 
+        };
         localStorage.setItem(NEW_INDICATORS_KEY, JSON.stringify(saveData));
+        
+        // ✅ Отправляем в Firestore
+        await setDoc(
+            doc(db, CONFIG_COLLECTION, NEW_INDICATORS_DOC), 
+            { 
+                globalNew: [...newIndicatorsState.globalNew], 
+                lastUpdated: Date.now(), 
+                updatedBy: currentUser.uid 
+            }, 
+            { merge: true }
+        );
+        
+        // ✅ Обновляем UI сразу
         updateRobinNewIndicators();
-    } catch (e) { showToast(getTranslation('error_adding_indicator'), 'error'); }
+        debugLog('✅ Added NEW: ' + itemId, 'ok');
+        
+    } catch (e) { 
+        debugLog('❌ Error adding NEW: ' + e.message, 'err');
+        showToast('Ошибка добавления метки NEW', 'error'); 
+    }
 }
-
 function updateRobinSectionBadges() {
     document.querySelectorAll('.collapsible-section').forEach(sec => {
         const st = sec.querySelector('.section-status'); if (!st) return;
@@ -2197,7 +2229,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
             const newUrl = document.getElementById('addFieldUrl').value.trim();
             const newTooltipEn = document.getElementById('addFieldTooltipEn').value.trim();
             const newTooltipUa = document.getElementById('addFieldTooltipUa').value.trim();
-            const newImages = getImagesFromInputs();
+            const newImages = getImagesFromInputs(); // ИЗМЕНЕНО
             
             if (!newTitle || !newUrl) { alert('Title and URL are required!'); return; }
 
@@ -2211,7 +2243,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                     found.descEn = newTooltipEn;
                     found.descUa = newTooltipUa;
                     found.tooltip = currentModalLang === 'en' ? newTooltipEn : newTooltipUa;
-                    found.images = newImages;
+                    found.images = newImages; // ИЗМЕНЕНО
                     isUserItem = true; 
                     await saveRobinUserItems(); 
                     break; 
@@ -2225,7 +2257,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                     descEn: newTooltipEn, 
                     descUa: newTooltipUa,
                     tooltip: newTooltipEn || newTooltipUa, 
-                    images: newImages
+                    images: newImages // ИЗМЕНЕНО
                 }; 
                 await saveRobinEditsOverride(); 
             }
@@ -2236,7 +2268,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                 descEn: newTooltipEn, 
                 descUa: newTooltipUa,
                 tooltip: newTooltipEn || newTooltipUa, 
-                images: newImages
+                images: newImages // ИЗМЕНЕНО
             });
             
             if (favoritesState[id]) { 
@@ -2260,92 +2292,79 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
         const descEn = document.getElementById('addFieldTooltipEn').value.trim();
         const descUa = document.getElementById('addFieldTooltipUa').value.trim();
         const tooltip = descEn || descUa;
-        const newImages = getImagesFromInputs();
+        const newImages = getImagesFromInputs(); // ИЗМЕНЕНО
         const website = document.getElementById('addFieldWebsite').value.trim(); 
         const twitter = document.getElementById('addFieldTwitter').value.trim();
+        const description = document.getElementById('addFieldDescription').value.trim();
 
         if (currentAddContext.zone) {
-            // ✅ Добавление элемента в зону (NFT, dApp link и т.д.)
-            if (!title || !url) { alert('Title and URL are required!'); return; }
-            const config = currentAddContext.config; 
-            const id = generateId();
-            const item = { 
-                id, 
-                title, 
-                url, 
-                tooltip, 
-                descEn,
-                descUa,
-                images: newImages,
-                trackType: config.trackType, 
-                addedAt: Date.now() 
-            };
-            if (!userItemsData.items[currentAddContext.zone]) userItemsData.items[currentAddContext.zone] = [];
-            userItemsData.items[currentAddContext.zone].push(item);
-            
-            // ✅ ДОБАВЛЯЕМ метку NEW
-            if (isAdmin) await addToRobinGlobalNewIndicators(id);
-            
-            await saveRobinUserItems(); 
-            renderUserItemInZone(currentAddContext.zone, item); 
-            showToast(getTranslation('element_added'), 'success');
-            
-        } else if (currentAddContext.sectionZone) {
+    if (!title || !url) { alert('Title and URL are required!'); return; }
+    const config = currentAddContext.config; 
+    const id = generateId();
+    const item = { 
+        id, 
+        title, 
+        url, 
+        tooltip, 
+        descEn,
+        descUa,
+        images: newImages,
+        trackType: config.trackType, 
+        addedAt: Date.now() 
+    };
+    if (!userItemsData.items[currentAddContext.zone]) 
+        userItemsData.items[currentAddContext.zone] = [];
+    userItemsData.items[currentAddContext.zone].push(item);
+    
+    // ✅ УБЕДИСЬ ЧТО ЭТА СТРОКА ЕСТЬ!
+    if (isAdmin) await addToRobinGlobalNewIndicators(id);
+    
+    await saveRobinUserItems(); 
+    renderUserItemInZone(currentAddContext.zone, item); 
+    showToast(getTranslation('element_added'), 'success');
+}
+    else if (currentAddContext.sectionZone) {
             const sConfig = currentAddContext.config;
-            
             if (sConfig.type === 'nft-collection') {
-                // ✅ Добавление NFT коллекции
                 if (!title) { alert('Title is required!'); return; }
                 const collId = generateId(); 
                 const coll = { id: collId, title, website, twitter, parentZone: currentAddContext.sectionZone, items: [], addedAt: Date.now() };
                 userItemsData.collections.push(coll); 
                 ZONE_CONFIG[collId] = { type: 'nft-item', label: 'NFT in ' + title, trackType: 'track-once' };
-                
-                // ❌ НЕ добавляем NEW для пустой коллекции (только для элементов внутри)
-                
                 await saveRobinUserItems(); 
                 renderUserCollection(coll); 
                 showToast(getTranslation('collection_created'), 'success');
-                
             } else if (sConfig.type === 'dapp-category') {
-                // ✅ Добавление dApp категории
                 if (!title) { alert('Title is required!'); return; }
                 const catId = generateId(); 
-                const cat = { 
-                    id: catId, 
-                    title, 
-                    description: descEn || descUa,
-                    descEn,
-                    descUa,
-                    parentZone: currentAddContext.sectionZone, 
-                    items: [], 
-                    addedAt: Date.now() 
-                };
+                const descEn = document.getElementById('addFieldTooltipEn').value.trim();
+const descUa = document.getElementById('addFieldTooltipUa').value.trim();
+const cat = { 
+    id: catId, 
+    title, 
+    description: descEn || descUa,  // Основное описание
+    descEn,  // Для отображения
+    descUa,  // Для отображения
+    parentZone: currentAddContext.sectionZone, 
+    items: [], 
+    addedAt: Date.now() 
+};
                 userItemsData.dappCategories.push(cat); 
                 ZONE_CONFIG[catId] = { type: 'link-item', label: title, trackType: 'track-daily' };
-                
-                // ❌ НЕ добавляем NEW для пустой категории
-                
                 await saveRobinUserItems(); 
                 renderUserDappCategory(cat); 
                 showToast(getTranslation('category_created'), 'success');
-                
             } else if (sConfig.type === 'deploy-group') {
-                // ✅ Добавление deploy группы
                 if (!title) { alert('Title is required!'); return; }
                 const grpId = generateId(); 
                 const grp = { id: grpId, title, parentZone: currentAddContext.sectionZone, items: [], addedAt: Date.now() };
                 userItemsData.collections.push(grp); 
                 ZONE_CONFIG[grpId] = { type: 'link-item', label: grp.title, trackType: 'track-daily' };
-                
-                // ❌ НЕ добавляем NEW для пустой группы
-                
                 await saveRobinUserItems(); 
                 renderUserDeployGroup(grp); 
                 showToast(getTranslation('group_created'), 'success');
             }
         }
-        
         closeModal(); 
         bindTrackingHandlersToAll(); 
         attachFavoriteControls(); 
