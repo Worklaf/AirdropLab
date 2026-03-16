@@ -3167,13 +3167,12 @@ async function saveNFTCollectionsOrder() {
     
     nftCollectionsOrder = order;
     
-    // ✅ Всегда сохраняем (для ВСЕХ пользователей, не только админов)
     const timestamp = Date.now();
     localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(order));
     localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY + '_ts', String(timestamp));
     
-    // ✅ Сохраняем в Firebase PUBLIC для синхронизации (для ВСЕХ)
-    if (currentUser) {
+    // ✅ Сохраняем в Firebase - только если админ
+    if (currentUser && isAdmin) {  // ← ДОБАВЬ ПРОВЕРКУ isAdmin
         try {
             await setDoc(doc(db, PUBLIC_DATA_COLLECTION, 'nft_collections_order_v1'), {
                 order: order,
@@ -3184,8 +3183,10 @@ async function saveNFTCollectionsOrder() {
             
             console.log('✅ NFT order saved to cloud:', order);
         } catch(e) { 
-            console.error('⚠️ NFT order save error:', e); 
+            console.error('⚠️ NFT order save error:', e);
         }
+    } else if (currentUser && !isAdmin) {
+        console.warn('⛔ Only admins can save NFT order to cloud');
     }
 }
 </script>
