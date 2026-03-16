@@ -1673,27 +1673,21 @@ onAuthStateChanged(auth, async (user) => {
     }
     
     if (!initialAuthCheckComplete) {
-        initialAuthCheckComplete = true;
-        await loadLanguagePreference();
-        loadRobinUserItems();
-        loadRobinEditsOverride();
-        await loadNFTCollectionsOrder();
-        await loadRobinSharedData();
-        
-        // ✅ ВАЖНО: Загружаем NEW индикаторы ДО отрисовки
-        await loadRobinNewIndicators();
-        
-        await loadRobinData();
-        renderRobinUserItems();
-        
-        // ✅ ВАЖНО: Обновляем NEW метки ПОСЛЕ рендера
-        updateRobinNewIndicators();
-        
-        // ✅ Realtime для всех
-        initRobinSharedDataRealtime();
-        
-        isDataLoaded = true;
-    }
+    initialAuthCheckComplete = true;
+    await loadLanguagePreference();
+    loadRobinUserItems();
+    loadRobinEditsOverride();
+    await loadRobinSharedData();  // ← сначала загружаем коллекции
+    await loadNFTCollectionsOrder();  // ← потом загружаем их порядок
+    
+    await loadRobinNewIndicators();
+    await loadRobinData();
+    renderRobinUserItems();
+    updateRobinNewIndicators();
+    initRobinSharedDataRealtime();
+    
+    isDataLoaded = true;
+}
 });
 
 // ===== HELPERS =====
@@ -2607,38 +2601,43 @@ async function saveNFTCollectionsOrder() {
     nftCollectionsOrder = order;
     localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(order));
     
-    if (currentUser && isAdmin) {
+    // ✅ Сохраняем в ПУБЛИЧНУЮ коллекцию для всех пользователей
+    if (isAdmin && currentUser) {
         try {
-            await saveToCloud({ 
-                robinNFTCollectionsOrder: order,
-                robinNFTCollectionsOrderTimestamp: Date.now()
-            });
-        } catch(e) { console.error('Order save error:', e); }
+            await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
+                nftCollectionsOrder: order,
+                nftCollectionsOrderTimestamp: Date.now()
+            }, { merge: true });
+            console.log('✅ Order saved to public Firebase');
+        } catch(e) { 
+            console.error('Order save error:', e); 
+        }
     }
 }
 
-// ✅ ЗАГРУЗКА порядка при инициализации (ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ)
+// ✅ Загружает порядок из публичной Firebase для ВСЕХ
 async function loadNFTCollectionsOrder() {
     const localOrder = JSON.parse(localStorage.getItem(NFT_COLLECTIONS_ORDER_KEY) || '[]');
     nftCollectionsOrder = localOrder;
     
-    // ✅ УБИРАЕМ проверку isAdmin - загружаем для всех
-    if (currentUser) {
-        try {
-            const docRef = doc(db, "users", currentUser.uid);
-            const docSnap = await getDoc(docRef);
+    // Загружаем из ПУБЛИЧНОЙ коллекции для всех
+    try {
+        const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists() && docSnap.data().nftCollectionsOrder) {
+            const cloudOrder = docSnap.data().nftCollectionsOrder;
+            const cloudTs = docSnap.data().nftCollectionsOrderTimestamp || 0;
+            const localTs = parseInt(localStorage.getItem(NFT_COLLECTIONS_ORDER_KEY + '_ts') || '0', 10);
             
-            if (docSnap.exists() && docSnap.data().robinNFTCollectionsOrder) {
-                const cloudTs = docSnap.data().robinNFTCollectionsOrderTimestamp || 0;
-                const localTs = parseInt(localStorage.getItem(NFT_COLLECTIONS_ORDER_KEY + '_ts') || '0', 10);
-                
-                if (cloudTs > localTs) {
-                    nftCollectionsOrder = docSnap.data().robinNFTCollectionsOrder;
-                    localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(nftCollectionsOrder));
-                    localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY + '_ts', String(cloudTs));
-                }
+            if (cloudTs > localTs) {
+                nftCollectionsOrder = cloudOrder;
+                localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY, JSON.stringify(nftCollectionsOrder));
+                localStorage.setItem(NFT_COLLECTIONS_ORDER_KEY + '_ts', String(cloudTs));
             }
-        } catch (e) { console.error('Load order error:', e); }
+        }
+    } catch (e) { 
+        console.error('Load order error:', e); 
     }
 }
 function renderUserDappCategory(cat) {
