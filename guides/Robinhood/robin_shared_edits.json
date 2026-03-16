@@ -1,3 +1,14 @@
 {
-  "editsOverride": {}
+  "editsOverride": {
+    "faucet_robin": {
+      "images": [
+        "https://faucet.testnet.chain.robinhood.com/chain-logo.svg?dpl=dpl_G1xYjJM5mp7i6AwQ8HwfLxd2MJGn"
+      ],
+      "url": "https://faucet.testnet.chain.robinhood.com/",
+      "descUa": "Перейдіть на сторінку Robinhood Chain Testnet Faucet, підключіть гаманець і отримайте тестові токени ETH, TSLA, AMZN, PLTR, NFLX та AMD",
+      "tooltip": "Go to the Robinhood Chain Testnet Faucet page, connect a wallet and get test tokens ETH, TSLA, AMZN, PLTR, NFLX and AMD",
+      "descEn": "Go to the Robinhood Chain Testnet Faucet page, connect a wallet and get test tokens ETH, TSLA, AMZN, PLTR, NFLX and AMD",
+      "title": "Robinhood Chain Testnet Faucet (Official)"
+    }
+  }
 }
