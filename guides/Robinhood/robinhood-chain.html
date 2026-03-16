@@ -1748,18 +1748,32 @@ function bindTrackingHandler(el) {
 function bindTrackingHandlersToAll() { document.querySelectorAll('.track-daily, .track-once').forEach(bindTrackingHandler); }
 
 function handleClick(e) {
-    const btn = e.currentTarget; const id = btn.getAttribute('data-id'); if (!id) return;
-    if (newIndicatorsState.globalNew.has(id) && !newIndicatorsState.clickedByUser.has(id)) { clearRobinNewLink(id); }
+    const btn = e.currentTarget; 
+    const id = btn.getAttribute('data-id'); 
+    if (!id) return;
+    
+    // ✅ Убираем метку NEW при клике
+    if (newIndicatorsState.globalNew.has(id) && !newIndicatorsState.clickedByUser.has(id)) { 
+        clearRobinNewLink(id); 
+    }
+    
     const now = new Date().toISOString();
     if (!robinData[id]) robinData[id] = {};
+    
     if (btn.classList.contains('track-daily')) {
         if (robinData[id].lastClick && isToday(robinData[id].lastClick)) return;
-        robinData[id].totalClicks = (robinData[id].totalClicks || 0) + 1; robinData[id].lastClick = now;
+        robinData[id].totalClicks = (robinData[id].totalClicks || 0) + 1; 
+        robinData[id].lastClick = now;
     } else if (btn.classList.contains('track-once')) {
         robinData[id].visited = true;
-        if (btn.classList.contains('track-once-info')) { robinData[id].totalClicks = (robinData[id].totalClicks || 0) + 1; robinData[id].lastClick = now; }
+        if (btn.classList.contains('track-once-info')) { 
+            robinData[id].totalClicks = (robinData[id].totalClicks || 0) + 1; 
+            robinData[id].lastClick = now; 
+        }
     }
-    saveRobinStats(); updateUI();
+    saveRobinStats(); 
+    updateUI();
+}RobinStats(); updateUI();
 }
 
 window.resetRobinAll = async function() {
@@ -2184,7 +2198,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
             const newUrl = document.getElementById('addFieldUrl').value.trim();
             const newTooltipEn = document.getElementById('addFieldTooltipEn').value.trim();
             const newTooltipUa = document.getElementById('addFieldTooltipUa').value.trim();
-            const newImages = getImagesFromInputs(); // ИЗМЕНЕНО
+            const newImages = getImagesFromInputs();
             
             if (!newTitle || !newUrl) { alert('Title and URL are required!'); return; }
 
@@ -2198,7 +2212,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                     found.descEn = newTooltipEn;
                     found.descUa = newTooltipUa;
                     found.tooltip = currentModalLang === 'en' ? newTooltipEn : newTooltipUa;
-                    found.images = newImages; // ИЗМЕНЕНО
+                    found.images = newImages;
                     isUserItem = true; 
                     await saveRobinUserItems(); 
                     break; 
@@ -2212,7 +2226,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                     descEn: newTooltipEn, 
                     descUa: newTooltipUa,
                     tooltip: newTooltipEn || newTooltipUa, 
-                    images: newImages // ИЗМЕНЕНО
+                    images: newImages
                 }; 
                 await saveRobinEditsOverride(); 
             }
@@ -2223,7 +2237,7 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                 descEn: newTooltipEn, 
                 descUa: newTooltipUa,
                 tooltip: newTooltipEn || newTooltipUa, 
-                images: newImages // ИЗМЕНЕНО
+                images: newImages
             });
             
             if (favoritesState[id]) { 
@@ -2247,12 +2261,12 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
         const descEn = document.getElementById('addFieldTooltipEn').value.trim();
         const descUa = document.getElementById('addFieldTooltipUa').value.trim();
         const tooltip = descEn || descUa;
-        const newImages = getImagesFromInputs(); // ИЗМЕНЕНО
+        const newImages = getImagesFromInputs();
         const website = document.getElementById('addFieldWebsite').value.trim(); 
         const twitter = document.getElementById('addFieldTwitter').value.trim();
-        const description = document.getElementById('addFieldDescription').value.trim();
 
         if (currentAddContext.zone) {
+            // ✅ Добавление элемента в зону (NFT, dApp link и т.д.)
             if (!title || !url) { alert('Title and URL are required!'); return; }
             const config = currentAddContext.config; 
             const id = generateId();
@@ -2263,59 +2277,76 @@ document.getElementById('addModalSave').addEventListener('click', async () => {
                 tooltip, 
                 descEn,
                 descUa,
-                images: newImages, // ИЗМЕНЕНО
+                images: newImages,
                 trackType: config.trackType, 
                 addedAt: Date.now() 
             };
             if (!userItemsData.items[currentAddContext.zone]) userItemsData.items[currentAddContext.zone] = [];
             userItemsData.items[currentAddContext.zone].push(item);
+            
+            // ✅ ДОБАВЛЯЕМ метку NEW
             if (isAdmin) await addToRobinGlobalNewIndicators(id);
+            
             await saveRobinUserItems(); 
             renderUserItemInZone(currentAddContext.zone, item); 
             showToast(getTranslation('element_added'), 'success');
             
         } else if (currentAddContext.sectionZone) {
             const sConfig = currentAddContext.config;
+            
             if (sConfig.type === 'nft-collection') {
+                // ✅ Добавление NFT коллекции
                 if (!title) { alert('Title is required!'); return; }
                 const collId = generateId(); 
                 const coll = { id: collId, title, website, twitter, parentZone: currentAddContext.sectionZone, items: [], addedAt: Date.now() };
                 userItemsData.collections.push(coll); 
                 ZONE_CONFIG[collId] = { type: 'nft-item', label: 'NFT in ' + title, trackType: 'track-once' };
+                
+                // ❌ НЕ добавляем NEW для пустой коллекции (только для элементов внутри)
+                
                 await saveRobinUserItems(); 
                 renderUserCollection(coll); 
                 showToast(getTranslation('collection_created'), 'success');
+                
             } else if (sConfig.type === 'dapp-category') {
+                // ✅ Добавление dApp категории
                 if (!title) { alert('Title is required!'); return; }
                 const catId = generateId(); 
-                const descEn = document.getElementById('addFieldTooltipEn').value.trim();
-const descUa = document.getElementById('addFieldTooltipUa').value.trim();
-const cat = { 
-    id: catId, 
-    title, 
-    description: descEn || descUa,  // Основное описание
-    descEn,  // Для отображения
-    descUa,  // Для отображения
-    parentZone: currentAddContext.sectionZone, 
-    items: [], 
-    addedAt: Date.now() 
-};
+                const cat = { 
+                    id: catId, 
+                    title, 
+                    description: descEn || descUa,
+                    descEn,
+                    descUa,
+                    parentZone: currentAddContext.sectionZone, 
+                    items: [], 
+                    addedAt: Date.now() 
+                };
                 userItemsData.dappCategories.push(cat); 
                 ZONE_CONFIG[catId] = { type: 'link-item', label: title, trackType: 'track-daily' };
+                
+                // ❌ НЕ добавляем NEW для пустой категории
+                
                 await saveRobinUserItems(); 
                 renderUserDappCategory(cat); 
                 showToast(getTranslation('category_created'), 'success');
+                
             } else if (sConfig.type === 'deploy-group') {
+                // ✅ Добавление deploy группы
                 if (!title) { alert('Title is required!'); return; }
                 const grpId = generateId(); 
                 const grp = { id: grpId, title, parentZone: currentAddContext.sectionZone, items: [], addedAt: Date.now() };
                 userItemsData.collections.push(grp); 
                 ZONE_CONFIG[grpId] = { type: 'link-item', label: grp.title, trackType: 'track-daily' };
+                
+                // ❌ НЕ добавляем NEW для пустой группы
+                
                 await saveRobinUserItems(); 
                 renderUserDeployGroup(grp); 
                 showToast(getTranslation('group_created'), 'success');
             }
         }
+        
         closeModal(); 
         bindTrackingHandlersToAll(); 
         attachFavoriteControls(); 
