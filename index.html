@@ -1729,34 +1729,23 @@ async function saveUserData(user) {
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
     
-    // ✅ Получаем Twitter username если логин через Twitter
-    let twitterUsername = '';
-    if (user.providerData && user.providerData.length > 0) {
-        const twitterProvider = user.providerData.find(p => p.providerId === 'twitter.com');
-        if (twitterProvider?.displayName) {
-            twitterUsername = twitterProvider.displayName;
-        }
-    }
-    
     if (!userSnap.exists()) {
       await setDoc(userRef, { 
         email: user.email || null,
-        displayName: user.displayName || twitterUsername || 'Аноним', 
+        displayName: user.displayName || 'Аноним', 
         photoURL: user.photoURL || null, 
         firstLogin: serverTimestamp(), 
         provider: user.providerData[0]?.providerId || 'unknown',
         lastLogin: serverTimestamp(), 
         favorites: [], 
         completed: [], 
-        arcGuideStats: {},
-        username: twitterUsername || null  // ✅ Сохраняем Twitter username
+        arcGuideStats: {}
       });
     } else {
       const userData = userSnap.data();
       const updates = { lastLogin: serverTimestamp() };
       if (!userData.firstLogin) updates.firstLogin = serverTimestamp();
       if (!userData.provider && user.providerData[0]) updates.provider = user.providerData[0].providerId;
-      if (twitterUsername && !userData.username) updates.username = twitterUsername; // ✅ Сохраняем если нет
       await updateDoc(userRef, updates);
     }
   } catch (e) { console.error('Error saving user:', e); }
@@ -1780,7 +1769,6 @@ async function syncLocalStorageToFirestore(userId) {
 
 onAuthStateChanged(auth, async function(user) {
 
-    // ✅ ДОБАВИТЬ — резолвим промис ОДИН РАЗ при первом срабатывании
     if (_resolveAuthReady) {
         _resolveAuthReady(user || null);
         _resolveAuthReady = null;
@@ -1790,6 +1778,16 @@ onAuthStateChanged(auth, async function(user) {
     if (user) {
         currentUser = user;
         window.currentUser = user;
+        
+        // ✅ Получаем Twitter username для отображения
+        let displayEmailOrTwitter = user.email;
+        if (!displayEmailOrTwitter && user.providerData?.length > 0) {
+            const twitterProvider = user.providerData.find(p => p.providerId === 'twitter.com');
+            if (twitterProvider?.displayName) {
+                displayEmailOrTwitter = '@' + twitterProvider.displayName;
+            }
+        }
+        
         await saveUserData(user);
         await syncLocalStorageToFirestore(user.uid);
         document.getElementById('generalFeedbackPanel').classList.remove('hidden');
@@ -1804,7 +1802,6 @@ onAuthStateChanged(auth, async function(user) {
                 userFavorites = data.favorites  || [];
                 userCompleted = data.completed  || [];
 
-                // ✅ ОСТАВИТЬ ТОЛЬКО ОДНУ ПРОВЕРКУ счётчика (убрать дубль ниже)
                 if (!data.counted) {
                     await incrementUserCount();
                     await setDoc(userRef, { counted: true }, { merge: true });
@@ -1824,24 +1821,17 @@ onAuthStateChanged(auth, async function(user) {
         document.getElementById('guestWarning').classList.add('hidden');
         document.getElementById('userAvatar').src = user.photoURL
             || 'https://ui-avatars.com/api/?name=' + (user.email || 'User') + '&background=random';
-        let displayName = user.displayName;
-if (!displayName && user.providerData && user.providerData.length > 0) {
-    const twitterProvider = user.providerData.find(p => p.providerId === 'twitter.com');
-    if (twitterProvider?.displayName) {
-        displayName = twitterProvider.displayName;
-    }
-}
-document.getElementById('userName').textContent = displayName || user.email?.split('@')[0] || 'User';
+        
+        // ✅ НОВОЕ: Показываем email или @twitterUsername
+        document.getElementById('userName').textContent = displayEmailOrTwitter || user.displayName || 'User';
 
         initUserSync(user.uid);
         initNotificationsListener(user.uid);
 
-        // ✅ Загружаем состояние hero из Firestore
         await loadHeroStateFromFirestore(user.uid);
 
         applyFilters();
 
-        // ✅ Уведомляем другие модули
         document.dispatchEvent(new CustomEvent('userAuthChanged', { detail: { user } }));
         document.dispatchEvent(new CustomEvent('authStateReady',  { detail: { user } }));
 
