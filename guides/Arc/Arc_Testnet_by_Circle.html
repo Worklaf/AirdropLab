@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="languages.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         .lightbox-image { transition: opacity 0.3s ease; }
         #lightboxLeft:hover, #lightboxRight:hover { background: var(--accent) !important; transform: translateY(-50%) scale(1.1); }
@@ -983,19 +983,25 @@ onAuthStateChanged(auth, async (user) => {
     }, 400);
 }
 });
-/* ===== MEDIA TYPE DETECTION ===== */
+// ===== MEDIA TYPE DETECTION =====
 function getMediaType(url) {
     if (!url) return 'unknown';
-    const l = url.toLowerCase();
-    if (l.endsWith('.m3u8')) return 'hls';              // <-- добавили
-    if (/\.(mp4|webm|mov|avi|mkv|ogg)(\?|$)/.test(l)) return 'video';
+    const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
+    const lowerUrl = url.toLowerCase();
+    
+    // ✅ Проверяем HLS (m3u8)
+    if (lowerUrl.includes('.m3u8')) return 'hls';
+    
+    // Проверяем обычное видео
+    if (videoExts.some(ext => lowerUrl.includes(ext))) return 'video';
+    
     return 'image';
 }
 
 function createMediaElement(url, alt = '', className = '', autoplay = true) {
     const type = getMediaType(url);
-
-    // ----- HLS (.m3u8) -----
+    
+    // === HLS VIDEO (m3u8) ===
     if (type === 'hls') {
         const container = document.createElement('div');
         container.className = className;
@@ -1010,38 +1016,61 @@ function createMediaElement(url, alt = '', className = '', autoplay = true) {
             border-radius: 8px;
             background: #000;
         `;
-
+        
         const video = document.createElement('video');
-        video.style.cssText = 'width:100%;max-height:60vh;object-fit:contain;';
-        video.muted = true;
+        video.style.cssText = 'width:100%;max-height:100%;object-fit:contain;';
+        video.loop = true;
+        video.muted = true; // Обязательно для автозапуска
         video.playsInline = true;
-        if (autoplay) video.autoplay = true;
-
-        // Safari умеет HLS сам
-        if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = url;
-        } else if (window.Hls && Hls.isSupported()) {
-            const hls = new Hls({ autoStartLoad: true, mute: true });
+        
+        // Используем HLS.js
+        if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+            const hls = new Hls({
+                enableWorker: true,
+                lowLatencyMode: true,
+            });
             hls.loadSource(url);
             hls.attachMedia(video);
-            if (autoplay) {
-                hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    video.play().catch(()=>{});
-                });
-            }
-        } else {
-            // Если браузер не поддерживает HLS и нет hls.js
-            const msg = document.createElement('div');
-            msg.style.cssText='color:#f87171;padding:20px;text-align:center;font-size:.9rem;';
-            msg.textContent = '⚠️ Video format not supported';
-            container.appendChild(msg);
+            
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                if (autoplay) {
+                    video.play().catch(e => console.log('HLS Autoplay blocked:', e));
+                }
+            });
+            
+            hls.on(Hls.Events.ERROR, function (event, data) {
+                if (data.fatal) {
+                    console.error('HLS fatal error:', data);
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            console.log("Network error, trying to recover...");
+                            hls.startLoad();
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            console.log("Media error, trying to recover...");
+                            hls.recoverMediaError();
+                            break;
+                        default:
+                            hls.destroy();
+                            break;
+                    }
+                }
+            });
+            
+            // Сохраняем инстанс для очистки
+            container._hls = hls;
+            
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // Нативная поддержка HLS (Safari)
+            video.src = url;
+            if (autoplay) video.play().catch(e => {});
         }
-
+        
         container.appendChild(video);
         return container;
     }
-
-    // ----- Обычный video (.mp4 и др.) -----
+    
+    // === REGULAR VIDEO (mp4, webm) ===
     if (type === 'video') {
         const container = document.createElement('div');
         container.className = className;
@@ -1056,22 +1085,24 @@ function createMediaElement(url, alt = '', className = '', autoplay = true) {
             border-radius: 8px;
             background: #000;
         `;
-
+        
         const video = document.createElement('video');
         video.src = url;
-        video.style.cssText = 'width:100%;max-height:60vh;object-fit:contain;';
+        video.style.cssText = 'width:100%;max-height:100%;object-fit:contain;';
         video.loop = true;
         video.muted = true;
         video.playsInline = true;
+        
         if (autoplay) {
             video.autoplay = true;
-            setTimeout(()=>video.play().catch(()=>{}),100);
+            setTimeout(() => video.play().catch(e => console.log('Autoplay blocked:', e)), 100);
         }
+        
         container.appendChild(video);
         return container;
     }
-
-    // ----- Картинка -----
+    
+    // === IMAGE ===
     const img = document.createElement('img');
     img.src = url;
     img.alt = alt;
@@ -2361,6 +2392,11 @@ function showTooltip(e) {
     if (!target) return;
 
     ensureTooltipEl();
+    const oldHlsContainer = tooltipEl.querySelector('div[_hls]');
+    if (oldHlsContainer && oldHlsContainer._hls) {
+        oldHlsContainer._hls.destroy();
+        oldHlsContainer._hls = null;
+    }
     activeTooltipTarget = target;
 
     const imagesAttr = target.getAttribute('data-images');
@@ -2629,7 +2665,15 @@ function closeLightbox() {
     overlay.classList.remove('open');
     document.body.style.overflow = '';
     overlay.onwheel = null;
-    
+    const mediaWrapper = document.getElementById('arcLightboxMedia');
+    if (mediaWrapper) {
+        const hlsContainer = mediaWrapper.querySelector('div[_hls]');
+        if (hlsContainer && hlsContainer._hls) {
+            hlsContainer._hls.destroy();
+            hlsContainer._hls = null;
+        }
+        mediaWrapper.innerHTML = '';
+    }
     // Останавливаем видео если есть
     const mediaWrapper = document.getElementById('arcLightboxMedia');
     if (mediaWrapper) {
