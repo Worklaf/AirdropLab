@@ -890,31 +890,51 @@ async function loadLanguagePreference() {
         currentLanguage = (localLang === 'uk') ? 'ua' : localLang;
     }
     
-    if (currentUser) {
+    // ✅ ГАРАНТИРОВАННАЯ ЗАПИСЬ в Firebase
+if (currentUser) {
+    const ts = Date.now();
+    const docRef = doc(db, "users", currentUser.uid);
+    
+    // 1️⃣ Сначала пишем ТОЛЬКО robin-поля (без merge - полная замена)
+    const robinDoc = {
+        robinUserItems: userItemsData,
+        robinUserItemsTimestamp: ts,
+        robinGuideStats: robinData,
+        robinFavoritesState: favoritesState,
+        robinFavoritesOrder: favoritesOrder,
+        robinFavoritesTimestamp: ts,
+        robinEditsOverride: editsOverride,
+        robinEditsTimestamp: ts
+    };
+    
+    // 2️⃣ merge: true - добавляем/обновляем ТОЛЬКО эти поля, остальное не трогаем
+    await setDoc(docRef, robinDoc, { merge: true });
+    console.log('✅ Firebase setDoc done');
+    
+    // 3️⃣ ПРОВЕРЯЕМ что действительно записалось
+    const verify = await getDoc(docRef);
+    console.log('✅ Verify - items count:', verify.data()?.robinUserItems?.collections?.length);
+    
+    // 4️⃣ Public только если админ
+    if (isAdmin) {
         try {
-            const docRef = doc(db, "users", currentUser.uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists() && docSnap.data().robinLanguage) {
-                let cloudLang = docSnap.data().robinLanguage;
-                // Нормализация: uk → ua
-                cloudLang = (cloudLang === 'uk') ? 'ua' : cloudLang;
-                
-                const cloudTs = docSnap.data().robinLanguageTimestamp || 0;
-                const localTs = parseInt(localStorage.getItem(LANGUAGE_KEY + '_ts') || '0', 10);
-                
-                if (cloudTs > localTs) {
-                    currentLanguage = cloudLang;
-                    localStorage.setItem(LANGUAGE_KEY, currentLanguage);
-                    localStorage.setItem(LANGUAGE_KEY + '_ts', String(cloudTs));
-                }
-            }
-        } catch (e) {
-            console.error("Error loading language from Firebase:", e);
+            await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
+                userItemsData: userItemsData,
+                editsOverride: editsOverride,
+                lastUpdated: ts,
+                updatedBy: currentUser.uid
+            }, { merge: true });
+        } catch (publicErr) {
+            console.warn('⚠️ Public save skipped:', publicErr.message);
         }
     }
-    
-    updateAllTranslations();
 }
+
+// ✅ Ждём 2 сек (Firebase хочет времени на запись)
+await new Promise(resolve => setTimeout(resolve, 2000));
+
+console.log('🔄 Reloading...');
+location.reload();
 // ===== MAIN CODE =====
 let newLinksSet = new Set();
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
