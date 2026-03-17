@@ -14,6 +14,36 @@
     <script src="languages.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
+        /* Кнопки сортировки (Admin Only) */
+.sort-controls {
+    display: none; /* Скрыто по умолчанию */
+    gap: 4px;
+    margin-right: 10px;
+}
+body.is-admin .sort-controls {
+    display: inline-flex;
+}
+
+.sort-btn {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    color: var(--text-muted);
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.sort-btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
         .lightbox-image { transition: opacity 0.3s ease; }
         #lightboxLeft:hover, #lightboxRight:hover { background: var(--accent) !important; transform: translateY(-50%) scale(1.1); }
         .lightbox-dot:hover { transform: scale(1.3); }
@@ -1641,13 +1671,61 @@ function createAddBtn(title, onClick) {
     btn.addEventListener('click', (e)=>{ e.stopPropagation(); onClick(); });
     return btn;
 }
+// ===========================
+// AUTO SORT FUNCTION
+// ===========================
+window.sortNftCollections = async (criteria) => {
+    if (!isAdmin) return;
 
+    // 1. Получаем все NFT коллекции
+    let nftColls = userItemsData.collections.filter(c => 
+        c.parentZone === 'nfts' || (!c.parentZone && String(c.id).startsWith('nft_'))
+    );
+
+    // 2. Сортируем массив объектов
+    nftColls.sort((a, b) => {
+        if (criteria === 'az') {
+            // По алфавиту (A-Z)
+            return a.title.localeCompare(b.title);
+        } 
+        else if (criteria === 'count') {
+            // По количеству элементов (от большего к меньшему)
+            const countA = userItemsData.items[a.id]?.length || 0;
+            const countB = userItemsData.items[b.id]?.length || 0;
+            if (countB !== countA) return countB - countA;
+            return a.title.localeCompare(b.title); // Если кол-во равно, то по алфавиту
+        }
+        else if (criteria === 'newest') {
+            // Сначала новые (по дате добавления коллекции)
+            return (b.addedAt || 0) - (a.addedAt || 0);
+        }
+    });
+
+    // 3. Обновляем глобальный массив порядка
+    arcNftCollectionsOrder = nftColls.map(c => c.id);
+
+    // 4. Сохраняем в Firebase и перерисовываем
+    await saveArcNFTCollectionsOrder();
+    renderNFTs(); // Мгновенное обновление локально
+    showToast(`✅ Sorted by: ${criteria === 'az' ? 'Name' : 'Count'}`, 'success');
+};
 // ===========================
 // SECTION-LEVEL + BUTTONS
 // ===========================
 function injectSectionAddButtons() {
+    // === NFT SECTION ===
     const nftSection = document.querySelector('[data-section-id="nfts"] .section-header');
     if (nftSection && !nftSection.querySelector('.section-add-btn')) {
+        
+        // 1. Создаем контейнер для кнопок сортировки
+        const sortContainer = document.createElement('div');
+        sortContainer.className = 'sort-controls admin-only';
+        sortContainer.innerHTML = `
+            <button class="sort-btn" onclick="window.sortNftCollections('az')" title="Sort A-Z"><i class="fas fa-sort-alpha-down"></i></button>
+            <button class="sort-btn" onclick="window.sortNftCollections('count')" title="Sort by Quantity"><i class="fas fa-sort-amount-down"></i></button>
+        `;
+        
+        // 2. Кнопка добавления (+)
         const btn = document.createElement('button');
         btn.type='button'; btn.className='section-add-btn admin-only'; btn.title='Add NFT Collection'; btn.innerHTML='+';
         btn.addEventListener('click',(e)=>{
@@ -1655,10 +1733,19 @@ function injectSectionAddButtons() {
             currentAddContext = { sectionType:'nft-collection' };
             openModal('Add NFT Collection', ['fieldTitle','fieldWebsite','fieldTwitter']);
         });
+
+        // Вставляем элементы перед кнопкой сворачивания
         const toggle = nftSection.querySelector('.section-toggle');
-        if (toggle) nftSection.insertBefore(btn,toggle); else nftSection.appendChild(btn);
+        if (toggle) {
+            nftSection.insertBefore(sortContainer, toggle); // Сортировка
+            nftSection.insertBefore(btn, toggle); // Плюс
+        } else {
+            nftSection.appendChild(sortContainer);
+            nftSection.appendChild(btn);
+        }
     }
 
+    // === DEPLOY SECTION (без изменений) ===
     const deploySection = document.querySelector('[data-section-id="deploy"] .section-header');
     if (deploySection && !deploySection.querySelector('.section-add-btn')) {
         const btn = document.createElement('button');
@@ -1672,6 +1759,7 @@ function injectSectionAddButtons() {
         if (toggle) deploySection.insertBefore(btn,toggle); else deploySection.appendChild(btn);
     }
 
+    // === DAPPS SECTION (без изменений) ===
     const dappsSection = document.querySelector('[data-section-id="dapps"] .section-header');
     if (dappsSection && !dappsSection.querySelector('.section-add-btn')) {
         const btn = document.createElement('button');
@@ -1685,6 +1773,7 @@ function injectSectionAddButtons() {
         if (toggle) dappsSection.insertBefore(btn,toggle); else dappsSection.appendChild(btn);
     }
 
+    // === FAUCETS (без изменений) ===
     const faucetsZone = document.getElementById('faucets-zone');
     if (faucetsZone && !faucetsZone.querySelector('.add-item-btn')) {
         const btn = createAddBtn('Add Faucet', ()=>{
@@ -1694,6 +1783,7 @@ function injectSectionAddButtons() {
         faucetsZone.appendChild(btn);
     }
 
+    // === DEPLOY INNER BUTTONS (без изменений) ===
     ['deploy_basic','deploy_advanced'].forEach(zone=>{
         const container = document.querySelector(`[data-zone="${zone}"]`);
         if (!container) return;
@@ -1707,7 +1797,6 @@ function injectSectionAddButtons() {
         lc.appendChild(btn);
     });
 }
-
 // ===========================
 // MODAL
 // ===========================
