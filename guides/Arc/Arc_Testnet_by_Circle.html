@@ -617,6 +617,8 @@ body.edit-mode [data-section-id="nfts"] .resource-header:active {
 </div>
 
 <script type="module">
+// Ваш полный JavaScript (с исправленными функциями, относящимися к порядку NFT)
+
 // ===========================
 // MULTI-IMAGE SYSTEM
 // ===========================
@@ -1006,11 +1008,11 @@ onAuthStateChanged(auth, async (user) => {
     renderAll();
 
     setTimeout(() => {
-        applyArcNFTSortOrder(); // <-- Применяем порядок после рендера
+        applyArcNFTSortOrder();
         initArcNFTCollectionsSort();
-        initArcNFTOrderRealtime();
+        initArcNFTOrderRealtime();             // ← Добавлено
         updateNewIndicators();
-        console.log('✅ Arc fully initialized');
+        console.log('✅ Arc fully initialized with order sync');
     }, 400);
 }
 });
@@ -1677,37 +1679,37 @@ function createAddBtn(title, onClick) {
 window.sortNftCollections = async (criteria) => {
     if (!isAdmin) return;
 
-    // Получаем все NFT коллекции
-    let nftColls = userItemsData.collections.filter(
-        c => c.parentZone === 'nfts' || (!c.parentZone && String(c.id).startsWith('nft_'))
+    // 1. Получаем все NFT коллекции
+    let nftColls = userItemsData.collections.filter(c => 
+        c.parentZone === 'nfts' || (!c.parentZone && String(c.id).startsWith('nft_'))
     );
 
-    // Сортируем коллекции
+    // 2. Сортируем массив объектов
     nftColls.sort((a, b) => {
         if (criteria === 'az') {
+            // По алфавиту (A-Z)
             return a.title.localeCompare(b.title);
-        }
+        } 
         else if (criteria === 'count') {
+            // По количеству элементов (от большего к меньшему)
             const countA = userItemsData.items[a.id]?.length || 0;
             const countB = userItemsData.items[b.id]?.length || 0;
-            return countB - countA || a.title.localeCompare(b.title);
+            if (countB !== countA) return countB - countA;
+            return a.title.localeCompare(b.title); // Если кол-во равно, то по алфавиту
         }
         else if (criteria === 'newest') {
+            // Сначала новые (по дате добавления коллекции)
             return (b.addedAt || 0) - (a.addedAt || 0);
         }
-        return 0;
     });
 
-    // Обновляем глобальный порядок
+    // 3. Обновляем глобальный массив порядка
     arcNftCollectionsOrder = nftColls.map(c => c.id);
 
-    // Сохраняем порядок
+    // 4. Сохраняем в Firebase и перерисовываем
     await saveArcNFTCollectionsOrder();
-    
-    // Применяем сортировку без пересоздания элементов
-    applyArcNFTSortOrder();
-
-    showToast(`✅ Sorted by: ${criteria === 'az' ? 'Name' : criteria === 'count' ? 'Quantity' : 'Date'}`, 'success');
+    renderNFTs(); // Мгновенное обновление локально
+    showToast(`✅ Sorted by: ${criteria === 'az' ? 'Name' : 'Count'}`, 'success');
 };
 // ===========================
 // SECTION-LEVEL + BUTTONS
@@ -3232,10 +3234,9 @@ async function loadArcNFTCollectionsOrder() {
 async function saveArcNFTCollectionsOrder() {
     const grid = document.getElementById('nfts-grid');
     if (!grid) return;
-
-    // Более надежный способ получения порядка из DOM
-    const cards = grid.querySelectorAll('.user-collection-card');
-    const currentOrder = Array.from(cards)
+    
+    // Получаем текущий порядок из DOM
+    const currentOrder = Array.from(grid.querySelectorAll('.user-collection-card'))
         .map(card => card.dataset.zone)
         .filter(Boolean);
 
@@ -3255,50 +3256,44 @@ async function saveArcNFTCollectionsOrder() {
         await setDoc(doc(db, PUBLIC_DATA_COLLECTION, 'arc_nft_order_v1'), {
             order: arcNftCollectionsOrder,
             timestamp: ts,
-            updatedBy: currentUser?.uid || 'anonymous'
+            updatedBy: currentUser ? currentUser.uid : 'anonymous'
         }, { merge: true });
-        console.log('✅ NFT order saved to Cloud:', arcNftCollectionsOrder.length, 'items');
+        
+        console.log('✅ Arc NFT order saved to PUBLIC document');
     } catch(e) {
-        console.error('⚠️ NFT order save to Cloud failed:', e);
+        console.error('⚠️ Failed to save NFT order to public:', e);
     }
 }
+
 function initArcNFTCollectionsSort() {
     if (!isAdmin) return;
     
     const grid = document.getElementById('nfts-grid');
     if (!grid || typeof Sortable === 'undefined') return;
     
-    // Уничтожаем старую сортировку
+    // Уничтожаем старый если есть
     if (grid._sortable) {
         grid._sortable.destroy();
         grid._sortable = null;
     }
     
     // Инициализация сортировки через Drag & Drop
-    grid._sortable = new Sortable(grid, {
-        animation: 200,
-        ghostClass: 'sortable-ghost',
-        dragClass: 'sortable-drag',
-        handle: '.resource-header',
-        filter: '.add-item-btn, .section-add-btn, .user-collection-delete-top',
-        onEnd: async (evt) => {
-            // Получаем новое положение элементов
-            await saveArcNFTCollectionsOrder();
-            showToast('✅ NFT collections reordered!', 'success');
-        }
-    });
-    
-    console.log('✅ NFT collection sorting initialized');
+    setTimeout(() => {
+        grid._sortable = new Sortable(grid, {
+            animation: 200,
+            ghostClass: 'sortable-ghost',
+            dragClass: 'sortable-drag',
+            handle: '.resource-header',
+            filter: '.add-item-btn, .section-add-btn, .user-collection-delete-top',
+            onEnd: async (evt) => {
+                // Получаем новое положение элементов
+                await saveArcNFTCollectionsOrder();
+                showToast('✅ NFT collections reordered!', 'success');
+            }
+        });
+        console.log('✅ NFT collection sorting initialized');
+    }, 100);
 }
-
-// Исправленная функция в onAuthStateChanged
-setTimeout(() => {
-    applyArcNFTSortOrder();        // Применяем сохраненный порядок
-    initArcNFTCollectionsSort();   // Инициализируем drag'n'drop
-    initArcNFTOrderRealtime();     // Включаем синхронизацию
-    updateNewIndicators();
-    console.log('✅ Arc fully initialized with order sync');
-}, 500);
 
 function initArcNFTOrderRealtime() {
     if (arcNftOrderUnsubscribe) return;
@@ -3323,8 +3318,9 @@ function initArcNFTOrderRealtime() {
             localStorage.setItem(ARC_NFT_ORDER_KEY, JSON.stringify(cloudOrder));
             localStorage.setItem(ARC_NFT_ORDER_KEY + '_ts', String(cloudTs));
 
-            applyArcNFTSortOrder(); // <-- Только переставляем DOM, не перерисовываем
+            applyArcNFTSortOrder();
             
+            // Тост только если страница уже загружена (не первая загрузка)
             if (document.readyState === 'complete') {
                 showToast('📡 NFT order updated!', 'info');
             }
