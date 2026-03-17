@@ -413,25 +413,27 @@ body.light-theme .nft-counter {
         </div>
         
         <div class="desc-field-wrapper field-hidden" id="descFieldUa">
-            <label><span data-i18n="tooltip_label">Description (tooltip)</span> (Українська) <span class="translate-badge" id="translateBadgeUa" style="display:none;">...</span>
-                <textarea id="addFieldTooltipUa" placeholder="Опис українською..."></textarea>
-            </label>
-        </div>
+    <label><span data-i18n="tooltip_label">Description (tooltip)</span> (Українська) <span class="translate-badge" id="translateBadgeUa" style="display:none;">...</span>
+        <textarea id="addFieldTooltipUa" placeholder="Опис українською..."></textarea>
+    </label>
+</div>
         
         <label id="fieldUrl"><span data-i18n="url_label">URL Link</span> *<input type="url" id="addFieldUrl" placeholder="https://..." required></label>
-        
-               <!-- MULTI-IMAGE INPUT - NEW FROM ARC -->
-<label id="fieldImage">
-    <span data-i18n="image_label">Images (for NFT)</span>
-    <span id="imageCounter" style="font-size:0.75rem;color:var(--accent);margin-left:8px;">0/5 images</span>
-    <div id="imageInputsContainer" style="margin-top:8px;">
-        <div class="image-input-row" style="display:flex;gap:8px;align-items:center;">
-            <input type="url" class="addFieldImage" placeholder="https://...image.png" style="flex:1; background:rgba(15,23,42,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);">
-            <button type="button" class="add-image-btn" onclick="window.addImageInput()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;">+</button>
+        <!-- ADD MODAL - замінити label id="fieldImage" на це: -->
+<div id="fieldImage">
+    <label style="display:flex;flex-direction:column;gap:6px;font-size:0.85rem;color:var(--text-muted);font-weight:600;">
+        <span data-i18n="image_label">Image URL (for NFT)</span>
+        <div id="imageInputsContainer">
+            <div class="image-input-row" style="display:flex;gap:8px;align-items:center;">
+                <input type="url" class="addFieldImage" placeholder="https://...image.png" 
+                    style="flex:1;background:rgba(15,23,42,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text-main);">
+                <button type="button" onclick="window.addImageInput()" 
+                    style="background:var(--accent);color:#fff;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;font-weight:bold;">+</button>
+            </div>
         </div>
-    </div>
-</label>
-        
+        <span id="imageCounter" style="font-size:0.7rem;color:#94a3b8;margin-top:2px;">1/5 images</span>
+    </label>
+</div>
         <label id="fieldWebsite"><span data-i18n="website_label">Project Website URL</span><input type="url" id="addFieldWebsite" placeholder="https://..."></label>
         <label id="fieldTwitter"><span data-i18n="twitter_label">Project Twitter URL</span><input type="url" id="addFieldTwitter" placeholder="https://x.com/..."></label>
         
@@ -2805,7 +2807,11 @@ function createItemWrapper(item, zone, defaultTrack) {
         delBtn.disabled = false;
         delBtn.innerHTML = '×';
     }
-});
+    }); // закриття addEventListener
+
+    wrapper.appendChild(delBtn); // ← ДОДАТИ
+    return wrapper;              // ← ДОДАТИ
+}
 
 function renderUserItemInZone(zone, item) {
     const container = document.querySelector(`[data-zone="${zone}"]`); if (!container) return;
@@ -3150,7 +3156,11 @@ function createUserLink(item, zone) {
         delBtn.disabled = false;
         delBtn.innerHTML = '×';
     }
-});
+    }); // закриття addEventListener
+
+    wrapper.appendChild(delBtn); // ← ДОДАТИ
+    return wrapper;              // ← ДОДАТИ
+}
 
 async function uploadConfigToGithub() {
     try {
