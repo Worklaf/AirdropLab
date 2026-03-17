@@ -544,6 +544,32 @@ video.tooltip-image {
     justify-content: center;
     margin-right: 2px;
 }
+       /* NFT COUNTER */
+.resource-item, .user-collection-card {
+    position: relative; /* Обязательно */
+}
+
+.nft-counter {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(15, 23, 42, 0.92);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.6);
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    pointer-events: none;
+}
+
+body.light-theme .nft-counter {
+    background: rgba(255,255,255,0.95);
+    color: #15803d;
+    border-color: #4ade80;
+}
     </style>
 </head>
 <body>
@@ -885,6 +911,24 @@ function createMediaElement(url, alt = '', className = '', autoplay = true) {  /
         img.onerror = () => img.style.display = 'none';
         return img;
     }
+}
+    // ===== NFT COUNTER FUNCTION =====
+function updateNFTCardCounter(card, collectionId) {
+    if (!card || !collectionId) return;
+    
+    // Удаляем старый счётчик
+    const oldCounter = card.querySelector('.nft-counter');
+    if (oldCounter) oldCounter.remove();
+    
+    const items = userItemsData.items[collectionId] || [];
+    const count = items.length;
+    
+    const counter = document.createElement('div');
+    counter.className = 'nft-counter';
+    counter.textContent = count;
+    counter.title = `${count} NFT in collection`;
+    
+    card.appendChild(counter);
 }
 function clearImageInputs() {
     const container = document.getElementById('imageInputsContainer');
@@ -2497,18 +2541,26 @@ async function saveSharedDataToFirebase() {
 async function saveRobinUserItems() {
     localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
     localStorage.setItem('robin_user_items_timestamp', String(Date.now()));
+    
     if (currentUser) {
         try {
             await saveToCloud({ 
                 robinUserItems: userItemsData, 
                 robinUserItemsTimestamp: Date.now() 
             });
+            if (isAdmin) await saveSharedDataToFirebase();
         } catch(e) { 
-            showToast('⚠️ Private save error', 'error'); 
+            showToast('⚠️ Saved locally only', 'error'); 
         }
-        // ✅ ОТДЕЛЬНЫЙ try/catch — публичное сохранение НЕ зависит от приватного
-        if (isAdmin) await saveSharedDataToFirebase();
+    } else if (isAdmin) {
+        await saveSharedDataToFirebase();
     }
+
+    // ✅ ОБНОВЛЯЕМ ВСЕ СЧЁТЧИКИ
+    document.querySelectorAll('.user-collection-card').forEach(card => {
+        const zone = card.dataset.zone;
+        if (zone) updateNFTCardCounter(card, zone);
+    });
 }
 
 async function saveRobinEditsOverride() {
@@ -2872,6 +2924,10 @@ delBtn.className = 'user-item-delete';
             userItemsData.collections.forEach(c => { if (c.items) c.items = c.items.filter(i => i.id !== item.id); });
             userItemsData.dappCategories.forEach(c => { if (c.items) c.items = c.items.filter(i => i.id !== item.id); });
             await saveRobinUserItems(); wrapper.remove();
+            const collCard = document.querySelector(`[data-zone="${zone}"]`);
+if (collCard && collCard.classList.contains('user-collection-card')) {
+    updateNFTCardCounter(collCard, zone);
+}
             if (favoritesState[item.id]) { delete favoritesState[item.id]; favoritesOrder = favoritesOrder.filter(x => x !== item.id); await saveRobinFavorites(); refreshAllVisuals(); }
             showToast(`${getTranslation('removed')}: ${item.title}`, 'info');
         } catch (error) { delBtn.disabled = false; delBtn.innerHTML = '×'; }
@@ -2890,6 +2946,10 @@ function renderUserItemInZone(zone, item) {
     const wrapper = createUserLink(item, zone);
     const addBtn = target.querySelector('.add-item-btn'); 
     if (addBtn) target.insertBefore(wrapper, addBtn); else target.appendChild(wrapper);
+    const collCard = document.querySelector(`[data-zone="${zone}"]`);
+if (collCard && collCard.classList.contains('user-collection-card')) {
+    updateNFTCardCounter(collCard, zone);
+}
 }
 
 function renderUserCollection(coll) {
@@ -2902,7 +2962,6 @@ function renderUserCollection(coll) {
     card.className = 'resource-item user-collection-card'; 
     card.dataset.zone = coll.id;
     
-    // ✅ 1. Кнопка удаления (крестик)
     const delTop = document.createElement('button'); 
     delTop.type = 'button'; 
     delTop.className = 'user-collection-delete-top admin-only'; 
@@ -2919,7 +2978,6 @@ function renderUserCollection(coll) {
     });
     card.appendChild(delTop);
     
-    // ✅ 2. Хедер коллекции
     const header = document.createElement('div'); 
     header.className = 'resource-header';
 
@@ -2928,46 +2986,26 @@ function renderUserCollection(coll) {
     titleSpan.textContent = coll.title; 
     header.appendChild(titleSpan);
 
-    // ✅ 3. НОВАЯ КНОПКА: Swap Images
-    // Показываем только если включен режим редактирования и есть картинки у элементов
+    // Кнопка смены превью (1st / 2nd)
     const swapBtn = document.createElement('button');
     swapBtn.type = 'button';
-    swapBtn.className = 'preview-swap-btn admin-only edit-only';
-    swapBtn.title = 'Swap Preview Images: 0 -> 1 -> 0';
-    swapBtn.dataset.swapId = coll.id;
-    swapBtn.innerHTML = '<span class="icon"><i class="fas fa-shuffle"></i></span> <span class="swap-label">1st</span>';
+    swapBtn.className = 'preview-swap-btn admin-only';
+    const currentPreviewIndex = coll.previewIndex || 0;
+    swapBtn.innerHTML = `<i class="fas fa-images"></i> <span class="swap-label">${currentPreviewIndex === 1 ? '2nd' : '1st'}</span>`;
+    if (currentPreviewIndex === 1) swapBtn.classList.add('active');
     
-    // Проверяем текущий статус и применяем
-    if (coll.previewIndex === 1) {
-        swapBtn.classList.add('active');
-        swapBtn.querySelector('.swap-label').textContent = '2nd';
-    }
-
-    swapBtn.addEventListener('click', async () => {
-        // Находим коллекцию в данных
-        const collectionData = userItemsData.collections.find(c => c.id === coll.id);
-        if (!collectionData) return;
-
-        // Меняем индекс
-        collectionData.previewIndex = collectionData.previewIndex === 0 ? 1 : 0;
-        
-        // Обновляем внешний вид кнопки
-        swapBtn.classList.toggle('active', collectionData.previewIndex === 1);
-        swapBtn.querySelector('.swap-label').textContent = collectionData.previewIndex === 1 ? '2nd' : '1st';
-
-        // Сохраняем изменение
+    swapBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const collData = userItemsData.collections.find(c => c.id === coll.id);
+        if (!collData) return;
+        collData.previewIndex = collData.previewIndex === 0 ? 1 : 0;
+        swapBtn.classList.toggle('active', collData.previewIndex === 1);
+        swapBtn.querySelector('.swap-label').textContent = collData.previewIndex === 1 ? '2nd' : '1st';
         await saveRobinUserItems();
-        
-        // Показываем уведомление
-        const msg = collectionData.previewIndex === 1 
-            ? "🖼️ Preview changed to 2nd image" 
-            : "🖼️ Preview changed to 1st image";
-        showToast(msg, 'info');
+        showToast(collData.previewIndex === 1 ? '🖼️ 2nd image as preview' : '🖼️ 1st image as preview', 'info');
     });
-    
     header.appendChild(swapBtn);
 
-    // Социальные иконки
     if (coll.website || coll.twitter) {
         const icons = document.createElement('span'); 
         icons.className = 'social-icons';
@@ -2976,7 +3014,6 @@ function renderUserCollection(coll) {
         header.appendChild(icons);
     }
     
-    // Кнопка добавления
     const addBtn = document.createElement('button'); 
     addBtn.type = 'button'; 
     addBtn.className = 'add-item-btn admin-only'; 
@@ -2984,8 +3021,8 @@ function renderUserCollection(coll) {
     addBtn.innerHTML = '<span class="btn-plus">+</span>';
     addBtn.addEventListener('click', (e) => { 
         e.stopPropagation(); 
-        currentAddContext = { zone: coll.id, config: ZONE_CONFIG[coll.id] || { type:'nft-item', label: coll.title, trackType:'track-once' } }; 
-        openModal(`${getTranslation('add_to')}: ${getTranslation('add_nft')} ${coll.title}`, ['fieldTitle','fieldUrl','fieldImage','descFieldEn','descFieldUa']); 
+        currentAddContext = { zone: coll.id, config: { type:'nft-item', trackType:'track-once' } }; 
+        openModal(`${getTranslation('add_to')}: ${coll.title}`, ['fieldTitle','fieldUrl','fieldImage','descFieldEn','descFieldUa']); 
     });
     header.appendChild(addBtn); 
     card.appendChild(header);
@@ -2997,10 +3034,11 @@ function renderUserCollection(coll) {
     
     const items = userItemsData.items[coll.id] || []; 
     items.forEach(item => renderUserItemInZone(coll.id, item));
-    requestAnimationFrame(() => card.classList.add('anim-visible'));
     
-    // Обновляем порядок в общем списке
-    saveNFTCollectionsOrder();
+    // ✅ Добавляем счётчик
+    updateNFTCardCounter(card, coll.id);
+    
+    requestAnimationFrame(() => card.classList.add('anim-visible'));
 }
 
 
