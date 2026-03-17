@@ -397,13 +397,12 @@ body.light-theme .nft-counter {
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
-    display: none;             /* ← было inline-flex, стало none */
+    display: none;
     align-items: center;
     gap: 4px;
     transition: all 0.2s;
     white-space: nowrap;
-    flex: 0 0 100%;
-    max-width: fit-content;
+    flex: 0 0 100%;    /* ← ВСЕГДА вся ширина = всегда своя строка */
     order: 99;
     margin-top: 6px;
 }
