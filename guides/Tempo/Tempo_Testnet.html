@@ -13,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="tempo_languages.js"></script>
     
     <style>
@@ -345,6 +345,32 @@
         .lang-tab, .language-toggle-btn, #languageToggleText, .lightbox-lang-btn {
             font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif !important;
         }
+        /* NFT COUNTER */
+.resource-item, .user-collection-card {
+    position: relative;
+}
+
+.nft-counter {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(15, 23, 42, 0.92);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.6);
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    pointer-events: none;
+}
+
+body.light-theme .nft-counter {
+    background: rgba(255,255,255,0.95);
+    color: #15803d;
+    border-color: #4ade80;
+}
     </style>
 </head>
 <body>
@@ -702,7 +728,74 @@ function updateAllTranslations() {
         editBtn.innerHTML = `<i class="fas fa-${isActive ? 'check' : 'pen'}"></i> <span data-i18n="${isActive ? 'finish_editing' : 'edit_mode'}">${getTranslation(isActive ? 'finish_editing' : 'edit_mode')}</span>`;
     }
 }
+// ===== MEDIA TYPE + HLS SUPPORT =====
+function getMediaType(url) {
+    if (!url) return 'unknown';
+    const lower = url.toLowerCase();
+    if (lower.includes('.m3u8')) return 'hls';
+    if (['.mp4','.webm','.mov','.avi','.mkv','.ogg'].some(ext => lower.includes(ext))) return 'video';
+    return 'image';
+}
 
+function createMediaElement(url, alt = '', className = '', autoplay = true) {
+    const type = getMediaType(url);
+    
+    if (type === 'hls') {
+        const container = document.createElement('div');
+        container.className = className;
+        container.style.cssText = `position:relative;width:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;border-radius:8px;background:#000;`;
+        
+        const video = document.createElement('video');
+        video.style.cssText = 'width:100%;max-height:100%;object-fit:contain;';
+        video.loop = true; video.muted = true; video.playsInline = true;
+        
+        if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+            const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+            hls.loadSource(url);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => { if (autoplay) video.play().catch(() => {}); });
+            container._hls = hls;
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = url;
+            if (autoplay) video.play().catch(() => {});
+        }
+        container.appendChild(video);
+        return container;
+    }
+    
+    if (type === 'video') {
+        const container = document.createElement('div');
+        container.className = className;
+        container.style.cssText = `position:relative;width:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;border-radius:8px;background:#000;`;
+        
+        const video = document.createElement('video');
+        video.src = url;
+        video.style.cssText = 'width:100%;max-height:100%;object-fit:contain;';
+        video.loop = true; video.muted = true; video.playsInline = true;
+        if (autoplay) setTimeout(() => video.play().catch(() => {}), 100);
+        container.appendChild(video);
+        return container;
+    }
+    
+    const img = document.createElement('img');
+    img.src = url; img.alt = alt || ''; img.className = className; img.loading = 'lazy';
+    img.onerror = () => img.style.display = 'none';
+    return img;
+}
+
+// ===== NFT COUNTER =====
+function updateNFTCardCounter(card, collectionId) {
+    if (!card || !collectionId) return;
+    card.querySelector('.nft-counter')?.remove();
+    
+    const count = (userItemsData.items[collectionId] || []).length;
+    
+    const counter = document.createElement('div');
+    counter.className = 'nft-counter';
+    counter.textContent = count;
+    counter.title = `${count} NFT в коллекции`;
+    card.appendChild(counter);
+}
 function toggleLanguage() {
     currentLanguage = currentLanguage === 'en' ? 'ua' : 'en';
     localStorage.setItem(LANGUAGE_KEY, currentLanguage);
@@ -1012,41 +1105,67 @@ function positionTooltip(target) {
 
 // ===== TOOLTIP LANGUAGE AWARE =====
 function showTooltip(e) {
-    const target = e.target.closest('[data-tooltip]');
+    const target = e.target.closest('[data-tooltip], [data-images], [data-image]');
     if (!target) return;
 
     ensureTooltipElement();
     activeTooltipTarget = target;
 
-    const imageUrl = target.getAttribute('data-image');
-    const tooltip = target.getAttribute('data-tooltip') || '';
-    const descEn  = target.getAttribute('data-desc-en') || '';
-    const descUa  = target.getAttribute('data-desc-ua') || '';
-
-    // Нормализуем язык: 'uk' считаем как 'ua'
-    const lang = (currentLanguage === 'uk') ? 'ua' : currentLanguage;
-
-    let text;
-    if (lang === 'ua') {
-        // Для украинского: приоритет descUa → tooltip → descEn
-        text = descUa || tooltip || descEn;
-    } else {
-        // Для английского: приоритет descEn → tooltip → descUa
-        text = descEn || tooltip || descUa;
+    const imagesAttr = target.getAttribute('data-images');
+    let images = [];
+    if (imagesAttr) {
+        try { images = JSON.parse(imagesAttr); } catch(err) {}
+    } else if (target.getAttribute('data-image')) {
+        images = [target.getAttribute('data-image')];
     }
+
+    // Приоритет видео (.m3u8 или mp4), даже если оно не первое
+    let currentIdx = 0;
+    if (images.length > 0) {
+        const videoIndex = images.findIndex(url => {
+            const t = getMediaType(url);
+            return t === 'video' || t === 'hls';
+        });
+        currentIdx = videoIndex !== -1 ? videoIndex : Math.min(
+            parseInt(target.getAttribute('data-image-index') || '0'),
+            Math.max(0, images.length - 1)
+        );
+    }
+
+    const imageUrl = images.length > 0 ? images[currentIdx] : null;
+    const tooltip = target.getAttribute('data-tooltip') || '';
+    const descEn = target.getAttribute('data-desc-en') || '';
+    const descUa = target.getAttribute('data-desc-ua') || '';
+
+    const lang = currentLanguage;
+    let text = lang === 'ua' ? (descUa || tooltip || descEn) : (descEn || tooltip || descUa);
 
     if (!text && !imageUrl) return;
 
     if (imageUrl) {
         tooltipEl.classList.add('has-image');
-        tooltipEl.innerHTML =
-            `<div class="tooltip-image-container">
-                <img src="${imageUrl}" alt="${text || 'Image'}"
-                     class="tooltip-image"
-                     loading="lazy"
-                     onerror="this.style.display='none'">
-                ${text ? `<div class="tooltip-text">${text}</div>` : ''}
-            </div>`;
+        const mediaEl = createMediaElement(imageUrl, text || 'Media', 'tooltip-image', true);
+        
+        const container = document.createElement('div');
+        container.className = 'tooltip-image-container';
+        container.appendChild(mediaEl);
+        
+        if (images.length > 1) {
+            const indicator = document.createElement('div');
+            indicator.style.cssText = 'font-size:0.72rem;color:#94a3b8;text-align:center;margin-top:4px;';
+            indicator.textContent = `${currentIdx + 1} / ${images.length}`;
+            container.appendChild(indicator);
+        }
+        
+        if (text) {
+            const textDiv = document.createElement('div');
+            textDiv.className = 'tooltip-text';
+            textDiv.textContent = text;
+            container.appendChild(textDiv);
+        }
+        
+        tooltipEl.innerHTML = '';
+        tooltipEl.appendChild(container);
     } else {
         tooltipEl.classList.remove('has-image');
         tooltipEl.textContent = text;
@@ -1641,6 +1760,11 @@ async function saveTempoUserItems() {
         try { await saveToCloud({ tempoUserItems: userItemsData, tempoUserItemsTimestamp: Date.now() }); } 
         catch (e) { showToast('⚠️ Saved locally, cloud unavailable', 'error'); }
     }
+        // Обновляем счётчики NFT после сохранения
+    document.querySelectorAll('.user-collection-card').forEach(card => {
+        const zone = card.dataset.zone;
+        if (zone) updateNFTCardCounter(card, zone);
+    });
 }
 
 async function saveTempoEditsOverride() {
@@ -1997,21 +2121,46 @@ function createUserLink(item, zone) {
     delBtn.title = getTranslation('delete_item');
     delBtn.innerHTML = '×';
     delBtn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        if (!confirm(getTranslation('confirm_delete'))) return;
-        delBtn.disabled = true; delBtn.innerHTML = '⏳';
-        try {
-            if (userItemsData.items[zone]) userItemsData.items[zone] = userItemsData.items[zone].filter(i => i.id !== item.id);
-            userItemsData.collections.forEach(c => { if (c.items) c.items = c.items.filter(i => i.id !== item.id); });
-            userItemsData.dappCategories.forEach(c => { if (c.items) c.items = c.items.filter(i => i.id !== item.id); });
-            await saveTempoUserItems(); wrapper.remove();
-            if (favoritesState[item.id]) { delete favoritesState[item.id]; favoritesOrder = favoritesOrder.filter(x => x !== item.id); await saveTempoFavorites(); refreshAllVisuals(); }
-            showToast(`${getTranslation('removed')}: ${item.title}`, 'info');
-        } catch (error) { delBtn.disabled = false; delBtn.innerHTML = '×'; }
-    });
-    wrapper.appendChild(delBtn);
-    return wrapper;
-}
+    e.stopPropagation();
+    if (!confirm(getTranslation('confirm_delete'))) return;
+    delBtn.disabled = true; 
+    delBtn.innerHTML = '⏳';
+
+    try {
+        if (userItemsData.items[zone]) {
+            userItemsData.items[zone] = userItemsData.items[zone].filter(i => i.id !== item.id);
+        }
+
+        userItemsData.collections.forEach(c => {
+            if (c.items) c.items = c.items.filter(i => i.id !== item.id);
+        });
+
+        userItemsData.dappCategories.forEach(c => {
+            if (c.items) c.items = c.items.filter(i => i.id !== item.id);
+        });
+
+        await saveTempoUserItems();
+        wrapper.remove();
+
+        // 🔥 ДОБАВЛЕНО: обновление счётчика
+        const collCard = document.querySelector(`[data-zone="${zone}"]`);
+        if (collCard) updateNFTCardCounter(collCard, zone);
+
+        if (favoritesState[item.id]) {
+            delete favoritesState[item.id];
+            favoritesOrder = favoritesOrder.filter(x => x !== item.id);
+            await saveTempoFavorites();
+            refreshAllVisuals();
+        }
+
+        showToast(`${getTranslation('removed')}: ${item.title}`, 'info');
+
+    } catch (error) {
+        delBtn.disabled = false;
+        delBtn.innerHTML = '×';
+    }
+});
+
 
 function renderUserItemInZone(zone, item) {
     const container = document.querySelector(`[data-zone="${zone}"]`); if (!container) return;
@@ -2057,6 +2206,7 @@ function renderUserCollection(coll) {
     header.appendChild(addBtn); card.appendChild(header);
     const linkColl = document.createElement('div'); linkColl.className = 'link-collection'; card.appendChild(linkColl); grid.appendChild(card);
     const items = userItemsData.items[coll.id] || []; items.forEach(item => renderUserItemInZone(coll.id, item));
+    updateNFTCardCounter(card, coll.id);
     requestAnimationFrame(() => card.classList.add('anim-visible'));
 }
 
