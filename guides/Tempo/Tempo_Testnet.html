@@ -387,19 +387,20 @@ body.light-theme .nft-counter {
     background: rgba(96,165,250,0.12);
     border: 1px solid rgba(96,165,250,0.35);
     color: #60a5fa;
-    padding: 2px 8px;
-    height: 20px;
+    padding: 4px 10px;       /* ← чуть больше */
+    height: auto;            /* ← пусть сама подстраивается */
     border-radius: 4px;
-    font-size: 0.65rem;
+    font-size: 0.75rem;      /* ← немного крупнее */
     font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: 4px;
     transition: all 0.2s;
     white-space: nowrap;
-    flex: 0 0 100%;    /* ← вся ширина = своя строка */
-    order: 99;         /* ← всегда последняя */
+
+    flex: 0 0 auto;          /* ← НЕ занимать всю ширину */
+    order: 99;
     margin-top: 4px;
 }
 .preview-swap-btn i { font-size: 0.65rem; }
