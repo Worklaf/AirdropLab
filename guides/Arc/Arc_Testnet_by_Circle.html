@@ -997,24 +997,21 @@ onAuthStateChanged(auth, async (user) => {
     await loadLanguagePref();
     loadUserItems();
     loadEditsOverride();
-
-    await loadArcNFTCollectionsOrder();
+    
+    await loadArcNFTCollectionsOrder();        // ← Добавлено
     await loadSharedData();
     await loadNewIndicators();
     await loadArcData();
 
-    renderAll(); // ← рендерим карточки
+    renderAll();
 
-    // ✅ Ждём следующий frame чтобы DOM точно был готов
-    requestAnimationFrame(() => {
-        setTimeout(() => {
-            applyArcNFTSortOrder();   // ← применяем порядок ПОСЛЕ рендера
-            initArcNFTCollectionsSort();
-            initArcNFTOrderRealtime();
-            updateNewIndicators();
-            console.log('✅ Arc fully initialized');
-        }, 200);
-    });
+    setTimeout(() => {
+        applyArcNFTSortOrder();
+        initArcNFTCollectionsSort();
+        initArcNFTOrderRealtime();             // ← Добавлено
+        updateNewIndicators();
+        console.log('✅ Arc fully initialized with order sync');
+    }, 400);
 }
 });
 // ===== MEDIA TYPE DETECTION =====
