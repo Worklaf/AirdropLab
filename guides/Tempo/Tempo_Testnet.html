@@ -190,9 +190,29 @@
         .resource-item.anim-visible { opacity:1; transform:translateY(0); }
         .resource-item.resource-inline { gap:14px; }
         .resource-note { margin:0; color:var(--text-muted); font-size:0.9rem; }
-        .resource-header { display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:1px solid var(--border); }
-        .resource-title { font-weight:bold; font-size:1.1rem; color:#fff; }
-        body.light-theme .resource-title { color:#0f172a; }
+        .resource-header { 
+    display: flex; 
+    justify-content: flex-start;  /* было space-between */
+    align-items: center; 
+    padding-bottom: 10px; 
+    border-bottom: 1px solid var(--border);
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+
+.resource-title { 
+    font-weight: bold; 
+    font-size: 1.1rem; 
+    color: #fff;
+    flex: 1 1 auto;    /* занимает свободное место */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.light-theme .resource-title { color: #0f172a; }
 
         .dapp-table { width:100%; border-collapse:separate; border-spacing:0; background:var(--card-bg); border-radius:12px; overflow:hidden; border:1px solid var(--border); transition:background .4s,border-color .4s; }
         .dapp-table th,.dapp-table td { padding:16px 18px; text-align:left; border-bottom:1px solid var(--border); }
@@ -374,24 +394,38 @@ body.light-theme .nft-counter {
 }
         /* PREVIEW SWAP BUTTON */
 .preview-swap-btn {
-    background: rgba(96,165,250,0.15);
-    border: 1px solid rgba(96,165,250,0.4);
+    background: rgba(96,165,250,0.12);
+    border: 1px solid rgba(96,165,250,0.35);
     color: #60a5fa;
-    padding: 3px 10px;
-    border-radius: 6px;
-    font-size: 0.72rem;
-    font-weight: 600;
+    padding: 0 6px;
+    height: 22px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     transition: all 0.2s;
     white-space: nowrap;
     flex-shrink: 0;
 }
-.preview-swap-btn:hover { background: rgba(96,165,250,0.3); color: #fff; border-color: rgba(96,165,250,0.7); }
-.preview-swap-btn.active { background: rgba(250,204,21,0.2); border-color: #facc15; color: #facc15; }
-body.light-theme .preview-swap-btn { background: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.3); color: #2563eb; }
+.preview-swap-btn i { font-size: 0.65rem; }
+.preview-swap-btn:hover { 
+    background: rgba(96,165,250,0.25); 
+    color: #fff; 
+    border-color: rgba(96,165,250,0.6); 
+}
+.preview-swap-btn.active { 
+    background: rgba(250,204,21,0.15); 
+    border-color: rgba(250,204,21,0.5); 
+    color: #facc15; 
+}
+body.light-theme .preview-swap-btn { 
+    background: rgba(37,99,235,0.08); 
+    border-color: rgba(37,99,235,0.25); 
+    color: #2563eb; 
+}
     </style>
 </head>
 <body>
@@ -1090,10 +1124,12 @@ function checkAdmin(user) {
 // NEW FROM ARC - Save shared data to public collection
 async function saveSharedDataToFirebase() {
     if (!isAdmin || !currentUser) return;
-    setAdminSaveLock(5000); // Lock before save to prevent double render
+    setAdminSaveLock(5000);
     try {
         await setDoc(doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC), {
-            userItemsData, editsOverride,
+            userItemsData,
+            editsOverride,
+            staticPreviewIndexes: staticCardPreviewIndex, // ← ДОБАВИТЬ
             lastUpdated: Date.now(),
             updatedBy: currentUser.uid
         }, { merge: true });
@@ -1762,10 +1798,14 @@ async function loadTempoSharedData() {
     if (isAdmin) {
         loadTempoUserItems();
         loadTempoEditsOverride();
+        // Загрузить индексы из localStorage для админа
+        try {
+            const savedIdx = localStorage.getItem('tempo_static_preview_indexes');
+            if (savedIdx) staticCardPreviewIndex = JSON.parse(savedIdx);
+        } catch(e) {}
         return;
     }
 
-    // Check import lock
     const importLock = parseInt(localStorage.getItem('tempo_import_lock') || '0', 10);
     const now = Date.now();
     if (importLock > now - 5 * 60 * 1000) {
@@ -1780,17 +1820,28 @@ async function loadTempoSharedData() {
 
         if (docSnap.exists()) {
             const data = docSnap.data();
-            
             const publicTs = data.lastUpdated || 0;
             const localTs = parseInt(localStorage.getItem('tempo_user_items_timestamp') || '0', 10);
             
             if (publicTs >= localTs) {
                 userItemsData = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
                 editsOverride = data.editsOverride || {};
+                
+                // ← ДОБАВИТЬ: загрузка индексов превью
+                if (data.staticPreviewIndexes) {
+                    staticCardPreviewIndex = data.staticPreviewIndexes;
+                    localStorage.setItem('tempo_static_preview_indexes', JSON.stringify(staticCardPreviewIndex));
+                }
+                
                 localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
                 localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
                 console.log('✅ Public data loaded, collections:', userItemsData.collections.length);
             } else {
+                // Загрузить из localStorage
+                try {
+                    const savedIdx = localStorage.getItem('tempo_static_preview_indexes');
+                    if (savedIdx) staticCardPreviewIndex = JSON.parse(savedIdx);
+                } catch(e) {}
                 console.log('ℹ️ Local data is newer, keeping local');
             }
             return;
@@ -1799,7 +1850,7 @@ async function loadTempoSharedData() {
         console.warn("Firebase error, using GitHub fallback:", e);
     }
 
-    // GitHub fallback
+    // GitHub fallback (без изменений)
     try {
         const itemsResp = await fetch('https://raw.githubusercontent.com/Worklaf/AirdropLab/main/guides/Tempo/tempo_shared_items.json?v=' + Date.now());
         if (itemsResp.ok) {
@@ -1807,9 +1858,7 @@ async function loadTempoSharedData() {
             userItemsData = { items: data.items || {}, collections: data.collections || [], dappCategories: data.dappCategories || [] };
             localStorage.setItem(USER_ITEMS_KEY, JSON.stringify(userItemsData));
         }
-    } catch (e) {
-        console.log('Using local user items data');
-    }
+    } catch (e) { console.log('Using local user items data'); }
 
     try {
         const editsResp = await fetch('https://raw.githubusercontent.com/Worklaf/AirdropLab/main/guides/Tempo/tempo_shared_edits.json?v=' + Date.now());
@@ -1818,9 +1867,7 @@ async function loadTempoSharedData() {
             editsOverride = data.editsOverride || {};
             localStorage.setItem(EDITS_OVERRIDE_KEY, JSON.stringify(editsOverride));
         }
-    } catch (e) {
-        console.log('Using local edits data');
-    }
+    } catch (e) { console.log('Using local edits data'); }
 }
 
 // NEW FROM ARC - NFT Order System
@@ -1989,20 +2036,24 @@ onAuthStateChanged(auth, async (user) => {
 function renderAll() {
     renderTempoUserItems();
     injectAddButtons();
-    injectSwapPreviewBtns(); // ← добавлено
+    injectSwapPreviewBtns();
     bindTrackingHandlersToAll();
     attachFavoriteControls();
     initializeTooltips();
     initLightbox();
     updateUI();
     updateTempoNewIndicators();
-    // Update ALL NFT counters
+    
+    // Счётчики NFT
     document.querySelectorAll('[data-zone]').forEach(card => {
         const zone = card.dataset.zone;
         if (zone && (card.classList.contains('resource-item') || card.classList.contains('user-collection-card'))) {
             updateNFTCardCounter(card, zone);
         }
     });
+    
+    // ← Применить индексы превью для всех
+    setTimeout(() => applyStaticPreviewIndexes(), 100);
 }
 
 // ===== HELPERS =====
@@ -2297,13 +2348,26 @@ function initSharedDataRealtime() {
     const docRef = doc(db, PUBLIC_DATA_COLLECTION, SHARED_ITEMS_DOC);
     sharedDataUnsubscribe = onSnapshot(docRef, (snap) => {
         if (!snap.exists()) return;
-        if (adminSaveLock) { // Skip if admin just saved
+        if (adminSaveLock) {
             console.log('🔒 Skip render — admin save lock active');
             return;
         }
         const data = snap.data();
         const publicTs = data.lastUpdated || 0;
         const localTs = parseInt(localStorage.getItem('tempo_user_items_timestamp') || '0', 10);
+        
+        // ← Применить индексы превью ВСЕГДА (даже если основные данные не обновились)
+        if (data.staticPreviewIndexes) {
+            const newIndexes = data.staticPreviewIndexes;
+            const hasIndexChanges = JSON.stringify(newIndexes) !== JSON.stringify(staticCardPreviewIndex);
+            if (hasIndexChanges) {
+                staticCardPreviewIndex = newIndexes;
+                localStorage.setItem('tempo_static_preview_indexes', JSON.stringify(staticCardPreviewIndex));
+                applyStaticPreviewIndexes();
+                console.log('🖼️ Preview indexes updated for all users');
+            }
+        }
+        
         if (publicTs > localTs) {
             userItemsData = data.userItemsData || { items:{}, collections:[], dappCategories:[] };
             editsOverride = data.editsOverride || {};
@@ -3001,6 +3065,32 @@ function renderUserDeployGroup(grp) {
     const items = userItemsData.items[grp.id] || []; items.forEach(item => renderUserItemInZone(grp.id, item));
     requestAnimationFrame(() => card.classList.add('anim-visible'));
 }
+    // ===== APPLY STATIC PREVIEW INDEXES FOR ALL USERS =====
+function applyStaticPreviewIndexes() {
+    Object.keys(staticCardPreviewIndex).forEach(zone => {
+        const idx = staticCardPreviewIndex[zone] || 0;
+        const container = document.querySelector(`[data-zone="${zone}"]`);
+        if (!container) return;
+        
+        // Обновить data-image-index на всех ссылках зоны
+        container.querySelectorAll('a[data-images]').forEach(link => {
+            try {
+                const images = JSON.parse(link.getAttribute('data-images') || '[]');
+                if (images.length > 1) {
+                    link.setAttribute('data-image-index', String(idx));
+                }
+            } catch(err) {}
+        });
+        
+        // Обновить внешний вид кнопки
+        const swapBtn = container.querySelector('.preview-swap-btn');
+        if (swapBtn) {
+            const label = swapBtn.querySelector('.swap-label');
+            if (label) label.textContent = idx === 1 ? '2nd' : '1st';
+            swapBtn.classList.toggle('active', idx === 1);
+        }
+    });
+}
 function injectSwapPreviewBtns() {
     if (!isAdmin) return;
     document.querySelectorAll('[data-zone]').forEach(container => {
@@ -3019,20 +3109,37 @@ function injectSwapPreviewBtns() {
         if (curIdx === 1) swapBtn.classList.add('active');
         
         swapBtn.addEventListener('click', async (e) => {
-            e.stopPropagation(); e.preventDefault();
-            const newIdx = (staticCardPreviewIndex[zone] || 0) === 0 ? 1 : 0;
-            staticCardPreviewIndex[zone] = newIdx;
-            const label = swapBtn.querySelector('.swap-label');
-            if (label) label.textContent = newIdx === 1 ? '2nd' : '1st';
-            swapBtn.classList.toggle('active', newIdx === 1);
+            e.stopPropagation(); 
+            e.preventDefault();
             
+            // Для user-added коллекций — обновить через userItemsData
+            const collData = userItemsData.collections?.find(c => c.id === zone);
+            if (collData) {
+                collData.previewIndex = (collData.previewIndex || 0) === 0 ? 1 : 0;
+                staticCardPreviewIndex[zone] = collData.previewIndex;
+                await saveTempoUserItems(); // saveSharedDataToFirebase вызывается внутри
+            } else {
+                // Для статических карточек
+                const newIdx = (staticCardPreviewIndex[zone] || 0) === 0 ? 1 : 0;
+                staticCardPreviewIndex[zone] = newIdx;
+                localStorage.setItem('tempo_static_preview_indexes', JSON.stringify(staticCardPreviewIndex));
+                await saveSharedDataToFirebase(); // ← Сохранить в Firebase для всех
+            }
+            
+            const idx = staticCardPreviewIndex[zone] || 0;
+            const label = swapBtn.querySelector('.swap-label');
+            if (label) label.textContent = idx === 1 ? '2nd' : '1st';
+            swapBtn.classList.toggle('active', idx === 1);
+            
+            // Применить локально сразу
             container.querySelectorAll('a[data-images]').forEach(link => {
                 try {
                     const images = JSON.parse(link.getAttribute('data-images') || '[]');
-                    if (images.length > 1) link.setAttribute('data-image-index', String(newIdx));
+                    if (images.length > 1) link.setAttribute('data-image-index', String(idx));
                 } catch(err) {}
             });
-            showToast(newIdx === 1 ? '🖼️ Hover preview: 2nd image' : '🖼️ Hover preview: 1st image', 'info');
+            
+            showToast(idx === 1 ? '🖼️ Hover preview: 2nd image' : '🖼️ Hover preview: 1st image', 'info');
         });
         
         const addBtn = header.querySelector('.add-item-btn');
