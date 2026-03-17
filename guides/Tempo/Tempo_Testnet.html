@@ -402,21 +402,11 @@ body.light-theme .nft-counter {
     gap: 4px;
     transition: all 0.2s;
     white-space: nowrap;
-
-    flex: 0 0 auto;   /* ← кнопка по размеру */
+    flex: 0 0 100%;          /* всегда своя строка */
+    max-width: fit-content;  /* ← ширина только по размеру кнопки */
     order: 99;
     margin-top: 6px;
 }
-
-/* 🔥 Добавляем перенос строки */
-.preview-swap-btn::before {
-    content: "";
-    flex-basis: 100%;   /* ← создаёт новую строку */
-    width: 0;
-    height: 0;
-}
-
-
 .preview-swap-btn i { font-size: 0.65rem; }
 .preview-swap-btn:hover { background: rgba(96,165,250,0.25); color: #fff; border-color: rgba(96,165,250,0.6); }
 .preview-swap-btn.active { background: rgba(250,204,21,0.15); border-color: rgba(250,204,21,0.5); color: #facc15; }
