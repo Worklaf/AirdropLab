@@ -1500,16 +1500,23 @@ function positionTooltip(target) {
 }
 
 function showTooltip(e) {
-    const target = e.target.closest('[data-tooltip]');
+    const target = e.target.closest('[data-tooltip], [data-images], [data-image]');
     if (!target) return;
 
     ensureTooltipElement();
     activeTooltipTarget = target;
 
     const imagesAttr = target.getAttribute('data-images');
-        let currentIdx = 0;
+    let images = [];
+    if (imagesAttr) {
+        try { images = JSON.parse(imagesAttr); } catch(err) {}
+    } else if (target.getAttribute('data-image')) {
+        images = [target.getAttribute('data-image')];
+    }
+
+    // ✅ ПРИОРИТЕТ ВИДЕО — даже если оно второе в списке
+    let currentIdx = 0;
     if (images.length > 0) {
-        // ✅ Приоритет — видео (включая .m3u8), независимо от data-image-index
         const videoIndex = images.findIndex(url => {
             const t = getMediaType(url);
             return t === 'video' || t === 'hls';
@@ -1522,19 +1529,6 @@ function showTooltip(e) {
     }
 
     const imageUrl = images.length > 0 ? images[currentIdx] : null;
-    
-    // ✅ ЛОГИКА ВЫБОРА КАРТИНКИ (С учетом previewIndex)
-    let index = 0;
-    const collectionId = target.closest('.user-collection-card')?.dataset.zone;
-    const coll = userItemsData.collections.find(c => c.id === collectionId);
-    
-    if (coll && typeof coll.previewIndex === 'number') {
-        index = coll.previewIndex;
-    }
-    // Защита: если индекс больше массива (например, выбрали 2-ю, а она одна), берем 0
-    if (index >= images.length) index = 0;
-
-    const imageUrl = images.length > 0 ? images[index] : target.getAttribute('data-image');
     const tooltip = target.getAttribute('data-tooltip') || '';
     const descEn = target.getAttribute('data-desc-en') || '';
     const descUa = target.getAttribute('data-desc-ua') || '';
@@ -1546,38 +1540,27 @@ function showTooltip(e) {
 
     if (imageUrl) {
         tooltipEl.classList.add('has-image');
-        const plural = images.length > 1 ? ` (${index + 1}/${images.length})` : '';
         
         const mediaEl = createMediaElement(imageUrl, text || 'Media', 'tooltip-image', true);
         
         const container = document.createElement('div');
         container.className = 'tooltip-image-container';
-        container.style.cssText = 'display:flex;flex-direction:column;gap:8px;background:rgba(10,14,26,0.98);border:1px solid rgba(0,208,158,0.5);border-radius:12px;padding:10px;box-shadow:0 12px 48px rgba(0,208,158,0.25);';
-        
-        mediaEl.style.cssText = 'position:relative;z-index:1;';
         container.appendChild(mediaEl);
         
         if (images.length > 1) {
             const indicator = document.createElement('div');
-            indicator.style.cssText = 'position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#fff;padding:4px 8px;border-radius:4px;font-size:0.75rem;z-index:2;';
-            indicator.textContent = `${index + 1}/${images.length}`;
+            indicator.style.cssText = 'font-size:0.72rem;color:#94a3b8;text-align:center;margin-top:4px;';
+            indicator.textContent = `${currentIdx + 1} / ${images.length}`;
             container.appendChild(indicator);
         }
-        
+
         if (text) {
             const textDiv = document.createElement('div');
             textDiv.className = 'tooltip-text';
-            textDiv.textContent = text + plural;
+            textDiv.textContent = text;
             container.appendChild(textDiv);
         }
-        
-        if (images.length > 1) {
-            const hint = document.createElement('div');
-            hint.style.cssText = 'font-size:0.7rem;color:#94a3b8;text-align:center;margin-top:6px;margin-bottom:-4px;';
-            hint.textContent = '📸 Right-click for gallery';
-            container.appendChild(hint);
-        }
-        
+
         tooltipEl.innerHTML = '';
         tooltipEl.appendChild(container);
     } else {
