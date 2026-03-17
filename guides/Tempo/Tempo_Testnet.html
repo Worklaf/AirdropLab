@@ -297,8 +297,11 @@ body.light-theme .resource-title { color: #0f172a; }
         .user-item-delete { width:18px; height:18px; border-radius:50%; border:1px solid rgba(239,68,68,0.5); background:rgba(239,68,68,0.15); color:#f87171; font-size:0.7rem; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; transition:all .2s; flex-shrink:0; }
         .user-item-delete:hover { background:var(--alert-red); color:#fff; border-color:var(--alert-red); transform:scale(1.15); }
         .user-collection-card { position:relative; }
-        .user-collection-delete-top { position:absolute; top:10px; right:10px; width:24px; height:24px; border-radius:50%; border:1px solid rgba(239,68,68,0.5); background:rgba(239,68,68,0.2); color:#f87171; font-size:0.85rem; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; z-index:2; transition:all .2s; }
-        .user-collection-delete-top:hover { background:var(--alert-red); color:#fff; }
+        .user-collection-delete-top { position:absolute; top:10px; right:10px; width:24px; height:24px; border-radius:50%; border:1px solid rgba(239,68,68,0.5); background:rgba(239,68,68,0.2); color:#f87171; font-size:0.85rem; display:none; align-items:center; justify-content:center; cursor:pointer; padding:0; z-index:2; transition:all .2s; }
+.user-collection-delete-top:hover { background:var(--alert-red); color:#fff; }
+
+/* Крестик виден только в режиме редактирования */
+body.edit-mode .user-collection-delete-top { display:inline-flex; }
 
         .toast-container { position:fixed; bottom:30px; right:30px; z-index:30000; display:flex; flex-direction:column; gap:8px; }
         .toast { padding:12px 22px; border-radius:12px; color:#fff; font-size:0.88rem; font-weight:500; backdrop-filter:blur(10px); opacity:0; transform:translateY(20px); animation:toast-in .3s ease forwards; }
