@@ -3236,18 +3236,18 @@ async function saveArcNFTCollectionsOrder() {
     const grid = document.getElementById('nfts-grid');
     if (!grid) return;
 
-    // Получаем текущий порядок из DOM
+    // Более надежный способ получения порядка
     const currentOrder = Array.from(grid.querySelectorAll('.user-collection-card'))
         .map(card => card.dataset.zone)
         .filter(Boolean);
 
-    // Если есть изменения в порядке - обновляем
+    // Проверяем, изменился ли порядок
     if (JSON.stringify(currentOrder) !== JSON.stringify(arcNftCollectionsOrder)) {
         arcNftCollectionsOrder = currentOrder;
     }
 
     const ts = Date.now();
-
+    
     // Сохраняем в localStorage
     localStorage.setItem(ARC_NFT_ORDER_KEY, JSON.stringify(arcNftCollectionsOrder));
     localStorage.setItem(ARC_NFT_ORDER_KEY + '_ts', String(ts));
@@ -3259,9 +3259,9 @@ async function saveArcNFTCollectionsOrder() {
             timestamp: ts,
             updatedBy: currentUser?.uid || 'anonymous'
         }, { merge: true });
-        console.log('✅ NFT order saved:', arcNftCollectionsOrder.length);
+        console.log('✅ NFT order saved to Firebase:', arcNftCollectionsOrder.length);
     } catch(e) {
-        console.error('⚠️ NFT order save failed:', e);
+        console.error('⚠️ NFT order save to Firebase failed:', e);
     }
 }
 function initArcNFTCollectionsSort() {
@@ -3276,19 +3276,21 @@ function initArcNFTCollectionsSort() {
         grid._sortable = null;
     }
     
-    grid._sortable = new Sortable(grid, {
-        animation: 200,
-        ghostClass: 'sortable-ghost',
-        dragClass: 'sortable-drag',
-        handle: '.resource-header',
-        filter: '.add-item-btn, .section-add-btn, .user-collection-delete-top',
-        onEnd: async () => {
-            await saveArcNFTCollectionsOrder();
-            showToast('✅ NFT collections reordered!', 'success');
-        }
-    });
-    
-    console.log('✅ Arc NFT sort initialized');
+    // Ожидаем завершения текущего цикла
+    setTimeout(() => {
+        grid._sortable = new Sortable(grid, {
+            animation: 200,
+            ghostClass: 'sortable-ghost',
+            dragClass: 'sortable-drag',
+            handle: '.resource-header',
+            filter: '.add-item-btn, .section-add-btn, .user-collection-delete-top',
+            onEnd: async () => {
+                await saveArcNFTCollectionsOrder();
+                showToast('✅ NFT collections reordered!', 'success');
+            }
+        });
+        console.log('✅ Arc NFT sort initialized');
+    }, 100);
 }
 
 function initArcNFTOrderRealtime() {
@@ -3336,30 +3338,35 @@ function applyArcNFTSortOrder() {
     const cards = Array.from(grid.querySelectorAll('.user-collection-card'));
     if (!cards.length) return;
 
-    // Создаем временный объект для быстрого поиска карточек по ID
-    const cardMap = {};
+    // Убедимся, что у нас есть все элементы из order
+    const orderedCards = [];
+    const cardMap = new Map();
+    
+    // Создаем мап для быстрого поиска
     cards.forEach(card => {
-        cardMap[card.dataset.zone] = card;
+        cardMap.set(card.dataset.zone, card);
     });
-
-    // Очищаем grid
-    grid.innerHTML = '';
-
-    // Добавляем карточки в новом порядке
+    
+    // Собираем карточки в нужном порядке
     arcNftCollectionsOrder.forEach(zoneId => {
-        if (cardMap[zoneId]) {
-            grid.appendChild(cardMap[zoneId]);
+        const card = cardMap.get(zoneId);
+        if (card) {
+            orderedCards.push(card);
+            cardMap.delete(zoneId);
         }
     });
-
-    // Добавляем карточки, которых нет в порядке, в конец
-    cards.forEach(card => {
-        if (!arcNftCollectionsOrder.includes(card.dataset.zone)) {
-            grid.appendChild(card);
-        }
+    
+    // Добавляем оставшиеся карточки в конец
+    cardMap.forEach(card => {
+        orderedCards.push(card);
     });
-
-    console.log('✅ NFT order applied:', arcNftCollectionsOrder.slice(0, 3));
+    
+    // Выполняем перестановку в DOM
+    const fragment = document.createDocumentFragment();
+    orderedCards.forEach(card => fragment.appendChild(card));
+    grid.appendChild(fragment);
+    
+    console.log('✅ NFT order applied successfully:', arcNftCollectionsOrder.length, 'items');
 }
 </script>
 
