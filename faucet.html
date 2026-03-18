@@ -1677,7 +1677,7 @@ async function loadPendingSuggestions() {
       const data = doc.data();
       let userInfo = {
         userName: 'Anonymous',
-        userEmail: data.submittedEmail || data.userId,
+        userEmail: data.userId || 'Unknown',
         userPhoto: 'https://www.gravatar.com/avatar/?d=mp'
       };
       
@@ -1687,7 +1687,7 @@ async function loadPendingSuggestions() {
         if (userSnap.exists()) {
           const userData = userSnap.data();
           userInfo.userName = userData.displayName || userData.email?.split('@')[0] || 'Anonymous';
-          userInfo.userEmail = userData.email || data.submittedEmail || data.userId;
+          userInfo.userEmail = userData.email || data.userId || 'Unknown';
           userInfo.userPhoto = userData.photoURL || userInfo.userPhoto;
         }
       } catch(e) { console.warn('Failed to load user info for', data.userId); }
@@ -1740,6 +1740,25 @@ function renderPendingPanel() {
       '<a href="' + url + '" target="_blank" class="text-blue-400 hover:underline text-xs">' + url + '</a>'
     ).join('<br>');
     
+    // Create preview card
+    const typeClass = (s.type || 'free') + ' ' + (s.net || 'testnet');
+    const badgeType = '<span class="badge badge-' + (s.type || 'free') + '">' + (s.type === 'free' ? (isEn ? 'FREE' : 'БЕСПЛАТНО') : (isEn ? 'PAID' : 'ПЛАТНЫЙ')) + '</span>';
+    const badgeNet  = '<span class="badge badge-' + (s.net || 'testnet') + '" style="margin-left:4px;">' + (s.net === 'testnet' ? (isEn ? 'Testnet' : 'Тестнет') : (isEn ? 'Mainnet' : 'Мейннет')) + '</span>';
+    
+    const previewCard = '<div class="faucet-card ' + typeClass + '" style="margin:10px 0;border:2px dashed rgba(34,211,238,0.3);">' +
+      '<div style="padding:12px;">' +
+        '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">' +
+          '<div class="faucet-logo-placeholder"><i class="fas fa-faucet"></i></div>' +
+          '<div style="flex:1;">' +
+            '<div style="font-weight:700;color:#f1f5f9;font-size:14px;margin-bottom:4px;">' + (s.name || 'Unnamed') + '</div>' +
+            '<div style="display:flex;gap:4px;margin-bottom:6px;">' + badgeType + badgeNet + '</div>' +
+            (s.desc ? '<div style="font-size:12px;color:#94a3b8;line-height:1.4;">' + s.desc + '</div>' : '') +
+          '</div>' +
+        '</div>' +
+        (links ? '<div style="margin-top:8px;">' + links + '</div>' : '') +
+      '</div>' +
+    '</div>';
+    
     return '<div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;background:rgba(30,37,56,0.35);">' +
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
         '<img src="' + s.userPhoto + '" style="width:32px;height:32px;border-radius:50%;" alt="User" onerror="this.src=\'https://www.gravatar.com/avatar/?d=mp\'">' +
@@ -1751,12 +1770,17 @@ function renderPendingPanel() {
       '</div>' +
       
       '<div style="margin-bottom:8px;">' +
-        '<div style="font-weight:600;color:#f1f5f9;margin-bottom:4px;">' + s.name + '</div>' +
+        '<div style="font-weight:600;color:#f1f5f9;margin-bottom:4px;">' + (s.name || 'Unnamed') + '</div>' +
         '<div style="font-size:11px;color:#94a3b8;">' + (s.token || '') + ' • ' + (s.type || '') + ' • ' + (s.net || '') + '</div>' +
       '</div>' +
       
+      // Preview card
+      '<div style="margin:8px 0;">' +
+        '<div style="font-size:11px;color:#64748b;margin-bottom:4px;" data-translate="faucets_admin_preview">Предпросмотр крана:</div>' +
+        previewCard +
+      '</div>' +
+      
       (s.desc ? '<div style="font-size:12px;color:#cbd5e1;margin-bottom:8px;">' + s.desc + '</div>' : '') +
-      (links ? '<div style="margin-bottom:8px;">' + links + '</div>' : '') +
       
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">' +
         '<button class="ab-btn ab-btn-emerald" onclick="approveSuggestion(\'' + s.id + '\')"><i class="fas fa-check"></i> ' + (isEn ? 'Approve' : 'Одобрить') + '</button>' +
@@ -1891,7 +1915,7 @@ window.openRating = async function(faucetId) {
   openRatingModal(faucetId);
 };
 
-// Rating modal (admin only)
+// Rating modal (all users)
 async function openRatingModal(faucetId) {
   const modal = document.getElementById('ratingModal');
   if (!modal) return;
