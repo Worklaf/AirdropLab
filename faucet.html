@@ -551,6 +551,21 @@ window.updateRatingDisplay = updateRatingDisplay;
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 <script>
+// Toast notification function
+function toast(message) {
+  if (typeof window.showNotification === 'function') {
+    window.showNotification(message);
+  } else {
+    // Fallback: create simple toast
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.cssText = 'position:fixed;top:20px;right:20px;background:rgba(34,211,238,0.9);color:white;padding:12px 20px;border-radius:8px;z-index:10000;font-size:14px;';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
+}
+window.toast = toast;
+
 // Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyB3s7qH8Xc2y9YJtX5Z6V7W8X9Y0Z1A2B3",
@@ -565,6 +580,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+
+// Modern Firestore imports for compatibility
+const { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, query, where, orderBy, serverTimestamp, increment, runTransaction } = firebase.firestore;
 
 // Collections
 const COL_FAUCETS = 'faucets';
@@ -778,6 +796,15 @@ function renderAll() {
   container.innerHTML = html || '<div style="text-align:center;padding:60px;color:#475569;"><i class="fas fa-search" style="font-size:32px;margin-bottom:12px;display:block;"></i>'+(isEn?'Nothing found':'Ничего не найдено')+'</div>';
   updateCounts();
   applyCurrentFilter();
+}
+
+function getGroupedSections() {
+  var sections = [
+    { key:'free_testnet',  label: (window.currentLang === 'en' ? 'Free testnet faucets' : 'Бесплатные краны тестнетов'),  dotColor:'#34d399', glowColor:'rgba(52,211,153,0.6)', badgeType:'testnet', filter: function(f){ return f.type==='free' && f.net==='testnet'; } },
+    { key:'paid',          label: (window.currentLang === 'en' ? 'Paid / Pro faucets' : 'Платные / Pro краны'),          dotColor:'#fbbf24', glowColor:'rgba(251,191,36,0.6)', badgeType:'paid',    filter: function(f){ return f.type==='paid'; } },
+    { key:'free_mainnet',  label: (window.currentLang === 'en' ? 'Mainnet / devnet faucets' : 'Краны мейннетов / devnet'),     dotColor:'#a78bfa', glowColor:'rgba(167,139,250,0.6)',badgeType:'mainnet', filter: function(f){ return f.type==='free' && f.net==='mainnet'; } },
+  ];
+  return sections;
 }
 
 function updateCounts() {
@@ -1025,28 +1052,47 @@ function closeLoginModal() {
   m.style.display = 'none';
   m.classList.remove('active');
 }
+
 window.openLoginModal = openLoginModal;
 window.closeLoginModal = closeLoginModal;
 window.loginGoogle = async function() {
-  try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
+  try { 
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider); 
+    closeLoginModal(); 
+    toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); 
+  }
   catch(e) { alert(e.message); }
 };
 window.loginTwitter = async function() {
-  try { await auth.signInWithPopup(new firebase.auth.TwitterAuthProvider()); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
+  try { 
+    const provider = new firebase.auth.TwitterAuthProvider();
+    await auth.signInWithPopup(provider); 
+    closeLoginModal(); 
+    toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); 
+  }
   catch(e) { alert(e.message); }
 };
 window.loginEmail = async function() {
   const email = (document.getElementById('emailInput')?.value || '').trim();
   const pass  = (document.getElementById('passInput')?.value || '').trim();
   if (!email || !pass) { alert((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); return; }
-  try { await auth.signInWithEmailAndPassword(email, pass); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
+  try { 
+    await auth.signInWithEmailAndPassword(email, pass); 
+    closeLoginModal(); 
+    toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); 
+  }
   catch(e) { alert(e.message); }
 };
 window.registerEmail = async function() {
   const email = (document.getElementById('emailInput')?.value || '').trim();
   const pass  = (document.getElementById('passInput')?.value || '').trim();
   if (!email || !pass) { alert((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); return; }
-  try { await auth.createUserWithEmailAndPassword(email, pass); closeLoginModal(); toast((window.currentLang==='en')?'Account created':'Аккаунт создан'); }
+  try { 
+    await auth.createUserWithEmailAndPassword(email, pass); 
+    closeLoginModal(); 
+    toast((window.currentLang==='en')?'Account created':'Аккаунт создан'); 
+  }
   catch(e) { alert(e.message); }
 };
 window.logout = function() { auth.signOut(); };
