@@ -298,7 +298,7 @@
       <div style="width:8px;height:8px;border-radius:50%;background:#ef4444;" id="pendingIndicator"></div>
       <i class="fas fa-user-shield"></i> Админ панель
     </h3>
-    <button onclick="togglePendingPanel()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
+    <button onclick="closeAdminPanel()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
             onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.color='#f87171'" 
             onmouseout="this.style.background='transparent';this.style.color='#64748b'">
       <i class="fas fa-times"></i>
@@ -1728,10 +1728,23 @@ async function loadPendingSuggestions() {
   }
 }
 
+function closeAdminPanel() {
+  const adminBar = document.getElementById('adminBar');
+  if (adminBar) {
+    adminBar.style.display = 'none';
+  }
+}
+window.closeAdminPanel = closeAdminPanel;
+
 function togglePendingPanel() {
-  const p = document.getElementById('pendingPanel');
-  p.classList.toggle('open');
-  if (p.classList.contains('open')) loadPendingSuggestions();
+  const panel = document.getElementById('pendingPanel');
+  if (panel) {
+    const isVisible = panel.style.display !== 'none';
+    panel.style.display = isVisible ? 'none' : 'block';
+    if (!isVisible) {
+      loadPendingSuggestions();
+    }
+  }
 }
 window.togglePendingPanel = togglePendingPanel;
 
@@ -1834,7 +1847,7 @@ window.toggleFavoriteLink = async function(faucetId, url) {
   const key = linkFavKey(faucetId, url);
   if (currentUser) {
     const id = String(faucetId).slice(0,40) + '_' + hash32(url);
-    const ref = doc(db, 'users', currentUser.uid, 'faucetLinkFavorites', id);
+    const ref = doc(db, 'users', currentUser.uid, 'linkFavorites', id);
     if (linkFavoritesSet.has(key)) {
       await deleteDoc(ref);
       linkFavoritesSet.delete(key);
