@@ -266,6 +266,12 @@
       <span data-translate="faucets_suggest_btn">Предложить кран</span>
     </button>
 
+    <!-- Кнопка модерации для админа -->
+    <button id="adminModerationBtn" onclick="togglePendingPanel()" style="display:none;padding:8px 16px;background:linear-gradient(135deg,#ef4444,#dc2626);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:white;font-weight:700;cursor:pointer;transition:all 0.3s;margin-left:10px;">
+      <i class="fas fa-inbox" style="margin-right:6px;"></i>
+      Модерация <span id="pendingBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
+    </button>
+
     <input id="faucetSearch" type="text" data-translate="faucets_search_placeholder" placeholder="Поиск по сети или токену..."
       style="padding:6px 14px;background:rgba(30,37,56,0.6);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#f1f5f9;font-size:12px;outline:none;min-width:220px;"
       oninput="fSearch(this.value)">
@@ -292,37 +298,20 @@
 </main>
 
 <!-- Admin Bar (only for admin) -->
-<div id="adminBar" style="display:none;position:fixed;top:80px;right:20px;z-index:1001;background:linear-gradient(135deg,#1e293b,#0f172a);border:2px solid rgba(34,211,238,0.3);border-radius:16px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.4);min-width:320px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-    <h3 style="font-size:14px;font-weight:900;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
-      <div style="width:8px;height:8px;border-radius:50%;background:#ef4444;" id="pendingIndicator"></div>
-      <i class="fas fa-user-shield"></i> Админ панель
-    </h3>
-    <button onclick="closeAdminPanel()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
-            onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.color='#f87171'" 
-            onmouseout="this.style.background='transparent';this.style.color='#64748b'">
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-  
-  <div style="display:flex;gap:8px;margin-bottom:12px;">
-    <button class="ab-btn ab-btn-green" onclick="openAddModal()" style="flex:1;"><i class="fas fa-plus"></i><span data-translate="faucets_admin_add">Добавить</span></button>
-    <button class="ab-btn ab-btn-cyan" onclick="toggleEditMode()" style="flex:1;"><i class="fas fa-pen" id="editModeIcon"></i><span id="editModeLabel" data-translate="faucets_admin_edit_mode">Режим</span></button>
-  </div>
-  
-  <div id="pendingCount" style="font-size:12px;color:#94a3b8;margin-bottom:12px;">Загрузка...</div>
-  
-  <button onclick="togglePendingPanel()" id="pendingToggleBtn" style="width:100%;padding:10px;background:linear-gradient(135deg,#22d3ee,#0891b2);border:none;border-radius:10px;color:white;font-weight:700;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 12px rgba(34,211,238,0.3);"
-          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 16px rgba(34,211,238,0.4)'"
-          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(34,211,238,0.3)'">
-    <i class="fas fa-inbox" style="margin-right:6px;"></i>
-    Показать предложения <span id="pendingBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
-  </button>
-  
-  <div id="pendingPanel" style="display:none;margin-top:16px;max-height:400px;overflow-y:auto;">
-    <div id="pendingList"></div>
-  </div>
+<div id="adminBar" style="display:none;">
+  <span style="font-size:11px;color:#22d3ee;font-weight:700;white-space:nowrap;"><i class="fas fa-user-shield" style="margin-right:5px;"></i><span data-translate="admin">Admin</span></span>
+  <button class="ab-btn ab-btn-green" onclick="openAddModal()"><i class="fas fa-plus"></i><span data-translate="faucets_admin_add">Добавить кран</span></button>
+  <button class="ab-btn ab-btn-cyan"  onclick="toggleEditMode()"><i class="fas fa-pen" id="editModeIcon"></i><span id="editModeLabel" data-translate="faucets_admin_edit_mode">Режим редакт.</span></button>
+  <button class="ab-btn ab-btn-purple" onclick="seedDefaultsToFirestore()"><i class="fas fa-database"></i><span data-translate="faucets_admin_seed">Залить базу</span></button>
+  <span style="margin-left:auto;font-size:11px;color:#475569;" data-translate="faucets_storage_firestore">Данные хранятся в Firestore</span>
 </div>
+
+<!-- Pending Suggestions Panel -->
+<div id="pendingPanel" style="display:none;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;">
+    <div style="font-size:13px;font-weight:800;color:#f1f5f9;"><i class="fas fa-inbox" style="color:#a78bfa;margin-right:6px;"></i><span data-translate="faucets_admin_pending_title">Предложения (pending)</span></div>
+    <button class="ab-btn ab-btn-red" onclick="togglePendingPanel()"><i class="fas fa-times"></i><span data-translate="close">Закрыть</span></button>
+  </div>
   <div id="pendingList" style="display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 
@@ -1682,7 +1671,6 @@ async function loadFaucetsFromFirestore() {
 async function loadPendingSuggestions() {
   if (!isAdmin) return;
   try {
-    // Avoid composite index requirement: fetch by status only, sort client-side
     const snap = await getDocs(query(collection(db, COL_SUGGESTIONS), where('status', '==', 'pending')));
     pendingSuggestions = [];
     for (const doc of snap.docs) {
@@ -1712,29 +1700,17 @@ async function loadPendingSuggestions() {
     }
     
     // Update UI
-    const countEl = document.getElementById('pendingCount');
     const badgeEl = document.getElementById('pendingBadge');
-    const indicatorEl = document.getElementById('pendingIndicator');
+    const adminBtn = document.getElementById('adminModerationBtn');
     
-    if (countEl) countEl.textContent = pendingSuggestions.length + ' предложений';
     if (badgeEl) badgeEl.textContent = pendingSuggestions.length;
-    if (indicatorEl) {
-      indicatorEl.style.background = pendingSuggestions.length > 0 ? '#ef4444' : '#22d3ee';
-    }
+    if (adminBtn) adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
     
     renderPendingPanel();
   } catch(e) {
     console.error('Failed to load pending suggestions:', e);
   }
 }
-
-function closeAdminPanel() {
-  const adminBar = document.getElementById('adminBar');
-  if (adminBar) {
-    adminBar.style.display = 'none';
-  }
-}
-window.closeAdminPanel = closeAdminPanel;
 
 function togglePendingPanel() {
   const panel = document.getElementById('pendingPanel');
@@ -1755,49 +1731,38 @@ function renderPendingPanel() {
   const isEn = (window.currentLang === 'en');
   
   if (!pendingSuggestions.length) {
-    list.innerHTML = '<div style="color:#64748b;font-size:12px;text-align:center;padding:20px;">'+(isEn ? 'No pending suggestions' : 'Нет предложений')+'</div>';
+    list.innerHTML = '<div style="color:#64748b;font-size:12px;">'+(isEn ? 'No pending suggestions' : 'Нет предложений')+'</div>';
     return;
   }
   
   const html = pendingSuggestions.map(s => {
     const links = (s.links || []).map(url => 
-      '<a href="' + url + '" target="_blank" class="text-blue-400 hover:underline text-xs block mb-1">' + url + '</a>'
-    ).join('');
+      '<a href="' + url + '" target="_blank" class="text-blue-400 hover:underline text-xs">' + url + '</a>'
+    ).join('<br>');
     
-    const userInfo = '<div class="flex items-center gap-3 mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">' +
-      '<img src="' + s.userPhoto + '" ' +
-           'class="w-10 h-10 rounded-full border-2 border-slate-600" alt="User avatar" ' +
-           'onerror="this.src=\'https://www.gravatar.com/avatar/?d=mp\'">' +
-      '<div class="flex-1">' +
-        '<div class="text-sm font-semibold text-white">' + s.userName + '</div>' +
-        '<div class="text-xs text-slate-400">' + s.userEmail + '</div>' +
-      '</div>' +
-      '<div class="text-xs text-slate-500">' +
-        new Date(s.createdAt?.toDate?.() || s.createdAt).toLocaleDateString() +
-      '</div>' +
-    '</div>';
-    
-    return '<div class="border border-slate-700 rounded-lg p-4 mb-4 bg-slate-900/50 hover:bg-slate-900/70 transition-colors">' +
-      '<div class="flex justify-between items-start mb-3">' +
-        '<div>' +
-          '<div class="font-bold text-base text-white mb-1">' + s.name + '</div>' +
-          '<div class="flex gap-2 text-xs">' +
-            '<span class="px-2 py-1 bg-slate-700/50 rounded text-slate-300">' + (s.token || 'N/A') + '</span>' +
-            '<span class="px-2 py-1 bg-blue-500/20 rounded text-blue-400">' + (s.type || 'unknown') + '</span>' +
-            '<span class="px-2 py-1 bg-purple-500/20 rounded text-purple-400">' + (s.net || 'unknown') + '</span>' +
-          '</div>' +
+    return '<div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;background:rgba(30,37,56,0.35);">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+        '<img src="' + s.userPhoto + '" style="width:32px;height:32px;border-radius:50%;" alt="User" onerror="this.src=\'https://www.gravatar.com/avatar/?d=mp\'">' +
+        '<div style="flex:1;">' +
+          '<div style="font-weight:600;color:#f1f5f9;font-size:13px;">' + s.userName + '</div>' +
+          '<div style="font-size:11px;color:#94a3b8;">' + s.userEmail + '</div>' +
         '</div>' +
+        '<div style="font-size:10px;color:#64748b;">' + new Date(s.createdAt?.toDate?.() || s.createdAt).toLocaleDateString() + '</div>' +
       '</div>' +
-      userInfo +
-      (s.desc ? '<div class="text-sm text-slate-300 mt-3 p-3 bg-slate-800/30 rounded border-l-4 border-blue-500">' + s.desc + '</div>' : '') +
-      (links ? '<div class="mt-3"><div class="text-xs text-slate-500 mb-2">Links:</div>' + links + '</div>' : '') +
-      '<div class="flex gap-2 mt-4">' +
-        '<button onclick="approveSuggestion(\'' + s.id + '\')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg transition-colors flex items-center gap-2">' +
-          '<i class="fas fa-check"></i> ' + (isEn ? 'Approve' : 'Одобрить') +
-        '</button>' +
-        '<button onclick="deleteSuggestion(\'' + s.id + '\')" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm rounded-lg transition-colors flex items-center gap-2">' +
-          '<i class="fas fa-trash"></i> ' + (isEn ? 'Delete' : 'Удалить') +
-        '</button>' +
+      
+      '<div style="margin-bottom:8px;">' +
+        '<div style="font-weight:600;color:#f1f5f9;margin-bottom:4px;">' + s.name + '</div>' +
+        '<div style="font-size:11px;color:#94a3b8;">' + (s.token || '') + ' • ' + (s.type || '') + ' • ' + (s.net || '') + '</div>' +
+      '</div>' +
+      
+      (s.desc ? '<div style="font-size:12px;color:#cbd5e1;margin-bottom:8px;">' + s.desc + '</div>' : '') +
+      (links ? '<div style="margin-bottom:8px;">' + links + '</div>' : '') +
+      
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">' +
+        '<button class="ab-btn ab-btn-emerald" onclick="approveSuggestion(\'' + s.id + '\')"><i class="fas fa-check"></i> ' + (isEn ? 'Approve' : 'Одобрить') + '</button>' +
+        '<button class="ab-btn ab-btn-cyan" onclick="editSuggestion(\'' + s.id + '\')"><i class="fas fa-edit"></i> ' + (isEn ? 'Edit' : 'Изменить') + '</button>' +
+        '<button class="ab-btn ab-btn-purple" onclick="awardReagents(\'' + s.userId + '\', \'' + s.id + '\')"><i class="fas fa-coins"></i> ' + (isEn ? 'Award RGT' : 'Начислить RGT') + '</button>' +
+        '<button class="ab-btn ab-btn-red" onclick="deleteSuggestion(\'' + s.id + '\')"><i class="fas fa-trash"></i> ' + (isEn ? 'Delete' : 'Удалить') + '</button>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -1806,6 +1771,54 @@ function renderPendingPanel() {
 }
 
 // Suggestion management functions
+window.editSuggestion = function(id) {
+  const s = pendingSuggestions.find(item => item.id === id);
+  if (!s) return;
+  
+  // Fill the add modal with suggestion data
+  document.getElementById('modalTitle').textContent = 'Редактировать предложение';
+  document.getElementById('addName').value = s.name || '';
+  document.getElementById('addToken').value = s.token || '';
+  document.getElementById('addType').value = s.type || 'free';
+  document.getElementById('addNet').value = s.net || 'testnet';
+  document.getElementById('addDesc').value = s.desc || '';
+  document.getElementById('addLinks').value = (s.links || []).join('\n');
+  document.getElementById('addLogoUrl').value = s.logoUrl || '';
+  document.getElementById('addReward').value = s.reward || '';
+  document.getElementById('addCooldown').value = s.cooldown || '';
+  
+  // Store the suggestion ID for saving
+  window.currentEditingSuggestionId = id;
+  
+  openAddModal();
+};
+
+window.awardReagents = async function(userId, suggestionId) {
+  if (!isAdmin || !userId) return;
+  const raw = prompt((window.currentLang==='en')?'RGT to award (number):':'Сколько RGT начислить:');
+  if (raw === null) return;
+  const amount = Number(raw);
+  if (!Number.isFinite(amount) || amount <= 0) { 
+    alert((window.currentLang==='en')?'Invalid amount':'Неверное количество'); 
+    return; 
+  }
+  try {
+    await setDoc(doc(db, 'users', userId), { reagents: increment(amount) }, { merge: true });
+    if (suggestionId) {
+      await updateDoc(doc(db, COL_SUGGESTIONS, suggestionId), {
+        rgtAwarded: amount,
+        rgtAwardedAt: serverTimestamp(),
+        rgtAwardedBy: currentUser.uid
+      });
+    }
+    toast((window.currentLang==='en')?'RGT awarded':'RGT начислены');
+    await loadPendingSuggestions();
+  } catch(e) {
+    console.error('Failed to award RGT:', e);
+    toast((window.currentLang==='en')?'Error awarding RGT':'Ошибка начисления RGT');
+  }
+};
+
 window.approveSuggestion = async function(id) {
   if (!isAdmin) return;
   const sref = doc(db, COL_SUGGESTIONS, id);
