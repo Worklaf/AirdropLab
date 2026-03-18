@@ -1234,28 +1234,33 @@ function renderCard(f) {
 }
 
 function renderAll() {
-  var container = document.getElementById('sectionsContainer');
-  var sections = getGroupedSections();
-  var html = '';
-
-  sections.forEach(function(sec) {
-    var items = faucets.filter(sec.filter);
-    if (items.length === 0) return;
-
-    items = sortFaucets(items);
-
-    html += '<div class="faucet-section" data-sec="'+sec.key+'" style="margin-bottom:36px;">';
-    html += '<div class="section-hdr">'
-      + '<span class="section-dot" style="background:'+sec.dotColor+';box-shadow:0 0 8px '+sec.glowColor+';"></span>'
-      + '<span style="font-size:16px;font-weight:700;color:#f1f5f9;">'+sec.label+'</span>'
-      + '<span class="badge badge-'+sec.badgeType+'" style="margin-left:4px;">'+items.length+'</span>'
-      + '</div>';
-    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px;">';
-    items.forEach(function(f) { html += renderCard(f); });
-    html += '</div></div>';
-  });
-
+  // Контейнер секций - сетка карточек
+  const sectionsContainer = document.getElementById('sectionsContainer');
+  if (!sectionsContainer) return;
+  
+  let html = '';
   const isEn = (window.currentLang === 'en');
+  
+  for (const section of getGroupedSections()) {
+    const filtered = faucets.filter(section.filter);
+    if (!filtered.length) continue;
+    
+    html += '<div class="faucet-section">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">' +
+        '<div style="width:8px;height:8px;border-radius:50%;background:' + section.dotColor + ';" class="pulse-dot"></div>' +
+        '<h2 style="font-size:16px;font-weight:800;color:#f1f5f9;margin:0;">' + section.label + '</h2>' +
+        '<span style="font-size:12px;color:#64748b;background:rgba(0,0,0,0.2);padding:2px 8px;border-radius:12px;">' + filtered.length + '</span>' +
+      '</div>' +
+      '<div class="faucets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">';
+    
+    for (const f of filtered) {
+      html += renderCard(f);
+    }
+    
+    html += '</div></div>';
+  }
+  
+  sectionsContainer.innerHTML = html;
   container.innerHTML = html || '<div style="text-align:center;padding:60px;color:#475569;"><i class="fas fa-search" style="font-size:32px;margin-bottom:12px;display:block;"></i>'+(isEn?'Nothing found':'Ничего не найдено')+'</div>';
   updateCounts();
   applyCurrentFilter();
@@ -1965,53 +1970,62 @@ async function submitRatingModal() {
 window.submitRatingModal = submitRatingModal;
 
 async function setUserRating(faucetId, newRating) {
+  console.log('Setting rating:', { faucetId, newRating, userId: currentUser.uid, isAdmin });
+  
   const faucetRef = doc(db, COL_FAUCETS, faucetId);
   const ratingRef = doc(db, COL_FAUCETS, faucetId, 'ratings', currentUser.uid);
   
-  await runTransaction(db, async (tx) => {
-    const faucetSnap = await tx.get(faucetRef);
-    if (!faucetSnap.exists()) throw new Error('Missing faucet');
-    const f = faucetSnap.data();
-    
-    const avg = Number(f.ratingAvg || 0);
-    const cnt = Number(f.ratingCount || 0);
+  try {
+    await runTransaction(db, async (tx) => {
+      const faucetSnap = await tx.get(faucetRef);
+      if (!faucetSnap.exists()) throw new Error('Missing faucet');
+      const f = faucetSnap.data();
+      
+      const avg = Number(f.ratingAvg || 0);
+      const cnt = Number(f.ratingCount || 0);
 
-    const rSnap = await tx.get(ratingRef);
-    const prev = rSnap.exists() ? Number(rSnap.data().value || 0) : null;
+      const rSnap = await tx.get(ratingRef);
+      const prev = rSnap.exists() ? Number(rSnap.data().value || 0) : null;
 
-    let newCnt = cnt;
-    let total = avg * cnt;
-    
-    if (prev === null) {
-      // Новая оценка от пользователя
-      newCnt = cnt + 1;
-      total = total + newRating;
-    } else {
-      // Обновление существующей оценки
-      total = total - prev + newRating;
-      // cnt не меняется
-    }
-    
-    const newAvg = newCnt > 0 ? (total / newCnt) : 0;
+      let newCnt = cnt;
+      let total = avg * cnt;
+      
+      if (prev === null) {
+        // Новая оценка от пользователя
+        newCnt = cnt + 1;
+        total = total + newRating;
+      } else {
+        // Обновление существующей оценки
+        total = total - prev + newRating;
+        // cnt не меняется
+      }
+      
+      const newAvg = newCnt > 0 ? (total / newCnt) : 0;
 
-    // Сохраняем оценку пользователя
-    tx.set(ratingRef, { 
-      value: newRating, 
-      userId: currentUser.uid,
-      userName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Anonymous',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp() 
-    }, { merge: true });
-    
-    // Обновляем среднюю оценку крана
-    tx.update(faucetRef, { 
-      ratingAvg: newAvg, 
-      ratingCount: newCnt, 
-      updatedAt: serverTimestamp() 
+      console.log('Transaction data:', { prev, newRating, cnt, newCnt, total, newAvg });
+
+      // Сохраняем оценку пользователя
+      tx.set(ratingRef, { 
+        value: newRating, 
+        userId: currentUser.uid,
+        userName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Anonymous',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp() 
+      }, { merge: true });
+      
+      // Обновляем среднюю оценку крана
+      tx.update(faucetRef, { 
+        ratingAvg: newAvg, 
+        ratingCount: newCnt, 
+        updatedAt: serverTimestamp() 
+      });
     });
-  });
-  
-  console.log('Rating saved:', { faucetId, newRating, newAvg, newCnt });
+    
+    console.log('Rating saved successfully:', { faucetId, newRating });
+  } catch (error) {
+    console.error('Error saving rating:', error);
+    throw error;
+  }
 }
 
 // Language change rerender
