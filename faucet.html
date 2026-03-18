@@ -292,21 +292,37 @@
 </main>
 
 <!-- Admin Bar (only for admin) -->
-<div id="adminBar" style="display:none;">
-  <span style="font-size:11px;color:#22d3ee;font-weight:700;white-space:nowrap;"><i class="fas fa-user-shield" style="margin-right:5px;"></i><span data-translate="admin">Admin</span></span>
-  <button class="ab-btn ab-btn-green" onclick="openAddModal()"><i class="fas fa-plus"></i><span data-translate="faucets_admin_add">Добавить кран</span></button>
-  <button class="ab-btn ab-btn-cyan"  onclick="toggleEditMode()"><i class="fas fa-pen" id="editModeIcon"></i><span id="editModeLabel" data-translate="faucets_admin_edit_mode">Режим редакт.</span></button>
-  <button class="ab-btn ab-btn-purple" onclick="togglePendingPanel()"><i class="fas fa-inbox"></i><span data-translate="faucets_admin_moderation">Модерация предложений</span> <span id="pendingCount" class="badge badge-multi" style="margin-left:6px;">0</span></button>
-  <button class="ab-btn ab-btn-purple" onclick="seedDefaultsToFirestore()"><i class="fas fa-database"></i><span data-translate="faucets_admin_seed">Залить базу</span></button>
-  <span style="margin-left:auto;font-size:11px;color:#475569;" data-translate="faucets_storage_firestore">Данные хранятся в Firestore</span>
-</div>
-
-<!-- Pending Suggestions Panel -->
-<div id="pendingPanel">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;">
-    <div style="font-size:13px;font-weight:800;color:#f1f5f9;"><i class="fas fa-inbox" style="color:#a78bfa;margin-right:6px;"></i><span data-translate="faucets_admin_pending_title">Предложения (pending)</span></div>
-    <button class="ab-btn ab-btn-red" onclick="togglePendingPanel()"><i class="fas fa-times"></i><span data-translate="close">Закрыть</span></button>
+<div id="adminBar" style="display:none;position:fixed;top:80px;right:20px;z-index:1001;background:linear-gradient(135deg,#1e293b,#0f172a);border:2px solid rgba(34,211,238,0.3);border-radius:16px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.4);min-width:320px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <h3 style="font-size:14px;font-weight:900;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:#ef4444;" id="pendingIndicator"></div>
+      <i class="fas fa-user-shield"></i> Админ панель
+    </h3>
+    <button onclick="togglePendingPanel()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
+            onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.color='#f87171'" 
+            onmouseout="this.style.background='transparent';this.style.color='#64748b'">
+      <i class="fas fa-times"></i>
+    </button>
   </div>
+  
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <button class="ab-btn ab-btn-green" onclick="openAddModal()" style="flex:1;"><i class="fas fa-plus"></i><span data-translate="faucets_admin_add">Добавить</span></button>
+    <button class="ab-btn ab-btn-cyan" onclick="toggleEditMode()" style="flex:1;"><i class="fas fa-pen" id="editModeIcon"></i><span id="editModeLabel" data-translate="faucets_admin_edit_mode">Режим</span></button>
+  </div>
+  
+  <div id="pendingCount" style="font-size:12px;color:#94a3b8;margin-bottom:12px;">Загрузка...</div>
+  
+  <button onclick="togglePendingPanel()" id="pendingToggleBtn" style="width:100%;padding:10px;background:linear-gradient(135deg,#22d3ee,#0891b2);border:none;border-radius:10px;color:white;font-weight:700;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 12px rgba(34,211,238,0.3);"
+          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 16px rgba(34,211,238,0.4)'"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(34,211,238,0.3)'">
+    <i class="fas fa-inbox" style="margin-right:6px;"></i>
+    Показать предложения <span id="pendingBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
+  </button>
+  
+  <div id="pendingPanel" style="display:none;margin-top:16px;max-height:400px;overflow-y:auto;">
+    <div id="pendingList"></div>
+  </div>
+</div>
   <div id="pendingList" style="display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 
@@ -478,7 +494,8 @@
   </div>
 </div>
 
-// Rating modal (all users)
+<!-- Rating modal (all users) -->
+<script>
 function updateRatingDisplay(value) {
   const val = parseInt(value);
   document.getElementById('ratingValue').textContent = val;
@@ -487,6 +504,7 @@ function updateRatingDisplay(value) {
   dot.style.borderColor = ratingToColor(val);
 }
 window.updateRatingDisplay = updateRatingDisplay;
+</script>
 <div id="ratingModal" style="display:none;position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px;">
   <div class="modal-box" style="max-width:580px;background:linear-gradient(135deg,#1e293b,#0f172a);border:2px solid rgba(34,211,238,0.3);border-radius:20px;box-shadow:0 25px 60px rgba(0,0,0,0.8),0 0 40px rgba(34,211,238,0.2);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:20px 20px 0;">
@@ -1549,20 +1567,34 @@ async function loadFavorites() {
   favoritesSet = new Set();
   linkFavoritesSet = new Set();
   if (currentUser) {
-    // legacy faucet-level favorites (kept empty for now)
+    // Load faucet-level favorites (legacy)
     try {
-      const favSnap = await getDocs(collection(db, 'users', currentUser.uid, 'faucetFavorites'));
-      favSnap.forEach(d => favoritesSet.add(d.id));
-    } catch(_) {}
-
-    // per-link favorites
+      const favSnap = await getDoc(doc(db, 'users', currentUser.uid, 'faucetFavorites', 'list'));
+      if (favSnap.exists()) {
+        favSnap.data().ids?.forEach(id => favoritesSet.add(id));
+      }
+    } catch(e) { console.warn('Failed to load faucet favorites', e); }
+    
+    // Load link-level favorites
     try {
-      const lSnap = await getDocs(collection(db, 'users', currentUser.uid, 'faucetLinkFavorites'));
-      lSnap.forEach(d => {
-        const data = d.data() || {};
-        if (data.faucetId && data.url) linkFavoritesSet.add(linkFavKey(data.faucetId, data.url));
+      const linkSnap = await getDocs(collection(db, 'users', currentUser.uid, 'linkFavorites'));
+      linkSnap.forEach(doc => {
+        linkFavoritesSet.add(doc.id);
       });
-    } catch(_) {}
+    } catch(e) { console.warn('Failed to load link favorites', e); }
+    
+    // Load user stats for footer
+    try {
+      const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        // Update footer counters
+        const footerUserCount = document.getElementById('footerUserCount');
+        const footerProjectCount = document.getElementById('footerProjectCount');
+        if (footerUserCount) footerUserCount.textContent = '1';
+        if (footerProjectCount) footerProjectCount.textContent = userData.favoritesCount || '0';
+      }
+    } catch(e) { console.warn('Failed to load user stats', e); }
   } else {
     try {
       const raw = localStorage.getItem('al_faucet_favorites') || '[]';
@@ -1653,19 +1685,46 @@ async function loadPendingSuggestions() {
     // Avoid composite index requirement: fetch by status only, sort client-side
     const snap = await getDocs(query(collection(db, COL_SUGGESTIONS), where('status', '==', 'pending')));
     pendingSuggestions = [];
-    snap.forEach(d => pendingSuggestions.push({ id: d.id, ...d.data() }));
-    pendingSuggestions.sort((a, b) => {
-      const toMs = (x) => (x && typeof x.toDate === 'function') ? x.toDate().getTime() : (x ? new Date(x).getTime() : 0);
-      return toMs(a.submittedAt) - toMs(b.submittedAt);
-    });
-    document.getElementById('pendingCount').textContent = String(pendingSuggestions.length);
+    for (const doc of snap.docs) {
+      const data = doc.data();
+      let userInfo = {
+        userName: 'Anonymous',
+        userEmail: data.submittedEmail || data.userId,
+        userPhoto: 'https://www.gravatar.com/avatar/?d=mp'
+      };
+      
+      // Try to get user info from users collection
+      try {
+        const userSnap = await getDoc(doc(db, 'users', data.userId));
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          userInfo.userName = userData.displayName || userData.email?.split('@')[0] || 'Anonymous';
+          userInfo.userEmail = userData.email || data.submittedEmail || data.userId;
+          userInfo.userPhoto = userData.photoURL || userInfo.userPhoto;
+        }
+      } catch(e) { console.warn('Failed to load user info for', data.userId); }
+      
+      pendingSuggestions.push({
+        id: doc.id,
+        ...data,
+        ...userInfo
+      });
+    }
+    
+    // Update UI
+    const countEl = document.getElementById('pendingCount');
+    const badgeEl = document.getElementById('pendingBadge');
+    const indicatorEl = document.getElementById('pendingIndicator');
+    
+    if (countEl) countEl.textContent = `${pendingSuggestions.length} предложений`;
+    if (badgeEl) badgeEl.textContent = pendingSuggestions.length;
+    if (indicatorEl) {
+      indicatorEl.style.background = pendingSuggestions.length > 0 ? '#ef4444' : '#22d3ee';
+    }
+    
     renderPendingPanel();
-  } catch (e) {
-    console.warn('[Faucets] loadPendingSuggestions failed:', e);
-    document.getElementById('pendingCount').textContent = '!';
-    pendingSuggestions = [];
-    renderPendingPanel();
-    toast((window.currentLang === 'en') ? 'Failed to load suggestions' : 'Не удалось загрузить предложения');
+  } catch(e) {
+    console.error('Failed to load pending suggestions:', e);
   }
 }
 
@@ -1679,82 +1738,65 @@ window.togglePendingPanel = togglePendingPanel;
 function renderPendingPanel() {
   const list = document.getElementById('pendingList');
   if (!list) return;
+  
+  const isEn = (window.currentLang === 'en');
+  
   if (!pendingSuggestions.length) {
-    list.innerHTML = '<div style="color:#64748b;font-size:12px;">'+((window.currentLang==='en')?'No pending suggestions':'Нет предложений')+'</div>';
+    list.innerHTML = '<div style="color:#64748b;font-size:12px;text-align:center;padding:20px;">'+(isEn ? 'No pending suggestions' : 'Нет предложений')+'</div>';
     return;
   }
-  list.innerHTML = pendingSuggestions.map((s) => {
-    const sub = s.submittedEmail ? (' · ' + safeText(s.submittedEmail)) : '';
-    return `
-      <div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;background:rgba(30,37,56,0.35);">
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-weight:800;color:#f1f5f9;">${safeText(s.name || '')} <span style="color:#64748b;font-weight:700;font-size:12px;">(${safeText(s.token || '')})</span></div>
-          <div style="font-size:11px;color:#64748b;"><i class="fas fa-user"></i> ${safeText(s.submittedBy || '')}${sub}</div>
+  
+  const html = pendingSuggestions.map(s => {
+    const links = (s.links || []).map(url => 
+      `<a href="${url}" target="_blank" class="text-blue-400 hover:underline text-xs block mb-1">${url}</a>`
+    ).join('');
+    
+    const userInfo = `
+      <div class="flex items-center gap-3 mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+        <img src="${s.userPhoto}" 
+             class="w-10 h-10 rounded-full border-2 border-slate-600" alt="User avatar"
+             onerror="this.src='https://www.gravatar.com/avatar/?d=mp'">
+        <div class="flex-1">
+          <div class="text-sm font-semibold text-white">${s.userName}</div>
+          <div class="text-xs text-slate-400">${s.userEmail}</div>
         </div>
-        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:10px;">
-          <div>
-            <div class="ae-label">Name</div>
-            <input class="ae-input" id="p_name_${s.id}" value="${safeText(s.name || '')}">
-          </div>
-          <div>
-            <div class="ae-label">Token</div>
-            <input class="ae-input" id="p_token_${s.id}" value="${safeText(s.token || '')}">
-          </div>
-          <div style="grid-column:1/-1;">
-            <div class="ae-label">Link</div>
-            <input class="ae-input" id="p_link_${s.id}" value="${safeText(s.link || '')}">
-          </div>
-          <div style="grid-column:1/-1;">
-            <div class="ae-label">Logo URL</div>
-            <input class="ae-input" id="p_logo_${s.id}" value="${safeText(s.logoUrl || '')}">
-          </div>
-          <div style="grid-column:1/-1;">
-            <div class="ae-label">Description</div>
-            <textarea class="ae-input" id="p_desc_${s.id}" rows="2" style="resize:vertical;">${safeText(s.desc || '')}</textarea>
-          </div>
-          <div>
-            <div class="ae-label">Type</div>
-            <select class="ae-select ae-input" id="p_type_${s.id}">
-              <option value="free" ${s.type==='free'?'selected':''}>free</option>
-              <option value="paid" ${s.type==='paid'?'selected':''}>paid</option>
-            </select>
-          </div>
-          <div>
-            <div class="ae-label">Net</div>
-            <select class="ae-select ae-input" id="p_net_${s.id}">
-              <option value="testnet" ${s.net==='testnet'?'selected':''}>testnet</option>
-              <option value="mainnet" ${s.net==='mainnet'?'selected':''}>mainnet</option>
-            </select>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-          <button class="ab-btn ab-btn-green" onclick="window.approveSuggestion('${s.id}')"><i class="fas fa-check"></i>Approve</button>
-          <button class="ab-btn ab-btn-cyan" onclick="window.saveSuggestionEdits('${s.id}')"><i class="fas fa-save"></i>Save edits</button>
-          <button class="ab-btn ab-btn-purple" onclick="window.awardRGT('${safeText(s.submittedBy || '')}','${s.id}')"><i class="fas fa-vial"></i>Award RGT</button>
-          <button class="ab-btn ab-btn-red" onclick="window.deleteSuggestion('${s.id}')"><i class="fas fa-trash"></i>Delete</button>
+        <div class="text-xs text-slate-500">
+          ${new Date(s.createdAt?.toDate?.() || s.createdAt).toLocaleDateString()}
         </div>
       </div>
     `;
-  }).join('');
+    
+    return `
+      <div class="border border-slate-700 rounded-lg p-4 mb-4 bg-slate-900/50 hover:bg-slate-900/70 transition-colors">
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <div class="font-bold text-base text-white mb-1">${s.name}</div>
+            <div class="flex gap-2 text-xs">
+              <span class="px-2 py-1 bg-slate-700/50 rounded text-slate-300">${s.token || 'N/A'}</span>
+              <span class="px-2 py-1 bg-blue-500/20 rounded text-blue-400">${s.type || 'unknown'}</span>
+              <span class="px-2 py-1 bg-purple-500/20 rounded text-purple-400">${s.net || 'unknown'}</span>
+            </div>
+          </div>
+        </div>
+        
+        ${userInfo}
+        
+        ${s.desc ? `<div class="text-sm text-slate-300 mt-3 p-3 bg-slate-800/30 rounded border-l-4 border-blue-500">${s.desc}</div>` : ''}
+        
+        ${links ? `<div class="mt-3"><div class="text-xs text-slate-500 mb-2">Links:</div>${links}</div>` : ''}
+        
+        <div class="flex gap-2 mt-4">
+          <button onclick="approveSuggestion('${s.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg transition-colors flex items-center gap-2">
+            <i class="fas fa-check"></i> ${isEn ? 'Approve' : 'Одобрить'}
+          </button>
+          <button onclick="deleteSuggestion('${s.id}')" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm rounded-lg transition-colors flex items-center gap-2">
+            <i class="fas fa-trash"></i> ${isEn ? 'Delete' : 'Удалить'}
+          </button>
+        </div>
+      </div>
 }
 
-window.saveSuggestionEdits = async function(id) {
-  if (!isAdmin) return;
-  const payload = {
-    name: document.getElementById(`p_name_${id}`).value.trim(),
-    token: document.getElementById(`p_token_${id}`).value.trim(),
-    link: normalizeUrl(document.getElementById(`p_link_${id}`).value.trim()),
-    logoUrl: normalizeUrl(document.getElementById(`p_logo_${id}`).value.trim()),
-    desc: document.getElementById(`p_desc_${id}`).value.trim(),
-    type: document.getElementById(`p_type_${id}`).value,
-    net: document.getElementById(`p_net_${id}`).value,
-    updatedAt: serverTimestamp()
-  };
-  await updateDoc(doc(db, COL_SUGGESTIONS, id), payload);
-  toast('Saved');
-  await loadPendingSuggestions();
-};
-
+// Suggestion management functions
 window.approveSuggestion = async function(id) {
   if (!isAdmin) return;
   const sref = doc(db, COL_SUGGESTIONS, id);
@@ -1767,8 +1809,8 @@ window.approveSuggestion = async function(id) {
     type: s.type || 'free',
     net: s.net || 'testnet',
     desc: s.desc || '',
-    links: [normalizeUrl(s.link || '')].filter(Boolean),
-    logoUrl: normalizeUrl(s.logoUrl || ''),
+    links: (s.links || []).map(normalizeUrl).filter(Boolean),
+    logoUrl: s.logoUrl || '',
     tags: [],
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -1785,29 +1827,11 @@ window.approveSuggestion = async function(id) {
 
 window.deleteSuggestion = async function(id) {
   if (!isAdmin) return;
-  if (!confirm('Delete suggestion?')) return;
+  if (!confirm((window.currentLang==='en')?'Delete suggestion?':'Удалить предложение?')) return;
   await deleteDoc(doc(db, COL_SUGGESTIONS, id));
+  toast((window.currentLang==='en')?'Deleted':'Удалено');
   await loadPendingSuggestions();
 };
-
-window.awardRGT = async function(uid, suggestionId) {
-  if (!isAdmin || !uid) return;
-  const raw = prompt((window.currentLang==='en')?'RGT to award (number)':'Сколько RGT начислить?');
-  if (raw === null) return;
-  const amount = Number(raw);
-  if (!Number.isFinite(amount) || amount <= 0) { alert('Invalid amount'); return; }
-  await setDoc(doc(db, 'users', uid), { reagents: increment(amount) }, { merge: true });
-  if (suggestionId) {
-    await updateDoc(doc(db, COL_SUGGESTIONS, suggestionId), {
-      rgtAwarded: amount,
-      rgtAwardedAt: serverTimestamp(),
-      rgtAwardedBy: currentUser.uid
-    });
-  }
-  toast((window.currentLang==='en')?'RGT awarded':'RGT начислены');
-  await loadPendingSuggestions();
-};
-
 // Favorites
 window.toggleFavoriteLink = async function(faucetId, url) {
   if (!faucetId || !url) return;
@@ -1900,11 +1924,11 @@ async function setUserRating(faucetId, newRating) {
     const cnt = Number(f.ratingCount || 0);
 
     const rSnap = await tx.get(ratingRef);
-    const prev = rSnap.exists() ? Number(rSnap.data().value) : null;
+    const prev = rSnap.exists() ? Number(rSnap.data().value || 0) : null;
 
     let newCnt = cnt;
     let total = avg * cnt;
-    if (prev === null || !Number.isFinite(prev)) {
+    if (prev === null) {
       newCnt = cnt + 1;
       total = total + newRating;
     } else {
@@ -1916,36 +1940,6 @@ async function setUserRating(faucetId, newRating) {
     tx.update(faucetRef, { ratingAvg: newAvg, ratingCount: newCnt, updatedAt: serverTimestamp() });
   });
 }
-
-
-// Seed defaults (admin only)
-async function seedDefaultsToFirestore() {
-  if (!isAdmin) return;
-  const isEn = (window.currentLang === 'en');
-  if (!confirm(isEn ? 'Upload DEFAULT_FAUCETS into Firestore? (duplicates possible)' : 'Залить DEFAULT_FAUCETS в Firestore? (возможны дубликаты)')) return;
-  for (const f of DEFAULT_FAUCETS) {
-    await addDoc(collection(db, COL_FAUCETS), {
-      name: f.name || '',
-      token: f.token || '',
-      type: f.type || 'free',
-      net: f.net || 'testnet',
-      desc: f.desc || '',
-      links: (f.links || []).map(normalizeUrl).filter(Boolean),
-      reward: f.reward || '',
-      cooldown: f.cooldown || '',
-      tags: Array.isArray(f.tags) ? f.tags : [],
-      logoUrl: '',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      ratingAvg: 0,
-      ratingCount: 0,
-      clickCount: 0
-    });
-  }
-  toast(isEn ? 'Seed complete' : 'Заливка завершена');
-  await loadFaucetsFromFirestore();
-}
-window.seedDefaultsToFirestore = seedDefaultsToFirestore;
 
 // Language change rerender
 document.addEventListener('languageChanged', function() {
