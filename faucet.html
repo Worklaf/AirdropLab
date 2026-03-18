@@ -73,10 +73,10 @@
 
     /* Admin panel */
     #adminBar {
-      position: fixed; top: 80px; right: 20px; z-index: 1001;
-      background: linear-gradient(135deg,#1e293b,#0f172a); border: 2px solid rgba(34,211,238,0.3);
-      border-radius: 16px; padding: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      min-width: 320px; backdrop-filter: blur(16px);
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+      background: rgba(8,10,20,0.97); border-top: 1px solid rgba(34,211,238,0.3);
+      backdrop-filter: blur(16px); padding: 10px 20px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
     }
     .ab-btn {
       display: inline-flex; align-items: center; gap: 6px;
@@ -266,6 +266,12 @@
       <span data-translate="faucets_suggest_btn">Предложить кран</span>
     </button>
 
+    <button class="filter-tab" onclick="togglePendingPanel()" id="userPendingBtn" style="display:none;">
+      <i class="fas fa-inbox" style="margin-right:4px;color:#a78bfa;"></i>
+      <span>Предложения</span>
+      <span id="userPendingBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
+    </button>
+
     <input id="faucetSearch" type="text" data-translate="faucets_search_placeholder" placeholder="Поиск по сети или токену..."
       style="padding:6px 14px;background:rgba(30,37,56,0.6);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#f1f5f9;font-size:12px;outline:none;min-width:220px;"
       oninput="fSearch(this.value)">
@@ -293,33 +299,30 @@
 
 <!-- Admin Bar (only for admin) -->
 <div id="adminBar" style="display:none;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+  <div style="display:flex;align-items:center;gap:8px;">
     <h3 style="font-size:14px;font-weight:900;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
       <div style="width:8px;height:8px;border-radius:50%;background:#ef4444;" id="pendingIndicator"></div>
       <i class="fas fa-user-shield"></i> Админ панель
     </h3>
-    <button onclick="togglePendingPanel()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
-            onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.color='#f87171'" 
-            onmouseout="this.style.background='transparent';this.style.color='#64748b'">
-      <i class="fas fa-times"></i>
+  </div>
+  
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button class="ab-btn ab-btn-green" onclick="openAddModal()"><i class="fas fa-plus"></i><span data-translate="faucets_admin_add">Добавить</span></button>
+    <button class="ab-btn ab-btn-cyan" onclick="toggleEditMode()"><i class="fas fa-pen" id="editModeIcon"></i><span id="editModeLabel" data-translate="faucets_admin_edit_mode">Режим</span></button>
+    
+    <div id="pendingCount" style="font-size:12px;color:#94a3b8;margin:0 8px;">Загрузка...</div>
+    
+    <button onclick="togglePendingPanel()" id="pendingToggleBtn" class="ab-btn ab-btn-purple">
+      <i class="fas fa-inbox"></i>
+      Предложения <span id="pendingBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
     </button>
   </div>
   
-  <div style="display:flex;gap:8px;margin-bottom:12px;">
-    <button class="ab-btn ab-btn-green" onclick="openAddModal()" style="flex:1;"><i class="fas fa-plus"></i><span data-translate="faucets_admin_add">Добавить</span></button>
-    <button class="ab-btn ab-btn-cyan" onclick="toggleEditMode()" style="flex:1;"><i class="fas fa-pen" id="editModeIcon"></i><span id="editModeLabel" data-translate="faucets_admin_edit_mode">Режим</span></button>
-  </div>
-  
-  <div id="pendingCount" style="font-size:12px;color:#94a3b8;margin-bottom:12px;">Загрузка...</div>
-  
-  <button onclick="togglePendingPanel()" id="pendingToggleBtn" style="width:100%;padding:10px;background:linear-gradient(135deg,#22d3ee,#0891b2);border:none;border-radius:10px;color:white;font-weight:700;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 12px rgba(34,211,238,0.3);"
-          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 16px rgba(34,211,238,0.4)'"
-          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(34,211,238,0.3)'">
-    <i class="fas fa-inbox" style="margin-right:6px;"></i>
-    Показать предложения <span id="pendingBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
-  </button>
-  
-  <div id="pendingPanel" style="display:none;margin-top:16px;max-height:400px;overflow-y:auto;">
+  <div id="pendingPanel" style="display:none;position:fixed;bottom:80px;right:20px;width:400px;max-height:400px;overflow-y:auto;background:rgba(8,10,20,0.98);border:1px solid rgba(34,211,238,0.3);border-radius:12px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:10000;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h4 style="font-size:14px;font-weight:700;color:#f1f5f9;">Предложения кранов</h4>
+      <button onclick="togglePendingPanel()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;">&times;</button>
+    </div>
     <div id="pendingList"></div>
   </div>
 </div>
@@ -1712,10 +1715,12 @@ async function loadPendingSuggestions() {
     // Update UI
     const countEl = document.getElementById('pendingCount');
     const badgeEl = document.getElementById('pendingBadge');
+    const userBadgeEl = document.getElementById('userPendingBadge');
     const indicatorEl = document.getElementById('pendingIndicator');
     
     if (countEl) countEl.textContent = pendingSuggestions.length + ' предложений';
     if (badgeEl) badgeEl.textContent = pendingSuggestions.length;
+    if (userBadgeEl) userBadgeEl.textContent = pendingSuggestions.length;
     if (indicatorEl) {
       indicatorEl.style.background = pendingSuggestions.length > 0 ? '#ef4444' : '#22d3ee';
     }
@@ -1727,9 +1732,18 @@ async function loadPendingSuggestions() {
 }
 
 function togglePendingPanel() {
-  const p = document.getElementById('pendingPanel');
-  p.classList.toggle('open');
-  if (p.classList.contains('open')) loadPendingSuggestions();
+  const panel = document.getElementById('pendingPanel');
+  if (!panel) return;
+  
+  const isVisible = panel.style.display !== 'none';
+  if (isVisible) {
+    panel.style.display = 'none';
+  } else {
+    panel.style.display = 'block';
+    if (isAdmin) {
+      loadPendingSuggestions();
+    }
+  }
 }
 window.togglePendingPanel = togglePendingPanel;
 
@@ -1833,7 +1847,7 @@ window.toggleFavoriteLink = async function(faucetId, url) {
   const key = linkFavKey(faucetId, url);
   if (currentUser) {
     const id = String(faucetId).slice(0,40) + '_' + hash32(url);
-    const ref = doc(db, 'users', currentUser.uid, 'faucetLinkFavorites', id);
+    const ref = doc(db, 'users', currentUser.uid, 'linkFavorites', id);
     if (linkFavoritesSet.has(key)) {
       await deleteDoc(ref);
       linkFavoritesSet.delete(key);
@@ -1947,6 +1961,13 @@ onAuthStateChanged(auth, async (user) => {
   window.currentUser = currentUser;
   isAdmin = !!(user && (user.uid === ADMIN_UID));
   document.getElementById('adminBar').style.display = isAdmin ? 'flex' : 'none';
+  
+  // Show/hide user suggestions button
+  const userPendingBtn = document.getElementById('userPendingBtn');
+  if (userPendingBtn) {
+    userPendingBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+  }
+  
   updateHeaderAuthUI(user);
   await loadFavorites();
   await loadFaucetsFromFirestore();
