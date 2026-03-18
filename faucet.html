@@ -160,9 +160,10 @@
     .fav-link-btn {
       background: none; border: none; cursor: pointer;
       font-size: 11px; padding: 0 3px; opacity: 0.5; transition: all 0.15s;
-      flex-shrink: 0;
+      flex-shrink: 0; color: #64748b;
     }
-    .fav-link-btn:hover, .fav-link-btn.fav-active { opacity: 1; color: #fbbf24; }
+    .fav-link-btn:hover, .fav-link-btn.fav-active { opacity: 1; color: #fbbf24; transform: scale(1.1); }
+    .fav-link-btn.fav-active { color: #f59e0b; }
 
     /* Логотип крана */
     .faucet-logo {
@@ -475,39 +476,103 @@
   </div>
 </div>
 
-<!-- Rating modal (admin only) -->
-<div id="ratingModal" style="display:none;position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,0.82);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:20px;">
-  <div class="modal-box" style="max-width:520px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <h2 style="font-size:16px;font-weight:900;color:#f1f5f9;">
-        <i class="fas fa-star" style="color:#fbbf24;margin-right:8px;"></i>
-        <span data-translate="faucets_rating_title">Рейтинг крана</span>
+// Rating modal (all users)
+function updateRatingDisplay(value) {
+  const val = parseInt(value);
+  document.getElementById('ratingValue').textContent = val;
+  const dot = document.getElementById('ratingDot');
+  dot.className = 'rating-circle rating-' + val;
+  dot.style.borderColor = ratingToColor(val);
+}
+window.updateRatingDisplay = updateRatingDisplay;
+<div id="ratingModal" style="display:none;position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px;">
+  <div class="modal-box" style="max-width:580px;background:linear-gradient(135deg,#1e293b,#0f172a);border:2px solid rgba(34,211,238,0.3);border-radius:20px;box-shadow:0 25px 60px rgba(0,0,0,0.8),0 0 40px rgba(34,211,238,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:20px 20px 0;">
+      <h2 style="font-size:18px;font-weight:900;color:#f1f5f9;display:flex;align-items:center;gap:10px;">
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#f97316);display:flex;align-items:center;justify-content:center;">
+          <i class="fas fa-star" style="color:#fff;font-size:18px;"></i>
+        </div>
+        <span data-translate="faucets_rating_title">Оценить кран</span>
       </h2>
-      <button onclick="closeRatingModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;">&times;</button>
+      <button onclick="closeRatingModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:20px;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
+              onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.color='#f87171'" 
+              onmouseout="this.style.background='transparent';this.style.color='#64748b'">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-      <div id="ratingDot" class="rating-circle rating-8" style="width:42px;height:42px;font-size:14px;border-width:3px;cursor:default;" onclick="return false;">
-        <span id="ratingValue">8</span>
-      </div>
-      <div style="flex:1;">
-        <input id="ratingSlider" type="range" min="0" max="10" step="1" value="8"
-               style="width:100%;accent-color:#22d3ee;"
-               oninput="document.getElementById('ratingValue').textContent=this.value; document.getElementById('ratingDot').style.borderColor = (window.ratingToColor?window.ratingToColor(this.value):'#22d3ee');">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:#64748b;margin-top:6px;">
-          <span>0</span><span>5</span><span>10</span>
+    
+    <div style="padding:0 20px 20px;">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+        <div id="ratingDot" class="rating-circle rating-8" style="width:50px;height:50px;font-size:16px;border-width:3px;cursor:default;box-shadow:0 0 20px rgba(34,211,238,0.3);" onclick="return false;">
+          <span id="ratingValue">8</span>
+        </div>
+        <div style="flex:1;">
+          <div style="margin-bottom:8px;">
+            <input id="ratingSlider" type="range" min="0" max="10" step="1" value="8"
+                   style="width:100%;height:8px;border-radius:4px;outline:none;background:linear-gradient(to right,#ef4444 0%,#f59e0b 30%,#eab308 50%,#84cc16 70%,#22d3ee 100%);-webkit-appearance:none;appearance:none;"
+                   oninput="updateRatingDisplay(this.value)">
+            <style>
+              #ratingSlider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: linear-gradient(135deg,#22d3ee,#06b6d4);
+                cursor: pointer;
+                border: 3px solid #fff;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                transition: all 0.2s;
+              }
+              #ratingSlider::-webkit-slider-thumb:hover {
+                transform: scale(1.2);
+                box-shadow: 0 4px 12px rgba(34,211,238,0.5);
+              }
+              #ratingSlider::-moz-range-thumb {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: linear-gradient(135deg,#22d3ee,#06b6d4);
+                cursor: pointer;
+                border: 3px solid #fff;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                transition: all 0.2s;
+              }
+              #ratingSlider::-moz-range-thumb:hover {
+                transform: scale(1.2);
+                box-shadow: 0 4px 12px rgba(34,211,238,0.5);
+              }
+            </style>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;">
+            <span style="padding:4px 8px;background:rgba(239,68,68,0.2);border-radius:6px;color:#ef4444;">0 - Плохо</span>
+            <span style="padding:4px 8px;background:rgba(245,158,11,0.2);border-radius:6px;color:#f59e0b;">5 - Средне</span>
+            <span style="padding:4px 8px;background:rgba(34,211,238,0.2);border-radius:6px;color:#22d3ee;">10 - Отлично</span>
+          </div>
         </div>
       </div>
-    </div>
-    <div style="font-size:11px;color:#64748b;line-height:1.5;margin-bottom:14px;" data-translate="faucets_rating_hint">
-      Только админ может выставлять рейтинг. 0 = плохо, 10 = отлично.
-    </div>
-    <div style="display:flex;gap:10px;">
-      <button onclick="submitRatingModal()" style="flex:1;padding:10px;background:linear-gradient(135deg,#f59e0b,#f97316);border:none;border-radius:10px;color:white;font-size:13px;font-weight:900;cursor:pointer;">
-        <i class="fas fa-save" style="margin-right:6px;"></i><span data-translate="save">Сохранить</span>
-      </button>
-      <button onclick="closeRatingModal()" style="padding:10px 18px;background:rgba(30,37,56,0.8);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#94a3b8;font-size:13px;cursor:pointer;">
-        <span data-translate="close">Закрыть</span>
-      </button>
+      
+      <div style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:12px;padding:12px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <i class="fas fa-info-circle" style="color:#22d3ee;font-size:14px;"></i>
+          <span style="font-size:12px;font-weight:600;color:#f1f5f9;" data-translate="faucets_rating_hint">Оцените кран от 0 до 10</span>
+        </div>
+        <p style="font-size:11px;color:#94a3b8;line-height:1.5;margin:0;">Ваша оценка поможет другим пользователям выбрать лучшие краны. Оценка учитывается в общем рейтинге.</p>
+      </div>
+      
+      <div style="display:flex;gap:12px;">
+        <button onclick="submitRatingModal()" style="flex:1;padding:14px;background:linear-gradient(135deg,#22d3ee,#0891b2);border:none;border-radius:12px;color:white;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 12px rgba(34,211,238,0.3);"
+                onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(34,211,238,0.4)'"
+                onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(34,211,238,0.3)'">
+          <i class="fas fa-save" style="margin-right:8px;"></i>
+          <span data-translate="save">Сохранить оценку</span>
+        </button>
+        <button onclick="closeRatingModal()" style="padding:14px 24px;background:rgba(30,37,56,0.8);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#94a3b8;font-size:14px;cursor:pointer;transition:all 0.2s;"
+                onmouseover="this.style.background='rgba(71,85,105,0.8)';this.style.color='#f1f5f9'"
+                onmouseout="this.style.background='rgba(30,37,56,0.8)';this.style.color='#94a3b8'">
+          <span data-translate="close">Отмена</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -998,6 +1063,82 @@ function hash32(str) {
 // ═══════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════
+function getNetworkIcon(token, name) {
+  const tokenLower = (token || '').toLowerCase();
+  const nameLower = (name || '').toLowerCase();
+  
+  // Bitcoin
+  if (tokenLower === 'btc' || nameLower.includes('bitcoin')) return 'fab fa-bitcoin';
+  
+  // Ethereum
+  if (tokenLower === 'eth' || nameLower.includes('ethereum')) return 'fab fa-ethereum';
+  
+  // BNB Chain
+  if (tokenLower === 'bnb' || nameLower.includes('binance') || nameLower.includes('bsc')) return 'fas fa-coins';
+  
+  // Polygon
+  if (tokenLower === 'matic' || nameLower.includes('polygon')) return 'fas fa-shapes';
+  
+  // Arbitrum
+  if (nameLower.includes('arbitrum') || nameLower.includes('arb')) return 'fas fa-cube';
+  
+  // Optimism
+  if (nameLower.includes('optimism') || nameLower.includes('op')) return 'fas fa-rocket';
+  
+  // Base
+  if (nameLower.includes('base')) return 'fas fa-layer-group';
+  
+  // Solana
+  if (tokenLower === 'sol' || nameLower.includes('solana')) return 'fas fa-sun';
+  
+  // Avalanche
+  if (tokenLower === 'avax' || nameLower.includes('avalanche')) return 'fas fa-mountain';
+  
+  // Cardano
+  if (tokenLower === 'ada' || nameLower.includes('cardano')) return 'fas fa-gem';
+  
+  // Ripple
+  if (tokenLower === 'xrp' || nameLower.includes('ripple')) return 'fas fa-water';
+  
+  // StarkNet
+  if (nameLower.includes('starknet') || nameLower.includes('stark')) return 'fas fa-star';
+  
+  // zkSync
+  if (nameLower.includes('zksync')) return 'fas fa-infinity';
+  
+  // Linea
+  if (nameLower.includes('linea')) return 'fas fa-pencil-ruler';
+  
+  // Scroll
+  if (nameLower.includes('scroll')) return 'fas fa-scroll';
+  
+  // Fantom
+  if (tokenLower === 'ftm' || nameLower.includes('fantom')) return 'fas fa-ghost';
+  
+  // Celo
+  if (tokenLower === 'celo' || nameLower.includes('celo')) return 'fas fa-mobile-alt';
+  
+  // Gnosis
+  if (tokenLower === 'xdai' || nameLower.includes('gnosis')) return 'fas fa-eye';
+  
+  // Aptos
+  if (tokenLower === 'apt' || nameLower.includes('aptos')) return 'fas fa-compass';
+  
+  // Sui
+  if (tokenLower === 'sui' || nameLower.includes('sui')) return 'fas fa-circle';
+  
+  // TON
+  if (tokenLower === 'ton' || nameLower.includes('telegram')) return 'fab fa-telegram';
+  
+  // Tron
+  if (tokenLower === 'trx' || nameLower.includes('tron')) return 'fas fa-bolt';
+  
+  // Cosmos ecosystem
+  if (tokenLower === 'atom' || nameLower.includes('cosmos')) return 'fas fa-atom';
+  
+  // Default
+  return 'fas fa-faucet';
+}
 function getGroupedSections() {
   var sections = [
     { key:'free_testnet',  label: (window.currentLang === 'en' ? 'Free testnet faucets' : 'Бесплатные краны тестнетов'),  dotColor:'#34d399', glowColor:'rgba(52,211,153,0.6)', badgeType:'testnet', filter: function(f){ return f.type==='free' && f.net==='testnet'; } },
@@ -1027,9 +1168,11 @@ function renderCard(f) {
     const u = safeText(url);
     const k = linkFavKey(f.id, url);
     const favOn = linkFavoritesSet.has(k);
-    const favCls = favOn ? 'fav-active' : '';
+    const favCls = favOn ? 'fav-active' : ''
+    const favIcon = favOn ? 'fas' : 'far';
+    const favTitle = favOn ? (isEn?'Remove from favorites':'Убрать из избранного') : (isEn?'Add to favorites':'В избранное');
     return '<div style="display:flex;align-items:center;gap:6px;">'
-      + '<button class="fav-link-btn '+favCls+'" title="'+(isEn?'Save this link':'Сохранить эту ссылку')+'" onclick="event.preventDefault(); event.stopPropagation(); window.toggleFavoriteLink(\''+safeText(f.id)+'\', \''+safeText(url)+'\')"><i class="'+(favOn?'fas':'far')+' fa-star"></i></button>'
+      + '<button class="fav-link-btn '+favCls+'" title="'+favTitle+'" onclick="event.preventDefault(); event.stopPropagation(); window.toggleFavoriteLink(\''+safeText(f.id)+'\', \''+safeText(url)+'\')"><i class="'+favIcon+' fa-star"></i></button>'
       + '<a href="'+u+'" target="_blank" rel="noopener noreferrer" class="faucet-link" onclick="window.trackClick(\''+safeText(f.id)+'\');"><i class="fas fa-external-link-alt"></i>'+safeText(short)+'</a>'
       + '</div>';
   }).join('');
@@ -1043,10 +1186,11 @@ function renderCard(f) {
   const ratingText = ratingCount > 0 ? (Math.round(ratingAvg * 10) / 10).toFixed(1) : '–';
   const autoLogo = (!f.logoUrl && (f.links||[])[0]) ? getFaviconUrlFromLink((f.links||[])[0]) : '';
   const logoSrc = f.logoUrl || autoLogo;
+  const networkIcon = getNetworkIcon(f.token, f.name);
   const logoHtml = logoSrc
     ? `<img class="faucet-logo" src="${safeText(logoSrc)}" alt="${safeText(f.name)}"
-         onerror="this.outerHTML='<div class=&quot;faucet-logo-placeholder&quot;><i class=&quot;fas fa-water&quot;></i></div>'">`
-    : '<div class="faucet-logo-placeholder"><i class="fas fa-water"></i></div>';
+         onerror="this.outerHTML='<div class=&quot;faucet-logo-placeholder&quot;><i class=&quot;${networkIcon}&quot;></i></div>'">`
+    : `<div class="faucet-logo-placeholder"><i class="${networkIcon}"></i></div>`;
 
   var editBtns = (editMode && isAdmin) ? '<div style="display:flex;gap:6px;margin-top:10px;">'
     + '<button onclick="editFaucet(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);border-radius:6px;color:#22d3ee;font-size:11px;cursor:pointer;"><i class="fas fa-pen"></i> '+(isEn?'Edit':'Изменить')+'</button>'
@@ -1380,10 +1524,21 @@ function updateHeaderAuthUI(user) {
   }
   const ava = document.getElementById('userAvatar');
   const name = document.getElementById('userName');
+  const mobAva = document.getElementById('mobUserAvatar');
+  const mobOut = document.getElementById('mobLoggedOutView');
+  const mobInn = document.getElementById('mobLoggedInView');
+  
   if (user) {
     if (ava) ava.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
     if (name) name.textContent = user.displayName || (user.email ? user.email.split('@')[0] : 'Researcher');
+    if (mobAva) mobAva.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+    if (mobOut) mobOut.style.display = 'none';
+    if (mobInn) mobInn.style.display = 'flex';
+  } else {
+    if (mobOut) mobOut.style.display = 'block';
+    if (mobInn) mobInn.style.display = 'none';
   }
+  
   const adminPanel = document.getElementById('adminPanel');
   if (adminPanel) adminPanel.style.display = isAdmin ? 'flex' : 'none';
 }
