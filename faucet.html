@@ -14,27 +14,6 @@
   <script src="assets/reagents.js"></script>
   <script src="footer.js"></script>
   <style>
-    /* Сетка для кранов */
-    .faucets-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 20px;
-      align-items: start;
-    }
-    
-    @media (max-width: 768px) {
-      .faucets-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-    }
-    
-    @media (min-width: 1200px) {
-      .faucets-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-    
     /* z-index fix — nav dropdown поверх всего */
     #site-nav { position: relative; z-index: 999 !important; }
     .al-nav-dropdown { z-index: 1000 !important; }
@@ -1255,39 +1234,29 @@ function renderCard(f) {
 }
 
 function renderAll() {
-  // Контейнер секций - сетка карточек
-  const sectionsContainer = document.getElementById('sectionsContainer');
-  if (!sectionsContainer) return;
-  
-  let html = '';
+  var container = document.getElementById('sectionsContainer');
+  var sections = getGroupedSections();
+  var html = '';
   const isEn = (window.currentLang === 'en');
-  
-  for (const section of getGroupedSections()) {
-    const filtered = faucets.filter(section.filter);
-    if (!filtered.length) continue;
-    
-    html += '<div class="faucet-section">' +
-      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">' +
-        '<div style="width:8px;height:8px;border-radius:50%;background:' + section.dotColor + ';" class="pulse-dot"></div>' +
-        '<h2 style="font-size:16px;font-weight:800;color:#f1f5f9;margin:0;">' + section.label + '</h2>' +
-        '<span style="font-size:12px;color:#64748b;background:rgba(0,0,0,0.2);padding:2px 8px;border-radius:12px;">' + filtered.length + '</span>' +
-      '</div>' +
-      '<div class="faucets-grid">';
-    
-    for (const f of filtered) {
-      html += renderCard(f);
-    }
-    
+
+  sections.forEach(function(sec) {
+    var items = faucets.filter(sec.filter);
+    if (items.length === 0) return;
+
+    items = sortFaucets(items);
+
+    html += '<div class="faucet-section" data-sec="'+sec.key+'" style="margin-bottom:36px;">';
+    html += '<div class="section-hdr">'
+      + '<span class="section-dot" style="background:'+sec.dotColor+';box-shadow:0 0 8px '+sec.glowColor+';"></span>'
+      + '<span style="font-size:16px;font-weight:700;color:#f1f5f9;">'+sec.label+'</span>'
+      + '<span class="badge badge-'+sec.badgeType+'" style="margin-left:4px;">'+items.length+'</span>'
+      + '</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px;">';
+    items.forEach(function(f) { html += renderCard(f, isEn); });
     html += '</div></div>';
-  }
-  
-  sectionsContainer.innerHTML = html;
-  
-  // Показываем сообщение если ничего не найдено
-  if (!html) {
-    sectionsContainer.innerHTML = '<div style="text-align:center;padding:60px;color:#475569;"><i class="fas fa-search" style="font-size:32px;margin-bottom:12px;display:block;"></i>'+(isEn?'Nothing found':'Ничего не найдено')+'</div>';
-  }
-  
+  });
+
+  container.innerHTML = html || '<div style="text-align:center;padding:60px;color:#475569;"><i class="fas fa-search" style="font-size:32px;margin-bottom:12px;display:block;"></i>'+(isEn?'Nothing found':'Ничего не найдено')+'</div>';
   updateCounts();
   applyCurrentFilter();
 }
