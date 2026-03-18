@@ -14,6 +14,27 @@
   <script src="assets/reagents.js"></script>
   <script src="footer.js"></script>
   <style>
+    /* Сетка для кранов */
+    .faucets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+      align-items: start;
+    }
+    
+    @media (max-width: 768px) {
+      .faucets-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+    
+    @media (min-width: 1200px) {
+      .faucets-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
     /* z-index fix — nav dropdown поверх всего */
     #site-nav { position: relative; z-index: 999 !important; }
     .al-nav-dropdown { z-index: 1000 !important; }
@@ -1251,7 +1272,7 @@ function renderAll() {
         '<h2 style="font-size:16px;font-weight:800;color:#f1f5f9;margin:0;">' + section.label + '</h2>' +
         '<span style="font-size:12px;color:#64748b;background:rgba(0,0,0,0.2);padding:2px 8px;border-radius:12px;">' + filtered.length + '</span>' +
       '</div>' +
-      '<div class="faucets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">';
+      '<div class="faucets-grid">';
     
     for (const f of filtered) {
       html += renderCard(f);
@@ -1261,7 +1282,12 @@ function renderAll() {
   }
   
   sectionsContainer.innerHTML = html;
-  container.innerHTML = html || '<div style="text-align:center;padding:60px;color:#475569;"><i class="fas fa-search" style="font-size:32px;margin-bottom:12px;display:block;"></i>'+(isEn?'Nothing found':'Ничего не найдено')+'</div>';
+  
+  // Показываем сообщение если ничего не найдено
+  if (!html) {
+    sectionsContainer.innerHTML = '<div style="text-align:center;padding:60px;color:#475569;"><i class="fas fa-search" style="font-size:32px;margin-bottom:12px;display:block;"></i>'+(isEn?'Nothing found':'Ничего не найдено')+'</div>';
+  }
+  
   updateCounts();
   applyCurrentFilter();
 }
@@ -1714,7 +1740,15 @@ async function loadPendingSuggestions() {
     const adminBtn = document.getElementById('adminModerationBtn');
     
     if (badgeEl) badgeEl.textContent = pendingSuggestions.length;
-    if (adminBtn) adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+    if (adminBtn) {
+      adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+      // Показываем количество если есть предложения
+      if (pendingSuggestions.length > 0) {
+        badgeEl.style.display = 'inline-block';
+      } else {
+        badgeEl.style.display = 'none';
+      }
+    }
     
     renderPendingPanel();
   } catch(e) {
@@ -2033,12 +2067,30 @@ document.addEventListener('languageChanged', function() {
   renderAll();
 });
 
+// Инициализация кнопки модерации при загрузке страницы
+function initializeAdminButton() {
+  const adminBtn = document.getElementById('adminModerationBtn');
+  if (adminBtn) {
+    adminBtn.style.display = 'none'; // Скрыть по умолчанию
+  }
+}
+
+// Вызываем инициализацию сразу
+initializeAdminButton();
+
 // Init
 onAuthStateChanged(auth, async (user) => {
   currentUser = user || null;
   window.currentUser = currentUser;
   isAdmin = !!(user && (user.uid === ADMIN_UID));
   document.getElementById('adminBar').style.display = isAdmin ? 'flex' : 'none';
+  
+  // Показываем кнопку модерации для админа
+  const adminBtn = document.getElementById('adminModerationBtn');
+  if (adminBtn) {
+    adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+  }
+  
   updateHeaderAuthUI(user);
   await loadFavorites();
   await loadFaucetsFromFirestore();
