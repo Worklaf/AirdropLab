@@ -1788,6 +1788,9 @@ function renderPendingPanel() {
       '</div>' +
     '</div>';
   }).join('');
+  
+  list.innerHTML = html;
+}
 
 // Suggestion management functions
 window.approveSuggestion = async function(id) {
