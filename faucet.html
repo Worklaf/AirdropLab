@@ -14,6 +14,43 @@
   <script src="assets/reagents.js"></script>
   <script src="footer.js"></script>
   <style>
+    .faucet-section {
+      margin-bottom: 36px;
+    }
+    
+    .faucet-section > div:last-child {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)) !important;
+      gap: 14px !important;
+    }
+    
+    /* Минимум 2 колонки на планшетах и десктопах */
+    @media (min-width: 640px) {
+      .faucet-section > div:last-child {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+    
+    /* Минимум 3 колонки на десктопах */
+    @media (min-width: 1024px) {
+      .faucet-section > div:last-child {
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+    }
+    
+    /* До 4 колонок на больших экранах */
+    @media (min-width: 1400px) {
+      .faucet-section > div:last-child {
+        grid-template-columns: repeat(4, 1fr) !important;
+      }
+    }
+    
+    #sectionsContainer {
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
     /* z-index fix — nav dropdown поверх всего */
     #site-nav { position: relative; z-index: 999 !important; }
     .al-nav-dropdown { z-index: 1000 !important; }
