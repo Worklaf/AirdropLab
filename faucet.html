@@ -12,6 +12,7 @@
   <script src="languages.js"></script>
   <script src="header.js"></script>
   <script src="assets/reagents.js"></script>
+  <script src="footer.js"></script>
   <style>
     /* z-index fix — nav dropdown поверх всего */
     #site-nav { position: relative; z-index: 999 !important; }
@@ -1337,8 +1338,28 @@ async function loadFaucetsFromFirestore() {
     });
     // If DB is empty, still allow UI to show something meaningful
     if (!faucets.length) {
+      // Show embedded defaults until the collection is seeded
+      faucets = DEFAULT_FAUCETS.map((f) => ({
+        id: f.id,
+        name: f.name || '',
+        token: f.token || '',
+        type: f.type || 'free',
+        net: f.net || 'testnet',
+        desc: f.desc || '',
+        links: (f.links || []).map(normalizeUrl).filter(Boolean),
+        reward: f.reward || '',
+        cooldown: f.cooldown || '',
+        tags: Array.isArray(f.tags) ? f.tags : [],
+        logoUrl: f.logoUrl || '',
+        ratingAvg: 0,
+        ratingCount: 0,
+        clickCount: 0,
+        createdAt: null,
+        updatedAt: null,
+        _source: 'embedded'
+      }));
       const isEn = (window.currentLang === 'en');
-      toast(isEn ? 'No faucets in database yet' : 'В базе пока нет кранов');
+      toast(isEn ? 'Database is empty — showing embedded defaults' : 'База пуста — показаны встроенные данные');
     }
   } catch (e) {
     const code = e && (e.code || e.name) ? String(e.code || e.name) : '';
@@ -1381,11 +1402,24 @@ async function loadFaucetsFromFirestore() {
 
 async function loadPendingSuggestions() {
   if (!isAdmin) return;
-  const snap = await getDocs(query(collection(db, COL_SUGGESTIONS), where('status', '==', 'pending'), orderBy('submittedAt')));
-  pendingSuggestions = [];
-  snap.forEach(d => pendingSuggestions.push({ id: d.id, ...d.data() }));
-  document.getElementById('pendingCount').textContent = String(pendingSuggestions.length);
-  renderPendingPanel();
+  try {
+    // Avoid composite index requirement: fetch by status only, sort client-side
+    const snap = await getDocs(query(collection(db, COL_SUGGESTIONS), where('status', '==', 'pending')));
+    pendingSuggestions = [];
+    snap.forEach(d => pendingSuggestions.push({ id: d.id, ...d.data() }));
+    pendingSuggestions.sort((a, b) => {
+      const toMs = (x) => (x && typeof x.toDate === 'function') ? x.toDate().getTime() : (x ? new Date(x).getTime() : 0);
+      return toMs(a.submittedAt) - toMs(b.submittedAt);
+    });
+    document.getElementById('pendingCount').textContent = String(pendingSuggestions.length);
+    renderPendingPanel();
+  } catch (e) {
+    console.warn('[Faucets] loadPendingSuggestions failed:', e);
+    document.getElementById('pendingCount').textContent = '!';
+    pendingSuggestions = [];
+    renderPendingPanel();
+    toast((window.currentLang === 'en') ? 'Failed to load suggestions' : 'Не удалось загрузить предложения');
+  }
 }
 
 function togglePendingPanel() {
@@ -1640,6 +1674,17 @@ onAuthStateChanged(auth, async (user) => {
   await loadFavorites();
   await loadFaucetsFromFirestore();
   if (isAdmin) await loadPendingSuggestions();
+
+  // Hook profile/account modal (footer.js)
+  try {
+    const avaWrap = document.getElementById('userAvatarWrapper');
+    const nameWrap = document.getElementById('userNameWrapper');
+    const openAccount = () => {
+      if (typeof window.openPageModal === 'function') window.openPageModal('account');
+    };
+    if (avaWrap) avaWrap.onclick = openAccount;
+    if (nameWrap) nameWrap.onclick = openAccount;
+  } catch(_) {}
 });
 </script>
 </body>
