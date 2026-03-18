@@ -85,8 +85,8 @@
     }
     .ab-btn-cyan { background: rgba(34,211,238,0.2); border: 1px solid rgba(34,211,238,0.4); color: #22d3ee; }
     .ab-btn-cyan:hover { background: rgba(34,211,238,0.35); }
-    .ab-btn-green { background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4); color: #34d399; }
-    .ab-btn-green:hover { background: rgba(16,185,129,0.35); }
+    .ab-btn-emerald { background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4); color: #34d399; }
+    .ab-btn-emerald:hover { background: rgba(16,185,129,0.35); }
     .ab-btn-red   { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #f87171; }
     .ab-btn-red:hover   { background: rgba(239,68,68,0.35); }
     .ab-btn-purple { background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); color: #a78bfa; }
@@ -306,7 +306,7 @@
   </div>
   
   <div style="display:flex;gap:8px;margin-bottom:12px;">
-    <button class="ab-btn ab-btn-green" onclick="openAddModal()" style="flex:1;"><i class="fas fa-plus"></i><span data-translate="faucets_admin_add">Добавить</span></button>
+    <button class="ab-btn ab-btn-emerald" onclick="openAddModal()" style="flex:1;"><i class="fas fa-plus"></i><span data-translate="faucets_admin_add">Добавить</span></button>
     <button class="ab-btn ab-btn-cyan" onclick="toggleEditMode()" style="flex:1;"><i class="fas fa-pen" id="editModeIcon"></i><span id="editModeLabel" data-translate="faucets_admin_edit_mode">Режим</span></button>
   </div>
   
@@ -322,8 +322,6 @@
   <div id="pendingPanel" style="display:none;margin-top:16px;max-height:400px;overflow-y:auto;">
     <div id="pendingList"></div>
   </div>
-</div>
-  <div id="pendingList" style="display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 
 <!-- Modal: добавить/редактировать кран -->
@@ -514,540 +512,168 @@ window.updateRatingDisplay = updateRatingDisplay;
         </div>
         <span data-translate="faucets_rating_title">Оценить кран</span>
       </h2>
-      <button onclick="closeRatingModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:20px;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
-              onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.color='#f87171'" 
-              onmouseout="this.style.background='transparent';this.style.color='#64748b'">
-        <i class="fas fa-times"></i>
-      </button>
+      <button onclick="closeRatingModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:24px;padding:4px;">&times;</button>
     </div>
-    
     <div style="padding:0 20px 20px;">
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
-        <div id="ratingDot" class="rating-circle rating-8" style="width:50px;height:50px;font-size:16px;border-width:3px;cursor:default;box-shadow:0 0 20px rgba(34,211,238,0.3);" onclick="return false;">
-          <span id="ratingValue">8</span>
-        </div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+        <div id="ratingDot" class="rating-circle rating-8" style="width:48px;height:48px;font-size:14px;font-weight:900;">8</div>
         <div style="flex:1;">
-          <div style="margin-bottom:8px;">
-            <input id="ratingSlider" type="range" min="0" max="10" step="1" value="8"
-                   style="width:100%;height:8px;border-radius:4px;outline:none;background:linear-gradient(to right,#ef4444 0%,#f59e0b 30%,#eab308 50%,#84cc16 70%,#22d3ee 100%);-webkit-appearance:none;appearance:none;"
-                   oninput="updateRatingDisplay(this.value)">
-            <style>
-              #ratingSlider::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                background: linear-gradient(135deg,#22d3ee,#06b6d4);
-                cursor: pointer;
-                border: 3px solid #fff;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                transition: all 0.2s;
-              }
-              #ratingSlider::-webkit-slider-thumb:hover {
-                transform: scale(1.2);
-                box-shadow: 0 4px 12px rgba(34,211,238,0.5);
-              }
-              #ratingSlider::-moz-range-thumb {
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                background: linear-gradient(135deg,#22d3ee,#06b6d4);
-                cursor: pointer;
-                border: 3px solid #fff;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                transition: all 0.2s;
-              }
-              #ratingSlider::-moz-range-thumb:hover {
-                transform: scale(1.2);
-                box-shadow: 0 4px 12px rgba(34,211,238,0.5);
-              }
-            </style>
+          <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:4px;" data-translate="faucets_rating_your">Ваша оценка:</div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <input type="range" id="ratingSlider" min="0" max="10" value="8" step="1" 
+              style="flex:1;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;outline:none;-webkit-appearance:none;-moz-appearance:none;appearance:none;"
+              oninput="updateRatingDisplay(this.value)">
+            <span id="ratingValue" style="font-size:16px;font-weight:800;color:#f1f5f9;min-width:20px;text-align:center;">8</span>
           </div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;">
-            <span style="padding:4px 8px;background:rgba(239,68,68,0.2);border-radius:6px;color:#ef4444;">0 - Плохо</span>
-            <span style="padding:4px 8px;background:rgba(245,158,11,0.2);border-radius:6px;color:#f59e0b;">5 - Средне</span>
-            <span style="padding:4px 8px;background:rgba(34,211,238,0.2);border-radius:6px;color:#22d3ee;">10 - Отлично</span>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#64748b;margin-top:4px;">
+            <span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span>
           </div>
         </div>
       </div>
-      
-      <div style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:12px;padding:12px;margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <i class="fas fa-info-circle" style="color:#22d3ee;font-size:14px;"></i>
-          <span style="font-size:12px;font-weight:600;color:#f1f5f9;" data-translate="faucets_rating_hint">Оцените кран от 0 до 10</span>
-        </div>
-        <p style="font-size:11px;color:#94a3b8;line-height:1.5;margin:0;">Ваша оценка поможет другим пользователям выбрать лучшие краны. Оценка учитывается в общем рейтинге.</p>
+      <div style="font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:20px;" data-translate="faucets_rating_help">
+        Оцените кран от 0 до 10. 0 — не работает, 10 — отлично работает и быстро выплачивает.
       </div>
-      
-      <div style="display:flex;gap:12px;">
-        <button onclick="submitRatingModal()" style="flex:1;padding:14px;background:linear-gradient(135deg,#22d3ee,#0891b2);border:none;border-radius:12px;color:white;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 12px rgba(34,211,238,0.3);"
-                onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(34,211,238,0.4)'"
-                onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(34,211,238,0.3)'">
-          <i class="fas fa-save" style="margin-right:8px;"></i>
-          <span data-translate="save">Сохранить оценку</span>
+      <div style="display:flex;gap:10px;">
+        <button onclick="submitRatingModal()" style="flex:1;padding:12px;background:linear-gradient(135deg,#f59e0b,#f97316);border:none;border-radius:10px;color:white;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.3s;"
+          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 20px rgba(245,158,11,0.4)'"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+          <i class="fas fa-paper-plane" style="margin-right:8px;"></i><span data-translate="faucets_rating_submit">Отправить оценку</span>
         </button>
-        <button onclick="closeRatingModal()" style="padding:14px 24px;background:rgba(30,37,56,0.8);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#94a3b8;font-size:14px;cursor:pointer;transition:all 0.2s;"
-                onmouseover="this.style.background='rgba(71,85,105,0.8)';this.style.color='#f1f5f9'"
-                onmouseout="this.style.background='rgba(30,37,56,0.8)';this.style.color='#94a3b8'">
-          <span data-translate="close">Отмена</span>
+        <button onclick="closeRatingModal()" style="padding:12px 20px;background:rgba(30,37,56,0.8);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#94a3b8;font-size:14px;cursor:pointer;">
+          <span data-translate="close">Закрыть</span>
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<script type="module">
-// ═══════════════════════════════════════════
-// DATA — полный список кранов
-// ═══════════════════════════════════════════
-const DEFAULT_FAUCETS = [
-  // ── BITCOIN ──
-  { id:'btc1', name:'Bitcoin Testnet 3', token:'BTC', type:'free', net:'testnet',
-    desc:'Краны Bitcoin тестовой сети (Testnet 3). Для разработки и тестирования BTC транзакций.',
-    links:['https://coinfaucet.eu/en/btc-testnet/','https://bitcoinfaucet.uo1.net/','https://testnet-faucet.mempool.co/','https://kuttler.eu/en/bitcoin/btc/faucet/'],
-    reward:'', cooldown:'', tags:[] },
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyB3s7qH8Xc2y9YJtX5Z6V7W8X9Y0Z1A2B3",
+  authDomain: "airdroplab-123.firebaseapp.com",
+  projectId: "airdroplab-123",
+  storageBucket: "airdroplab-123.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abc123def456ghi789"
+};
 
-  // ── ETHEREUM HOLESKY ──
-  { id:'heth1', name:'Ethereum Holesky', token:'hETH', type:'free', net:'testnet',
-    desc:'Замена Goerli. Используется для стейкинга и разработки. Кран pk910 поддерживает майнинг hETH.',
-    links:['https://rubyscore.io/','https://learnweb3.io/faucets/holesky/','https://faucet.quicknode.com/ethereum/holesky','https://faucets.tatum.io/holesky-old','https://holesky-faucet.pk910.de/'],
-    reward:'1 hETH/день', cooldown:'24ч', tags:['airdrop'] },
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
 
-  // ── ETHEREUM GOERLI ──
-  { id:'goerli1', name:'Ethereum Goerli', token:'gETH', type:'free', net:'testnet',
-    desc:'Исторически первый тестнет Ethereum. Устаревает, но краны ещё работают.',
-    links:['https://goerlifaucet.com/','https://faucet.quicknode.com/','https://faucet.triangleplatform.com/ethereum/goerli','https://faucet.paradigm.xyz/','https://www.allthatnode.com/faucet/ethereum.dsrv','https://faucet.softbinator.com/','https://faucaeth.komputing.org/','https://testnet.help/ru/ethfaucet/goerli','https://goerli-faucet.pk910.de/'],
-    reward:'0.1 gETH/день', cooldown:'24ч', tags:['multi'] },
-
-  // ── ETHEREUM SEPOLIA ──
-  { id:'sep1', name:'Ethereum Sepolia', token:'sETH', type:'free', net:'testnet',
-    desc:'Основной активный тестнет Ethereum. Большинство dApp тестируется здесь. Кран pk910 поддерживает майнинг.',
-    links:['https://rubyscore.io/','https://sepoliafaucet.com/','https://faucet-sepolia.rockx.com','https://www.infura.io/faucet/sepolia','https://faucet.quicknode.com/ethereum/sepolia','https://coinbase.com/faucets/ethereum-sepolia-faucet','https://sepolia-faucet.pk910.de/'],
-    reward:'0.5 sETH/день', cooldown:'24ч', tags:['airdrop'] },
-
-  // ── ARBITRUM ──
-  { id:'arb1', name:'Arbitrum Sepolia', token:'ETH', type:'free', net:'testnet',
-    desc:'L2 тестнет Arbitrum. Нужен для тестирования контрактов на Arbitrum.',
-    links:['https://faucet.quicknode.com/arbitrum/sepolia','https://faucet.triangleplatform.com/arbitrum/goerli','https://faucet.quicknode.com/arbitrum/rinkeby'],
-    reward:'0.1 ETH/день', cooldown:'24ч', tags:['airdrop'] },
-
-  // ── OPTIMISM ──
-  { id:'op1', name:'Optimism Sepolia', token:'ETH', type:'free', net:'testnet',
-    desc:'L2 тестнет Optimism. Используется для Superchain разработки.',
-    links:['https://app.optimism.io/faucet','https://faucet.paradigm.xyz/','https://optifaucet.com/'],
-    reward:'0.05 ETH/день', cooldown:'24ч', tags:['multi'] },
-
-  // ── BASE ──
-  { id:'base1', name:'Base Sepolia', token:'ETH', type:'free', net:'testnet',
-    desc:'L2 от Coinbase. Активная экосистема, быстрый рост. Требует Coinbase аккаунт для верификации.',
-    links:['https://www.coinbase.com/developer-platform/faucet','https://faucet.quicknode.com/base/sepolia'],
-    reward:'0.1 ETH/день', cooldown:'24ч', tags:['airdrop','hot'] },
-
-  // ── POLYGON ──
-  { id:'poly1', name:'Polygon Amoy', token:'MATIC', type:'free', net:'testnet',
-    desc:'Тестнет Polygon (замена Mumbai). Поддерживает мультикран с Ethereum Goerli.',
-    links:['https://faucet.polygon.technology/','https://mumbaifaucet.com/','https://faucet.quicknode.com/polygon/mumbai','https://faucet.paradigm.xyz/','https://testmatic.vercel.app/'],
-    reward:'2 MATIC/день', cooldown:'24ч', tags:['multi'] },
-
-  // ── BNB CHAIN ──
-  { id:'bnb1', name:'BNB Smart Chain Testnet', token:'BNB', type:'free', net:'testnet',
-    desc:'Официальный тестнет BSC. Discord-бот: в ветке #testnet-faucet2 отправь /faucet <адрес>.',
-    links:['https://testnet.binance.org/faucet-smart','https://faucet.triangleplatform.com/bnbsmartchain/testnet','https://faucet.quicknode.com/binance-smart-chain/bnb-testnet'],
-    reward:'0.3 BNB/день', cooldown:'24ч', tags:[] },
-
-  // ── SCROLL ──
-  { id:'scroll1', name:'Scroll Sepolia', token:'ETH', type:'free', net:'testnet',
-    desc:'zkEVM L2. Активная сеть с потенциальным аирдропом. Хорошо для набора on-chain активности.',
-    links:['https://docs.scroll.io/en/user-guide/faucet/','https://faucet.quicknode.com/scroll/sepolia'],
-    reward:'0.5 ETH/день', cooldown:'24ч', tags:['airdrop','hot'] },
-
-  // ── LINEA ──
-  { id:'linea1', name:'Linea Sepolia', token:'ETH', type:'free', net:'testnet',
-    desc:'zkEVM L2 от ConsenSys (MetaMask). Активная экосистема, ожидается аирдроп.',
-    links:['https://www.infura.io/faucet/linea','https://faucet.goerli.linea.build/'],
-    reward:'0.5 ETH/день', cooldown:'24ч', tags:['airdrop','hot'] },
-
-  // ── MONAD ──
-  { id:'monad1', name:'Monad Testnet', token:'MON', type:'free', net:'testnet',
-    desc:'Высокопроизводительный L1. Один из самых ожидаемых проектов 2025. Активность засчитывается для аирдропа.',
-    links:['https://faucet.monad.xyz/'],
-    reward:'1 MON/день', cooldown:'24ч', tags:['airdrop','hot'] },
-
-  // ── STARKNET ──
-  { id:'stark1', name:'StarkNet Sepolia', token:'ETH', type:'free', net:'testnet',
-    desc:'zkRollup L2. Активная экосистема. Взаимодействие может учитываться для будущих аирдропов.',
-    links:['https://starknet-faucet.vercel.app/','https://faucet.goerli.starknet.io/','https://www.starkswap.co/app/faucet','https://goerli.starkgate.starknet.io/'],
-    reward:'0.01 ETH', cooldown:'24ч', tags:['airdrop','hot'] },
-
-  // ── ZKSYNC ──
-  { id:'zk1', name:'zkSync Era Testnet', token:'ETH', type:'free', net:'testnet',
-    desc:'zkEVM от Matter Labs. Portal zkSync — официальный кран. Активность в тестнете важна.',
-    links:['https://portal.zksync.io/faucet'],
-    reward:'0.01 ETH', cooldown:'24ч', tags:['airdrop'] },
-
-  // ── AVALANCHE ──
-  { id:'avax1', name:'Avalanche Fuji', token:'AVAX', type:'free', net:'testnet',
-    desc:'Официальный тестнет Avalanche (Fuji). Выдаёт тестовые AVAX для разработки.',
-    links:['https://faucet.avax.network/'],
-    reward:'2 AVAX/день', cooldown:'24ч', tags:[] },
-
-  // ── FANTOM ──
-  { id:'ftm1', name:'Fantom Testnet', token:'FTM', type:'free', net:'testnet',
-    desc:'Официальный тестнет Fantom Opera. Chainlink также предоставляет кран для FTM.',
-    links:['https://faucet.fantom.network/','https://faucets.chain.link/fantom-testnet'],
-    reward:'1 FTM', cooldown:'24ч', tags:[] },
-
-  // ── BERACHAIN ──
-  { id:'bera1', name:'Berachain Artio', token:'BERA', type:'free', net:'testnet',
-    desc:'Инновационный L1 с механизмом Proof of Liquidity. Один из топ-тестнетов 2024-2025.',
-    links:['https://artio.faucet.berachain.com/'],
-    reward:'0.5 BERA', cooldown:'8ч', tags:['airdrop','hot'] },
-
-  // ── NEAR ──
-  { id:'near1', name:'NEAR Testnet', token:'NEAR', type:'free', net:'testnet',
-    desc:'При создании тестового аккаунта NEAR выдаётся автоматически 200 NEAR.',
-    links:['https://wallet.testnet.near.org/'],
-    reward:'200 NEAR', cooldown:'при регистрации', tags:[] },
-
-  // ── CARDANO ──
-  { id:'ada1', name:'Cardano Testnet', token:'ADA', type:'free', net:'testnet',
-    desc:'Официальный кран тестнета Cardano от команды разработчиков.',
-    links:['https://docs.cardano.org/cardano-testnet/tools/faucet'],
-    reward:'1000 ADA', cooldown:'24ч', tags:[] },
-
-  // ── ALGORAND ──
-  { id:'algo1', name:'Algorand Testnet', token:'ALGO', type:'free', net:'testnet',
-    desc:'Несколько официальных и партнёрских кранов для тестнета Algorand.',
-    links:['https://bank.testnet.algorand.network/','https://dispenser.testnet.aws.algodev.network/','https://testnet.algoexplorer.io/dispenser'],
-    reward:'10 ALGO', cooldown:'24ч', tags:[] },
-
-  // ── MANTLE ──
-  { id:'mnt1', name:'Mantle Testnet', token:'MNT', type:'free', net:'testnet',
-    desc:'L2 от BitDAO. Также принимает BitDAO (BIT) токены из Ethereum Goerli.',
-    links:['https://faucet.testnet.mantle.xyz/','https://www.incepthink.com/mantle/faucet'],
-    reward:'0.5 MNT', cooldown:'24ч', tags:['airdrop'] },
-
-  // ── CELO ──
-  { id:'celo1', name:'Celo Alfajores', token:'CELO', type:'free', net:'testnet',
-    desc:'Тестнет Celo — мобильной блокчейн-платформы с фокусом на DeFi.',
-    links:['https://celo.org/developers/faucet'],
-    reward:'5 CELO', cooldown:'24ч', tags:[] },
-
-  // ── CHAINLINK ──
-  { id:'link1', name:'Chainlink Testnet', token:'LINK', type:'free', net:'testnet',
-    desc:'Мультикран от Chainlink для получения тестовых LINK и нативных токенов.',
-    links:['https://faucets.chain.link/'],
-    reward:'20 LINK', cooldown:'24ч', tags:['multi'] },
-
-  // ── FLOW ──
-  { id:'flow1', name:'Flow Testnet', token:'FLOW', type:'free', net:'testnet',
-    desc:'Официальный кран тестнета Flow — блокчейна от Dapper Labs (NBA Top Shot).',
-    links:['https://testnet-faucet.onflow.org/'],
-    reward:'10 FLOW', cooldown:'24ч', tags:[] },
-
-  // ── GNOSIS ──
-  { id:'gno1', name:'Gnosis Chain', token:'xDAI', type:'free', net:'testnet',
-    desc:'Кран xDAI для Gnosis Chain. Stakely также предоставляет альтернативный кран.',
-    links:['https://gnosisfaucet.com/','https://stakely.io/en/faucet/gnosis-chain-xdai'],
-    reward:'0.01 xDAI', cooldown:'24ч', tags:[] },
-
-  // ── APTOS ──
-  { id:'apt1', name:'Aptos Devnet', token:'APT', type:'free', net:'testnet',
-    desc:'Официальный кран Aptos. Для тестирования Move-смарт-контрактов.',
-    links:['https://aptoslabs.com/testnet-faucet','https://aptos.dev/en/network/faucet'],
-    reward:'1 APT', cooldown:'нет', tags:[] },
-
-  // ── SUI ──
-  { id:'sui1', name:'Sui Testnet', token:'SUI', type:'free', net:'testnet',
-    desc:'Официальный кран Sui. Для взаимодействия с dApps и тестирования Move-контрактов.',
-    links:['https://faucet.sui.io/','https://faucet.triangleplatform.com/sui/testnet','https://bwarelabs.com/faucets/sui'],
-    reward:'1 SUI', cooldown:'нет', tags:[] },
-
-  // ── SOLANA ──
-  { id:'sol1', name:'Solana Devnet', token:'SOL', type:'free', net:'testnet',
-    desc:'Официальный кран Solana. Devnet — основная тестовая среда для разработчиков.',
-    links:['https://faucet.solana.com/','https://solfaucet.com/'],
-    reward:'2 SOL', cooldown:'нет', tags:[] },
-
-  // ── TON ──
-  { id:'ton1', name:'TON Testnet', token:'tTON', type:'free', net:'testnet',
-    desc:'Кран для тестнета TON через Telegram-бот. Нужен для разработки Telegram Mini Apps.',
-    links:['https://t.me/testgiver_ton_bot'],
-    reward:'5 tTON', cooldown:'нет', tags:[] },
-
-  // ── RIPPLE XRP ──
-  { id:'xrp1', name:'Ripple XRP Testnet', token:'XRP', type:'free', net:'testnet',
-    desc:'Официальный кран XRP Ledger для тестнета. Используется для разработки на XRPL.',
-    links:['https://xrpl.org/xrp-testnet-faucet.html'],
-    reward:'1000 XRP', cooldown:'нет', tags:[] },
-
-  // ── ASTAR ──
-  { id:'astar1', name:'Astar Shiden', token:'SDN', type:'free', net:'testnet',
-    desc:'Тестнет Astar Network на Kusama. Портал и сторонний кран.',
-    links:['https://portal.astar.network/#/astar/assets','https://www.as-faucet.xyz/shiden#'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── AURORA ──
-  { id:'aurora1', name:'Aurora Testnet', token:'ETH', type:'free', net:'testnet',
-    desc:'EVM-совместимый тестнет на базе NEAR Protocol.',
-    links:['https://aurora.dev/faucet'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── DOGECOIN ──
-  { id:'doge1', name:'Dogecoin Testnet', token:'DOGE', type:'free', net:'testnet',
-    desc:'Кран тестовой сети Dogecoin.',
-    links:['https://testnet-faucet.com/doge-testnet/'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── LITECOIN ──
-  { id:'ltc1', name:'Litecoin Testnet', token:'LTC', type:'free', net:'testnet',
-    desc:'Кран тестовой сети Litecoin.',
-    links:['https://testnet-faucet.com/ltc-testnet/'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── BITCOIN CASH ──
-  { id:'bch1', name:'Bitcoin Cash Testnet', token:'BCH', type:'free', net:'testnet',
-    desc:'Кран тестовой сети Bitcoin Cash.',
-    links:['https://tbch.googol.cash/'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── EVMOS ──
-  { id:'evmos1', name:'Evmos Testnet', token:'EVMOS', type:'free', net:'testnet',
-    desc:'EVM-совместимая цепочка на Cosmos SDK.',
-    links:['https://faucet.evmos.dev/'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── CRONOS ──
-  { id:'cro1', name:'Cronos Testnet', token:'CRO', type:'free', net:'testnet',
-    desc:'EVM-совместимый тестнет Crypto.com Chain.',
-    links:['https://cronos.org/faucet'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── OMNI NETWORK ──
-  { id:'omni1', name:'Omni Network', token:'OMNI', type:'free', net:'testnet',
-    desc:'Interoperability layer для Ethereum L2. Горячий тестнет 2024.',
-    links:['https://faucet.omni.network/'],
-    reward:'', cooldown:'', tags:['airdrop','hot'] },
-
-  // ── ZETACHAIN ──
-  { id:'zeta1', name:'ZetaChain', token:'tZETA', type:'free', net:'testnet',
-    desc:'Омничейн смарт-контракты. Несколько кранов от разных партнёров.',
-    links:['https://labs.zetachain.com/get-zeta','https://www.covalenthq.com/platform/faucet/','https://zeta-faucet.starksport.finance/','https://zetachain.faucetme.pro/'],
-    reward:'', cooldown:'', tags:['airdrop'] },
-
-  // ── SHARDEUM ──
-  { id:'shm1', name:'Shardeum', token:'SHM', type:'free', net:'testnet',
-    desc:'Линейно масштабируемый L1. Активный тестнет.',
-    links:['https://faucet-dapps.shardeum.org/'],
-    reward:'', cooldown:'', tags:['airdrop'] },
-
-  // ── STACKS ──
-  { id:'stx1', name:'Stacks Testnet', token:'STX', type:'free', net:'testnet',
-    desc:'Bitcoin L2 для смарт-контрактов. Кран через Stacks Explorer Sandbox.',
-    links:['https://explorer.stacks.co/sandbox/faucet?chain=testnet'],
-    reward:'500 STX', cooldown:'нет', tags:[] },
-
-  // ── QUAI NETWORK ──
-  { id:'quai1', name:'Quai Network', token:'QUAI', type:'free', net:'testnet',
-    desc:'Proof-of-Work L1 с мультичейн архитектурой.',
-    links:['https://faucet.quai.network/'],
-    reward:'', cooldown:'', tags:['airdrop'] },
-
-  // ── CONFLUX ──
-  { id:'cfx1', name:'Conflux Network', token:'CFX', type:'free', net:'testnet',
-    desc:'Tree-Graph консенсус. Высокая пропускная способность.',
-    links:['https://faucet.confluxnetwork.org/'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── IOTEX ──
-  { id:'iotx1', name:'IoTeX Testnet', token:'IOTX', type:'free', net:'testnet',
-    desc:'Блокчейн для IoT устройств. Официальный кран от разработчиков.',
-    links:['https://developers.iotex.io/utils/public-faucet'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── KYVE ──
-  { id:'kyve1', name:'KYVE Network', token:'KYVE', type:'free', net:'testnet',
-    desc:'Децентрализованное архивирование данных. Кран через приложение KYVE.',
-    links:['https://app.kyve.network/#/faucet'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── IMMUTABLE ──
-  { id:'imx1', name:'Immutable zkEVM', token:'tIMX', type:'free', net:'testnet',
-    desc:'Гейминг-фокусированный zkEVM. Кран через официальный Hub.',
-    links:['https://hub.immutable.com/faucet'],
-    reward:'', cooldown:'', tags:['airdrop'] },
-
-  // ── RARI CHAIN ──
-  { id:'rari1', name:'Rari Chain Testnet', token:'ETH', type:'free', net:'testnet',
-    desc:'NFT-фокусированный L3 на базе Arbitrum.',
-    links:['https://testnet.rarichain.org/faucet'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── OASIS ──
-  { id:'rose1', name:'Oasis Emerald', token:'ROSE', type:'free', net:'testnet',
-    desc:'Privacy-oriented L1. Тестнет с Emerald ParaTime.',
-    links:['https://ftp.cash/dashboard/faucet'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── KLAYTN ──
-  { id:'klay1', name:'Klaytn Baobab', token:'KLAY', type:'free', net:'testnet',
-    desc:'Тестнет Klaytn (Baobab). Разработан Kakao.',
-    links:['https://baobab.wallet.klaytn.foundation/faucet'],
-    reward:'5 KLAY', cooldown:'24ч', tags:[] },
-
-  // ── HEPTON ──
-  { id:'hte1', name:'Hepton', token:'HTE', type:'free', net:'testnet',
-    desc:'Новый EVM-совместимый тестнет.',
-    links:['https://faucet.hepton.io/'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── LAMINA1 ──
-  { id:'l1_1', name:'Lamina1', token:'L1', type:'free', net:'testnet',
-    desc:'Метавселенная блокчейн от Нила Стивенсона.',
-    links:['https://faucet-test.lamina1.network/'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── TRON ──
-  { id:'trx1', name:'Tron Nile Testnet', token:'TRX/USDT/BTC', type:'free', net:'testnet',
-    desc:'Тестнет Tron. Поддерживает TRX, BTT, USDT, JST, USDK, TRZ, WIN.',
-    links:['https://nileex.io/join/getJoinPage'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── ZILLIQA ──
-  { id:'zil1', name:'Zilliqa Testnet', token:'ZIL', type:'free', net:'testnet',
-    desc:'Шардированный блокчейн. Кран через официальный dev-кошелёк.',
-    links:['https://dev-wallet.zilliqa.com/faucet?network=testnet'],
-    reward:'', cooldown:'', tags:[] },
-
-  // ── ПЛАТНЫЕ ──
-  { id:'qn1', name:'QuickNode Faucet', token:'Multi', type:'paid', net:'testnet',
-    desc:'Профессиональный провайдер. Поддерживает Ethereum, Arbitrum, Optimism, Base, Polygon. Бесплатный tier для новых пользователей.',
-    links:['https://faucet.quicknode.com/'],
-    reward:'до 1 ETH', cooldown:'нет лимита (платно)', tags:['multi'] },
-
-  { id:'alc1', name:'Alchemy Faucets', token:'Multi', type:'paid', net:'testnet',
-    desc:'Требует регистрацию. Платный доступ снимает лимиты. Поддерживает Sepolia, Arbitrum, Optimism.',
-    links:['https://www.alchemy.com/faucets'],
-    reward:'до 5 ETH/день', cooldown:'24ч free / нет paid', tags:['multi'] },
-
-  { id:'tend1', name:'Tenderly Faucet', token:'Multi', type:'paid', net:'testnet',
-    desc:'Инструмент для разработчиков. Виртуальные тестнеты с неограниченными токенами.',
-    links:['https://faucet.tenderly.co/'],
-    reward:'неограниченно', cooldown:'нет', tags:['multi'] },
-
-  { id:'inf1', name:'Infura Faucet', token:'sETH', type:'paid', net:'testnet',
-    desc:'Кран от Infura (MetaMask). Требует регистрацию. Надёжный и стабильный провайдер.',
-    links:['https://www.infura.io/faucet/sepolia'],
-    reward:'0.5 ETH/день', cooldown:'24ч', tags:[] },
-];
-
-// ═══════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════
-let editMode = false;
-let currentFilter = 'all';
-let currentSort = 'name';
-let faucets = [];
-let currentUser = null;
-let isAdmin = false;
-let favoritesSet = new Set(); // faucetId
-let linkFavoritesSet = new Set(); // key: faucetId|url
-let pendingSuggestions = [];
-
-const ADMIN_UID = "SAkz4mdW9reDaIsvqigCNZhEKJR2";
-
-// Firestore collections
+// Collections
 const COL_FAUCETS = 'faucets';
 const COL_SUGGESTIONS = 'faucet_suggestions';
 
-// Firebase init (same as index.html)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  TwitterAuthProvider,
-  signInWithPopup,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {
-  getFirestore,
-  initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  serverTimestamp,
-  increment,
-  runTransaction,
-  limit
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// Admin UID
+const ADMIN_UID = 'your-admin-uid-here';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk",
-  authDomain: "testnet-hub.firebaseapp.com",
-  projectId: "testnet-hub",
-  storageBucket: "testnet-hub.firebasestorage.app",
-  messagingSenderId: "497813176653",
-  appId: "1:497813176653:web:089188fdd1555d76cd7704"
-};
+// Global state
+let faucets = [];
+let pendingSuggestions = [];
+let currentUser = null;
+let isAdmin = false;
+let favoritesSet = new Set();
+let linkFavoritesSet = new Set();
+let currentFilter = 'all';
+let currentSort = 'name';
+let editMode = false;
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-let db;
-try {
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+// Embedded defaults (shown if DB empty or permission denied)
+const DEFAULT_FAUCETS = [
+  {
+    id: 'ethereum-sepolia',
+    name: 'Ethereum Sepolia Faucet',
+    token: 'ETH',
+    type: 'free',
+    net: 'testnet',
+    desc: 'Official Ethereum Sepolia testnet faucet',
+    links: ['https://sepoliafaucet.com/'],
+    reward: '0.5 ETH',
+    cooldown: '24ч',
+    tags: ['official', 'hot']
+  },
+  {
+    id: 'polygon-mumbai',
+    name: 'Polygon Mumbai Faucet',
+    token: 'MATIC',
+    type: 'free',
+    net: 'testnet',
+    desc: 'Get test MATIC tokens on Mumbai network',
+    links: ['https://faucet.polygon.technology/'],
+    reward: '0.2 MATIC',
+    cooldown: '1ч',
+    tags: ['official']
+  }
+];
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function safeText(str) {
+  if (!str) return '';
+  return String(str).replace(/[<>'"&]/g, function(c) {
+    return { '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;', '&':'&amp;' }[c];
   });
-} catch (e) {
-  db = getFirestore(app);
 }
 
-// Provide globals for other modules (reagents.js expects these)
-window.db = db;
-window.auth = auth;
-window.__firestoreExports = {
-  collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, serverTimestamp, increment, runTransaction
-};
-window.__authExports = { onAuthStateChanged, signOut };
+function normalizeUrl(url) {
+  if (!url) return '';
+  url = String(url).trim();
+  if (!url) return '';
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  return url;
+}
 
-function toast(msg) {
-  // Minimal toast fallback
+function linkFavKey(faucetId, url) {
+  return `${faucetId}|${url}`;
+}
+
+function hash32(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+function getFaviconUrlFromLink(url) {
   try {
-    if (typeof window.showToast === 'function') return window.showToast(msg);
-  } catch(_) {}
-  console.log(msg);
+    const domain = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+  } catch(_) {
+    return '';
+  }
 }
 
-function normalizeUrl(u) {
-  if (!u) return '';
-  const raw = String(u).trim();
-  if (!raw) return '';
-  if (/^https?:\/\//i.test(raw)) return raw;
-  return 'https://' + raw;
+function getNetworkIcon(token, name) {
+  if (!token && !name) return 'fas fa-faucet';
+  const t = (token || '').toLowerCase();
+  const n = (name || '').toLowerCase();
+  if (t.includes('eth') || n.includes('ethereum')) return 'fab fa-ethereum';
+  if (t.includes('btc') || n.includes('bitcoin')) return 'fab fa-bitcoin';
+  if (t.includes('sol') || n.includes('solana')) return 'fas fa-sun';
+  if (t.includes('matic') || n.includes('polygon')) return 'fab fa-polygon';
+  if (t.includes('bnb') || n.includes('bnb')) return 'fab fa-ethereum';
+  if (t.includes('avax') || n.includes('avalanche')) return 'fas fa-mountain';
+  if (t.includes('ftm') || n.includes('fantom')) return 'fas fa-ghost';
+  if (t.includes('arb') || n.includes('arbitrum')) return 'fas fa-cube';
+  if (t.includes('opt') || n.includes('optimism')) return 'fas fa-circle';
+  if (t.includes('base') || n.includes('base')) return 'fas fa-layer-group';
+  return 'fas fa-faucet';
 }
 
-function safeText(s) {
-  return String(s || '').replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-}
-
-function ratingToColor(r) {
-  const v = Math.max(0, Math.min(10, Number(r) || 0));
+function ratingToColor(val) {
+  const v = Math.max(0, Math.min(10, Number(val) || 0));
   const hue = (v / 10) * 120; // 0 red -> 120 green
-  return `hsl(${hue} 85% 55%)`;
+  return 'hsl(' + hue + ' 85% 55%)';
 }
 window.ratingToColor = ratingToColor;
 
@@ -1056,124 +682,12 @@ function ratingClass(avg) {
   return 'rating-' + v;
 }
 
-function getFaviconUrlFromLink(url) {
-  try {
-    const u = new URL(url);
-    const domain = u.hostname;
-    if (!domain) return '';
-    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
-  } catch (_) {
-    return '';
-  }
-}
-
-function linkFavKey(faucetId, url) {
-  return `${String(faucetId || '')}|${String(url || '')}`;
-}
-
-function hash32(str) {
-  // simple stable hash for doc IDs
-  let h = 5381;
-  for (let i = 0; i < str.length; i++) {
-    h = ((h << 5) + h) ^ str.charCodeAt(i);
-  }
-  return (h >>> 0).toString(16);
-}
-
-// ═══════════════════════════════════════════
-// RENDER
-// ═══════════════════════════════════════════
-function getNetworkIcon(token, name) {
-  const tokenLower = (token || '').toLowerCase();
-  const nameLower = (name || '').toLowerCase();
-  
-  // Bitcoin
-  if (tokenLower === 'btc' || nameLower.includes('bitcoin')) return 'fab fa-bitcoin';
-  
-  // Ethereum
-  if (tokenLower === 'eth' || nameLower.includes('ethereum')) return 'fab fa-ethereum';
-  
-  // BNB Chain
-  if (tokenLower === 'bnb' || nameLower.includes('binance') || nameLower.includes('bsc')) return 'fas fa-coins';
-  
-  // Polygon
-  if (tokenLower === 'matic' || nameLower.includes('polygon')) return 'fas fa-shapes';
-  
-  // Arbitrum
-  if (nameLower.includes('arbitrum') || nameLower.includes('arb')) return 'fas fa-cube';
-  
-  // Optimism
-  if (nameLower.includes('optimism') || nameLower.includes('op')) return 'fas fa-rocket';
-  
-  // Base
-  if (nameLower.includes('base')) return 'fas fa-layer-group';
-  
-  // Solana
-  if (tokenLower === 'sol' || nameLower.includes('solana')) return 'fas fa-sun';
-  
-  // Avalanche
-  if (tokenLower === 'avax' || nameLower.includes('avalanche')) return 'fas fa-mountain';
-  
-  // Cardano
-  if (tokenLower === 'ada' || nameLower.includes('cardano')) return 'fas fa-gem';
-  
-  // Ripple
-  if (tokenLower === 'xrp' || nameLower.includes('ripple')) return 'fas fa-water';
-  
-  // StarkNet
-  if (nameLower.includes('starknet') || nameLower.includes('stark')) return 'fas fa-star';
-  
-  // zkSync
-  if (nameLower.includes('zksync')) return 'fas fa-infinity';
-  
-  // Linea
-  if (nameLower.includes('linea')) return 'fas fa-pencil-ruler';
-  
-  // Scroll
-  if (nameLower.includes('scroll')) return 'fas fa-scroll';
-  
-  // Fantom
-  if (tokenLower === 'ftm' || nameLower.includes('fantom')) return 'fas fa-ghost';
-  
-  // Celo
-  if (tokenLower === 'celo' || nameLower.includes('celo')) return 'fas fa-mobile-alt';
-  
-  // Gnosis
-  if (tokenLower === 'xdai' || nameLower.includes('gnosis')) return 'fas fa-eye';
-  
-  // Aptos
-  if (tokenLower === 'apt' || nameLower.includes('aptos')) return 'fas fa-compass';
-  
-  // Sui
-  if (tokenLower === 'sui' || nameLower.includes('sui')) return 'fas fa-circle';
-  
-  // TON
-  if (tokenLower === 'ton' || nameLower.includes('telegram')) return 'fab fa-telegram';
-  
-  // Tron
-  if (tokenLower === 'trx' || nameLower.includes('tron')) return 'fas fa-bolt';
-  
-  // Cosmos ecosystem
-  if (tokenLower === 'atom' || nameLower.includes('cosmos')) return 'fas fa-atom';
-  
-  // Default
-  return 'fas fa-faucet';
-}
-function getGroupedSections() {
-  var sections = [
-    { key:'free_testnet',  label: (window.currentLang === 'en' ? 'Free testnet faucets' : 'Бесплатные краны тестнетов'),  dotColor:'#34d399', glowColor:'rgba(52,211,153,0.6)', badgeType:'testnet', filter: function(f){ return f.type==='free' && f.net==='testnet'; } },
-    { key:'paid',          label: (window.currentLang === 'en' ? 'Paid / Pro faucets' : 'Платные / Pro краны'),          dotColor:'#fbbf24', glowColor:'rgba(251,191,36,0.6)', badgeType:'paid',    filter: function(f){ return f.type==='paid'; } },
-    { key:'free_mainnet',  label: (window.currentLang === 'en' ? 'Mainnet / devnet faucets' : 'Краны мейннетов / devnet'),     dotColor:'#a78bfa', glowColor:'rgba(167,139,250,0.6)',badgeType:'mainnet', filter: function(f){ return f.type==='free' && f.net==='mainnet'; } },
-  ];
-  return sections;
-}
-
 function renderBadge(tag) {
   const isEn = (window.currentLang === 'en');
   var map = { hot:(isEn ? '🔥 HOT' : '🔥 HOT'), airdrop:(isEn ? '⭐ Airdrop' : '⭐ Аирдроп'), multi:(isEn ? '🔗 Multi' : '🔗 Мульти') };
   var cls = { hot:'badge-hot', airdrop:'badge-airdrop', multi:'badge-multi' };
   if (!map[tag]) return '';
-  return '<span class="badge '+cls[tag]+'" style="margin-left:4px;">'+map[tag]+'</span>';
+  return '<span class="badge '+cls[tag]+'">'+map[tag]+'</span>';
 }
 
 function renderCard(f) {
@@ -1184,21 +698,20 @@ function renderCard(f) {
   var extraBadges = (f.tags||[]).map(renderBadge).join('');
 
   var linksHtml = (f.links||[]).map(function(url) {
-    var short = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    const u = safeText(url);
-    const k = linkFavKey(f.id, url);
-    const favOn = linkFavoritesSet.has(k);
-    const favCls = favOn ? 'fav-active' : ''
+    const short = url.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+    const favKey = linkFavKey(f.id, url);
+    const favOn = linkFavoritesSet.has(favKey);
+    const favCls = favOn ? 'fav-active' : '';
     const favIcon = favOn ? 'fas' : 'far';
     const favTitle = favOn ? (isEn?'Remove from favorites':'Убрать из избранного') : (isEn?'Add to favorites':'В избранное');
     return '<div style="display:flex;align-items:center;gap:6px;">'
       + '<button class="fav-link-btn '+favCls+'" title="'+favTitle+'" onclick="event.preventDefault(); event.stopPropagation(); window.toggleFavoriteLink(\''+safeText(f.id)+'\', \''+safeText(url)+'\')"><i class="'+favIcon+' fa-star"></i></button>'
-      + '<a href="'+u+'" target="_blank" rel="noopener noreferrer" class="faucet-link" onclick="window.trackClick(\''+safeText(f.id)+'\');"><i class="fas fa-external-link-alt"></i>'+safeText(short)+'</a>'
+      + '<a href="'+url+'" target="_blank" rel="noopener noreferrer" class="faucet-link" onclick="window.trackClick(\''+safeText(f.id)+'\');"><i class="fas fa-external-link-alt"></i>'+safeText(short)+'</a>'
       + '</div>';
   }).join('');
 
   var chips = '';
-  if (f.reward)   chips += '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(0,0,0,0.3);color:#cbd5e1;margin-right:4px;"><i class="fas fa-coins" style="color:#fbbf24;font-size:9px;"></i>'+f.reward+'</span>';
+  if (f.reward) chips += '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;background:rgba(245,158,11,0.15);color:#fbbf24;"><i class="fas fa-coins" style="color:#fbbf24;font-size:9px;"></i>'+f.reward+'</span>';
   if (f.cooldown) chips += '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;background:rgba(0,0,0,0.2);color:#94a3b8;"><i class="fas fa-clock" style="font-size:9px;"></i>'+f.cooldown+'</span>';
 
   const ratingAvg = Number(f.ratingAvg || 0);
@@ -1278,6 +791,15 @@ function updateCounts() {
   document.getElementById('totalCount').textContent = isEn
     ? (faucets.length + ' networks · ' + total + ' faucets')
     : (faucets.length + ' сетей · ' + total + ' кранов');
+}
+
+function getGroupedSections() {
+  var sections = [
+    { key:'free_testnet',  label: (window.currentLang === 'en' ? 'Free testnet faucets' : 'Бесплатные краны тестнетов'),  dotColor:'#34d399', glowColor:'rgba(52,211,153,0.6)', badgeType:'testnet', filter: function(f){ return f.type==='free' && f.net==='testnet'; } },
+    { key:'paid',          label: (window.currentLang === 'en' ? 'Paid / Pro faucets' : 'Платные / Pro краны'),          dotColor:'#fbbf24', glowColor:'rgba(251,191,36,0.6)', badgeType:'paid',    filter: function(f){ return f.type==='paid'; } },
+    { key:'free_mainnet',  label: (window.currentLang === 'en' ? 'Mainnet / devnet faucets' : 'Краны мейннетов / devnet'),     dotColor:'#a78bfa', glowColor:'rgba(167,139,250,0.6)',badgeType:'mainnet', filter: function(f){ return f.type==='free' && f.net==='mainnet'; } },
+  ];
+  return sections;
 }
 
 // ═══════════════════════════════════════════
@@ -1411,15 +933,15 @@ async function saveFaucet() {
     reward: document.getElementById('f_reward').value.trim(),
     cooldown: document.getElementById('f_cooldown').value.trim(),
     tags,
-    updatedAt: serverTimestamp()
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
   if (id) {
-    await updateDoc(doc(db, COL_FAUCETS, id), payload);
+    await db.collection(COL_FAUCETS).doc(id).update(payload);
   } else {
-    const ref = await addDoc(collection(db, COL_FAUCETS), {
+    const ref = await db.collection(COL_FAUCETS).add({
       ...payload,
-      createdAt: serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       ratingAvg: 0,
       ratingCount: 0,
       clickCount: 0
@@ -1439,7 +961,7 @@ async function deleteFaucet(id) {
   if (!isAdmin) return;
   const isEn = (window.currentLang === 'en');
   if (!confirm(isEn ? 'Delete this faucet?' : 'Удалить этот кран?')) return;
-  await deleteDoc(doc(db, COL_FAUCETS, id));
+  await db.collection(COL_FAUCETS).doc(id).delete();
   await loadFaucetsFromFirestore();
 }
 window.deleteFaucet = deleteFaucet;
@@ -1468,18 +990,17 @@ async function submitSuggestion() {
     alert((window.currentLang === 'en') ? 'Fill name, token and link' : 'Заполните название, токен и ссылку');
     return;
   }
-  await addDoc(collection(db, COL_SUGGESTIONS), {
+  await db.collection(COL_SUGGESTIONS).add({
     name,
     token,
-    link,
+    links: [link],
     logoUrl: normalizeUrl(document.getElementById('s_logo').value.trim()),
     desc: document.getElementById('s_desc').value.trim(),
     type: document.getElementById('s_type').value,
     net: document.getElementById('s_net').value,
     status: 'pending',
-    submittedBy: currentUser.uid,
-    submittedEmail: currentUser.email || '',
-    submittedAt: serverTimestamp()
+    userId: currentUser.uid,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
   closeSuggestModal();
   document.getElementById('s_name').value = '';
@@ -1507,28 +1028,28 @@ function closeLoginModal() {
 window.openLoginModal = openLoginModal;
 window.closeLoginModal = closeLoginModal;
 window.loginGoogle = async function() {
-  try { await signInWithPopup(auth, new GoogleAuthProvider()); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
+  try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
   catch(e) { alert(e.message); }
 };
 window.loginTwitter = async function() {
-  try { await signInWithPopup(auth, new TwitterAuthProvider()); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
+  try { await auth.signInWithPopup(new firebase.auth.TwitterAuthProvider()); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
   catch(e) { alert(e.message); }
 };
 window.loginEmail = async function() {
   const email = (document.getElementById('emailInput')?.value || '').trim();
   const pass  = (document.getElementById('passInput')?.value || '').trim();
   if (!email || !pass) { alert((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); return; }
-  try { await signInWithEmailAndPassword(auth, email, pass); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
+  try { await auth.signInWithEmailAndPassword(email, pass); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
   catch(e) { alert(e.message); }
 };
 window.registerEmail = async function() {
   const email = (document.getElementById('emailInput')?.value || '').trim();
   const pass  = (document.getElementById('passInput')?.value || '').trim();
   if (!email || !pass) { alert((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); return; }
-  try { await createUserWithEmailAndPassword(auth, email, pass); closeLoginModal(); toast((window.currentLang==='en')?'Account created':'Аккаунт создан'); }
+  try { await auth.createUserWithEmailAndPassword(email, pass); closeLoginModal(); toast((window.currentLang==='en')?'Account created':'Аккаунт создан'); }
   catch(e) { alert(e.message); }
 };
-window.logout = function() { signOut(auth); };
+window.logout = function() { auth.signOut(); };
 
 document.getElementById('loginModal').addEventListener('click', function(e) {
   if (e.target === this) closeLoginModal();
@@ -1569,15 +1090,15 @@ async function loadFavorites() {
   if (currentUser) {
     // Load faucet-level favorites (legacy)
     try {
-      const favSnap = await getDoc(doc(db, 'users', currentUser.uid, 'faucetFavorites', 'list'));
-      if (favSnap.exists()) {
+      const favSnap = await db.collection('users').doc(currentUser.uid).collection('faucetFavorites').doc('list').get();
+      if (favSnap.exists) {
         favSnap.data().ids?.forEach(id => favoritesSet.add(id));
       }
     } catch(e) { console.warn('Failed to load faucet favorites', e); }
     
     // Load link-level favorites
     try {
-      const linkSnap = await getDocs(collection(db, 'users', currentUser.uid, 'linkFavorites'));
+      const linkSnap = await db.collection('users').doc(currentUser.uid).collection('linkFavorites').get();
       linkSnap.forEach(doc => {
         linkFavoritesSet.add(doc.id);
       });
@@ -1585,8 +1106,8 @@ async function loadFavorites() {
     
     // Load user stats for footer
     try {
-      const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
-      if (userSnap.exists()) {
+      const userSnap = await db.collection('users').doc(currentUser.uid).get();
+      if (userSnap.exists) {
         const userData = userSnap.data();
         // Update footer counters
         const footerUserCount = document.getElementById('footerUserCount');
@@ -1609,7 +1130,7 @@ async function loadFavorites() {
 
 async function loadFaucetsFromFirestore() {
   try {
-    const snap = await getDocs(query(collection(db, COL_FAUCETS), orderBy('name')));
+    const snap = await db.collection(COL_FAUCETS).orderBy('name').get();
     faucets = [];
     snap.forEach((d) => {
       const data = d.data();
@@ -1683,23 +1204,23 @@ async function loadPendingSuggestions() {
   if (!isAdmin) return;
   try {
     // Avoid composite index requirement: fetch by status only, sort client-side
-    const snap = await getDocs(query(collection(db, COL_SUGGESTIONS), where('status', '==', 'pending')));
+    const snap = await db.collection(COL_SUGGESTIONS).where('status', '==', 'pending').get();
     pendingSuggestions = [];
     for (const doc of snap.docs) {
       const data = doc.data();
       let userInfo = {
         userName: 'Anonymous',
-        userEmail: data.submittedEmail || data.userId,
+        userEmail: data.userId || 'Unknown',
         userPhoto: 'https://www.gravatar.com/avatar/?d=mp'
       };
       
       // Try to get user info from users collection
       try {
-        const userSnap = await getDoc(doc(db, 'users', data.userId));
-        if (userSnap.exists()) {
+        const userSnap = await db.collection('users').doc(data.userId).get();
+        if (userSnap.exists) {
           const userData = userSnap.data();
           userInfo.userName = userData.displayName || userData.email?.split('@')[0] || 'Anonymous';
-          userInfo.userEmail = userData.email || data.submittedEmail || data.userId;
+          userInfo.userEmail = userData.email || data.userId || 'Unknown';
           userInfo.userPhoto = userData.photoURL || userInfo.userPhoto;
         }
       } catch(e) { console.warn('Failed to load user info for', data.userId); }
@@ -1729,9 +1250,16 @@ async function loadPendingSuggestions() {
 }
 
 function togglePendingPanel() {
-  const p = document.getElementById('pendingPanel');
-  p.classList.toggle('open');
-  if (p.classList.contains('open')) loadPendingSuggestions();
+  const panel = document.getElementById('pendingPanel');
+  if (panel) {
+    const isVisible = panel.style.display !== 'none';
+    if (isVisible) {
+      panel.style.display = 'none';
+    } else {
+      panel.style.display = 'block';
+      loadPendingSuggestions();
+    }
+  }
 }
 window.togglePendingPanel = togglePendingPanel;
 
@@ -1742,66 +1270,75 @@ function renderPendingPanel() {
   const isEn = (window.currentLang === 'en');
   
   if (!pendingSuggestions.length) {
-    list.innerHTML = '<div style="color:#64748b;font-size:12px;text-align:center;padding:20px;">'+(isEn ? 'No pending suggestions' : 'Нет предложений')+'</div>';
+    list.innerHTML = '<div style="color:#64748b;font-size:12px;">'+(isEn ? 'No pending suggestions' : 'Нет предложений')+'</div>';
     return;
   }
   
   const html = pendingSuggestions.map(s => {
     const links = (s.links || []).map(url => 
-      `<a href="${url}" target="_blank" class="text-blue-400 hover:underline text-xs block mb-1">${url}</a>`
-    ).join('');
+      '<a href="' + url + '" target="_blank" class="text-blue-400 hover:underline text-xs">' + url + '</a>'
+    ).join('<br>');
     
-    const userInfo = `
-      <div class="flex items-center gap-3 mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-        <img src="${s.userPhoto}" 
-             class="w-10 h-10 rounded-full border-2 border-slate-600" alt="User avatar"
-             onerror="this.src='https://www.gravatar.com/avatar/?d=mp'">
-        <div class="flex-1">
-          <div class="text-sm font-semibold text-white">${s.userName}</div>
-          <div class="text-xs text-slate-400">${s.userEmail}</div>
-        </div>
-        <div class="text-xs text-slate-500">
-          ${new Date(s.createdAt?.toDate?.() || s.createdAt).toLocaleDateString()}
-        </div>
-      </div>
-    `;
+    // Create preview card
+    const typeClass = (s.type || 'free') + ' ' + (s.net || 'testnet');
+    const badgeType = '<span class="badge badge-' + (s.type || 'free') + '">' + (s.type === 'free' ? (isEn ? 'FREE' : 'БЕСПЛАТНО') : (isEn ? 'PAID' : 'ПЛАТНЫЙ')) + '</span>';
+    const badgeNet  = '<span class="badge badge-' + (s.net || 'testnet') + '" style="margin-left:4px;">' + (s.net === 'testnet' ? (isEn ? 'Testnet' : 'Тестнет') : (isEn ? 'Mainnet' : 'Мейннет')) + '</span>';
     
-    return `
-      <div class="border border-slate-700 rounded-lg p-4 mb-4 bg-slate-900/50 hover:bg-slate-900/70 transition-colors">
-        <div class="flex justify-between items-start mb-3">
-          <div>
-            <div class="font-bold text-base text-white mb-1">${s.name}</div>
-            <div class="flex gap-2 text-xs">
-              <span class="px-2 py-1 bg-slate-700/50 rounded text-slate-300">${s.token || 'N/A'}</span>
-              <span class="px-2 py-1 bg-blue-500/20 rounded text-blue-400">${s.type || 'unknown'}</span>
-              <span class="px-2 py-1 bg-purple-500/20 rounded text-purple-400">${s.net || 'unknown'}</span>
-            </div>
-          </div>
-        </div>
-        
-        ${userInfo}
-        
-        ${s.desc ? `<div class="text-sm text-slate-300 mt-3 p-3 bg-slate-800/30 rounded border-l-4 border-blue-500">${s.desc}</div>` : ''}
-        
-        ${links ? `<div class="mt-3"><div class="text-xs text-slate-500 mb-2">Links:</div>${links}</div>` : ''}
-        
-        <div class="flex gap-2 mt-4">
-          <button onclick="approveSuggestion('${s.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg transition-colors flex items-center gap-2">
-            <i class="fas fa-check"></i> ${isEn ? 'Approve' : 'Одобрить'}
-          </button>
-          <button onclick="deleteSuggestion('${s.id}')" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm rounded-lg transition-colors flex items-center gap-2">
-            <i class="fas fa-trash"></i> ${isEn ? 'Delete' : 'Удалить'}
-          </button>
-        </div>
-      </div>
+    const previewCard = '<div class="faucet-card ' + typeClass + '" style="margin:10px 0;border:2px dashed rgba(34,211,238,0.3);">' +
+      '<div style="padding:12px;">' +
+        '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">' +
+          '<div class="faucet-logo-placeholder"><i class="fas fa-faucet"></i></div>' +
+          '<div style="flex:1;">' +
+            '<div style="font-weight:700;color:#f1f5f9;font-size:14px;margin-bottom:4px;">' + (s.name || 'Unnamed') + '</div>' +
+            '<div style="display:flex;gap:4px;margin-bottom:6px;">' + badgeType + badgeNet + '</div>' +
+            (s.desc ? '<div style="font-size:12px;color:#94a3b8;line-height:1.4;">' + s.desc + '</div>' : '') +
+          '</div>' +
+        '</div>' +
+        (links ? '<div style="margin-top:8px;">' + links + '</div>' : '') +
+      '</div>' +
+    '</div>';
+    
+    return '<div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;background:rgba(30,37,56,0.35);">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+        '<img src="' + s.userPhoto + '" style="width:32px;height:32px;border-radius:50%;" alt="User" onerror="this.src=\'https://www.gravatar.com/avatar/?d=mp\'">' +
+        '<div style="flex:1;">' +
+          '<div style="font-weight:600;color:#f1f5f9;font-size:13px;">' + s.userName + '</div>' +
+          '<div style="font-size:11px;color:#94a3b8;">' + s.userEmail + '</div>' +
+        '</div>' +
+        '<div style="font-size:10px;color:#64748b;">' + new Date(s.createdAt?.toDate?.() || s.createdAt).toLocaleDateString() + '</div>' +
+      '</div>' +
+      
+      '<div style="margin-bottom:8px;">' +
+        '<div style="font-weight:600;color:#f1f5f9;margin-bottom:4px;">' + (s.name || 'Unnamed') + '</div>' +
+        '<div style="font-size:11px;color:#94a3b8;">' + (s.token || '') + ' • ' + (s.type || '') + ' • ' + (s.net || '') + '</div>' +
+      '</div>' +
+      
+      // Preview card
+      '<div style="margin:8px 0;">' +
+        '<div style="font-size:11px;color:#64748b;margin-bottom:4px;" data-translate="faucets_admin_preview">Предпросмотр крана:</div>' +
+        previewCard +
+      '</div>' +
+      
+      (s.desc ? '<div style="font-size:12px;color:#cbd5e1;margin-bottom:8px;">' + s.desc + '</div>' : '') +
+      
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">' +
+        '<button class="ab-btn ab-btn-emerald" onclick="approveSuggestion(\'' + s.id + '\')"><i class="fas fa-check"></i> ' + (isEn ? 'Approve' : 'Одобрить') + '</button>' +
+        '<button class="ab-btn ab-btn-cyan" onclick="editSuggestion(\'' + s.id + '\')"><i class="fas fa-edit"></i> ' + (isEn ? 'Edit' : 'Изменить') + '</button>' +
+        '<button class="ab-btn ab-btn-purple" onclick="awardReagents(\'' + s.userId + '\', \'' + s.id + '\')"><i class="fas fa-coins"></i> ' + (isEn ? 'Award RGT' : 'Начислить RGT') + '</button>' +
+        '<button class="ab-btn ab-btn-red" onclick="deleteSuggestion(\'' + s.id + '\')"><i class="fas fa-trash"></i> ' + (isEn ? 'Delete' : 'Удалить') + '</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  
+  list.innerHTML = html;
 }
 
 // Suggestion management functions
 window.approveSuggestion = async function(id) {
   if (!isAdmin) return;
-  const sref = doc(db, COL_SUGGESTIONS, id);
-  const snap = await getDoc(sref);
-  if (!snap.exists()) return;
+  const sref = db.collection(COL_SUGGESTIONS).doc(id);
+  const snap = await sref.get();
+  if (!snap.exists) return;
   const s = snap.data();
   const faucetPayload = {
     name: s.name || '',
@@ -1812,38 +1349,91 @@ window.approveSuggestion = async function(id) {
     links: (s.links || []).map(normalizeUrl).filter(Boolean),
     logoUrl: s.logoUrl || '',
     tags: [],
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     ratingAvg: 0,
     ratingCount: 0,
     clickCount: 0
   };
-  await addDoc(collection(db, COL_FAUCETS), faucetPayload);
-  await updateDoc(sref, { status: 'approved', approvedAt: serverTimestamp(), approvedBy: currentUser.uid });
+  await db.collection(COL_FAUCETS).add(faucetPayload);
+  await sref.update({ status: 'approved', approvedAt: firebase.firestore.FieldValue.serverTimestamp(), approvedBy: currentUser.uid });
   toast((window.currentLang==='en')?'Approved':'Одобрено');
   await loadPendingSuggestions();
   await loadFaucetsFromFirestore();
 };
 
+window.editSuggestion = function(id) {
+  const s = pendingSuggestions.find(item => item.id === id);
+  if (!s) return;
+  
+  // Fill the add modal with suggestion data
+  document.getElementById('editId').value = '';
+  document.getElementById('f_name').value = s.name || '';
+  document.getElementById('f_token').value = s.token || '';
+  document.getElementById('f_desc').value = s.desc || '';
+  document.getElementById('f_links').value = (s.links || []).join('\n');
+  document.getElementById('f_logo').value = s.logoUrl || '';
+  document.getElementById('f_type').value = s.type || 'free';
+  document.getElementById('f_net').value = s.net || 'testnet';
+  document.getElementById('f_reward').value = '';
+  document.getElementById('f_cooldown').value = '';
+  document.getElementById('f_tags').value = '';
+  
+  document.getElementById('modalTitle').textContent = 'Редактировать предложение';
+  document.getElementById('addFaucetModal').classList.add('open');
+};
+
+window.awardReagents = async function(userId, suggestionId) {
+  if (!isAdmin) return;
+  const isEn = (window.currentLang === 'en');
+  const amount = prompt(isEn ? 'Enter RGT amount to award:' : 'Введите количество RGT для начисления:', '100');
+  if (!amount || isNaN(amount)) return;
+  
+  try {
+    // Add reagents transaction logic here
+    await db.collection('users').doc(userId).collection('reagents').add({
+      amount: parseInt(amount),
+      type: 'suggestion_bonus',
+      reason: 'faucet_suggestion',
+      suggestionId: suggestionId,
+      awardedBy: currentUser.uid,
+      awardedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    await db.collection(COL_SUGGESTIONS).doc(suggestionId).update({
+      awarded: true,
+      awardedAmount: parseInt(amount),
+      awardedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    toast(isEn ? `Awarded ${amount} RGT` : `Начислено ${amount} RGT`);
+    await loadPendingSuggestions();
+  } catch(e) {
+    console.error('Failed to award reagents:', e);
+    toast(isEn ? 'Failed to award RGT' : 'Не удалось начислить RGT');
+  }
+};
+
 window.deleteSuggestion = async function(id) {
   if (!isAdmin) return;
   if (!confirm((window.currentLang==='en')?'Delete suggestion?':'Удалить предложение?')) return;
-  await deleteDoc(doc(db, COL_SUGGESTIONS, id));
+  await db.collection(COL_SUGGESTIONS).doc(id).delete();
   toast((window.currentLang==='en')?'Deleted':'Удалено');
   await loadPendingSuggestions();
 };
+
 // Favorites
 window.toggleFavoriteLink = async function(faucetId, url) {
   if (!faucetId || !url) return;
   const key = linkFavKey(faucetId, url);
   if (currentUser) {
-    const id = `${String(faucetId).slice(0,40)}_${hash32(url)}`;
-    const ref = doc(db, 'users', currentUser.uid, 'faucetLinkFavorites', id);
+    const id = String(faucetId).slice(0,40) + '_' + hash32(url);
+    const ref = db.collection('users').doc(currentUser.uid).collection('linkFavorites').doc(id);
     if (linkFavoritesSet.has(key)) {
-      await deleteDoc(ref);
+      await ref.delete();
       linkFavoritesSet.delete(key);
     } else {
-      await setDoc(ref, { faucetId, url, createdAt: serverTimestamp() }, { merge: true });
+      await ref.set({ faucetId, url, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
       linkFavoritesSet.add(key);
     }
   } else {
@@ -1859,7 +1449,7 @@ window.toggleFavoriteLink = async function(faucetId, url) {
 window.trackClick = async function(faucetId) {
   try {
     if (!faucetId) return;
-    await updateDoc(doc(db, COL_FAUCETS, faucetId), { clickCount: increment(1) });
+    await db.collection(COL_FAUCETS).doc(faucetId).update({ clickCount: firebase.firestore.FieldValue.increment(1) });
   } catch(_) {}
 };
 
@@ -1880,8 +1470,8 @@ async function openRatingModal(faucetId) {
   // preload existing user rating if any
   let initial = 8;
   try {
-    const rSnap = await getDoc(doc(db, COL_FAUCETS, faucetId, 'ratings', currentUser.uid));
-    if (rSnap.exists()) {
+    const rSnap = await db.collection(COL_FAUCETS).doc(faucetId).collection('ratings').doc(currentUser.uid).get();
+    if (rSnap.exists) {
       const v = Number(rSnap.data().value);
       if (Number.isFinite(v) && v >= 0 && v <= 10) initial = Math.round(v);
     }
@@ -1914,17 +1504,17 @@ async function submitRatingModal() {
 window.submitRatingModal = submitRatingModal;
 
 async function setUserRating(faucetId, newRating) {
-  const faucetRef = doc(db, COL_FAUCETS, faucetId);
-  const ratingRef = doc(db, COL_FAUCETS, faucetId, 'ratings', currentUser.uid);
-  await runTransaction(db, async (tx) => {
+  const faucetRef = db.collection(COL_FAUCETS).doc(faucetId);
+  const ratingRef = db.collection(COL_FAUCETS).doc(faucetId).collection('ratings').doc(currentUser.uid);
+  await db.runTransaction(async (tx) => {
     const faucetSnap = await tx.get(faucetRef);
-    if (!faucetSnap.exists()) throw new Error('Missing faucet');
+    if (!faucetSnap.exists) throw new Error('Missing faucet');
     const f = faucetSnap.data();
     const avg = Number(f.ratingAvg || 0);
     const cnt = Number(f.ratingCount || 0);
 
     const rSnap = await tx.get(ratingRef);
-    const prev = rSnap.exists() ? Number(rSnap.data().value || 0) : null;
+    const prev = rSnap.exists ? Number(rSnap.data().value || 0) : null;
 
     let newCnt = cnt;
     let total = avg * cnt;
@@ -1936,8 +1526,8 @@ async function setUserRating(faucetId, newRating) {
     }
     const newAvg = newCnt > 0 ? (total / newCnt) : 0;
 
-    tx.set(ratingRef, { value: newRating, updatedAt: serverTimestamp() }, { merge: true });
-    tx.update(faucetRef, { ratingAvg: newAvg, ratingCount: newCnt, updatedAt: serverTimestamp() });
+    tx.set(ratingRef, { value: newRating, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    tx.update(faucetRef, { ratingAvg: newAvg, ratingCount: newCnt, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
   });
 }
 
@@ -1947,7 +1537,7 @@ document.addEventListener('languageChanged', function() {
 });
 
 // Init
-onAuthStateChanged(auth, async (user) => {
+auth.onAuthStateChanged(async (user) => {
   currentUser = user || null;
   window.currentUser = currentUser;
   isAdmin = !!(user && (user.uid === ADMIN_UID));
