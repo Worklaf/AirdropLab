@@ -475,6 +475,43 @@
   </div>
 </div>
 
+<!-- Rating modal (admin only) -->
+<div id="ratingModal" style="display:none;position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,0.82);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:20px;">
+  <div class="modal-box" style="max-width:520px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h2 style="font-size:16px;font-weight:900;color:#f1f5f9;">
+        <i class="fas fa-star" style="color:#fbbf24;margin-right:8px;"></i>
+        <span data-translate="faucets_rating_title">Рейтинг крана</span>
+      </h2>
+      <button onclick="closeRatingModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;">&times;</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <div id="ratingDot" class="rating-circle rating-8" style="width:42px;height:42px;font-size:14px;border-width:3px;cursor:default;" onclick="return false;">
+        <span id="ratingValue">8</span>
+      </div>
+      <div style="flex:1;">
+        <input id="ratingSlider" type="range" min="0" max="10" step="1" value="8"
+               style="width:100%;accent-color:#22d3ee;"
+               oninput="document.getElementById('ratingValue').textContent=this.value; document.getElementById('ratingDot').style.borderColor = (window.ratingToColor?window.ratingToColor(this.value):'#22d3ee');">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#64748b;margin-top:6px;">
+          <span>0</span><span>5</span><span>10</span>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#64748b;line-height:1.5;margin-bottom:14px;" data-translate="faucets_rating_hint">
+      Только админ может выставлять рейтинг. 0 = плохо, 10 = отлично.
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="submitRatingModal()" style="flex:1;padding:10px;background:linear-gradient(135deg,#f59e0b,#f97316);border:none;border-radius:10px;color:white;font-size:13px;font-weight:900;cursor:pointer;">
+        <i class="fas fa-save" style="margin-right:6px;"></i><span data-translate="save">Сохранить</span>
+      </button>
+      <button onclick="closeRatingModal()" style="padding:10px 18px;background:rgba(30,37,56,0.8);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#94a3b8;font-size:13px;cursor:pointer;">
+        <span data-translate="close">Закрыть</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 // ═══════════════════════════════════════════
 // DATA — полный список кранов
@@ -830,6 +867,7 @@ let faucets = [];
 let currentUser = null;
 let isAdmin = false;
 let favoritesSet = new Set(); // faucetId
+let linkFavoritesSet = new Set(); // key: faucetId|url
 let pendingSuggestions = [];
 
 const ADMIN_UID = "SAkz4mdW9reDaIsvqigCNZhEKJR2";
@@ -926,10 +964,35 @@ function ratingToColor(r) {
   const hue = (v / 10) * 120; // 0 red -> 120 green
   return `hsl(${hue} 85% 55%)`;
 }
+window.ratingToColor = ratingToColor;
 
 function ratingClass(avg) {
   const v = Math.round(Math.max(0, Math.min(10, Number(avg) || 0)));
   return 'rating-' + v;
+}
+
+function getFaviconUrlFromLink(url) {
+  try {
+    const u = new URL(url);
+    const domain = u.hostname;
+    if (!domain) return '';
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
+  } catch (_) {
+    return '';
+  }
+}
+
+function linkFavKey(faucetId, url) {
+  return `${String(faucetId || '')}|${String(url || '')}`;
+}
+
+function hash32(str) {
+  // simple stable hash for doc IDs
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) + h) ^ str.charCodeAt(i);
+  }
+  return (h >>> 0).toString(16);
 }
 
 // ═══════════════════════════════════════════
@@ -962,20 +1025,26 @@ function renderCard(f) {
   var linksHtml = (f.links||[]).map(function(url) {
     var short = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
     const u = safeText(url);
-    return '<a href="'+u+'" target="_blank" rel="noopener noreferrer" class="faucet-link" onclick="window.trackClick(\''+safeText(f.id)+'\');"><i class="fas fa-external-link-alt"></i>'+safeText(short)+'</a>';
+    const k = linkFavKey(f.id, url);
+    const favOn = linkFavoritesSet.has(k);
+    const favCls = favOn ? 'fav-active' : '';
+    return '<div style="display:flex;align-items:center;gap:6px;">'
+      + '<button class="fav-link-btn '+favCls+'" title="'+(isEn?'Save this link':'Сохранить эту ссылку')+'" onclick="event.preventDefault(); event.stopPropagation(); window.toggleFavoriteLink(\''+safeText(f.id)+'\', \''+safeText(url)+'\')"><i class="'+(favOn?'fas':'far')+' fa-star"></i></button>'
+      + '<a href="'+u+'" target="_blank" rel="noopener noreferrer" class="faucet-link" onclick="window.trackClick(\''+safeText(f.id)+'\');"><i class="fas fa-external-link-alt"></i>'+safeText(short)+'</a>'
+      + '</div>';
   }).join('');
 
   var chips = '';
   if (f.reward)   chips += '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(0,0,0,0.3);color:#cbd5e1;margin-right:4px;"><i class="fas fa-coins" style="color:#fbbf24;font-size:9px;"></i>'+f.reward+'</span>';
   if (f.cooldown) chips += '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;background:rgba(0,0,0,0.2);color:#94a3b8;"><i class="fas fa-clock" style="font-size:9px;"></i>'+f.cooldown+'</span>';
 
-  const favActive = favoritesSet.has(f.id);
-  const favIcon = favActive ? 'fas fa-star' : 'far fa-star';
   const ratingAvg = Number(f.ratingAvg || 0);
   const ratingCount = Number(f.ratingCount || 0);
   const ratingText = ratingCount > 0 ? (Math.round(ratingAvg * 10) / 10).toFixed(1) : '–';
-  const logoHtml = f.logoUrl
-    ? `<img class="faucet-logo" src="${safeText(f.logoUrl)}" alt="${safeText(f.name)}"
+  const autoLogo = (!f.logoUrl && (f.links||[])[0]) ? getFaviconUrlFromLink((f.links||[])[0]) : '';
+  const logoSrc = f.logoUrl || autoLogo;
+  const logoHtml = logoSrc
+    ? `<img class="faucet-logo" src="${safeText(logoSrc)}" alt="${safeText(f.name)}"
          onerror="this.outerHTML='<div class=&quot;faucet-logo-placeholder&quot;><i class=&quot;fas fa-water&quot;></i></div>'">`
     : '<div class="faucet-logo-placeholder"><i class="fas fa-water"></i></div>';
 
@@ -995,7 +1064,6 @@ function renderCard(f) {
     + badgeType + badgeNet + extraBadges
     + '</div></div>'
     + '<div style="display:flex;align-items:center;gap:8px;">'
-    + '<button class="fav-btn" title="'+(isEn?'Favorite':'Избранное')+'" onclick="window.toggleFavorite(\''+safeText(f.id)+'\')"><i class="'+favIcon+'" style="color:'+(favActive?'#fbbf24':'#475569')+'"></i></button>'
     + '<div class="rating-circle '+ratingClass(ratingAvg)+'" title="'+(isEn?'Rate (0-10)':'Оценить (0-10)')+'" onclick="window.openRating(\''+safeText(f.id)+'\')">'+ratingText+'</div>'
     + '</div>'
     + '</div>'
@@ -1063,7 +1131,12 @@ window.fFilter = fFilter;
 function applyCurrentFilter() {
   var query = (document.getElementById('faucetSearch').value || '').toLowerCase();
   document.querySelectorAll('.faucet-card').forEach(function(card) {
-    var isFav = favoritesSet.has(card.dataset.id);
+    // favorites filter = any favorited link inside this faucet
+    var isFav = false;
+    if (currentFilter === 'favorites') {
+      const fid = card.dataset.id;
+      isFav = Array.from(linkFavoritesSet).some(k => k.startsWith(fid + '|'));
+    }
     var matchFilter = currentFilter === 'all'
       || currentFilter === 'favorites' && isFav
       || card.dataset.type === currentFilter
@@ -1317,13 +1390,30 @@ function updateHeaderAuthUI(user) {
 
 async function loadFavorites() {
   favoritesSet = new Set();
+  linkFavoritesSet = new Set();
   if (currentUser) {
-    const favSnap = await getDocs(collection(db, 'users', currentUser.uid, 'faucetFavorites'));
-    favSnap.forEach(d => favoritesSet.add(d.id));
+    // legacy faucet-level favorites (kept empty for now)
+    try {
+      const favSnap = await getDocs(collection(db, 'users', currentUser.uid, 'faucetFavorites'));
+      favSnap.forEach(d => favoritesSet.add(d.id));
+    } catch(_) {}
+
+    // per-link favorites
+    try {
+      const lSnap = await getDocs(collection(db, 'users', currentUser.uid, 'faucetLinkFavorites'));
+      lSnap.forEach(d => {
+        const data = d.data() || {};
+        if (data.faucetId && data.url) linkFavoritesSet.add(linkFavKey(data.faucetId, data.url));
+      });
+    } catch(_) {}
   } else {
     try {
       const raw = localStorage.getItem('al_faucet_favorites') || '[]';
       JSON.parse(raw).forEach(id => favoritesSet.add(id));
+    } catch(_) {}
+    try {
+      const raw2 = localStorage.getItem('al_faucet_link_favorites') || '[]';
+      JSON.parse(raw2).forEach(k => linkFavoritesSet.add(String(k)));
     } catch(_) {}
   }
 }
@@ -1562,22 +1652,23 @@ window.awardRGT = async function(uid, suggestionId) {
 };
 
 // Favorites
-window.toggleFavorite = async function(faucetId) {
-  if (!faucetId) return;
+window.toggleFavoriteLink = async function(faucetId, url) {
+  if (!faucetId || !url) return;
+  const key = linkFavKey(faucetId, url);
   if (currentUser) {
-    const ref = doc(db, 'users', currentUser.uid, 'faucetFavorites', faucetId);
-    if (favoritesSet.has(faucetId)) {
+    const id = `${String(faucetId).slice(0,40)}_${hash32(url)}`;
+    const ref = doc(db, 'users', currentUser.uid, 'faucetLinkFavorites', id);
+    if (linkFavoritesSet.has(key)) {
       await deleteDoc(ref);
-      favoritesSet.delete(faucetId);
+      linkFavoritesSet.delete(key);
     } else {
-      await setDoc(ref, { createdAt: serverTimestamp() }, { merge: true });
-      favoritesSet.add(faucetId);
+      await setDoc(ref, { faucetId, url, createdAt: serverTimestamp() }, { merge: true });
+      linkFavoritesSet.add(key);
     }
   } else {
-    // local fallback
-    if (favoritesSet.has(faucetId)) favoritesSet.delete(faucetId);
-    else favoritesSet.add(faucetId);
-    localStorage.setItem('al_faucet_favorites', JSON.stringify(Array.from(favoritesSet)));
+    if (linkFavoritesSet.has(key)) linkFavoritesSet.delete(key);
+    else linkFavoritesSet.add(key);
+    localStorage.setItem('al_faucet_link_favorites', JSON.stringify(Array.from(linkFavoritesSet)));
     toast((window.currentLang==='en')?'Saved locally':'Сохранено локально');
   }
   renderAll();
@@ -1594,14 +1685,80 @@ window.trackClick = async function(faucetId) {
 // Rating
 window.openRating = async function(faucetId) {
   if (!currentUser) { openLoginModal(); return; }
-  const isEn = (window.currentLang === 'en');
-  const raw = prompt(isEn ? 'Rate this faucet (0-10)' : 'Оцените кран (0-10)', '8');
-  if (raw === null) return;
-  const val = Math.round(Number(raw));
-  if (!Number.isFinite(val) || val < 0 || val > 10) { alert(isEn?'Enter a number 0..10':'Введите число 0..10'); return; }
-  await setUserRating(faucetId, val);
-  await loadFaucetsFromFirestore();
+  openRatingModal(faucetId);
 };
+
+// Rating modal (admin only)
+async function openRatingModal(faucetId) {
+  const modal = document.getElementById('ratingModal');
+  if (!modal) return;
+  modal.dataset.faucetId = faucetId;
+  const slider = document.getElementById('ratingSlider');
+  const valEl = document.getElementById('ratingValue');
+  const dot = document.getElementById('ratingDot');
+  // preload existing user rating if any
+  let initial = 8;
+  try {
+    const rSnap = await getDoc(doc(db, COL_FAUCETS, faucetId, 'ratings', currentUser.uid));
+    if (rSnap.exists()) {
+      const v = Number(rSnap.data().value);
+      if (Number.isFinite(v) && v >= 0 && v <= 10) initial = Math.round(v);
+    }
+  } catch(_) {}
+  slider.value = String(initial);
+  valEl.textContent = String(initial);
+  dot.style.borderColor = ratingToColor(initial);
+  modal.style.display = 'flex';
+}
+window.openRatingModal = openRatingModal;
+
+function closeRatingModal() {
+  const modal = document.getElementById('ratingModal');
+  if (!modal) return;
+  modal.style.display = 'none';
+}
+window.closeRatingModal = closeRatingModal;
+
+async function submitRatingModal() {
+  const modal = document.getElementById('ratingModal');
+  const faucetId = modal?.dataset?.faucetId || '';
+  const slider = document.getElementById('ratingSlider');
+  const v = Math.round(Number(slider.value));
+  if (!faucetId) return;
+  await setUserRating(faucetId, v);
+  closeRatingModal();
+  await loadFaucetsFromFirestore();
+  toast((window.currentLang === 'en') ? 'Rating saved' : 'Рейтинг сохранён');
+}
+window.submitRatingModal = submitRatingModal;
+
+async function setUserRating(faucetId, newRating) {
+  const faucetRef = doc(db, COL_FAUCETS, faucetId);
+  const ratingRef = doc(db, COL_FAUCETS, faucetId, 'ratings', currentUser.uid);
+  await runTransaction(db, async (tx) => {
+    const faucetSnap = await tx.get(faucetRef);
+    if (!faucetSnap.exists()) throw new Error('Missing faucet');
+    const f = faucetSnap.data();
+    const avg = Number(f.ratingAvg || 0);
+    const cnt = Number(f.ratingCount || 0);
+
+    const rSnap = await tx.get(ratingRef);
+    const prev = rSnap.exists() ? Number(rSnap.data().value) : null;
+
+    let newCnt = cnt;
+    let total = avg * cnt;
+    if (prev === null || !Number.isFinite(prev)) {
+      newCnt = cnt + 1;
+      total = total + newRating;
+    } else {
+      total = total - prev + newRating;
+    }
+    const newAvg = newCnt > 0 ? (total / newCnt) : 0;
+
+    tx.set(ratingRef, { value: newRating, updatedAt: serverTimestamp() }, { merge: true });
+    tx.update(faucetRef, { ratingAvg: newAvg, ratingCount: newCnt, updatedAt: serverTimestamp() });
+  });
+}
 
 async function setUserRating(faucetId, newRating) {
   const faucetRef = doc(db, COL_FAUCETS, faucetId);
@@ -1668,6 +1825,7 @@ document.addEventListener('languageChanged', function() {
 // Init
 onAuthStateChanged(auth, async (user) => {
   currentUser = user || null;
+  window.currentUser = currentUser;
   isAdmin = !!(user && (user.uid === ADMIN_UID));
   document.getElementById('adminBar').style.display = isAdmin ? 'flex' : 'none';
   updateHeaderAuthUI(user);
