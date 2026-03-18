@@ -562,9 +562,10 @@ window.updateRatingDisplay = updateRatingDisplay;
       </div>
       
       <div style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:12px;padding:12px;margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <i class="fas fa-info-circle" style="color:#22d3ee;font-size:14px;"></i>
-          <span style="font-size:12px;font-weight:600;color:#f1f5f9;" data-translate="faucets_rating_hint">Оцените кран от 0 до 10</span>
+        <div style="display:flex;align-items:center;gap:4px;cursor:pointer;" onclick="openRating('')" title="Оценить кран">
+          <i class="fas fa-star" style="color:#fbbf24;font-size:12px;"></i>
+          <span style="font-size:12px;font-weight:600;color:#f1f5f9;">Оценить</span>
+          <span style="font-size:10px;color:#94a3b8;">(0)</span>
         </div>
         <p style="font-size:11px;color:#94a3b8;line-height:1.5;margin:0;">Ваша оценка поможет другим пользователям выбрать лучшие краны. Оценка учитывается в общем рейтинге.</p>
       </div>
@@ -1193,6 +1194,9 @@ function renderCard(f) {
   const ratingAvg = Number(f.ratingAvg || 0);
   const ratingCount = Number(f.ratingCount || 0);
   const ratingText = ratingCount > 0 ? (Math.round(ratingAvg * 10) / 10).toFixed(1) : '–';
+  const ratingTitle = ratingCount > 0 
+    ? ((window.currentLang === 'en') ? 'Average rating: ' + ratingText + ' from ' + ratingCount + ' votes' : 'Средняя оценка: ' + ratingText + ' из ' + ratingCount + ' голосов')
+    : ((window.currentLang === 'en') ? 'No ratings yet' : 'Нет оценок');
   const autoLogo = (!f.logoUrl && (f.links||[])[0]) ? getFaviconUrlFromLink((f.links||[])[0]) : '';
   const logoSrc = f.logoUrl || autoLogo;
   const networkIcon = getNetworkIcon(f.token, f.name);
@@ -1217,7 +1221,8 @@ function renderCard(f) {
     + badgeType + badgeNet + extraBadges
     + '</div></div>'
     + '<div style="display:flex;align-items:center;gap:8px;">'
-    + '<div class="rating-circle '+ratingClass(ratingAvg)+'" title="'+(isEn?'Rate (0-10)':'Оценить (0-10)')+'" onclick="window.openRating(\''+safeText(f.id)+'\')">'+ratingText+'</div>'
+    + '<div class="rating-circle '+ratingClass(ratingAvg)+'" title="'+ratingTitle+'" onclick="window.openRating(\''+safeText(f.id)+'\')">'+ratingText+'</div>' +
+    (ratingCount > 1 ? '<span style="font-size:10px;color:#94a3b8;">(' + ratingCount + ')</span>' : '') +
     + '</div>'
     + '</div>'
     + (f.desc ? '<p style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;margin-top:6px;">'+safeText(f.desc)+'</p>' : '')
@@ -1962,10 +1967,12 @@ window.submitRatingModal = submitRatingModal;
 async function setUserRating(faucetId, newRating) {
   const faucetRef = doc(db, COL_FAUCETS, faucetId);
   const ratingRef = doc(db, COL_FAUCETS, faucetId, 'ratings', currentUser.uid);
+  
   await runTransaction(db, async (tx) => {
     const faucetSnap = await tx.get(faucetRef);
     if (!faucetSnap.exists()) throw new Error('Missing faucet');
     const f = faucetSnap.data();
+    
     const avg = Number(f.ratingAvg || 0);
     const cnt = Number(f.ratingCount || 0);
 
@@ -1974,17 +1981,37 @@ async function setUserRating(faucetId, newRating) {
 
     let newCnt = cnt;
     let total = avg * cnt;
+    
     if (prev === null) {
+      // Новая оценка от пользователя
       newCnt = cnt + 1;
       total = total + newRating;
     } else {
+      // Обновление существующей оценки
       total = total - prev + newRating;
+      // cnt не меняется
     }
+    
     const newAvg = newCnt > 0 ? (total / newCnt) : 0;
 
-    tx.set(ratingRef, { value: newRating, updatedAt: serverTimestamp() }, { merge: true });
-    tx.update(faucetRef, { ratingAvg: newAvg, ratingCount: newCnt, updatedAt: serverTimestamp() });
+    // Сохраняем оценку пользователя
+    tx.set(ratingRef, { 
+      value: newRating, 
+      userId: currentUser.uid,
+      userName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Anonymous',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp() 
+    }, { merge: true });
+    
+    // Обновляем среднюю оценку крана
+    tx.update(faucetRef, { 
+      ratingAvg: newAvg, 
+      ratingCount: newCnt, 
+      updatedAt: serverTimestamp() 
+    });
   });
+  
+  console.log('Rating saved:', { faucetId, newRating, newAvg, newCnt });
 }
 
 // Language change rerender
