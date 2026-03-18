@@ -1328,12 +1328,53 @@ async function loadFavorites() {
 }
 
 async function loadFaucetsFromFirestore() {
-  const snap = await getDocs(query(collection(db, COL_FAUCETS), orderBy('name')));
-  faucets = [];
-  snap.forEach((d) => {
-    const data = d.data();
-    faucets.push({ id: d.id, ...data });
-  });
+  try {
+    const snap = await getDocs(query(collection(db, COL_FAUCETS), orderBy('name')));
+    faucets = [];
+    snap.forEach((d) => {
+      const data = d.data();
+      faucets.push({ id: d.id, ...data });
+    });
+    // If DB is empty, still allow UI to show something meaningful
+    if (!faucets.length) {
+      const isEn = (window.currentLang === 'en');
+      toast(isEn ? 'No faucets in database yet' : 'В базе пока нет кранов');
+    }
+  } catch (e) {
+    const code = e && (e.code || e.name) ? String(e.code || e.name) : '';
+    console.warn('[Faucets] load from Firestore failed:', e);
+    // Fallback to embedded defaults if permissions or offline
+    faucets = DEFAULT_FAUCETS.map((f) => ({
+      id: f.id,
+      name: f.name || '',
+      token: f.token || '',
+      type: f.type || 'free',
+      net: f.net || 'testnet',
+      desc: f.desc || '',
+      links: (f.links || []).map(normalizeUrl).filter(Boolean),
+      reward: f.reward || '',
+      cooldown: f.cooldown || '',
+      tags: Array.isArray(f.tags) ? f.tags : [],
+      logoUrl: f.logoUrl || '',
+      ratingAvg: 0,
+      ratingCount: 0,
+      clickCount: 0,
+      createdAt: null,
+      updatedAt: null,
+      _source: 'embedded'
+    }));
+    const isEn = (window.currentLang === 'en');
+    if (String(code).includes('permission-denied')) {
+      toast(isEn
+        ? 'Firestore permissions deny reading faucets. Showing embedded defaults.'
+        : 'Правила Firestore запрещают чтение кранов. Показаны встроенные данные.');
+    } else {
+      toast(isEn
+        ? 'Failed to load from Firestore. Showing embedded defaults.'
+        : 'Не удалось загрузить из Firestore. Показаны встроенные данные.');
+    }
+  }
+
   renderAll();
   if (typeof window.updateAllTranslations === 'function') window.updateAllTranslations();
 }
