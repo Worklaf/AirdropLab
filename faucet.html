@@ -459,16 +459,18 @@
         <div style="font-size:10px;color:#64748b;" data-translate="or_email">ИЛИ EMAIL</div>
         <div style="height:1px;background:rgba(255,255,255,0.08);flex:1;"></div>
       </div>
-      <input class="ae-input" id="emailInput" type="email" data-translate="email" placeholder="Email">
-      <input class="ae-input" id="passInput" type="password" data-translate="password" placeholder="Пароль">
-      <div style="display:flex;gap:10px;">
-        <button onclick="loginEmail()" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid rgba(34,211,238,0.35);background:rgba(30,37,56,0.8);color:#e2e8f0;font-weight:800;cursor:pointer;">
-          <i class="fas fa-sign-in-alt" style="margin-right:6px;color:#22d3ee;"></i><span data-translate="login_btn">Войти</span>
-        </button>
-        <button onclick="registerEmail()" style="padding:10px 14px;border-radius:10px;border:1px solid rgba(34,211,238,0.25);background:rgba(34,211,238,0.08);color:#22d3ee;font-weight:900;cursor:pointer;">
-          <span data-translate="register">Регистрация</span>
-        </button>
-      </div>
+      <form onsubmit="event.preventDefault(); window.loginEmail();">
+        <input class="ae-input" id="emailInput" type="email" data-translate="email" placeholder="Email">
+        <input class="ae-input" id="passInput" type="password" data-translate="password" placeholder="Пароль">
+        <div style="display:flex;gap:10px;">
+          <button type="submit" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid rgba(34,211,238,0.35);background:rgba(30,37,56,0.8);color:#e2e8f0;font-weight:800;cursor:pointer;">
+            <i class="fas fa-sign-in-alt" style="margin-right:6px;color:#22d3ee;"></i><span data-translate="login_btn">Войти</span>
+          </button>
+          <button type="button" onclick="window.registerEmail()" style="padding:10px 14px;border-radius:10px;border:1px solid rgba(34,211,238,0.25);background:rgba(34,211,238,0.08);color:#22d3ee;font-weight:900;cursor:pointer;">
+            <span data-translate="register">Регистрация</span>
+          </button>
+        </div>
+      </form>
       <div style="font-size:11px;color:#64748b;line-height:1.5;" data-translate="faucets_login_hint">
         Вход нужен для избранного и рейтингов.
       </div>
@@ -1915,33 +1917,6 @@ async function setUserRating(faucetId, newRating) {
   });
 }
 
-async function setUserRating(faucetId, newRating) {
-  const faucetRef = doc(db, COL_FAUCETS, faucetId);
-  const ratingRef = doc(db, COL_FAUCETS, faucetId, 'ratings', currentUser.uid);
-  await runTransaction(db, async (tx) => {
-    const faucetSnap = await tx.get(faucetRef);
-    if (!faucetSnap.exists()) throw new Error('Missing faucet');
-    const f = faucetSnap.data();
-    const avg = Number(f.ratingAvg || 0);
-    const cnt = Number(f.ratingCount || 0);
-
-    const rSnap = await tx.get(ratingRef);
-    const prev = rSnap.exists() ? Number(rSnap.data().value || 0) : null;
-
-    let newCnt = cnt;
-    let total = avg * cnt;
-    if (prev === null) {
-      newCnt = cnt + 1;
-      total = total + newRating;
-    } else {
-      total = total - prev + newRating;
-    }
-    const newAvg = newCnt > 0 ? (total / newCnt) : 0;
-
-    tx.set(ratingRef, { value: newRating, updatedAt: serverTimestamp() }, { merge: true });
-    tx.update(faucetRef, { ratingAvg: newAvg, ratingCount: newCnt, updatedAt: serverTimestamp() });
-  });
-}
 
 // Seed defaults (admin only)
 async function seedDefaultsToFirestore() {
