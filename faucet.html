@@ -684,6 +684,21 @@ window.updateRatingDisplay = updateRatingDisplay;
 // ═══════════════════════════════════════════
 // DATA — полный список кранов
 // ═══════════════════════════════════════════
+// Функция для установки языка
+window.setLanguage = function(lang) {
+  window.currentLang = lang;
+  localStorage.setItem('selectedLanguage', lang);
+  
+  // Обновляем все переводы
+  updateAllTranslations();
+  
+  // Отправляем событие для других компонентов
+  document.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lang } }));
+};
+
+// Инициализация языка при загрузке
+window.currentLang = localStorage.getItem('selectedLanguage') || 'ru';
+
 // Функция для перевода текстов
 function t(key) {
   if (!window.currentLang) window.currentLang = 'ru';
