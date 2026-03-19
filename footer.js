@@ -20,17 +20,8 @@
                     const display = window.getFlagDisplay(lang);
                     // Создаем элементы через DOM чтобы избежать экранирования
                     option.innerHTML = '';
-                    if (display.flag.includes('<img')) {
-                        // Если это img, создаем через DOM
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = display.flag;
-                        const img = tempDiv.firstChild;
-                        option.appendChild(img);
-                        option.appendChild(document.createTextNode(' ' + display.text));
-                    } else {
-                        // Если это текст или эмодзи
-                        option.textContent = display.flag + ' ' + display.text;
-                    }
+                                        // SVG — вставляем через innerHTML
+                    option.innerHTML = display.flag + ' ' + display.text;
                 });
                 select.value = currentValue;
             }
@@ -2496,73 +2487,28 @@ function initAccountPage() {
     document.addEventListener('DOMContentLoaded', function() { setTimeout(updateFooterTranslations, 500); });
     window.updateFooterTranslations = updateFooterTranslations;
 
-    // Универсальная функция для получения отображения флага - ТОЛЬКО SVG
+    // Универсальная функция для получения отображения флага - инлайн SVG
 window.getFlagDisplay = function(language) {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const supportsEmoji = (function() {
-        try {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.textBaseline = 'top';
-            ctx.font = '16px Arial';
-            ctx.fillText('🇺🇦', 0, 0);
-            const data = ctx.getImageData(0, 0, 16, 16).data;
-            return data.some(channel => channel !== 0);
-        } catch(e) { return false; }
-    })();
+    var s = 'display:inline-block;width:20px;height:15px;border-radius:2px;' +
+            'border:1px solid rgba(255,255,255,0.2);vertical-align:middle;flex-shrink:0;';
 
-    if (isMobile && supportsEmoji) {
-        return {
-            ru: { flag: '🇺🇦', text: 'УКР' },
-            en: { flag: '🇺🇸', text: 'ENG' }
-        }[language] || { flag: '🇺🇦', text: 'УКР' };
-    }
+    var svgUA = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7410 3900" style="' + s + '">' +
+        '<path fill="#005BBB" d="M0 0h7410v3900H0"/>' +
+        '<path fill="#FFD500" d="M0 1950h7410v1950H0"/>' +
+        '</svg>';
 
-    // Определяем путь к флагам
-    const currentPath = window.location.pathname;
-    const basePath = (currentPath.includes('/faucet') || currentPath.includes('faucet.html'))
-        ? './assets/flags/'
-        : '../assets/flags/';
+    var svgUS = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7410 3900" style="' + s + '">' +
+        '<path fill="#b31942" d="M0 0h7410v3900H0"/>' +
+        '<path stroke="#FFF" stroke-width="300" d="M0 450h7410m0 600H0m0 600h7410m0 600H0m0 600h7410m0 600H0m0 600h7410"/>' +
+        '<path fill="#0a3161" d="M0 0h2964v2100H0"/>' +
+        '</svg>';
 
-    const svgStyle = 'width:20px;height:20px;border-radius:2px;border:1px solid #ccc;vertical-align:middle;object-fit:cover;';
-
-    // Создаём img элементы через DOM — никаких проблем с кавычками
-    function makeFlagImg(src, alt, fallbackGradient) {
-        const img = document.createElement('img');
-        img.src = src;
-        img.alt = alt;
-        img.setAttribute('style', svgStyle);
-        img.onerror = function() {
-            const span = document.createElement('span');
-            span.setAttribute('style',
-                'display:inline-block;width:20px;height:20px;border-radius:2px;' +
-                'border:1px solid #ccc;vertical-align:middle;background:' + fallbackGradient + ';'
-            );
-            this.replaceWith(span);
-        };
-        return img.outerHTML;
-    }
-
-    const flags = {
-        ru: makeFlagImg(
-            basePath + 'ua.svg',
-            'UA',
-            'linear-gradient(to bottom,#005BBB 50%,#FFD500 50%)'
-        ),
-        en: makeFlagImg(
-            basePath + 'us.svg',
-            'US',
-            'linear-gradient(to bottom,#B22234 0%,#B22234 40%,white 40%,white 60%,#B22234 60%)'
-        )
+    var data = {
+        ru: { flag: svgUA, text: 'УКР' },
+        en: { flag: svgUS, text: 'ENG' }
     };
 
-    const defaults = { ru: { text: 'УКР' }, en: { text: 'ENG' } };
-    const lang = flags[language] ? language : 'ru';
-
-    return {
-        flag: flags[lang],
-        text: defaults[lang].text
-    };
+    return data[language] || data['ru'];
 };
 
     window.updateProfileLanguage = async function(language) {
