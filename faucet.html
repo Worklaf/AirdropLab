@@ -300,11 +300,11 @@
     <button class="filter-tab" onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="favorites">Избранное</span></button>
     <button class="filter-tab" onclick="fFilter('my-suggestions',this)" id="mySuggestionsFilter" style="display:block;background:rgba(139,92,246,0.12);color:#a78bfa;border-color:rgba(139,92,246,0.35);" data-filter="my-suggestions">
       <i class="fas fa-user-edit" style="margin-right:4px;"></i>
-      Мои предложения <span id="mySuggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
+      <span data-translate="my_suggestions">My Suggestions</span> <span id="mySuggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
     </button>
     <button class="filter-tab" onclick="fFilter('suggestions',this)" id="suggestionsFilter" style="display:none;background:rgba(239,68,68,0.12);color:#f87171;border-color:rgba(239,68,68,0.35);" data-filter="suggestions">
       <i class="fas fa-inbox" style="margin-right:4px;"></i>
-      Предложения <span id="suggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
+      <span data-translate="suggestions">Suggestions</span>
     </button>
 
     <select id="sortSelectFaucets" onchange="setSort(this.value)"
