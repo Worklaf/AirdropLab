@@ -1530,7 +1530,9 @@ function renderCard(f) {
     + '<div class="rating-circle '+ratingClass(ratingAvg)+'" title="'+(isEn?'Rate (0-10)':'Оценить (0-10)')+'" onclick="window.openRating(\''+safeText(f.id)+'\')">'+ratingText+'</div>'
     + '</div>'
     + '</div>'
-    + (f.desc ? '<p style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;margin-top:6px;">'+safeText(f.desc)+'</p>' : '')
+    + (f.desc ? '<p style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;margin-top:6px;">'
+    + safeText(translateFaucetDescription(f.desc, window.currentLang || 'ru'))
+    + '</p>' : '')
     + userInfoHtml // Добавляем информацию о пользователе
     + (chips ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">'+chips+'</div>' : '')
     + '<div class="faucet-links-list">'+linksHtml+'</div>'
@@ -3416,9 +3418,11 @@ async function setUserRating(faucetId, newRating) {
 }
 
 // Language change rerender
-document.addEventListener('languageChanged', function() {
+document.addEventListener('languageChanged', function(e) {
+  const newLang = e.detail?.language || window.currentLang || 'ru';
+  window.currentLang = newLang;
+  renderAll();
   if (typeof window.updateAllTranslations === 'function') window.updateAllTranslations();
-  else renderAll();
 });
 
 // Init
