@@ -2240,8 +2240,9 @@ function initAccountPage() {
         const langText = document.querySelector('.lang-text-footer');
         if (langFlag && langText) {
             const currentLang = typeof window.currentLang !== 'undefined' ? window.currentLang : 'ru';
-            langFlag.textContent = currentLang === 'en' ? '🇺🇸' : '🇷🇺';
-            langText.textContent = currentLang === 'en' ? 'ENG' : 'РУС';
+            // Визуально: русский показываем как украинский (флаг UA, надпись УКР), но функционально остается 'ru'
+            langFlag.textContent = currentLang === 'en' ? '🇺🇸' : '🇺🇦';
+            langText.textContent = currentLang === 'en' ? 'ENG' : 'УКР';
         }
     }
 
