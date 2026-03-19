@@ -2511,20 +2511,32 @@ window.getFlagDisplay = function(language) {
         // На ПК используем ТОЛЬКО SVG файлы
         console.log('Using SVG flag files for PC');
         
-        // Пробуем разные варианты путей для SVG
-        const basePath = window.location.pathname.includes('faucet.html') ? './assets/flags/' : '../assets/flags/';
+        // Правильное определение пути для разных страниц
+        const currentPath = window.location.pathname;
+        let basePath;
+        
+        if (currentPath.includes('/faucet') || currentPath.includes('faucet.html')) {
+            basePath = './assets/flags/';
+        } else {
+            basePath = '../assets/flags/';
+        }
+        
         const uaPath = basePath + 'ua.svg';
         const usPath = basePath + 'us.svg';
+        console.log('Current location:', currentPath);
         console.log('SVG flag paths:', uaPath, usPath);
-        console.log('Current location:', window.location.pathname);
         
         // Параметры SVG флагов
         const svgStyle = 'width:20px;height:20px;border-radius:2px;border:1px solid #ccc;vertical-align:middle;object-fit:cover;';
         
+        // Fallback на текстовые флаги если SVG не загрузятся
+        const uaFallback = '<span style="display:inline-block;width:20px;height:20px;background:linear-gradient(to bottom,#005BBB 50%,#FFD500 50%);border-radius:2px;border:1px solid #ccc;vertical-align:middle;"></span>';
+        const usFallback = '<span style="display:inline-block;width:20px;height:20px;background:linear-gradient(to bottom,#B22234 0%,#B22234 40%,white 40%,white 60%,#B22234 60%,#B22234 100%);border-radius:2px;border:1px solid #ccc;vertical-align:middle;position:relative;"><span style="position:absolute;top:0;left:0;width:8px;height:8px;background:#3C3B6E;"></span></span>';
+        
         return {
-            ru: { flag: '<img src="' + uaPath + '" alt="UA" style="' + svgStyle + '" onerror="console.error(\'Failed to load UA SVG flag at: ' + uaPath + '\');">', text: 'УКР' },
-            en: { flag: '<img src="' + usPath + '" alt="US" style="' + svgStyle + '" onerror="console.error(\'Failed to load US SVG flag at: ' + usPath + '\');">', text: 'ENG' }
-        }[language] || { flag: '<img src="' + uaPath + '" alt="UA" style="' + svgStyle + '" onerror="console.error(\'Failed to load UA SVG flag at: ' + uaPath + '\');">', text: 'УКР' };
+            ru: { flag: '<img src="' + uaPath + '" alt="UA" style="' + svgStyle + '" onerror="console.error(\'Failed to load UA SVG flag at: ' + uaPath + '\');this.outerHTML=\'' + uaFallback + '\';">', text: 'УКР' },
+            en: { flag: '<img src="' + usPath + '" alt="US" style="' + svgStyle + '" onerror="console.error(\'Failed to load US SVG flag at: ' + usPath + '\');this.outerHTML=\'' + usFallback + '\';">', text: 'ENG' }
+        }[language] || { flag: '<img src="' + uaPath + '" alt="UA" style="' + svgStyle + '" onerror="console.error(\'Failed to load UA SVG flag at: ' + uaPath + '\');this.outerHTML=\'' + uaFallback + '\';">', text: 'УКР' };
     }
 };
 
