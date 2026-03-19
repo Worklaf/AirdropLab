@@ -7,42 +7,34 @@
 (function() {
     'use strict';
 
-    // Подключаем CSS библиотеку флагов с отладкой и альтернативным CDN
-    const flagIconsCSS = document.createElement('link');
-    flagIconsCSS.rel = 'stylesheet';
-    // Пробуем основной CDN
-    flagIconsCSS.href = 'https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css';
-    
-    flagIconsCSS.onload = function() {
-        console.log('Flag-icons CSS loaded successfully from jsdelivr');
-        // Принудительно обновляем флаги после загрузки CSS
-        setTimeout(() => {
-            updateFooterLanguageButton();
-            updateAllFlagSelectors();
-        }, 100);
-    };
-    
-    flagIconsCSS.onerror = function() {
-        console.warn('Failed to load from jsdelivr, trying unpkg...');
-        // Пробуем альтернативный CDN
-        const altCSS = document.createElement('link');
-        altCSS.rel = 'stylesheet';
-        altCSS.href = 'https://unpkg.com/flag-icons@7.2.3/css/flag-icons.min.css';
-        altCSS.onload = function() {
-            console.log('Flag-icons CSS loaded successfully from unpkg');
-            setTimeout(() => {
-                updateFooterLanguageButton();
-                updateAllFlagSelectors();
-            }, 100);
-        };
-        altCSS.onerror = function() {
-            console.error('Failed to load flag-icons CSS from all CDNs');
-            // Используем fallback
-            updateFooterLanguageButton();
-        };
-        document.head.appendChild(altCSS);
-    };
-    document.head.appendChild(flagIconsCSS);
+    // Встраиваем CSS флагов напрямую для гарантированной работы
+    const flagStyles = document.createElement('style');
+    flagStyles.textContent = `
+        .fi {
+            display: inline-block;
+            width: 1.33333333em;
+            line-height: 1em;
+            background-size: contain;
+            background-position: 50%;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+        .fi:before {
+            content: '\\00a0';
+        }
+        .fi-ua {
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30"%3e%3crect width="60" height="30" fill="%23005BBB"/%3e%3crect y="15" width="60" height="15" fill="%23FFD500"/%3e%3c/svg%3e');
+        }
+        .fi-us {
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30"%3e%3crect width="60" height="30" fill="%23B22234"/%3e%3crect y="2" width="60" height="2" fill="white"/%3e%3crect y="6" width="60" height="2" fill="white"/%3e%3crect y="10" width="60" height="2" fill="white"/%3e%3crect y="14" width="60" height="2" fill="white"/%3e%3crect y="18" width="60" height="2" fill="white"/%3e%3crect y="22" width="60" height="2" fill="white"/%3e%3crect y="26" width="60" height="2" fill="white"/%3e%3crect width="24" height="16" fill="%233C3B6E"/%3e%3c/svg%3e');
+        }
+        .fi-ua, .fi-us {
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+    `;
+    document.head.appendChild(flagStyles);
+    console.log('Inline flag CSS added successfully');
     
     // Функция для обновления всех селекторов с флагами
     function updateAllFlagSelectors() {
@@ -2450,37 +2442,13 @@ function initAccountPage() {
     initBackToTop();
     initNewsletterForm();
     initFooterLinks();
-    updateFooterLanguageButton();
     
-    // Обновляем селектор языка в личном кабинете если он открыт
+    // Обновляем флаги после небольшой задержки чтобы CSS применился
     setTimeout(() => {
-        updateAllFlagSelectors();
-    }, 500);
-    
-    // Периодическая проверка и обновление флагов
-    let flagCheckAttempts = 0;
-    const flagCheckInterval = setInterval(() => {
-        flagCheckAttempts++;
         updateFooterLanguageButton();
         updateAllFlagSelectors();
-        
-        // Проверяем загрузились ли флаги
-        const testElement = document.createElement('div');
-        testElement.className = 'fi fi-ua';
-        testElement.style.position = 'absolute';
-        testElement.style.visibility = 'hidden';
-        testElement.style.width = '1px';
-        testElement.style.height = '1px';
-        document.body.appendChild(testElement);
-        const styles = window.getComputedStyle(testElement);
-        const loaded = styles.backgroundImage !== 'none' || styles.background !== 'transparent';
-        document.body.removeChild(testElement);
-        
-        if (loaded || flagCheckAttempts > 10) {
-            clearInterval(flagCheckInterval);
-            console.log('Flag check stopped. Loaded:', loaded, 'Attempts:', flagCheckAttempts);
-        }
-    }, 1000);
+        console.log('Flags initialized with inline CSS');
+    }, 200);
     
     // ⭐️ Обязательно должен быть здесь
     updateFooterStats();
@@ -2499,7 +2467,7 @@ function initAccountPage() {
     });
 
     _initHeaderAvatarClick();
-    console.log('Footer v2.2 initialized');
+    console.log('Footer v2.2 initialized with inline flag CSS');
 }
 
     function initBackToTop() {
@@ -2571,41 +2539,19 @@ window.getFlagDisplay = function(language) {
         return data.some(channel => channel !== 0);
     })();
     
-    // Проверяем загрузился ли flag-icons CSS
-    const flagIconsLoaded = (function() {
-        const testElement = document.createElement('div');
-        testElement.className = 'fi fi-ua';
-        testElement.style.position = 'absolute';
-        testElement.style.visibility = 'hidden';
-        testElement.style.width = '1px';
-        testElement.style.height = '1px';
-        document.body.appendChild(testElement);
-        const styles = window.getComputedStyle(testElement);
-        const loaded = styles.backgroundImage !== 'none' || styles.background !== 'transparent';
-        document.body.removeChild(testElement);
-        console.log('Flag-icons CSS loaded check:', loaded);
-        return loaded;
-    })();
-    
     if (isMobile && supportsEmoji) {
         // На телефонах с поддержкой эмодзи
         return {
             ru: { flag: '🇺🇦', text: 'УКР' },
             en: { flag: '🇺🇸', text: 'ENG' }
         }[language] || { flag: '🇺🇦', text: 'УКР' };
-    } else if (flagIconsLoaded) {
-        // На ПК или если эмодзи не поддерживаются - используем flag-icons CSS
-        return {
-            ru: { flag: '<span class="fi fi-ua"></span>', text: 'УКР' },
-            en: { flag: '<span class="fi fi-us"></span>', text: 'ENG' }
-        }[language] || { flag: '<span class="fi fi-ua"></span>', text: 'УКР' };
     } else {
-        // Fallback - используем текстовые коды если CSS не загрузился
-        console.log('Using fallback text flags');
+        // На ПК или если эмодзи не поддерживаются - используем встроенные CSS флаги
+        console.log('Using inline CSS flags for:', language);
         return {
-            ru: { flag: 'UA', text: 'УКР' },
-            en: { flag: 'US', text: 'ENG' }
-        }[language] || { flag: 'UA', text: 'УКР' };
+            ru: { flag: '<span class="fi fi-ua" style="font-size: 16px;"></span>', text: 'УКР' },
+            en: { flag: '<span class="fi fi-us" style="font-size: 16px;"></span>', text: 'ENG' }
+        }[language] || { flag: '<span class="fi fi-ua" style="font-size: 16px;"></span>', text: 'УКР' };
     }
 };
 
