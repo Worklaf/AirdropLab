@@ -7,11 +7,64 @@
 (function() {
     'use strict';
 
-    // Подключаем CSS библиотеку флагов
+    // Подключаем CSS библиотеку флагов с отладкой и альтернативным CDN
     const flagIconsCSS = document.createElement('link');
     flagIconsCSS.rel = 'stylesheet';
+    // Пробуем основной CDN
     flagIconsCSS.href = 'https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css';
+    
+    flagIconsCSS.onload = function() {
+        console.log('Flag-icons CSS loaded successfully from jsdelivr');
+        // Принудительно обновляем флаги после загрузки CSS
+        setTimeout(() => {
+            updateFooterLanguageButton();
+            updateAllFlagSelectors();
+        }, 100);
+    };
+    
+    flagIconsCSS.onerror = function() {
+        console.warn('Failed to load from jsdelivr, trying unpkg...');
+        // Пробуем альтернативный CDN
+        const altCSS = document.createElement('link');
+        altCSS.rel = 'stylesheet';
+        altCSS.href = 'https://unpkg.com/flag-icons@7.2.3/css/flag-icons.min.css';
+        altCSS.onload = function() {
+            console.log('Flag-icons CSS loaded successfully from unpkg');
+            setTimeout(() => {
+                updateFooterLanguageButton();
+                updateAllFlagSelectors();
+            }, 100);
+        };
+        altCSS.onerror = function() {
+            console.error('Failed to load flag-icons CSS from all CDNs');
+            // Используем fallback
+            updateFooterLanguageButton();
+        };
+        document.head.appendChild(altCSS);
+    };
     document.head.appendChild(flagIconsCSS);
+    
+    // Функция для обновления всех селекторов с флагами
+    function updateAllFlagSelectors() {
+        const selectors = ['profileLanguage', 'userLanguageSelect'];
+        selectors.forEach(selectorId => {
+            const select = document.getElementById(selectorId);
+            if (select && typeof window.getFlagDisplay === 'function') {
+                const currentValue = select.value || (window.currentLang === 'en' ? 'en' : 'ru');
+                const options = select.querySelectorAll('option');
+                options.forEach(option => {
+                    const lang = option.value;
+                    const display = window.getFlagDisplay(lang);
+                    if (display.flag.includes('<span')) {
+                        option.innerHTML = display.flag + ' ' + display.text;
+                    } else {
+                        option.textContent = display.flag + ' ' + display.text;
+                    }
+                });
+                select.value = currentValue;
+            }
+        });
+    }
 
     const FOOTER_CONFIG = {
         company: {
@@ -2401,24 +2454,33 @@ function initAccountPage() {
     
     // Обновляем селектор языка в личном кабинете если он открыт
     setTimeout(() => {
-        const profileSelect = document.getElementById('profileLanguage');
-        if (profileSelect && typeof window.getFlagDisplay === 'function') {
-            const currentValue = profileSelect.value || (window.currentLang === 'en' ? 'en' : 'ru');
-            const options = profileSelect.querySelectorAll('option');
-            options.forEach(option => {
-                const lang = option.value;
-                const display = window.getFlagDisplay(lang);
-                if (display.flag.includes('<span')) {
-                    // Это flag-icons CSS
-                    option.innerHTML = display.flag + ' ' + display.text;
-                } else {
-                    // Это эмодзи
-                    option.textContent = display.flag + ' ' + display.text;
-                }
-            });
-            profileSelect.value = currentValue;
-        }
+        updateAllFlagSelectors();
     }, 500);
+    
+    // Периодическая проверка и обновление флагов
+    let flagCheckAttempts = 0;
+    const flagCheckInterval = setInterval(() => {
+        flagCheckAttempts++;
+        updateFooterLanguageButton();
+        updateAllFlagSelectors();
+        
+        // Проверяем загрузились ли флаги
+        const testElement = document.createElement('div');
+        testElement.className = 'fi fi-ua';
+        testElement.style.position = 'absolute';
+        testElement.style.visibility = 'hidden';
+        testElement.style.width = '1px';
+        testElement.style.height = '1px';
+        document.body.appendChild(testElement);
+        const styles = window.getComputedStyle(testElement);
+        const loaded = styles.backgroundImage !== 'none' || styles.background !== 'transparent';
+        document.body.removeChild(testElement);
+        
+        if (loaded || flagCheckAttempts > 10) {
+            clearInterval(flagCheckInterval);
+            console.log('Flag check stopped. Loaded:', loaded, 'Attempts:', flagCheckAttempts);
+        }
+    }, 1000);
     
     // ⭐️ Обязательно должен быть здесь
     updateFooterStats();
@@ -2509,18 +2571,41 @@ window.getFlagDisplay = function(language) {
         return data.some(channel => channel !== 0);
     })();
     
+    // Проверяем загрузился ли flag-icons CSS
+    const flagIconsLoaded = (function() {
+        const testElement = document.createElement('div');
+        testElement.className = 'fi fi-ua';
+        testElement.style.position = 'absolute';
+        testElement.style.visibility = 'hidden';
+        testElement.style.width = '1px';
+        testElement.style.height = '1px';
+        document.body.appendChild(testElement);
+        const styles = window.getComputedStyle(testElement);
+        const loaded = styles.backgroundImage !== 'none' || styles.background !== 'transparent';
+        document.body.removeChild(testElement);
+        console.log('Flag-icons CSS loaded check:', loaded);
+        return loaded;
+    })();
+    
     if (isMobile && supportsEmoji) {
         // На телефонах с поддержкой эмодзи
         return {
             ru: { flag: '🇺🇦', text: 'УКР' },
             en: { flag: '🇺🇸', text: 'ENG' }
         }[language] || { flag: '🇺🇦', text: 'УКР' };
-    } else {
+    } else if (flagIconsLoaded) {
         // На ПК или если эмодзи не поддерживаются - используем flag-icons CSS
         return {
             ru: { flag: '<span class="fi fi-ua"></span>', text: 'УКР' },
             en: { flag: '<span class="fi fi-us"></span>', text: 'ENG' }
         }[language] || { flag: '<span class="fi fi-ua"></span>', text: 'УКР' };
+    } else {
+        // Fallback - используем текстовые коды если CSS не загрузился
+        console.log('Using fallback text flags');
+        return {
+            ru: { flag: 'UA', text: 'УКР' },
+            en: { flag: 'US', text: 'ENG' }
+        }[language] || { flag: 'UA', text: 'УКР' };
     }
 };
 
