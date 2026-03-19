@@ -684,6 +684,128 @@ window.updateRatingDisplay = updateRatingDisplay;
 // ═══════════════════════════════════════════
 // DATA — полный список кранов
 // ═══════════════════════════════════════════
+// Функция для перевода описаний кранов
+function translateFaucetDescription(desc, lang) {
+  if (!desc) return desc;
+  
+  // Если текущий язык английский и описание на русском, переводим
+  if (lang === 'en' && /[\u0400-\u04FF]/.test(desc)) {
+    // Простые замены для основных фраз
+    const translations = {
+      'Краны Bitcoin тестовой сети': 'Bitcoin Testnet faucets',
+      'Для разработки и тестирования BTC транзакций': 'For development and testing BTC transactions',
+      'Замена Goerli': 'Goerli replacement',
+      'Используется для стейкинга и разработки': 'Used for staking and development',
+      'Кран pk910 поддерживает майнинг': 'pk910 faucet supports mining',
+      'Исторически первый тестнет Ethereum': 'Historically first Ethereum testnet',
+      'Устаревает, но краны ещё работают': 'Deprecated but faucets still work',
+      'Основной активный тестнет Ethereum': 'Main active Ethereum testnet',
+      'Большинство dApp тестируется здесь': 'Most dApps are tested here',
+      'L2 тестнет Arbitrum': 'L2 testnet Arbitrum',
+      'Нужен для тестирования контрактов на Arbitrum': 'Needed for testing contracts on Arbitrum',
+      'L2 тестнет Optimism': 'L2 testnet Optimism',
+      'Используется для Superchain разработки': 'Used for Superchain development',
+      'L2 от Coinbase': 'L2 from Coinbase',
+      'Активная экосистема, быстрый рост': 'Active ecosystem, rapid growth',
+      'Требует Coinbase аккаунт для верификации': 'Requires Coinbase account for verification',
+      'Тестнет Polygon (замена Mumbai)': 'Polygon testnet (Mumbai replacement)',
+      'Поддерживает мультикран с Ethereum Goerli': 'Supports multi-faucet with Ethereum Goerli',
+      'Официальный тестнет BSC': 'Official BSC testnet',
+      'Discord-бот: в ветке #testnet-faucet2 отправь /faucet <адрес>': 'Discord bot: in #testnet-faucet2 channel send /faucet <address>',
+      'zkEVM L2': 'zkEVM L2',
+      'Активная сеть с потенциальным аирдропом': 'Active network with potential airdrop',
+      'Хорошо для набора on-chain активности': 'Good for building on-chain activity',
+      'zkEVM L2 от ConsenSys (MetaMask)': 'zkEVM L2 from ConsenSys (MetaMask)',
+      'Активная экосистема, ожидается аирдроп': 'Active ecosystem, airdrop expected',
+      'Высокопроизводительный L1': 'High-performance L1',
+      'Один из самых ожидаемых проектов 2025': 'One of the most anticipated projects of 2025',
+      'Активность засчитывается для аирдропа': 'Activity counts for airdrop',
+      'zkRollup L2': 'zkRollup L2',
+      'Активная экосистема': 'Active ecosystem',
+      'Взаимодействие может учитываться для будущих аирдропов': 'Interaction may count for future airdrops',
+      'zkEVM от Matter Labs': 'zkEVM from Matter Labs',
+      'Portal zkSync — официальный кран': 'Portal zkSync - official faucet',
+      'Активность в тестнете важна': 'Activity in testnet is important',
+      'Официальный тестнет Avalanche (Fuji)': 'Official Avalanche testnet (Fuji)',
+      'Выдаёт тестовые AVAX для разработки': 'Issues test AVAX for development',
+      'Официальный тестнет Fantom Opera': 'Official Fantom Opera testnet',
+      'Chainlink также предоставляет кран для FTM': 'Chainlink also provides faucet for FTM',
+      'Инновационный L1 с механизмом Proof of Liquidity': 'Innovative L1 with Proof of Liquidity mechanism',
+      'Один из топ-тестнетов 2024-2025': 'One of the top testnets of 2024-2025',
+      'в день': '/day',
+      'день': 'day',
+      'час': 'hour',
+      'минут': 'minutes'
+    };
+    
+    let translated = desc;
+    for (const [ru, en] of Object.entries(translations)) {
+      translated = translated.replace(new RegExp(ru, 'g'), en);
+    }
+    
+    return translated;
+  }
+  
+  // Если текущий язык русский и описание на английском, переводим
+  if (lang === 'ru' && /[a-zA-Z]/.test(desc) && !/[\u0400-\u04FF]/.test(desc)) {
+    const translations = {
+      'Bitcoin Testnet faucets': 'Краны Bitcoin тестовой сети',
+      'For development and testing BTC transactions': 'Для разработки и тестирования BTC транзакций',
+      'Goerli replacement': 'Замена Goerli',
+      'Used for staking and development': 'Используется для стейкинга и разработки',
+      'pk910 faucet supports mining': 'Кран pk910 поддерживает майнинг',
+      'Historically first Ethereum testnet': 'Исторически первый тестнет Ethereum',
+      'Deprecated but faucets still work': 'Устаревает, но краны ещё работают',
+      'Main active Ethereum testnet': 'Основной активный тестнет Ethereum',
+      'Most dApps are tested here': 'Большинство dApp тестируется здесь',
+      'L2 testnet Arbitrum': 'L2 тестнет Arbitrum',
+      'Needed for testing contracts on Arbitrum': 'Нужен для тестирования контрактов на Arbitrum',
+      'L2 testnet Optimism': 'L2 тестнет Optimism',
+      'Used for Superchain development': 'Используется для Superchain разработки',
+      'L2 from Coinbase': 'L2 от Coinbase',
+      'Active ecosystem, rapid growth': 'Активная экосистема, быстрый рост',
+      'Requires Coinbase account for verification': 'Требует Coinbase аккаунт для верификации',
+      'Polygon testnet (Mumbai replacement)': 'Тестнет Polygon (замена Mumbai)',
+      'Supports multi-faucet with Ethereum Goerli': 'Поддерживает мультикран с Ethereum Goerli',
+      'Official BSC testnet': 'Официальный тестнет BSC',
+      'Discord bot: in #testnet-faucet2 channel send /faucet <address>': 'Discord-бот: в ветке #testnet-faucet2 отправь /faucet <адрес>',
+      'zkEVM L2': 'zkEVM L2',
+      'Active network with potential airdrop': 'Активная сеть с потенциальным аирдропом',
+      'Good for building on-chain activity': 'Хорошо для набора on-chain активности',
+      'zkEVM L2 from ConsenSys (MetaMask)': 'zkEVM L2 от ConsenSys (MetaMask)',
+      'Active ecosystem, airdrop expected': 'Активная экосистема, ожидается аирдроп',
+      'High-performance L1': 'Высокопроизводительный L1',
+      'One of the most anticipated projects of 2025': 'Один из самых ожидаемых проектов 2025',
+      'Activity counts for airdrop': 'Активность засчитывается для аирдропа',
+      'zkRollup L2': 'zkRollup L2',
+      'Active ecosystem': 'Активная экосистема',
+      'Interaction may count for future airdrops': 'Взаимодействие может учитываться для будущих аирдропов',
+      'zkEVM from Matter Labs': 'zkEVM от Matter Labs',
+      'Portal zkSync - official faucet': 'Portal zkSync — официальный кран',
+      'Activity in testnet is important': 'Активность в тестнете важна',
+      'Official Avalanche testnet (Fuji)': 'Официальный тестнет Avalanche (Fuji)',
+      'Issues test AVAX for development': 'Выдаёт тестовые AVAX для разработки',
+      'Official Fantom Opera testnet': 'Официальный тестнет Fantom Opera',
+      'Chainlink also provides faucet for FTM': 'Chainlink также предоставляет кран для FTM',
+      'Innovative L1 with Proof of Liquidity mechanism': 'Инновационный L1 с механизмом Proof of Liquidity',
+      'One of the top testnets of 2024-2025': 'Один из топ-тестнетов 2024-2025',
+      '/day': 'в день',
+      'day': 'день',
+      'hour': 'час',
+      'minutes': 'минут'
+    };
+    
+    let translated = desc;
+    for (const [en, ru] of Object.entries(translations)) {
+      translated = translated.replace(new RegExp(en, 'g'), ru);
+    }
+    
+    return translated;
+  }
+  
+  return desc;
+}
+
 const DEFAULT_FAUCETS = [
   // ── BITCOIN ──
   { id:'btc1', name:'Bitcoin Testnet 3', token:'BTC', type:'free', net:'testnet',
@@ -1634,7 +1756,7 @@ function renderSuggestionCard(s) {
     
     userInfo +
     
-    (s.desc ? '<p style="font-size:13px;color:#94a3b8;line-height:1.5;margin:8px 0;">' + s.desc + '</p>' : '') +
+    (s.desc ? '<p style="font-size:13px;color:#94a3b8;line-height:1.5;margin:8px 0;">' + translateFaucetDescription(s.desc, window.currentLang || 'ru') + '</p>' : '') +
     
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
       '<div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#64748b;">' +
@@ -3031,7 +3153,7 @@ function renderPendingPanel() {
         
         userInfo +
         
-        (s.desc ? '<div class="text-sm text-slate-300 mt-3 p-3 bg-slate-800/30 rounded border-l-4 border-blue-500">' + s.desc + '</div>' : '') +
+        (s.desc ? '<div class="text-sm text-slate-300 mt-3 p-3 bg-slate-800/30 rounded border-l-4 border-blue-500">' + translateFaucetDescription(s.desc, window.currentLang || 'ru') + '</div>' : '') +
         
         (links ? '<div class="mt-3"><div class="text-xs text-slate-500 mb-2">Links:</div>' + links + '</div>' : '') +
         
