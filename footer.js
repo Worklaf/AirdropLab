@@ -15,21 +15,23 @@
             if (select && typeof window.getFlagDisplay === 'function') {
                 const currentValue = select.value || (window.currentLang === 'en' ? 'en' : 'ru');
                 const options = select.querySelectorAll('option');
+                
                 options.forEach(option => {
                     const lang = option.value;
                     const display = window.getFlagDisplay(lang);
-                    // Создаем элементы через DOM чтобы избежать экранирования
-                    option.innerHTML = '';
-                    if (display.flag.includes('<img')) {
-                        // Если это img, создаем через DOM
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = display.flag;
-                        const img = tempDiv.firstChild;
-                        option.appendChild(img);
-                        option.appendChild(document.createTextNode(' ' + display.text));
-                    } else {
-                        // Если это текст или эмодзи
+                    
+                    if (typeof display.flag === 'string' && display.flag.includes('🇺')) {
+                        // Эмодзи для мобильных
                         option.textContent = display.flag + ' ' + display.text;
+                    } else {
+                        // CSS фоны для ПК
+                        option.textContent = ' ' + display.text;
+                        option.style.paddingLeft = '28px';
+                        option.style.backgroundImage = `url(${display.cssUrl})`;
+                        option.style.backgroundSize = '20px 20px';
+                        option.style.backgroundRepeat = 'no-repeat';
+                        option.style.backgroundPosition = '4px center';
+                        option.style.borderRadius = '2px';
                     }
                 });
                 select.value = currentValue;
@@ -2519,7 +2521,7 @@ window.getFlagDisplay = function(language) {
             en: { flag: '🇺🇸', text: 'ENG' }
         }[language] || { flag: '🇺🇦', text: 'УКР' };
     } else {
-        // На ПК используем ТОЛЬКО SVG файлы
+        // На ПК используем CSS фоны с SVG
         console.log('Using SVG flag files for PC');
         
         // Правильное определение пути для разных страниц
@@ -2537,17 +2539,23 @@ window.getFlagDisplay = function(language) {
         console.log('Current location:', currentPath);
         console.log('SVG flag paths:', uaPath, usPath);
         
-        // Параметры SVG флагов
-        const svgStyle = 'width:20px;height:20px;border-radius:2px;border:1px solid #ccc;vertical-align:middle;object-fit:cover;';
-        
-        // Fallback на текстовые флаги если SVG не загрузятся
-        const uaFallback = '<span style="display:inline-block;width:20px;height:20px;background:linear-gradient(to bottom,#005BBB 50%,#FFD500 50%);border-radius:2px;border:1px solid #ccc;vertical-align:middle;"></span>';
-        const usFallback = '<span style="display:inline-block;width:20px;height:20px;background:linear-gradient(to bottom,#B22234 0%,#B22234 40%,white 40%,white 60%,#B22234 60%,#B22234 100%);border-radius:2px;border:1px solid #ccc;vertical-align:middle;position:relative;"><span style="position:absolute;top:0;left:0;width:8px;height:8px;background:#3C3B6E;"></span></span>';
-        
+        // Возвращаем CSS классы вместо img
         return {
-            ru: { flag: '<img src="' + uaPath + '" alt="UA" style="' + svgStyle + '" onerror="console.error(\'Failed to load UA SVG flag at: ' + uaPath + '\');this.outerHTML=\'' + uaFallback + '\';">', text: 'УКР' },
-            en: { flag: '<img src="' + usPath + '" alt="US" style="' + svgStyle + '" onerror="console.error(\'Failed to load US SVG flag at: ' + usPath + '\');this.outerHTML=\'' + usFallback + '\';">', text: 'ENG' }
-        }[language] || { flag: '<img src="' + uaPath + '" alt="UA" style="' + svgStyle + '" onerror="console.error(\'Failed to load UA SVG flag at: ' + uaPath + '\');this.outerHTML=\'' + uaFallback + '\';">', text: 'УКР' };
+            ru: { 
+                flag: 'flag-ua', 
+                text: 'УКР',
+                cssUrl: uaPath
+            }, 
+            en: { 
+                flag: 'flag-us', 
+                text: 'ENG',
+                cssUrl: usPath
+            }
+        }[language] || { 
+            flag: 'flag-ua', 
+            text: 'УКР',
+            cssUrl: uaPath
+        };
     }
 };
 
