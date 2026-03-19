@@ -2077,6 +2077,11 @@ window.rewardUser = async function(userId, suggestionId) {
       });
       
       console.log('Notification sent to user:', userId, 'Language:', userLang);
+      
+      // Обновляем уведомления для пользователя (если это текущий пользователь)
+      if (currentUser && currentUser.uid === userId) {
+        await loadNotificationsFromFirestore();
+      }
     } catch(notifError) {
       console.warn('Failed to send notification:', notifError);
     }
@@ -2342,6 +2347,80 @@ async function submitSuggestion() {
     toast((window.currentLang === 'en') ? 'Error sending suggestion' : 'Ошибка при отправке предложения');
   }
 }
+
+window.submitSuggestion = submitSuggestion;
+
+// Загрузка уведомлений из Firestore
+async function loadNotificationsFromFirestore() {
+  if (!currentUser) return;
+  
+  try {
+    const notificationsSnap = await getDocs(query(
+      collection(db, 'notifications'),
+      where('userId', '==', currentUser.uid),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    ));
+    
+    const notifications = [];
+    notificationsSnap.forEach(doc => {
+      const data = doc.data();
+      notifications.push({
+        id: doc.id,
+        type: data.type === 'reward' ? 'success' : 'info',
+        message: data.message,
+        read: data.read || false,
+        createdAt: data.createdAt?.toDate?.() || new Date()
+      });
+    });
+    
+    // Обновляем глобальную переменную для footer.js
+    window.notifications = notifications;
+    
+    // Обновляем бейдж уведомлений если он есть
+    const unreadCount = notifications.filter(n => !n.read).length;
+    const notifBadge = document.getElementById('notificationBadge');
+    if (notifBadge) {
+      notifBadge.textContent = unreadCount;
+      notifBadge.style.display = unreadCount > 0 ? 'block' : 'none';
+    }
+    
+    console.log('Loaded notifications from Firestore:', notifications.length);
+  } catch(e) {
+    console.warn('Failed to load notifications from Firestore:', e);
+  }
+}
+
+window.loadNotificationsFromFirestore = loadNotificationsFromFirestore;
+
+// Отметить уведомление как прочитанное
+window.markNotificationAsRead = async function(notifId) {
+  if (!currentUser || !notifId) return;
+  
+  try {
+    await updateDoc(doc(db, 'notifications', notifId), {
+      read: true
+    });
+    
+    // Обновляем локальный массив
+    if (window.notifications) {
+      const notif = window.notifications.find(n => n.id === notifId);
+      if (notif) notif.read = true;
+    }
+    
+    // Обновляем бейдж
+    const unreadCount = window.notifications ? window.notifications.filter(n => !n.read).length : 0;
+    const notifBadge = document.getElementById('notificationBadge');
+    if (notifBadge) {
+      notifBadge.textContent = unreadCount;
+      notifBadge.style.display = unreadCount > 0 ? 'block' : 'none';
+    }
+    
+    console.log('Notification marked as read:', notifId);
+  } catch(e) {
+    console.error('Failed to mark notification as read:', e);
+  }
+};
 
 // Auth modal helpers
 function openLoginModal() {
@@ -2936,6 +3015,7 @@ onAuthStateChanged(auth, async (user) => {
   await loadFavorites();
   await loadFaucetsFromFirestore();
   if (isAdmin) await loadPendingSuggestions();
+  if (user) await loadNotificationsFromFirestore();
 
   // Hook profile/account modal (footer.js)
   try {
