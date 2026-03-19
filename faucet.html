@@ -320,12 +320,6 @@
       <span data-translate="faucets_suggest_btn">Предложить кран</span>
     </button>
 
-    <button class="filter-tab" onclick="togglePendingPanel()" id="userPendingBtn" style="display:none;">
-      <i class="fas fa-inbox" style="margin-right:4px;color:#a78bfa;"></i>
-      <span>Предложения</span>
-      <span id="userPendingBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
-    </button>
-
     <input id="faucetSearch" type="text" data-translate="faucets_search_placeholder" placeholder="Поиск по сети или токену..."
       style="padding:6px 14px;background:rgba(30,37,56,0.6);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#f1f5f9;font-size:12px;outline:none;min-width:220px;"
       oninput="fSearch(this.value)">
@@ -472,60 +466,89 @@
 </div>
 
 <!-- Modal: suggest faucet -->
-<div id="suggestModal">
-  <div class="modal-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h2 style="font-size:16px;font-weight:800;color:#f1f5f9;" data-translate="faucets_suggest_title">Предложить новый кран</h2>
-      <button onclick="closeSuggestModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;">&times;</button>
+<!-- Suggest Modal (same as Add Modal) -->
+<div id="suggestModal" class="modal-overlay">
+  <div class="modal-box" style="max-width: 540px;">
+    <div class="modal-header">
+      <h2 class="modal-title" id="suggestModalTitle" data-translate="faucets_suggest_title">Предложить новый кран</h2>
+      <button class="modal-close" onclick="closeSuggestModal()">&times;</button>
     </div>
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <div>
-        <div class="ae-label" data-translate="faucets_field_name">Название сети *</div>
-        <input class="ae-input" id="s_name" data-translate="faucets_ph_name" placeholder="Например: Ethereum Sepolia">
-      </div>
-      <div>
-        <div class="ae-label" data-translate="faucets_field_token">Токен *</div>
-        <input class="ae-input" id="s_token" data-translate="faucets_ph_token" placeholder="Например: ETH, BTC, SOL">
-      </div>
-      <div>
-        <div class="ae-label" data-translate="faucets_field_links">Ссылка *</div>
-        <input class="ae-input" id="s_link" data-translate="faucets_suggest_ph_link" placeholder="https://faucet.example.com">
-      </div>
-      <div>
-        <div class="ae-label" data-translate="faucets_field_logo">Логотип (URL)</div>
-        <input class="ae-input" id="s_logo" data-translate="faucets_ph_logo" placeholder="https://.../logo.png">
-      </div>
-      <div>
-        <div class="ae-label" data-translate="faucets_field_desc">Описание</div>
-        <textarea class="ae-input" id="s_desc" rows="2" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;"></textarea>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div>
-          <div class="ae-label" data-translate="faucets_field_type">Тип</div>
-          <select class="ae-select ae-input" id="s_type">
-            <option value="free" data-translate="faucets_type_free">Бесплатный</option>
-            <option value="paid" data-translate="faucets_type_paid">Платный</option>
-          </select>
+    <div class="modal-body">
+      <form onsubmit="event.preventDefault(); submitSuggestion();" style="display:grid;gap:16px;">
+        <input type="hidden" id="suggestId">
+        
+        <div class="form-row">
+          <div class="form-col">
+            <label class="form-label" data-translate="faucets_field_name">Название сети *</label>
+            <input class="form-input" id="suggest_name" data-translate="faucets_ph_name" placeholder="Например: Ethereum Sepolia" required>
+          </div>
+          <div class="form-col">
+            <label class="form-label" data-translate="faucets_field_token">Токен *</label>
+            <input class="form-input" id="suggest_token" data-translate="faucets_ph_token" placeholder="Например: ETH, BTC, SOL" required>
+          </div>
         </div>
+
         <div>
-          <div class="ae-label" data-translate="faucets_field_net">Сеть</div>
-          <select class="ae-select ae-input" id="s_net">
-            <option value="testnet" data-translate="faucets_net_testnet">Тестнет</option>
-            <option value="mainnet" data-translate="faucets_net_mainnet">Мейннет</option>
-          </select>
+          <label class="form-label" data-translate="faucets_field_links">Ссылки *</label>
+          <textarea class="form-input" id="suggest_links" rows="2" data-translate="faucets_ph_links" placeholder="https://faucet.example.com&#10;https://discord.gg/example" required></textarea>
         </div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:4px;">
-        <button onclick="submitSuggestion()" style="flex:1;padding:10px;background:linear-gradient(135deg,#8b5cf6,#2563eb);border:none;border-radius:8px;color:white;font-size:13px;font-weight:800;cursor:pointer;">
-          <i class="fas fa-paper-plane" style="margin-right:6px;"></i><span data-translate="send">Отправить</span>
-        </button>
-        <button onclick="closeSuggestModal()" style="padding:10px 18px;background:rgba(30,37,56,0.8);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#94a3b8;font-size:13px;cursor:pointer;">
-          <span data-translate="close">Закрыть</span>
-        </button>
-      </div>
-      <div style="font-size:11px;color:#64748b;line-height:1.5;" data-translate="faucets_suggest_hint">
-        Предложения попадают в модерацию. После одобрения кран появится в списке.
-      </div>
+
+        <div class="form-row">
+          <div class="form-col">
+            <label class="form-label" data-translate="faucets_field_logo">Логотип (URL)</label>
+            <input class="form-input" id="suggest_logo" data-translate="faucets_ph_logo" placeholder="https://.../logo.png">
+          </div>
+          <div class="form-col">
+            <label class="form-label" data-translate="faucets_field_type">Тип</label>
+            <select class="form-select" id="suggest_type">
+              <option value="free" data-translate="faucets_type_free">Бесплатный</option>
+              <option value="paid" data-translate="faucets_type_paid">Платный</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-col">
+            <label class="form-label" data-translate="faucets_field_net">Сеть</label>
+            <select class="form-select" id="suggest_net">
+              <option value="testnet" data-translate="faucets_net_testnet">Тестнет</option>
+              <option value="mainnet" data-translate="faucets_net_mainnet">Мейннет</option>
+            </select>
+          </div>
+          <div class="form-col">
+            <label class="form-label" data-translate="faucets_field_reward">Награда</label>
+            <input class="form-input" id="suggest_reward" data-translate="faucets_ph_reward" placeholder="0.1 ETH">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-col">
+            <label class="form-label" data-translate="faucets_field_cooldown">Кулдаун</label>
+            <input class="form-input" id="suggest_cooldown" data-translate="faucets_ph_cooldown" placeholder="24 часа">
+          </div>
+          <div class="form-col">
+            <label class="form-label" data-translate="faucets_field_tags">Теги</label>
+            <input class="form-input" id="suggest_tags" data-translate="faucets_ph_tags" placeholder="ETH, Layer 2, Testnet">
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" data-translate="faucets_field_desc">Описание</label>
+          <textarea class="form-input" id="suggest_desc" rows="3" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeSuggestModal()" data-translate="close">Закрыть</button>
+          <button type="submit" class="btn-primary">
+            <i class="fas fa-paper-plane" style="margin-right:6px;"></i>
+            <span data-translate="send">Отправить</span>
+          </button>
+        </div>
+        
+        <div style="font-size:11px;color:#64748b;line-height:1.5;padding:12px;background:rgba(34,211,238,0.05);border-radius:8px;border:1px solid rgba(34,211,238,0.1);" data-translate="faucets_suggest_hint">
+          Предложения попадают в модерацию. После одобрения кран появится в списке.
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -1340,6 +1363,7 @@ function renderCard(f) {
     '</div>';
   } else if ((f.status === 'rejected' || f.status === 'deleted') && currentUser && f.submittedBy === currentUser.uid) {
     authorBtns = '<div style="display:flex;gap:6px;margin-top:10px;">' +
+      '<button onclick="editAndResubmit(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);border-radius:6px;color:#22d3ee;font-size:11px;cursor:pointer;"><i class="fas fa-redo"></i> '+(isEn?'Edit & Resubmit':'Изменить и отправить повторно')+'</button>' +
       '<button onclick="deleteMySuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete Forever':'Удалить навсегда')+'</button>' +
     '</div>';
   }
@@ -1931,6 +1955,32 @@ window.rewardUser = async function(userId, suggestionId) {
     
     toast(isEn ? `Reward sent: ${amount} RGT` : `Награда отправлена: ${amount} RGT`);
     
+    // Отправляем уведомление пользователю
+    try {
+      // Получаем информацию о предложении для уведомления
+      const suggestionSnap = await getDoc(doc(db, COL_FAUCETS, suggestionId));
+      const suggestionName = suggestionSnap.exists() ? suggestionSnap.data().name : 'предложение';
+      
+      // Создаем уведомление в коллекции notifications
+      await addDoc(collection(db, 'notifications'), {
+        userId: userId,
+        type: 'reward',
+        title: isEn ? 'RGT Reward Received!' : 'Получена RGT награда!',
+        message: isEn 
+          ? `You received ${amount} RGT for your suggestion "${suggestionName}". Thank you for your contribution!`
+          : `Вы получили ${amount} RGT за ваше предложение "${suggestionName}". Спасибо за ваш вклад!`,
+        amount: Number(amount),
+        suggestionId: suggestionId,
+        suggestionName: suggestionName,
+        read: false,
+        createdAt: serverTimestamp()
+      });
+      
+      console.log('Notification sent to user:', userId);
+    } catch(notifError) {
+      console.warn('Failed to send notification:', notifError);
+    }
+    
     // Обновляем информацию о пользователе в интерфейсе
     if (typeof window.updateUserInfo === 'function') {
       window.updateUserInfo();
@@ -2080,52 +2130,100 @@ document.getElementById('suggestModal').addEventListener('click', function(e) {
 
 async function submitSuggestion() {
   if (!currentUser) { openLoginModal(); return; }
-  const name = document.getElementById('s_name').value.trim();
-  const token = document.getElementById('s_token').value.trim();
-  const link = normalizeUrl(document.getElementById('s_link').value.trim());
-  if (!name || !token || !link) {
-    alert((window.currentLang === 'en') ? 'Fill name, token and link' : 'Заполните название, токен и ссылку');
+  
+  const name = document.getElementById('suggest_name').value.trim();
+  const token = document.getElementById('suggest_token').value.trim();
+  const linksText = document.getElementById('suggest_links').value.trim();
+  const logo = document.getElementById('suggest_logo').value.trim();
+  const type = document.getElementById('suggest_type').value;
+  const net = document.getElementById('suggest_net').value;
+  const reward = document.getElementById('suggest_reward').value.trim();
+  const cooldown = document.getElementById('suggest_cooldown').value.trim();
+  const tagsText = document.getElementById('suggest_tags').value.trim();
+  const desc = document.getElementById('suggest_desc').value.trim();
+  const editId = document.getElementById('suggestId').value.trim();
+  
+  if (!name || !token || !linksText) {
+    alert((window.currentLang === 'en') ? 'Fill name, token and links' : 'Заполните название, токен и ссылки');
     return;
   }
   
-  // Создаем кран со статусом pending
-  const faucetData = {
-    name,
-    token,
-    links: [link],
-    logoUrl: normalizeUrl(document.getElementById('s_logo').value.trim()),
-    desc: document.getElementById('s_desc').value.trim(),
-    type: document.getElementById('s_type').value,
-    net: document.getElementById('s_net').value,
-    reward: '',
-    cooldown: '',
-    tags: [],
-    status: 'pending', // Статус для модерации
-    submittedBy: currentUser.uid,
-    submittedEmail: currentUser.email || '',
-    submittedAt: serverTimestamp(),
-    ratingAvg: 0,
-    ratingCount: 0,
-    clickCount: 0,
-    createdAt: serverTimestamp()
-  };
+  // Парсим ссылки и теги
+  const links = linksText.split('\n').map(l => l.trim()).filter(l => l);
+  const tags = tagsText ? tagsText.split(',').map(t => t.trim()).filter(t => t) : [];
   
-  // Добавляем в коллекцию faucets со специальным ID
-  const ref = await addDoc(collection(db, COL_FAUCETS), faucetData);
-  
-  closeSuggestModal();
-  document.getElementById('s_name').value = '';
-  document.getElementById('s_token').value = '';
-  document.getElementById('s_link').value = '';
-  document.getElementById('s_logo').value = '';
-  document.getElementById('s_desc').value = '';
-  
-  toast((window.currentLang === 'en') ? 'Suggestion sent for moderation' : 'Предложение отправлено на модерацию');
-  
-  // Перезагружаем краны
-  await loadFaucetsFromFirestore();
-};
-window.submitSuggestion = submitSuggestion;
+  try {
+    if (editId) {
+      // Обновляем существующее предложение (повторная отправка)
+      await updateDoc(doc(db, COL_FAUCETS, editId), {
+        name,
+        token,
+        links,
+        logoUrl: logo,
+        type,
+        net,
+        reward,
+        cooldown,
+        tags,
+        desc,
+        status: 'pending', // Возвращаем в pending
+        submittedAt: serverTimestamp() // Обновляем дату
+      });
+      toast((window.currentLang === 'en') ? 'Suggestion resubmitted!' : 'Предложение отправлено повторно!');
+    } else {
+      // Создаем новое предложение
+      const faucetData = {
+        name,
+        token,
+        links,
+        logoUrl: logo,
+        type,
+        net,
+        reward,
+        cooldown,
+        tags,
+        desc,
+        status: 'pending',
+        submittedBy: currentUser.uid,
+        submittedEmail: currentUser.email,
+        submittedAt: serverTimestamp(),
+        ratingAvg: 0,
+        ratingCount: 0,
+        clickCount: 0
+      };
+      
+      await addDoc(collection(db, COL_FAUCETS), faucetData);
+      toast((window.currentLang === 'en') ? 'Suggestion sent!' : 'Предложение отправлено!');
+    }
+    
+    closeSuggestModal();
+    
+    // Очищаем форму
+    document.getElementById('suggest_name').value = '';
+    document.getElementById('suggest_token').value = '';
+    document.getElementById('suggest_links').value = '';
+    document.getElementById('suggest_logo').value = '';
+    document.getElementById('suggest_type').value = 'free';
+    document.getElementById('suggest_net').value = 'testnet';
+    document.getElementById('suggest_reward').value = '';
+    document.getElementById('suggest_cooldown').value = '';
+    document.getElementById('suggest_tags').value = '';
+    document.getElementById('suggest_desc').value = '';
+    document.getElementById('suggestId').value = '';
+    
+    // Возвращаем заголовок
+    const titleEl = document.getElementById('suggestModalTitle');
+    if (titleEl) {
+      titleEl.textContent = (window.currentLang === 'en') ? 'Предложить новый кран' : 'Предложить новый кран';
+    }
+    
+    await loadFaucetsFromFirestore();
+    if (isAdmin) await loadPendingSuggestions();
+  } catch(e) {
+    console.error('Failed to submit suggestion:', e);
+    toast((window.currentLang === 'en') ? 'Error sending suggestion' : 'Ошибка при отправке предложения');
+  }
+}
 
 // Auth modal helpers
 function openLoginModal() {
@@ -2365,14 +2463,12 @@ async function loadPendingSuggestions() {
     // Update UI
     const countEl = document.getElementById('pendingCount');
     const badgeEl = document.getElementById('pendingBadge');
-    const userBadgeEl = document.getElementById('userPendingBadge');
     const suggestionsBadgeEl = document.getElementById('suggestionsBadge');
     const mySuggestionsBadgeEl = document.getElementById('mySuggestionsBadge');
     const indicatorEl = document.getElementById('pendingIndicator');
     
     if (countEl) countEl.textContent = pendingSuggestions.length + ' предложений';
     if (badgeEl) badgeEl.textContent = pendingSuggestions.length;
-    if (userBadgeEl) userBadgeEl.textContent = pendingSuggestions.length;
     if (suggestionsBadgeEl) suggestionsBadgeEl.textContent = pendingSuggestions.length;
     
     // Считаем предложения текущего пользователя
@@ -2511,6 +2607,42 @@ window.deleteSuggestion = async function(id) {
   toast((window.currentLang==='en')?'Deleted':'Удалено');
   await loadFaucetsFromFirestore();
   if (isAdmin) await loadPendingSuggestions();
+};
+
+window.editAndResubmit = function(id) {
+  const faucet = faucets.find(f => f.id === id);
+  if (!faucet) return;
+  
+  const isEn = (window.currentLang === 'en');
+  
+  // Заполняем форму предложения данными из существующего
+  const nameEl = document.getElementById('suggest_name');
+  const tokenEl = document.getElementById('suggest_token');
+  const linksEl = document.getElementById('suggest_links');
+  const logoEl = document.getElementById('suggest_logo');
+  const descEl = document.getElementById('suggest_desc');
+  const typeEl = document.getElementById('suggest_type');
+  const netEl = document.getElementById('suggest_net');
+  const rewardEl = document.getElementById('suggest_reward');
+  const cooldownEl = document.getElementById('suggest_cooldown');
+  const tagsEl = document.getElementById('suggest_tags');
+  const idEl = document.getElementById('suggestId');
+  const titleEl = document.getElementById('suggestModalTitle');
+  
+  if (nameEl) nameEl.value = faucet.name || '';
+  if (tokenEl) tokenEl.value = faucet.token || '';
+  if (linksEl) linksEl.value = (faucet.links || []).join('\n');
+  if (logoEl) logoEl.value = faucet.logoUrl || '';
+  if (descEl) descEl.value = faucet.desc || '';
+  if (typeEl) typeEl.value = faucet.type || 'free';
+  if (netEl) netEl.value = faucet.net || 'testnet';
+  if (rewardEl) rewardEl.value = faucet.reward || '';
+  if (cooldownEl) cooldownEl.value = faucet.cooldown || '';
+  if (tagsEl) tagsEl.value = (faucet.tags || []).join(', ');
+  if (idEl) idEl.value = faucet.id;
+  if (titleEl) titleEl.textContent = isEn ? 'Edit & Resubmit Suggestion' : 'Изменить и отправить повторно';
+  
+  openSuggestModal();
 };
 
 window.editSuggestion = function(id) {
@@ -2674,16 +2806,12 @@ onAuthStateChanged(auth, async (user) => {
   // Показываем/скрываем кнопки фильтров
   const mySuggestionsBtn = document.getElementById('mySuggestionsFilter');
   const suggestionsBtn = document.getElementById('suggestionsFilter');
-  const userPendingBtn = document.getElementById('userPendingBtn');
   
   if (mySuggestionsBtn) {
     mySuggestionsBtn.style.display = user ? 'inline-flex' : 'none';
   }
   if (suggestionsBtn) {
     suggestionsBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-  }
-  if (userPendingBtn) {
-    userPendingBtn.style.display = isAdmin ? 'inline-flex' : 'none';
   }
   
   updateHeaderAuthUI(user);
