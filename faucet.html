@@ -684,6 +684,23 @@ window.updateRatingDisplay = updateRatingDisplay;
 // ═══════════════════════════════════════════
 // DATA — полный список кранов
 // ═══════════════════════════════════════════
+// Функция для перевода текстов
+function t(key) {
+  if (!window.currentLang) window.currentLang = 'ru';
+  return translations[window.currentLang][key] || translations['ru'][key] || key;
+}
+
+// Функция для обновления всех переводов на странице
+function updateAllTranslations() {
+  document.querySelectorAll('[data-translate]').forEach(element => {
+    const key = element.getAttribute('data-translate');
+    element.textContent = t(key);
+  });
+  
+  // Обновляем описания кранов
+  renderAll();
+}
+
 // Функция для перевода описаний кранов
 function translateFaucetDescription(desc, lang) {
   if (!desc) return desc;
@@ -3385,7 +3402,8 @@ async function setUserRating(faucetId, newRating) {
 
 // Language change rerender
 document.addEventListener('languageChanged', function() {
-  renderAll();
+  if (typeof window.updateAllTranslations === 'function') window.updateAllTranslations();
+  else renderAll();
 });
 
 // Init
