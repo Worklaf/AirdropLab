@@ -15,22 +15,20 @@
             if (select && typeof window.getFlagDisplay === 'function') {
                 const currentValue = select.value || (window.currentLang === 'en' ? 'en' : 'ru');
                 const options = select.querySelectorAll('option');
-                
                 options.forEach(option => {
                     const lang = option.value;
                     const display = window.getFlagDisplay(lang);
-                    
-                    if (display.cssUrl) {
-                        // CSS фоны для ПК (есть cssUrl)
-                        option.textContent = ' ' + display.text;
-                        option.style.paddingLeft = '28px';
-                        option.style.backgroundImage = `url(${display.cssUrl})`;
-                        option.style.backgroundSize = '20px 20px';
-                        option.style.backgroundRepeat = 'no-repeat';
-                        option.style.backgroundPosition = '4px center';
-                        option.style.borderRadius = '2px';
+                    // Создаем элементы через DOM чтобы избежать экранирования
+                    option.innerHTML = '';
+                    if (display.flag.includes('<img')) {
+                        // Если это img, создаем через DOM
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = display.flag;
+                        const img = tempDiv.firstChild;
+                        option.appendChild(img);
+                        option.appendChild(document.createTextNode(' ' + display.text));
                     } else {
-                        // Эмодзи для мобильных (нет cssUrl)
+                        // Если это текст или эмодзи
                         option.textContent = display.flag + ' ' + display.text;
                     }
                 });
@@ -2500,63 +2498,71 @@ function initAccountPage() {
 
     // Универсальная функция для получения отображения флага - ТОЛЬКО SVG
 window.getFlagDisplay = function(language) {
-    // Определяем устройство и поддержка эмодзи
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const supportsEmoji = (function() {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const text = '🇺🇦';
-        ctx.textBaseline = 'top';
-        ctx.font = '16px Arial';
-        ctx.fillText(text, 0, 0);
-        const data = ctx.getImageData(0, 0, 16, 16).data;
-        return data.some(channel => channel !== 0);
+        try {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '16px Arial';
+            ctx.fillText('🇺🇦', 0, 0);
+            const data = ctx.getImageData(0, 0, 16, 16).data;
+            return data.some(channel => channel !== 0);
+        } catch(e) { return false; }
     })();
-    
+
     if (isMobile && supportsEmoji) {
-        // На телефонах с поддержкой эмодзи
-        console.log('Using emoji flags for mobile');
         return {
             ru: { flag: '🇺🇦', text: 'УКР' },
             en: { flag: '🇺🇸', text: 'ENG' }
         }[language] || { flag: '🇺🇦', text: 'УКР' };
-    } else {
-        // На ПК используем CSS фоны с SVG
-        console.log('Using SVG flag files for PC');
-        
-        // Правильное определение пути для разных страниц
-        const currentPath = window.location.pathname;
-        let basePath;
-        
-        if (currentPath.includes('/faucet') || currentPath.includes('faucet.html')) {
-            basePath = './assets/flags/';
-        } else {
-            basePath = '../assets/flags/';
-        }
-        
-        const uaPath = basePath + 'ua.svg';
-        const usPath = basePath + 'us.svg';
-        console.log('Current location:', currentPath);
-        console.log('SVG flag paths:', uaPath, usPath);
-        
-        // Возвращаем CSS классы вместо img
-        return {
-            ru: { 
-                flag: 'flag-ua', 
-                text: 'УКР',
-                cssUrl: uaPath
-            }, 
-            en: { 
-                flag: 'flag-us', 
-                text: 'ENG',
-                cssUrl: usPath
-            }
-        }[language] || { 
-            flag: 'flag-ua', 
-            text: 'УКР',
-            cssUrl: uaPath
-        };
     }
+
+    // Определяем путь к флагам
+    const currentPath = window.location.pathname;
+    const basePath = (currentPath.includes('/faucet') || currentPath.includes('faucet.html'))
+        ? './assets/flags/'
+        : '../assets/flags/';
+
+    const svgStyle = 'width:20px;height:20px;border-radius:2px;border:1px solid #ccc;vertical-align:middle;object-fit:cover;';
+
+    // Создаём img элементы через DOM — никаких проблем с кавычками
+    function makeFlagImg(src, alt, fallbackGradient) {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = alt;
+        img.setAttribute('style', svgStyle);
+        img.onerror = function() {
+            const span = document.createElement('span');
+            span.setAttribute('style',
+                'display:inline-block;width:20px;height:20px;border-radius:2px;' +
+                'border:1px solid #ccc;vertical-align:middle;background:' + fallbackGradient + ';'
+            );
+            this.replaceWith(span);
+        };
+        return img.outerHTML;
+    }
+
+    const flags = {
+        ru: makeFlagImg(
+            basePath + 'ua.svg',
+            'UA',
+            'linear-gradient(to bottom,#005BBB 50%,#FFD500 50%)'
+        ),
+        en: makeFlagImg(
+            basePath + 'us.svg',
+            'US',
+            'linear-gradient(to bottom,#B22234 0%,#B22234 40%,white 40%,white 60%,#B22234 60%)'
+        )
+    };
+
+    const defaults = { ru: { text: 'УКР' }, en: { text: 'ENG' } };
+    const lang = flags[language] ? language : 'ru';
+
+    return {
+        flag: flags[lang],
+        text: defaults[lang].text
+    };
 };
 
     window.updateProfileLanguage = async function(language) {
