@@ -70,6 +70,7 @@
     .filter-tab.apaid { background: rgba(245,158,11,0.12); color: #fbbf24; border-color: rgba(245,158,11,0.35); }
     .filter-tab.atest { background: rgba(59,130,246,0.12); color: #60a5fa; border-color: rgba(59,130,246,0.35); }
     .filter-tab.amain { background: rgba(139,92,246,0.12); color: #a78bfa; border-color: rgba(139,92,246,0.35); }
+    .filter-tab.asuggestions { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.35); }
 
     /* Admin panel */
     #adminBar {
@@ -295,6 +296,10 @@
     <button class="filter-tab"       onclick="fFilter('testnet',this)"><i class="fas fa-flask" style="margin-right:4px;color:#60a5fa;"></i><span data-translate="faucets_filter_testnet">Тестнеты</span></button>
     <button class="filter-tab"       onclick="fFilter('mainnet',this)"><i class="fas fa-network-wired" style="margin-right:4px;color:#a78bfa;"></i><span data-translate="faucets_filter_mainnet">Мейннеты</span></button>
     <button class="filter-tab"       onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="favorites">Избранное</span></button>
+    <button class="filter-tab" onclick="fFilter('suggestions',this)" id="suggestionsFilter" style="display:none;background:rgba(239,68,68,0.12);color:#f87171;border-color:rgba(239,68,68,0.35);" data-filter="suggestions">
+      <i class="fas fa-inbox" style="margin-right:4px;"></i>
+      Предложения <span id="suggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
+    </button>
 
     <select id="sortSelectFaucets" onchange="setSort(this.value)"
       style="padding:6px 12px;background:rgba(30,37,56,0.6);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#f1f5f9;font-size:12px;outline:none;">
@@ -1354,7 +1359,7 @@ function updateCounts() {
 function fFilter(type, btn) {
   currentFilter = type;
   document.querySelectorAll('.filter-tab').forEach(function(t){ t.className = 'filter-tab'; });
-  var map = { all:'af', free:'afree', paid:'apaid', testnet:'atest', mainnet:'amain' };
+  var map = { all:'af', free:'afree', paid:'apaid', testnet:'atest', mainnet:'amain', suggestions:'asuggestions' };
   if (btn) btn.classList.add(map[type] || 'af');
   applyCurrentFilter();
 }
@@ -1362,6 +1367,13 @@ window.fFilter = fFilter;
 
 function applyCurrentFilter() {
   var query = (document.getElementById('faucetSearch').value || '').toLowerCase();
+  
+  // Если выбран фильтр предложений, показываем их вместо обычных кранов
+  if (currentFilter === 'suggestions') {
+    renderSuggestions();
+    return;
+  }
+  
   document.querySelectorAll('.faucet-card').forEach(function(card) {
     // favorites filter = any favorited link inside this faucet
     var isFav = false;
@@ -1382,14 +1394,212 @@ function applyCurrentFilter() {
   });
 }
 
+function renderSuggestions() {
+  const container = document.getElementById('sectionsContainer');
+  if (!container) return;
+  
+  const isEn = (window.currentLang === 'en');
+  
+  if (!pendingSuggestions.length) {
+    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#64748b;"><i class="fas fa-inbox" style="font-size:48px;margin-bottom:16px;opacity:0.5;"></i><div style="font-size:18px;margin-bottom:8px;">' + (isEn ? 'No suggestions yet' : 'Нет предложений') + '</div><div style="font-size:14px;">' + (isEn ? 'When users suggest faucets, they will appear here' : 'Когда пользователи предложат краны, они появятся здесь') + '</div></div>';
+    return;
+  }
+  
+  let html = '<div class="faucet-section"><h2 class="section-title" style="color:#f87171;"><i class="fas fa-inbox" style="margin-right:8px;"></i>' + (isEn ? 'Pending Suggestions' : 'Предложения на рассмотрении') + ' <span style="font-size:14px;opacity:0.7;">(' + pendingSuggestions.length + ')</span></h2><div class="faucets-grid">';
+  
+  pendingSuggestions.forEach(s => {
+    // Преобразуем предложение в формат крана для рендеринга
+    const faucetData = {
+      id: 'suggestion_' + s.id,
+      name: s.name,
+      token: s.token,
+      type: s.type,
+      net: s.net,
+      desc: s.desc,
+      logoUrl: s.logoUrl,
+      links: s.links || [s.link],
+      reward: '',
+      cooldown: '',
+      tags: ['suggestion'],
+      ratingAvg: 0,
+      ratingCount: 0,
+      clickCount: 0,
+      submittedBy: s.submittedBy,
+      submittedEmail: s.submittedEmail,
+      submittedAt: s.submittedAt,
+      userName: s.userName,
+      userPhoto: s.userPhoto,
+      status: s.status
+    };
+    
+    html += renderSuggestionCard(faucetData);
+  });
+  
+  html += '</div></div>';
+  container.innerHTML = html;
+}
+
+function renderSuggestionCard(s) {
+  const isEn = (window.currentLang === 'en');
+  const typeClass = 'asuggestions';
+  const chips = '';
+  const ratingAvg = 0;
+  const ratingCount = 0;
+  const ratingText = '–';
+  
+  const autoLogo = (!s.logoUrl && (s.links||[])[0]) ? getFaviconUrlFromLink((s.links||[])[0]) : '';
+  const logoSrc = s.logoUrl || autoLogo;
+  const networkIcon = getNetworkIcon(s.token, s.name);
+  const logoHtml = logoSrc
+    ? '<img class="faucet-logo" src="' + logoSrc + '" alt="' + s.name + '"'
+         + ' onerror="this.outerHTML=\'<div class=&quot;faucet-logo-placeholder&quot;><i class=&quot;' + networkIcon + '&quot;></i></div>\'">'
+    : '<div class="faucet-logo-placeholder"><i class="' + networkIcon + '"></i></div>';
+
+  const links = (s.links || []).map(url => 
+    '<a href="' + url + '" target="_blank" class="faucet-link" onclick="trackClick(\'' + s.id + '\')">' + 
+      (url.startsWith('http') ? url.replace(/^https?:\/\//, '').split('/')[0] : url) + 
+      '<button class="favorite-btn" onclick="event.stopPropagation(); toggleFavoriteLink(\'' + s.id + '\',\'' + url + '\')">' +
+        '<i class="fas fa-star" style="color:' + (Array.from(linkFavoritesSet).some(k => k === s.id + '|' + url) ? '#fbbf24' : '#475569') + ';"></i>' +
+      '</button>' +
+    '</a>'
+  ).join('');
+
+  // Информация о пользователе
+  const submittedDate = s.submittedAt?.toDate?.() || new Date(s.submittedAt);
+  const timeAgo = getTimeAgo(submittedDate);
+  const userInfo = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:rgba(34,211,238,0.1);border-radius:8px;border:1px solid rgba(34,211,238,0.2);">' +
+    '<img src="' + (s.userPhoto || 'https://www.gravatar.com/avatar/?d=mp') + '" ' +
+         'style="width:24px;height:24px;border-radius:50%;border:2px solid rgba(34,211,238,0.3);cursor:pointer;" ' +
+         'onclick="showUserInfo(\'' + s.submittedBy + '\')" ' +
+         'onerror="this.src=\'https://www.gravatar.com/avatar/?d=mp\'" ' +
+         'title="' + (s.userName || 'Anonymous') + '">' +
+    '<div style="flex:1;">' +
+      '<div style="font-size:12px;font-weight:600;color:#f1f5f9;cursor:pointer;" onclick="showUserInfo(\'' + s.submittedBy + '\')" title="Посмотреть профиль">' + (s.userName || 'Anonymous') + '</div>' +
+      '<div style="font-size:10px;color:#94a3b8;">' + timeAgo + '</div>' +
+    '</div>' +
+    '<span style="font-size:10px;padding:2px 6px;background:rgba(239,68,68,0.2);color:#f87171;border-radius:4px;">Предложение</span>' +
+  '</div>';
+
+  var editBtns = '<div style="display:flex;gap:6px;margin-top:10px;">' +
+    '<button onclick="editSuggestion(\'' + s.id + '\')" style="padding:5px 12px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);border-radius:6px;color:#22d3ee;font-size:11px;cursor:pointer;"><i class="fas fa-pen"></i> '+(isEn?'Edit':'Изменить')+'</button>' +
+    '<button onclick="approveSuggestion(\'' + s.id + '\')" style="padding:5px 12px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:6px;color:#34d399;font-size:11px;cursor:pointer;"><i class="fas fa-check"></i> '+(isEn?'Approve':'Одобрить')+'</button>' +
+    '<button onclick="deleteSuggestion(\'' + s.id + '\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete':'Удалить')+'</button>' +
+    '<button onclick="rewardUser(\'' + s.submittedBy + '\', \'' + s.id + '\')" style="padding:5px 12px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:6px;color:#fbbf24;font-size:11px;cursor:pointer;"><i class="fas fa-coins"></i> RGT</button>' +
+  '</div>';
+
+  return '<div class="faucet-card ' + typeClass + '" data-id="' + s.id + '" data-name="' + s.name.toLowerCase() + '" data-token="' + (s.token || '').toLowerCase() + '" data-type="' + s.type + '" data-net="' + s.net + '">' +
+    '<div style="padding:16px;border:2px solid rgba(239,68,68,0.3);background:linear-gradient(135deg,rgba(239,68,68,0.05),rgba(15,23,42,0.8));">' +
+    '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">' +
+      logoHtml +
+      '<div style="flex:1;min-width:0;">' +
+        '<h3 style="font-size:16px;font-weight:700;color:#f1f5f9;margin:0 0 4px 0;line-height:1.3;">' + s.name + '</h3>' +
+        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">' +
+          '<span class="token-badge">' + (s.token || 'N/A') + '</span>' +
+          '<span class="type-badge type-' + s.type + '">' + s.type + '</span>' +
+          '<span class="net-badge">' + (s.net || 'unknown') + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    
+    userInfo +
+    
+    (s.desc ? '<p style="font-size:13px;color:#94a3b8;line-height:1.5;margin:8px 0;">' + s.desc + '</p>' : '') +
+    
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+      '<div style="display:flex;align-items:center;gap:4px;font-size:12px;color:#64748b;">' +
+        '<i class="fas fa-star" style="color:#fbbf24;"></i>' +
+        '<span>' + ratingText + '</span>' +
+        (ratingCount > 0 ? '<span style="font-size:11px;opacity:0.7;">(' + ratingCount + ')</span>' : '') +
+      '</div>' +
+    '</div>' +
+    
+    '<div style="margin-bottom:8px;">' + links + '</div>' +
+    
+    editBtns +
+  '</div></div>';
+}
+
+function getTimeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  const intervals = {
+    год: 31536000, года: 31536000, лет: 31536000,
+    месяц: 2592000, месяца: 2592000, месяцев: 2592000,
+    день: 86400, дня: 86400, дней: 86400,
+    час: 3600, часа: 3600, часов: 3600,
+    минута: 60, минуты: 60, минут: 60
+  };
+  
+  for (const [word, secondsInInterval] of Object.entries(intervals)) {
+    const interval = Math.floor(seconds / secondsInInterval);
+    if (interval >= 1) {
+      return interval + ' ' + word + ' назад';
+    }
+  }
+  return 'только что';
+}
+
 function fSearch(val) { applyCurrentFilter(); }
 window.fSearch = fSearch;
 
-function setSort(v) {
-  currentSort = v || 'name';
-  renderAll();
-}
-window.setSort = setSort;
+// Functions for suggestions
+window.editSuggestion = function(id) {
+  const suggestion = pendingSuggestions.find(s => s.id === id);
+  if (!suggestion) return;
+  
+  // Заполняем форму редактирования данными из предложения
+  document.getElementById('editId').value = suggestion.id;
+  document.getElementById('f_name').value = suggestion.name;
+  document.getElementById('f_token').value = suggestion.token;
+  document.getElementById('f_link').value = suggestion.link;
+  document.getElementById('f_logo').value = suggestion.logoUrl || '';
+  document.getElementById('f_desc').value = suggestion.desc || '';
+  document.getElementById('f_type').value = suggestion.type;
+  document.getElementById('f_net').value = suggestion.net;
+  document.getElementById('f_reward').value = suggestion.reward || '';
+  document.getElementById('f_cooldown').value = suggestion.cooldown || '';
+  
+  document.getElementById('modalTitle').textContent = 'Редактировать предложение';
+  openAddModal();
+};
+
+window.showUserInfo = function(userId) {
+  // Показываем модальное окно с информацией о пользователе
+  const user = pendingSuggestions.find(s => s.submittedBy === userId);
+  if (!user) return;
+  
+  const isEn = (window.currentLang === 'en');
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
+  modal.innerHTML = '<div style="background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid rgba(34,211,238,0.3);border-radius:16px;padding:24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+      '<h3 style="font-size:18px;font-weight:700;color:#f1f5f9;">Информация о пользователе</h3>' +
+      '<button onclick="this.closest(\'div[style]\').parentElement.remove()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:20px;">&times;</button>' +
+    '</div>' +
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">' +
+      '<img src="' + (user.userPhoto || 'https://www.gravatar.com/avatar/?d=mp') + '" style="width:60px;height:60px;border-radius:50%;border:2px solid rgba(34,211,238,0.3);" onerror="this.src=\'https://www.gravatar.com/avatar/?d=mp\'">' +
+      '<div>' +
+        '<div style="font-size:16px;font-weight:600;color:#f1f5f9;margin-bottom:4px;">' + (user.userName || 'Anonymous') + '</div>' +
+        '<div style="font-size:14px;color:#94a3b8;">' + (user.submittedEmail || 'No email') + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="font-size:14px;color:#94a3b8;line-height:1.5;">' +
+      '<div style="margin-bottom:8px;"><strong>ID:</strong> ' + userId + '</div>' +
+      '<div style="margin-bottom:8px;"><strong>Предложений:</strong> ' + pendingSuggestions.filter(s => s.submittedBy === userId).length + '</div>' +
+      '<div><strong>Последнее предложение:</strong> ' + new Date(user.submittedAt?.toDate?.() || user.submittedAt).toLocaleDateString() + '</div>' +
+    '</div>' +
+  '</div>';
+  document.body.appendChild(modal);
+};
+
+window.rewardUser = function(userId, suggestionId) {
+  const isEn = (window.currentLang === 'en');
+  const amount = prompt((isEn ? 'Enter RGT amount to reward:' : 'Введите количество RGT для награды:'), '100');
+  
+  if (!amount || isNaN(amount)) return;
+  
+  // Здесь логика начисления RGT пользователю
+  alert((isEn ? 'Reward sent!' : 'Награда отправлена!') + ' ' + amount + ' RGT');
+};
 
 function sortFaucets(list) {
   const arr = list.slice();
@@ -1783,11 +1993,13 @@ async function loadPendingSuggestions() {
     const countEl = document.getElementById('pendingCount');
     const badgeEl = document.getElementById('pendingBadge');
     const userBadgeEl = document.getElementById('userPendingBadge');
+    const suggestionsBadgeEl = document.getElementById('suggestionsBadge');
     const indicatorEl = document.getElementById('pendingIndicator');
     
     if (countEl) countEl.textContent = pendingSuggestions.length + ' предложений';
     if (badgeEl) badgeEl.textContent = pendingSuggestions.length;
     if (userBadgeEl) userBadgeEl.textContent = pendingSuggestions.length;
+    if (suggestionsBadgeEl) suggestionsBadgeEl.textContent = pendingSuggestions.length;
     if (indicatorEl) {
       indicatorEl.style.background = pendingSuggestions.length > 0 ? '#ef4444' : '#22d3ee';
       if (pendingSuggestions.length > 0) {
@@ -2048,10 +2260,14 @@ onAuthStateChanged(auth, async (user) => {
   isAdmin = !!(user && (user.uid === ADMIN_UID));
   document.getElementById('adminBar').style.display = isAdmin ? 'flex' : 'none';
   
-  // Show/hide user suggestions button
+  // Show/hide user suggestions button and filter
   const userPendingBtn = document.getElementById('userPendingBtn');
+  const suggestionsFilter = document.getElementById('suggestionsFilter');
   if (userPendingBtn) {
     userPendingBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+  }
+  if (suggestionsFilter) {
+    suggestionsFilter.style.display = isAdmin ? 'inline-flex' : 'none';
   }
   
   updateHeaderAuthUI(user);
