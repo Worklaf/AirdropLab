@@ -2058,8 +2058,24 @@ window.rewardUser = async function(userId, suggestionId) {
       // Получаем язык пользователя из его профиля
       const userSnap = await getDoc(doc(db, 'users', userId));
       const userData = userSnap.exists() ? userSnap.data() : {};
-      const userLang = userData.currentLang || 'ru'; // по умолчанию русский
-      const isUserEn = userLang === 'en';
+      
+      // Определяем язык пользователя: проверяем несколько возможных полей
+      let userLang = 'ru'; // по умолчанию русский
+      if (userData.language) userLang = userData.language;
+      else if (userData.currentLang) userLang = userData.currentLang;
+      else if (userData.lang) userLang = userData.lang;
+      else if (window.currentLang && userData.uid === currentUser?.uid) userLang = window.currentLang;
+      
+      const isUserEn = userLang === 'en' || userLang === 'en-US';
+      
+      console.log('User language detection:', { 
+        userId, 
+        profileLang: userData.language,
+        currentLang: userData.currentLang, 
+        globalLang: window.currentLang,
+        detected: userLang,
+        isEn: isUserEn 
+      });
       
       // Создаем уведомление в коллекции notifications
       await addDoc(collection(db, 'notifications'), {
@@ -2076,7 +2092,7 @@ window.rewardUser = async function(userId, suggestionId) {
         createdAt: serverTimestamp()
       });
       
-      console.log('Notification sent to user:', userId, 'Language:', userLang);
+      console.log('Notification sent to user:', userId, 'Language:', userLang, 'Is English:', isUserEn);
       
       // Обновляем уведомления для пользователя (если это текущий пользователь)
       if (currentUser && currentUser.uid === userId) {
@@ -2272,8 +2288,30 @@ async function saveSuggestion() {
         return;
       }
       
-      await updateDoc(doc(db, COL_FAUCETS, id), payload);
-      toast((window.currentLang === 'en') ? 'Suggestion updated!' : 'Предложение обновлено!');
+      // Сохраняем текущий статус (важно для Firestore правил)
+      const currentStatus = faucet.status || 'pending';
+      
+      // Если предложение было удалено/отклонено, создаем новое вместо обновления
+      if (currentStatus === 'deleted' || currentStatus === 'rejected') {
+        // Создаем новое предложение с теми же данными
+        const newPayload = {
+          ...payload,
+          status: 'pending',
+          submittedBy: currentUser.uid,
+          createdAt: serverTimestamp(),
+          ratingAvg: 0,
+          ratingCount: 0,
+          clickCount: 0
+        };
+        
+        await addDoc(collection(db, COL_FAUCETS), newPayload);
+        toast((window.currentLang === 'en') ? 'Suggestion resubmitted!' : 'Предложение отправлено повторно!');
+      } else {
+        // Обновляем существующее предложение (только pending)
+        payload.status = currentStatus; // сохраняем статус
+        await updateDoc(doc(db, COL_FAUCETS, id), payload);
+        toast((window.currentLang === 'en') ? 'Suggestion updated!' : 'Предложение обновлено!');
+      }
     } else {
       // Создание нового предложения через submitSuggestion
       closeAddModal();
@@ -2492,13 +2530,14 @@ window.showNotifications = function() {
     return;
   }
   
-  // Иначе создаем простое модальное окно
+  // Создаем модальное окно поверх всего с высоким z-index
   const modal = document.createElement('div');
+  modal.id = 'notificationsModalOverlay';
   modal.style.cssText = `
-    position: fixed; inset: 0; z-index: 9999;
+    position: fixed; inset: 0; z-index: 99999;
     background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
     display: flex; align-items: center; justify-content: center;
-    padding: 16px;
+    padding: 16px; opacity: 0; transition: opacity 0.2s ease;
   `;
   
   const content = document.createElement('div');
@@ -2506,6 +2545,8 @@ window.showNotifications = function() {
     background: #1e2538; border: 1px solid rgba(71,85,105,0.5);
     border-radius: 20px; width: 100%; max-width: 500px; max-height: 70vh;
     overflow: hidden; display: flex; flex-direction: column;
+    transform: scale(0.95); transition: transform 0.2s ease;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
   `;
   
   const notifications = window.notifications || [];
@@ -2517,7 +2558,9 @@ window.showNotifications = function() {
           <i class="fas fa-bell" style="color:#22d3ee;"></i>
           Уведомления
         </h2>
-        <button onclick="this.closest('div[style*=position]').remove()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:18px;">&times;</button>
+        <button onclick="this.closest('#notificationsModalOverlay').remove()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:18px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
+                onmouseover="this.style.background='rgba(239,68,68,0.3)';this.style.color='#f87171'" 
+                onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">&times;</button>
       </div>
     </div>
     <div style="padding:20px;overflow-y:auto;flex:1;">
@@ -2531,7 +2574,7 @@ window.showNotifications = function() {
                 <p style="font-size:13px;color:#f1f5f9;line-height:1.4;margin:0 0 4px 0;">${notif.message}</p>
                 <p style="font-size:11px;color:#64748b;margin:0;">${new Date(notif.createdAt).toLocaleString()}</p>
               </div>
-              ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); this.closest('div[style*=position]').querySelector('.fa-bell').click();" style="background:none;border:none;color:#22d3ee;cursor:pointer;font-size:11px;">Отметить</button>` : ''}
+              ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); this.closest('#notificationsModalOverlay').querySelector('.fa-bell').click();" style="background:none;border:none;color:#22d3ee;cursor:pointer;font-size:11px;padding:4px 8px;border-radius:4px;transition:all 0.2s;" onmouseover="this.style.background='rgba(34,211,238,0.2)'" onmouseout="this.style.background='transparent'">Отметить</button>` : ''}
             </div>
           </div>
         `).join('')
@@ -2542,9 +2585,32 @@ window.showNotifications = function() {
   modal.appendChild(content);
   document.body.appendChild(modal);
   
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) modal.remove();
+  // Анимация появления
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      modal.style.opacity = '1';
+      content.style.transform = 'scale(1)';
+    });
   });
+  
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      modal.style.opacity = '0';
+      content.style.transform = 'scale(0.95)';
+      setTimeout(() => modal.remove(), 200);
+    }
+  });
+  
+  // Закрытие по Escape
+  function onKeyDown(e) {
+    if (e.key === 'Escape') { 
+      modal.style.opacity = '0';
+      content.style.transform = 'scale(0.95)';
+      setTimeout(() => modal.remove(), 200);
+      document.removeEventListener('keydown', onKeyDown);
+    }
+  }
+  document.addEventListener('keydown', onKeyDown);
 };
 
 // Отметить уведомление как прочитанное
