@@ -909,8 +909,8 @@
                                 <label class="block text-sm font-medium text-slate-300 mb-2">Язык</label>
                                 <select id="profileLanguage" onchange="updateProfileLanguage(this.value)"
                                         class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:border-cyan-500 focus:outline-none">
-                                    <option value="ru" ${(userData.language === 'ru' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'ru')) ? 'selected' : ''}>${window.getFlagDisplay ? window.getFlagDisplay('ru').flag + ' ' + window.getFlagDisplay('ru').text : 'UA УКР'}</option>
-                                    <option value="en" ${(userData.language === 'en' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'en')) ? 'selected' : ''}>${window.getFlagDisplay ? window.getFlagDisplay('en').flag + ' ' + window.getFlagDisplay('en').text : 'US ENG'}</option>
+                                    <option value="ru" ${(userData.language === 'ru' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'ru')) ? 'selected' : ''}>${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('ru').flag : '🇺🇦')} ${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('ru').text : 'УКР')}</option>
+                                    <option value="en" ${(userData.language === 'en' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'en')) ? 'selected' : ''}>${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').flag : '🇺🇸')} ${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').text : 'ENG')}</option>
                                 </select>
                             </div>
                         </div>
@@ -2392,6 +2392,25 @@ function initAccountPage() {
     initFooterLinks();
     updateFooterLanguageButton();
     
+    // Обновляем селектор языка в личном кабинете если он открыт
+    setTimeout(() => {
+        const profileSelect = document.getElementById('profileLanguage');
+        if (profileSelect && typeof window.getFlagDisplay === 'function') {
+            const currentValue = profileSelect.value || (window.currentLang === 'en' ? 'en' : 'ru');
+            const options = profileSelect.querySelectorAll('option');
+            options.forEach(option => {
+                const lang = option.value;
+                const display = window.getFlagDisplay(lang);
+                if (display.flag.includes('<svg')) {
+                    option.innerHTML = display.flag + ' ' + display.text;
+                } else {
+                    option.textContent = display.flag + ' ' + display.text;
+                }
+            });
+            profileSelect.value = currentValue;
+        }
+    }, 500);
+    
     // ⭐️ Обязательно должен быть здесь
     updateFooterStats();
     
@@ -2525,17 +2544,18 @@ window.getFlagDisplay = function(language) {
         }
         
         try {
-            // Используем Firestore напрямую чтобы не перезагружать модальное окно
-            const { getFirestore, doc, updateDoc, serverTimestamp } = window.__firestoreExports || {};
-            if (!getFirestore || !doc || !updateDoc) {
+            // Используем правильные экспорты Firestore как в других функциях footer.js
+            const db = window.db;
+            const exp = window.__firestoreExports;
+            
+            if (!db || !exp || !exp.doc || !exp.updateDoc || !exp.serverTimestamp) {
                 footerShowToast('Ошибка: Firestore не доступен', 'error');
                 return;
             }
             
-            const db = getFirestore();
-            await updateDoc(doc(db, 'users', currentUser.uid), {
+            await exp.updateDoc(exp.doc(db, 'users', currentUser.uid), {
                 language: language,
-                updatedAt: serverTimestamp()
+                updatedAt: exp.serverTimestamp()
             });
             
             // Обновляем глобальный язык
@@ -2548,6 +2568,12 @@ window.getFlagDisplay = function(language) {
             
             // Обновляем кнопку в футере
             updateFooterLanguageButton();
+            
+            // Обновляем селектор в личном кабинете если он открыт
+            const profileSelect = document.getElementById('profileLanguage');
+            if (profileSelect) {
+                profileSelect.value = language;
+            }
             
             footerShowToast(`Язык изменен на ${language === 'en' ? 'English' : 'Русский'}`, 'success');
             console.log('Profile language updated:', language);
