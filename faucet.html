@@ -70,6 +70,8 @@
     .filter-tab.apaid { background: rgba(245,158,11,0.12); color: #fbbf24; border-color: rgba(245,158,11,0.35); }
     .filter-tab.atest { background: rgba(59,130,246,0.12); color: #60a5fa; border-color: rgba(59,130,246,0.35); }
     .filter-tab.amain { background: rgba(139,92,246,0.12); color: #a78bfa; border-color: rgba(139,92,246,0.35); }
+    .filter-tab.afav   { background: rgba(245,158,11,0.12); color: #fbbf24; border-color: rgba(245,158,11,0.35); }
+    .filter-tab.amysuggestions { background: rgba(139,92,246,0.12); color: #a78bfa; border-color: rgba(139,92,246,0.35); }
     .filter-tab.asuggestions { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.35); }
 
     /* Admin panel */
@@ -295,7 +297,11 @@
     <button class="filter-tab"       onclick="fFilter('paid',this)"><i class="fas fa-coins" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="faucets_filter_paid">Платные</span></button>
     <button class="filter-tab"       onclick="fFilter('testnet',this)"><i class="fas fa-flask" style="margin-right:4px;color:#60a5fa;"></i><span data-translate="faucets_filter_testnet">Тестнеты</span></button>
     <button class="filter-tab"       onclick="fFilter('mainnet',this)"><i class="fas fa-network-wired" style="margin-right:4px;color:#a78bfa;"></i><span data-translate="faucets_filter_mainnet">Мейннеты</span></button>
-    <button class="filter-tab"       onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="favorites">Избранное</span></button>
+    <button class="filter-tab" onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="favorites">Избранное</span></button>
+    <button class="filter-tab" onclick="fFilter('my-suggestions',this)" id="mySuggestionsFilter" style="display:block;background:rgba(139,92,246,0.12);color:#a78bfa;border-color:rgba(139,92,246,0.35);" data-filter="my-suggestions">
+      <i class="fas fa-user-edit" style="margin-right:4px;"></i>
+      Мои предложения <span id="mySuggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
+    </button>
     <button class="filter-tab" onclick="fFilter('suggestions',this)" id="suggestionsFilter" style="display:none;background:rgba(239,68,68,0.12);color:#f87171;border-color:rgba(239,68,68,0.35);" data-filter="suggestions">
       <i class="fas fa-inbox" style="margin-right:4px;"></i>
       Предложения <span id="suggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
@@ -1261,6 +1267,8 @@ function renderCard(f) {
     }
   } else if (f.status === 'rejected' && currentUser && f.submittedBy === currentUser.uid) {
     extraBadges += '<span class="badge" style="background:rgba(107,114,128,0.2);color:#9ca3af;border:1px solid rgba(107,114,128,0.3);margin-left:4px;">' + (isEn ? 'REJECTED' : 'ОТКЛОНЕНО') + '</span>';
+  } else if (f.status === 'deleted' && currentUser && f.submittedBy === currentUser.uid) {
+    extraBadges += '<span class="badge" style="background:rgba(107,114,128,0.2);color:#9ca3af;border:1px solid rgba(107,114,128,0.3);margin-left:4px;">' + (isEn ? 'DELETED' : 'УДАЛЕНО') + '</span>';
   } else if (f.status === 'active' && currentUser && f.submittedBy === currentUser.uid) {
     extraBadges += '<span class="badge" style="background:rgba(16,185,129,0.2);color:#34d399;border:1px solid rgba(16,185,129,0.3);margin-left:4px;">' + (isEn ? 'APPROVED' : 'ОДОБРЕНО') + '</span>';
   }
@@ -1330,9 +1338,9 @@ function renderCard(f) {
       '<button onclick="editSuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);border-radius:6px;color:#22d3ee;font-size:11px;cursor:pointer;"><i class="fas fa-pen"></i> '+(isEn?'Edit':'Изменить')+'</button>' +
       '<button onclick="deleteMySuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete':'Удалить')+'</button>' +
     '</div>';
-  } else if ((f.status === 'rejected' || f.status === 'pending') && currentUser && f.submittedBy === currentUser.uid) {
+  } else if ((f.status === 'rejected' || f.status === 'deleted') && currentUser && f.submittedBy === currentUser.uid) {
     authorBtns = '<div style="display:flex;gap:6px;margin-top:10px;">' +
-      '<button onclick="deleteMySuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete':'Удалить')+'</button>' +
+      '<button onclick="deleteMySuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete Forever':'Удалить навсегда')+'</button>' +
     '</div>';
   }
 
@@ -1416,7 +1424,7 @@ function updateCounts() {
 function fFilter(type, btn) {
   currentFilter = type;
   document.querySelectorAll('.filter-tab').forEach(function(t){ t.className = 'filter-tab'; });
-  var map = { all:'af', free:'afree', paid:'apaid', testnet:'atest', mainnet:'amain', suggestions:'asuggestions' };
+  var map = { all:'af', free:'afree', paid:'apaid', testnet:'atest', mainnet:'amain', favorites:'afav', 'my-suggestions':'amysuggestions', suggestions:'asuggestions' };
   if (btn) btn.classList.add(map[type] || 'af');
   applyCurrentFilter();
 }
@@ -1425,7 +1433,7 @@ window.fFilter = fFilter;
 function applyCurrentFilter() {
   var query = (document.getElementById('faucetSearch').value || '').toLowerCase();
   
-  // Если выбран фильтр предложений, показываем их вместо обычных кранов
+  // Если выбран фильтр предложений админа, показываем их вместо обычных кранов
   if (currentFilter === 'suggestions') {
     // Показываем только pending краны
     document.querySelectorAll('.faucet-card').forEach(function(card) {
@@ -1445,18 +1453,45 @@ function applyCurrentFilter() {
     return;
   }
   
+  // Если выбран фильтр "Мои предложения"
+  if (currentFilter === 'my-suggestions') {
+    if (!currentUser) {
+      document.querySelectorAll('.faucet-card').forEach(function(card) { card.style.display = 'none'; });
+      document.querySelectorAll('.faucet-section').forEach(function(sec) { sec.style.display = 'none'; });
+      return;
+    }
+    
+    document.querySelectorAll('.faucet-card').forEach(function(card) {
+      const faucetId = card.dataset.id;
+      const faucet = faucets.find(f => f.id === faucetId);
+      const isMySuggestion = faucet && faucet.submittedBy === currentUser.uid;
+      
+      var matchSearch = !query || card.dataset.name.includes(query) || card.dataset.token.includes(query);
+      card.style.display = (isMySuggestion && matchSearch) ? '' : 'none';
+    });
+    
+    document.querySelectorAll('.faucet-section').forEach(function(sec) {
+      var visible = Array.from(sec.querySelectorAll('.faucet-card')).some(function(c){ return c.style.display !== 'none'; });
+      sec.style.display = visible ? '' : 'none';
+    });
+    return;
+  }
+  
   document.querySelectorAll('.faucet-card').forEach(function(card) {
     const faucetId = card.dataset.id;
     const faucet = faucets.find(f => f.id === faucetId);
     
     // Показываем кран если:
-    // 1. Не pending ИЛИ
+    // 1. Не pending И не deleted ИЛИ
     // 2. Pending но автор текущий пользователь ИЛИ  
-    // 3. Pending и это админ
+    // 3. Pending и это админ ИЛИ
+    // 4. Deleted но автор текущий пользователь
     const isPending = faucet && faucet.status === 'pending';
+    const isDeleted = faucet && faucet.status === 'deleted';
     const canSeePending = isPending && (isAdmin || (currentUser && faucet.submittedBy === currentUser.uid));
+    const canSeeDeleted = isDeleted && currentUser && faucet.submittedBy === currentUser.uid;
     
-    if (isPending && !canSeePending) {
+    if ((isPending && !canSeePending) || (isDeleted && !canSeeDeleted)) {
       card.style.display = 'none';
       return;
     }
@@ -1663,7 +1698,12 @@ window.showUserInfo = async function(userId) {
       createdAt: null,
       reagents: 0,
       streak: 0,
-      invitedCount: 0
+      invitedCount: 0,
+      bio: '',
+      country: '',
+      twitter: '',
+      discord: '',
+      telegram: ''
     };
     
     if (userSnap.exists()) {
@@ -1677,55 +1717,167 @@ window.showUserInfo = async function(userId) {
         streak: data.streak || 0,
         invitedCount: data.invitedCount || 0,
         referralEarnings: data.referralEarnings || 0,
-        lastClaimDate: data.lastClaimDate
+        lastClaimDate: data.lastClaimDate,
+        bio: data.bio || '',
+        country: data.country || '',
+        twitter: data.twitter || '',
+        discord: data.discord || '',
+        telegram: data.telegram || ''
       };
     }
     
     const createdDate = userData.createdAt?.toDate?.() || new Date();
     const suggestionsCount = faucets.filter(f => f.submittedBy === userId).length;
     
-    const modal = document.createElement('div');
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
-    modal.innerHTML = '<div style="background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid rgba(34,211,238,0.3);border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
-        '<h3 style="font-size:20px;font-weight:700;color:#f1f5f9;">Профиль пользователя</h3>' +
-        '<button onclick="this.closest(\'div[style]\').parentElement.remove()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:24px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" ' +
-                'onmouseover="this.style.background=\'rgba(239,68,68,0.2)\';this.style.color=\'#f87171\'" ' +
-                'onmouseout="this.style.background=\'transparent\';this.style.color=\'#64748b\'">&times;</button>' +
-      '</div>' +
-      '<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">' +
-        '<img src="' + userData.photoURL + '" style="width:80px;height:80px;border-radius:50%;border:3px solid rgba(34,211,238,0.3);" onerror="this.src=\'https://www.gravatar.com/avatar/?d=mp\'">' +
-        '<div>' +
-          '<div style="font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:4px;">' + userData.displayName + '</div>' +
-          '<div style="font-size:14px;color:#94a3b8;margin-bottom:2px;">' + userData.email + '</div>' +
-          '<div style="font-size:12px;color:#64748b;">На платформе с ' + createdDate.toLocaleDateString() + '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;">' +
-        '<div style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:8px;padding:12px;text-align:center;">' +
-          '<div style="font-size:20px;font-weight:700;color:#22d3ee;">' + userData.reagents + '</div>' +
-          '<div style="font-size:12px;color:#94a3b8;">Реагентов</div>' +
-        '</div>' +
-        '<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:12px;text-align:center;">' +
-          '<div style="font-size:20px;font-weight:700;color:#fbbf24;">' + userData.streak + '</div>' +
-          '<div style="font-size:12px;color:#94a3b8;">Стрик</div>' +
-        '</div>' +
-        '<div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:12px;text-align:center;">' +
-          '<div style="font-size:20px;font-weight:700;color:#34d399;">' + userData.invitedCount + '</div>' +
-          '<div style="font-size:12px;color:#94a3b8;">Приглашено</div>' +
-        '</div>' +
-        '<div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:8px;padding:12px;text-align:center;">' +
-          '<div style="font-size:20px;font-weight:700;color:#a78bfa;">' + suggestionsCount + '</div>' +
-          '<div style="font-size:12px;color:#94a3b8;">Предложений</div>' +
-        '</div>' +
-      '</div>' +
-      '<div style="font-size:14px;color:#94a3b8;line-height:1.5;">' +
-        '<div style="margin-bottom:8px;"><strong>ID пользователя:</strong> ' + userId + '</div>' +
-        (userData.referralEarnings ? '<div style="margin-bottom:8px;"><strong>Реферальные доходы:</strong> ' + userData.referralEarnings + ' RGT</div>' : '') +
-        (userData.lastClaimDate ? '<div><strong>Последний клейм:</strong> ' + new Date(userData.lastClaimDate?.toDate?.() || userData.lastClaimDate).toLocaleDateString() + '</div>' : '') +
-      '</div>' +
-    '</div>';
-    document.body.appendChild(modal);
+    // Создаем модальное окно в стиле footer.js
+    const old = document.getElementById('userInfoOverlayModal');
+    if (old) old.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'userInfoOverlayModal';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; z-index: 9999;
+        background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 16px; opacity: 0; transition: opacity 0.2s ease;
+    `;
+
+    const box = document.createElement('div');
+    box.style.cssText = `
+        background: #1e2538; border: 1px solid rgba(71,85,105,0.5);
+        border-radius: 20px; width: 100%; max-width: 680px; max-height: 90vh;
+        overflow: hidden; display: flex; flex-direction: column;
+        position: relative; transform: scale(0.95); transition: transform 0.2s ease;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    `;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    closeBtn.style.cssText = `
+        position: absolute; top: 16px; right: 16px; z-index: 10;
+        width: 32px; height: 32px; border-radius: 50%;
+        background: rgba(71,85,105,0.5); border: none; color: #94a3b8;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        font-size: 14px; transition: all 0.2s;
+    `;
+    closeBtn.onmouseover = () => { closeBtn.style.background = 'rgba(239,68,68,0.3)'; closeBtn.style.color = '#f87171'; };
+    closeBtn.onmouseout  = () => { closeBtn.style.background = 'rgba(71,85,105,0.5)';  closeBtn.style.color = '#94a3b8'; };
+
+    function closeOverlay() {
+        overlay.style.opacity = '0';
+        box.style.transform = 'scale(0.95)';
+        setTimeout(() => overlay.remove(), 200);
+    }
+
+    closeBtn.onclick = closeOverlay;
+    overlay.addEventListener('mousedown', function(e) { if (e.target === overlay) closeOverlay(); });
+
+    function onKeyDown(e) {
+        if (e.key === 'Escape') { closeOverlay(); document.removeEventListener('keydown', onKeyDown); }
+    }
+    document.addEventListener('keydown', onKeyDown);
+
+    const contentWrap = document.createElement('div');
+    contentWrap.style.cssText = 'overflow-y: auto; flex: 1;';
+    
+    // HTML контент как в footer.js
+    contentWrap.innerHTML = `
+        <div style="padding:32px;">
+            <div style="text-align:center;margin-bottom:32px;">
+                <div style="position:relative;display:inline-block;margin-bottom:16px;">
+                    <img src="${userData.photoURL}" style="width:120px;height:120px;border-radius:50%;border:4px solid #22d3ee;object-fit:cover;" onerror="this.src='https://www.gravatar.com/avatar/?d=mp'">
+                    <div style="position:absolute;bottom:0;right:0;width:32px;height:32px;background:#22d3ee;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #1e2538;">
+                        <i class="fas fa-user" style="color:#fff;font-size:14px;"></i>
+                    </div>
+                </div>
+                <h2 style="font-size:24px;font-weight:700;color:#f1f5f9;margin:0 0 8px 0;">${userData.displayName}</h2>
+                <p style="font-size:14px;color:#94a3b8;margin:0 0 4px 0;">${userData.email}</p>
+                <p style="font-size:12px;color:#64748b;margin:0;">На платформе с ${createdDate.toLocaleDateString()}</p>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:32px;">
+                <div style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:12px;padding:16px;text-align:center;">
+                    <div style="font-size:24px;font-weight:700;color:#22d3ee;margin-bottom:4px;">${userData.reagents}</div>
+                    <div style="font-size:12px;color:#94a3b8;">Реагентов</div>
+                </div>
+                <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:16px;text-align:center;">
+                    <div style="font-size:24px;font-weight:700;color:#fbbf24;margin-bottom:4px;">${userData.streak}</div>
+                    <div style="font-size:12px;color:#94a3b8;">Стрик</div>
+                </div>
+                <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:16px;text-align:center;">
+                    <div style="font-size:24px;font-weight:700;color:#34d399;margin-bottom:4px;">${userData.invitedCount}</div>
+                    <div style="font-size:12px;color:#94a3b8;">Приглашено</div>
+                </div>
+                <div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:16px;text-align:center;">
+                    <div style="font-size:24px;font-weight:700;color:#a78bfa;margin-bottom:4px;">${suggestionsCount}</div>
+                    <div style="font-size:12px;color:#94a3b8;">Предложений</div>
+                </div>
+            </div>
+
+            <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(71,85,105,0.3);border-radius:12px;padding:20px;margin-bottom:24px;">
+                <h3 style="font-size:16px;font-weight:600;color:#f1f5f9;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;">
+                    <i class="fas fa-info-circle" style="color:#22d3ee;"></i>
+                    Информация о пользователе
+                </h3>
+                <div style="display:grid;gap:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(71,85,105,0.2);">
+                        <span style="font-size:13px;color:#94a3b8;">ID пользователя:</span>
+                        <span style="font-size:13px;color:#f1f5f9;font-family:monospace;">${userId}</span>
+                    </div>
+                    ${userData.referralEarnings ? `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(71,85,105,0.2);">
+                        <span style="font-size:13px;color:#94a3b8;">Реферальные доходы:</span>
+                        <span style="font-size:13px;color:#fbbf24;font-weight:600;">${userData.referralEarnings} RGT</span>
+                    </div>
+                    ` : ''}
+                    ${userData.lastClaimDate ? `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(71,85,105,0.2);">
+                        <span style="font-size:13px;color:#94a3b8;">Последний клейм:</span>
+                        <span style="font-size:13px;color:#f1f5f9;">${new Date(userData.lastClaimDate?.toDate?.() || userData.lastClaimDate).toLocaleDateString()}</span>
+                    </div>
+                    ` : ''}
+                    ${userData.country ? `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(71,85,105,0.2);">
+                        <span style="font-size:13px;color:#94a3b8;">Страна:</span>
+                        <span style="font-size:13px;color:#f1f5f9;">${userData.country}</span>
+                    </div>
+                    ` : ''}
+                    ${userData.bio ? `
+                    <div style="padding:8px 0;">
+                        <span style="font-size:13px;color:#94a3b8;display:block;margin-bottom:4px;">О себе:</span>
+                        <p style="font-size:13px;color:#f1f5f9;line-height:1.5;margin:0;">${userData.bio}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            ${userData.twitter || userData.discord || userData.telegram ? `
+            <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(71,85,105,0.3);border-radius:12px;padding:20px;">
+                <h3 style="font-size:16px;font-weight:600;color:#f1f5f9;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;">
+                    <i class="fas fa-share-alt" style="color:#22d3ee;"></i>
+                    Социальные сети
+                </h3>
+                <div style="display:flex;gap:12px;">
+                    ${userData.twitter ? `<a href="https://twitter.com/${userData.twitter}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(29,161,242,0.1);border:1px solid rgba(29,161,242,0.3);border-radius:8px;color:#1da1f2;text-decoration:none;font-size:13px;transition:all 0.2s;" onmouseover="this.style.background='rgba(29,161,242,0.2)'" onmouseout="this.style.background='rgba(29,161,242,0.1)'"><i class="fab fa-twitter"></i> @${userData.twitter}</a>` : ''}
+                    ${userData.discord ? `<div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(88,101,242,0.1);border:1px solid rgba(88,101,242,0.3);border-radius:8px;color:#8b9dc3;font-size:13px;"><i class="fab fa-discord"></i> ${userData.discord}</div>` : ''}
+                    ${userData.telegram ? `<a href="https://t.me/${userData.telegram}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(0,136,204,0.1);border:1px solid rgba(0,136,204,0.3);border-radius:8px;color:#0088cc;text-decoration:none;font-size:13px;transition:all 0.2s;" onmouseover="this.style.background='rgba(0,136,204,0.2)'" onmouseout="this.style.background='rgba(0,136,204,0.1)'"><i class="fab fa-telegram"></i> @${userData.telegram}</a>` : ''}
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+
+    box.appendChild(closeBtn);
+    box.appendChild(contentWrap);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            box.style.transform = 'scale(1)';
+        });
+    });
     
   } catch(e) {
     console.error('Failed to load user info:', e);
@@ -2168,10 +2320,17 @@ async function loadFaucetsFromFirestore() {
   }
   renderAll();
   if (typeof window.updateAllTranslations === 'function') window.updateAllTranslations();
+  
+  // Обновляем бейдж "Мои предложения"
+  if (currentUser) {
+    const mySuggestionsCount = faucets.filter(f => f.submittedBy === currentUser.uid).length;
+    const mySuggestionsBadgeEl = document.getElementById('mySuggestionsBadge');
+    if (mySuggestionsBadgeEl) mySuggestionsBadgeEl.textContent = mySuggestionsCount;
+  }
 }
 
 async function loadPendingSuggestions() {
-  if (!isAdmin) return;
+  if (!isAdmin && !currentUser) return;
   try {
     // Загружаем pending краны из основной коллекции
     const snap = await getDocs(query(collection(db, COL_FAUCETS), where('status', '==', 'pending')));
@@ -2208,12 +2367,20 @@ async function loadPendingSuggestions() {
     const badgeEl = document.getElementById('pendingBadge');
     const userBadgeEl = document.getElementById('userPendingBadge');
     const suggestionsBadgeEl = document.getElementById('suggestionsBadge');
+    const mySuggestionsBadgeEl = document.getElementById('mySuggestionsBadge');
     const indicatorEl = document.getElementById('pendingIndicator');
     
     if (countEl) countEl.textContent = pendingSuggestions.length + ' предложений';
     if (badgeEl) badgeEl.textContent = pendingSuggestions.length;
     if (userBadgeEl) userBadgeEl.textContent = pendingSuggestions.length;
     if (suggestionsBadgeEl) suggestionsBadgeEl.textContent = pendingSuggestions.length;
+    
+    // Считаем предложения текущего пользователя
+    if (currentUser) {
+      const mySuggestionsCount = faucets.filter(f => f.submittedBy === currentUser.uid).length;
+      if (mySuggestionsBadgeEl) mySuggestionsBadgeEl.textContent = mySuggestionsCount;
+    }
+    
     if (indicatorEl) {
       indicatorEl.style.background = pendingSuggestions.length > 0 ? '#ef4444' : '#22d3ee';
       if (pendingSuggestions.length > 0) {
@@ -2333,7 +2500,14 @@ window.approveSuggestion = async function(id) {
 
 window.deleteSuggestion = async function(id) {
   if (!isAdmin) return;
-  await deleteDoc(doc(db, COL_FAUCETS, id));
+  const isEn = (window.currentLang === 'en');
+  if (!confirm(isEn ? 'Delete this suggestion?' : 'Удалить это предложение?')) return;
+  
+  await updateDoc(doc(db, COL_FAUCETS, id), { 
+    status: 'deleted',
+    deletedAt: serverTimestamp(),
+    deletedBy: currentUser.uid
+  });
   toast((window.currentLang==='en')?'Deleted':'Удалено');
   await loadFaucetsFromFirestore();
   if (isAdmin) await loadPendingSuggestions();
@@ -2343,31 +2517,35 @@ window.editSuggestion = function(id) {
   const faucet = faucets.find(f => f.id === id);
   if (!faucet) return;
   
+  const isEn = (window.currentLang === 'en');
+  
   // Заполняем форму редактирования данными из предложения
   const editIdEl = document.getElementById('editId');
   const nameEl = document.getElementById('f_name');
   const tokenEl = document.getElementById('f_token');
-  const linkEl = document.getElementById('f_link');
+  const linksEl = document.getElementById('f_links');
   const logoEl = document.getElementById('f_logo');
   const descEl = document.getElementById('f_desc');
   const typeEl = document.getElementById('f_type');
   const netEl = document.getElementById('f_net');
   const rewardEl = document.getElementById('f_reward');
   const cooldownEl = document.getElementById('f_cooldown');
+  const tagsEl = document.getElementById('f_tags');
   
   if (editIdEl) editIdEl.value = faucet.id;
   if (nameEl) nameEl.value = faucet.name || '';
   if (tokenEl) tokenEl.value = faucet.token || '';
-  if (linkEl) linkEl.value = (faucet.links || [])[0] || '';
+  if (linksEl) linksEl.value = (faucet.links || []).join('\n');
   if (logoEl) logoEl.value = faucet.logoUrl || '';
   if (descEl) descEl.value = faucet.desc || '';
   if (typeEl) typeEl.value = faucet.type || 'free';
-  if (netEl) netEl.value = faucet.net || 'mainnet';
+  if (netEl) netEl.value = faucet.net || 'testnet';
   if (rewardEl) rewardEl.value = faucet.reward || '';
   if (cooldownEl) cooldownEl.value = faucet.cooldown || '';
+  if (tagsEl) tagsEl.value = (faucet.tags || []).join(', ');
   
   const modalTitleEl = document.getElementById('modalTitle');
-  if (modalTitleEl) modalTitleEl.textContent = 'Редактировать предложение';
+  if (modalTitleEl) modalTitleEl.textContent = isEn ? 'Edit Suggestion' : 'Редактировать предложение';
   
   openAddModal();
 };
@@ -2493,14 +2671,19 @@ onAuthStateChanged(auth, async (user) => {
   isAdmin = !!(user && (user.uid === ADMIN_UID));
   document.getElementById('adminBar').style.display = isAdmin ? 'flex' : 'none';
   
-  // Show/hide user suggestions button and filter
+  // Показываем/скрываем кнопки фильтров
+  const mySuggestionsBtn = document.getElementById('mySuggestionsFilter');
+  const suggestionsBtn = document.getElementById('suggestionsFilter');
   const userPendingBtn = document.getElementById('userPendingBtn');
-  const suggestionsFilter = document.getElementById('suggestionsFilter');
+  
+  if (mySuggestionsBtn) {
+    mySuggestionsBtn.style.display = user ? 'inline-flex' : 'none';
+  }
+  if (suggestionsBtn) {
+    suggestionsBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+  }
   if (userPendingBtn) {
     userPendingBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-  }
-  if (suggestionsFilter) {
-    suggestionsFilter.style.display = isAdmin ? 'inline-flex' : 'none';
   }
   
   updateHeaderAuthUI(user);
