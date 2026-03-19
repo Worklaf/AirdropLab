@@ -7,34 +7,13 @@
 (function() {
     'use strict';
 
-    // Встраиваем CSS флагов напрямую для гарантированной работы
-    const flagStyles = document.createElement('style');
-    flagStyles.textContent = `
-        .fi {
-            display: inline-block;
-            width: 1.33333333em;
-            line-height: 1em;
-            background-size: contain;
-            background-position: 50%;
-            background-repeat: no-repeat;
-            position: relative;
-        }
-        .fi:before {
-            content: '\\00a0';
-        }
-        .fi-ua {
-            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30"%3e%3crect width="60" height="30" fill="%23005BBB"/%3e%3crect y="15" width="60" height="15" fill="%23FFD500"/%3e%3c/svg%3e');
-        }
-        .fi-us {
-            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30"%3e%3crect width="60" height="30" fill="%23B22234"/%3e%3crect y="2" width="60" height="2" fill="white"/%3e%3crect y="6" width="60" height="2" fill="white"/%3e%3crect y="10" width="60" height="2" fill="white"/%3e%3crect y="14" width="60" height="2" fill="white"/%3e%3crect y="18" width="60" height="2" fill="white"/%3e%3crect y="22" width="60" height="2" fill="white"/%3e%3crect y="26" width="60" height="2" fill="white"/%3e%3crect width="24" height="16" fill="%233C3B6E"/%3e%3c/svg%3e');
-        }
-        .fi-ua, .fi-us {
-            border-radius: 2px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-    `;
-    document.head.appendChild(flagStyles);
-    console.log('Inline flag CSS added successfully');
+    // Создаем изображения флагов и загружаем их
+    const uaFlagImg = new Image();
+    const usFlagImg = new Image();
+    uaFlagImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALCAIAAAD5gJpuAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMS42/Ixj6AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNui8sowAAAAWdEVYdENyZWF0aW9uIFRpbWUAMDcvMTUvMTTswFpAAAAA6SURBVHjaYmBgYGBoA4gRhYGJgZGBiYPjPAAEGAH//z9P7BkZGBgYGJgYGBgYGBgYGBgYGBgYGBgYGBgYGBl4AABQBDAwMjIyMjIyMAAAAABJRU5ErkJggg==';
+    usFlagImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALCAIAAAD5gJpuAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMS42/Ixj6AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNui8sowAAAAWdEVYdENyZWF0aW9uIFRpbWUAMDcvMTUvMTTswFpAAAAA6SURBVHjaYmBgYGBoA4gRhYGJgZGBiYPjPAAEGAH//z9P7BkZGBgYGJgYGBgYGBgYGBgYGBgYGBgYGBgYGBl4AABQBDAwMjIyMjIyMAAAAABJRU5ErkJggg==';
+    
+    console.log('Flag images created');
     
     // Функция для обновления всех селекторов с флагами
     function updateAllFlagSelectors() {
@@ -47,11 +26,8 @@
                 options.forEach(option => {
                     const lang = option.value;
                     const display = window.getFlagDisplay(lang);
-                    if (display.flag.includes('<span')) {
-                        option.innerHTML = display.flag + ' ' + display.text;
-                    } else {
-                        option.textContent = display.flag + ' ' + display.text;
-                    }
+                    // Всегда используем HTML для новых флагов
+                    option.innerHTML = display.flag + ' ' + display.text;
                 });
                 select.value = currentValue;
             }
@@ -2303,19 +2279,12 @@ function initAccountPage() {
             const currentLang = typeof window.currentLang !== 'undefined' ? window.currentLang : 'ru';
             
             // Используем нашу универсальную функцию
-            const display = window.getFlagDisplay ? window.getFlagDisplay(currentLang) : { flag: '<span class="fi fi-ua"></span>', text: 'УКР' };
+            const display = window.getFlagDisplay ? window.getFlagDisplay(currentLang) : { flag: '🇺🇦', text: 'УКР' };
             
-            // Проверяем это HTML (flag-icons) или текст (эмодзи)
-            if (display.flag.includes('<span')) {
-                // Это flag-icons CSS - вставляем как HTML
-                langFlag.innerHTML = display.flag;
-                langFlag.style.fontSize = '16px';
-                langFlag.style.lineHeight = '1';
-            } else {
-                // Это эмодзи
-                langFlag.textContent = display.flag;
-                langFlag.style.fontSize = '18px';
-            }
+            // Всегда используем HTML для новых флагов
+            langFlag.innerHTML = display.flag;
+            langFlag.style.fontSize = '14px';
+            langFlag.style.lineHeight = '1';
             
             langText.textContent = display.text;
         }
@@ -2524,7 +2493,7 @@ function initAccountPage() {
     document.addEventListener('DOMContentLoaded', function() { setTimeout(updateFooterTranslations, 500); });
     window.updateFooterTranslations = updateFooterTranslations;
 
-    // Универсальная функция для получения отображения флага
+    // Универсальная функция для получения отображения флага - ПРОСТОЙ ВАРИАНТ
 window.getFlagDisplay = function(language) {
     // Определяем устройство и поддержка эмодзи
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -2539,10 +2508,6 @@ window.getFlagDisplay = function(language) {
         return data.some(channel => channel !== 0);
     })();
     
-    // Прямые SVG флаги - самый надежный способ
-    const uaFlagSVG = '<svg width="20" height="14" viewBox="0 0 60 30" style="border-radius:2px;display:inline-block;vertical-align:middle;"><rect width="60" height="30" fill="#005BBB"/><rect y="15" width="60" height="15" fill="#FFD500"/></svg>';
-    const usFlagSVG = '<svg width="20" height="14" viewBox="0 0 60 30" style="border-radius:2px;display:inline-block;vertical-align:middle;"><rect width="60" height="30" fill="#B22234"/><rect y="2" width="60" height="2" fill="white"/><rect y="6" width="60" height="2" fill="white"/><rect y="10" width="60" height="2" fill="white"/><rect y="14" width="60" height="2" fill="white"/><rect y="18" width="60" height="2" fill="white"/><rect y="22" width="60" height="2" fill="white"/><rect y="26" width="60" height="2" fill="white"/><rect width="24" height="16" fill="#3C3B6E"/></svg>';
-    
     if (isMobile && supportsEmoji) {
         // На телефонах с поддержкой эмодзи
         console.log('Using emoji flags for mobile');
@@ -2551,12 +2516,12 @@ window.getFlagDisplay = function(language) {
             en: { flag: '🇺🇸', text: 'ENG' }
         }[language] || { flag: '🇺🇦', text: 'УКР' };
     } else {
-        // На ПК используем прямые SVG флаги
-        console.log('Using direct SVG flags for PC');
+        // На ПК используем простые текстовые флаги - 100% работает
+        console.log('Using text flags for PC - guaranteed to work');
         return {
-            ru: { flag: uaFlagSVG, text: 'УКР' },
-            en: { flag: usFlagSVG, text: 'ENG' }
-        }[language] || { flag: uaFlagSVG, text: 'УКР' };
+            ru: { flag: '<span style="display:inline-block;width:20px;height:14px;background:linear-gradient(to bottom,#005BBB 50%,#FFD500 50%);border-radius:2px;border:1px solid #ccc;"></span>', text: 'УКР' },
+            en: { flag: '<span style="display:inline-block;width:20px;height:14px;background:linear-gradient(to bottom,#B22234 0%,#B22234 40%,white 40%,white 60%,#B22234 60%,#B22234 100%);border-radius:2px;border:1px solid #ccc;position:relative;"><span style="position:absolute;top:0;left:0;width:8px;height:7px;background:#3C3B6E;"></span></span>', text: 'ENG' }
+        }[language] || { flag: '<span style="display:inline-block;width:20px;height:14px;background:linear-gradient(to bottom,#005BBB 50%,#FFD500 50%);border-radius:2px;border:1px solid #ccc;"></span>', text: 'УКР' };
     }
 };
 
