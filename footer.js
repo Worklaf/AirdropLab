@@ -2485,7 +2485,7 @@ function initAccountPage() {
     document.addEventListener('DOMContentLoaded', function() { setTimeout(updateFooterTranslations, 500); });
     window.updateFooterTranslations = updateFooterTranslations;
 
-    // Универсальная функция для получения отображения флага - PNG ФАЙЛЫ
+    // Универсальная функция для получения отображения флага - SVG ФАЙЛЫ
 window.getFlagDisplay = function(language) {
     // Определяем устройство и поддержка эмодзи
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -2508,20 +2508,23 @@ window.getFlagDisplay = function(language) {
             en: { flag: '🇺🇸', text: 'ENG' }
         }[language] || { flag: '🇺🇦', text: 'УКР' };
     } else {
-        // На ПК используем PNG файлы - пробуем разные пути
-        console.log('Using PNG flag files for PC');
+        // На ПК используем SVG файлы с параметрами
+        console.log('Using SVG flag files for PC');
         
         // Пробуем разные варианты путей
         const basePath = window.location.pathname.includes('faucet.html') ? './assets/flags/' : '../assets/flags/';
-        const uaPath = basePath + 'ua.png';
-        const usPath = basePath + 'us.png';
-        console.log('Flag paths:', uaPath, usPath);
+        const uaPath = basePath + 'ua.svg';
+        const usPath = basePath + 'us.svg';
+        console.log('SVG flag paths:', uaPath, usPath);
         console.log('Current location:', window.location.pathname);
         
+        // Параметры SVG флагов
+        const svgStyle = 'width:20px;height:20px;border-radius:2px;border:1px solid #ccc;vertical-align:middle;object-fit:cover;';
+        
         return {
-            ru: { flag: '<img src="' + uaPath + '" alt="UA" style="width:20px;height:14px;border-radius:2px;border:1px solid #ccc;vertical-align:middle;" onerror="console.error(\'Failed to load UA flag at: ' + uaPath + '\');this.src=\'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCA2MCAzMCI+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjMDA1QkJCIi8+PHJlY3QgeT0iMTUiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxNSIgZmlsbD0iI0ZGRDUwMCIvPjwvc3ZnPg==\';">', text: 'УКР' },
-            en: { flag: '<img src="' + usPath + '" alt="US" style="width:20px;height:14px;border-radius:2px;border:1px solid #ccc;vertical-align:middle;" onerror="console.error(\'Failed to load US flag at: ' + usPath + '\');this.src=\'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCA2MCAzMCI+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjQjIyMjM0Ii8+PHJlY3QgeT0iMiIgd2lkdGg9IjYwIiBoZWlnaHQ9IjIiIGZpbGw9IndoaXRlIi8+PHJlY3QgeT0iNiIgd2lkdGg9IjYwIiBoZWlnaHQ9IjIiIGZpbGw9IndoaXRlIi8+PHJlY3QgeT0iMTAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIyIiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHk9IjE0IiB3aWR0aD0iNjAiIGhlaWdodD0iMiIgZmlsbD0id2hpdGUiLz48cmVjdCB5PSIxOCIgd2lkdGg9IjYwIiBoZWlnaHQ9IjIiIGZpbGw9IndoaXRlIi8+PHJlY3QgeT0iMjIiIHdpZHRoPSI2MCIgaGVpZ2h0PSIyIiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHk9IjI2IiB3aWR0aD0iNjAiIGhlaWdodD0iMiIgZmlsbD0id2hpdGUiLz48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMTYiIGZpbGw9IiMzQzNCNkUiLz48L3N2Zz4=\';">', text: 'ENG' }
-        }[language] || { flag: '<img src="' + uaPath + '" alt="UA" style="width:20px;height:14px;border-radius:2px;border:1px solid #ccc;vertical-align:middle;" onerror="console.error(\'Failed to load UA flag at: ' + uaPath + '\');">', text: 'УКР' };
+            ru: { flag: '<img src="' + uaPath + '" alt="UA" style="' + svgStyle + '" onerror="console.error(\'Failed to load UA SVG flag at: ' + uaPath + '\');">', text: 'УКР' },
+            en: { flag: '<img src="' + usPath + '" alt="US" style="' + svgStyle + '" onerror="console.error(\'Failed to load US SVG flag at: ' + usPath + '\');">', text: 'ENG' }
+        }[language] || { flag: '<img src="' + uaPath + '" alt="UA" style="' + svgStyle + '" onerror="console.error(\'Failed to load UA SVG flag at: ' + uaPath + '\');">', text: 'УКР' };
     }
 };
 
