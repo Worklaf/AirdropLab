@@ -465,90 +465,76 @@
   </div>
 </div>
 
-<!-- Modal: suggest faucet -->
-<!-- Suggest Modal (same as Add Modal) -->
-<div id="suggestModal" class="modal-overlay">
-  <div class="modal-box" style="max-width: 540px;">
-    <div class="modal-header">
-      <h2 class="modal-title" id="suggestModalTitle" data-translate="faucets_suggest_title">Предложить новый кран</h2>
-      <button class="modal-close" onclick="closeSuggestModal()">&times;</button>
+<!-- Modal: suggest faucet (same as add faucet) -->
+<div id="suggestModal">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="font-size:16px;font-weight:700;color:#f1f5f9;" id="suggestModalTitle" data-translate="faucets_suggest_title">Предложить новый кран</h2>
+      <button onclick="closeSuggestModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;">&times;</button>
     </div>
-    <div class="modal-body">
-      <form onsubmit="event.preventDefault(); submitSuggestion();" style="display:grid;gap:16px;">
-        <input type="hidden" id="suggestId">
-        
-        <div class="form-row">
-          <div class="form-col">
-            <label class="form-label" data-translate="faucets_field_name">Название сети *</label>
-            <input class="form-input" id="suggest_name" data-translate="faucets_ph_name" placeholder="Например: Ethereum Sepolia" required>
-          </div>
-          <div class="form-col">
-            <label class="form-label" data-translate="faucets_field_token">Токен *</label>
-            <input class="form-input" id="suggest_token" data-translate="faucets_ph_token" placeholder="Например: ETH, BTC, SOL" required>
-          </div>
-        </div>
-
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <input type="hidden" id="suggestId">
+      <div>
+        <div class="ae-label" data-translate="faucets_field_name">Название сети *</div>
+        <input class="ae-input" id="suggest_name" data-translate="faucets_ph_name" placeholder="Например: Ethereum Sepolia">
+      </div>
+      <div>
+        <div class="ae-label" data-translate="faucets_field_token">Токен *</div>
+        <input class="ae-input" id="suggest_token" data-translate="faucets_ph_token" placeholder="Например: ETH, BTC, SOL">
+      </div>
+      <div>
+        <div class="ae-label" data-translate="faucets_field_desc">Описание</div>
+        <textarea class="ae-input" id="suggest_desc" rows="2" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;"></textarea>
+      </div>
+      <div>
+        <div class="ae-label" data-translate="faucets_field_links">Ссылки (по одной в строке) *</div>
+        <textarea class="ae-input" id="suggest_links" rows="4" data-translate="faucets_ph_links" placeholder="https://faucet.example.com&#10;https://another.example.com" style="resize:vertical;"></textarea>
+      </div>
+      <div>
+        <div class="ae-label" data-translate="faucets_field_logo">Логотип (URL)</div>
+        <input class="ae-input" id="suggest_logo" data-translate="faucets_ph_logo" placeholder="https://.../logo.png">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
-          <label class="form-label" data-translate="faucets_field_links">Ссылки *</label>
-          <textarea class="form-input" id="suggest_links" rows="2" data-translate="faucets_ph_links" placeholder="https://faucet.example.com&#10;https://discord.gg/example" required></textarea>
+          <div class="ae-label" data-translate="faucets_field_type">Тип</div>
+          <select class="ae-select ae-input" id="suggest_type">
+            <option value="free" data-translate="faucets_type_free">Бесплатный</option>
+            <option value="paid" data-translate="faucets_type_paid">Платный</option>
+          </select>
         </div>
-
-        <div class="form-row">
-          <div class="form-col">
-            <label class="form-label" data-translate="faucets_field_logo">Логотип (URL)</label>
-            <input class="form-input" id="suggest_logo" data-translate="faucets_ph_logo" placeholder="https://.../logo.png">
-          </div>
-          <div class="form-col">
-            <label class="form-label" data-translate="faucets_field_type">Тип</label>
-            <select class="form-select" id="suggest_type">
-              <option value="free" data-translate="faucets_type_free">Бесплатный</option>
-              <option value="paid" data-translate="faucets_type_paid">Платный</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-col">
-            <label class="form-label" data-translate="faucets_field_net">Сеть</label>
-            <select class="form-select" id="suggest_net">
-              <option value="testnet" data-translate="faucets_net_testnet">Тестнет</option>
-              <option value="mainnet" data-translate="faucets_net_mainnet">Мейннет</option>
-            </select>
-          </div>
-          <div class="form-col">
-            <label class="form-label" data-translate="faucets_field_reward">Награда</label>
-            <input class="form-input" id="suggest_reward" data-translate="faucets_ph_reward" placeholder="0.1 ETH">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-col">
-            <label class="form-label" data-translate="faucets_field_cooldown">Кулдаун</label>
-            <input class="form-input" id="suggest_cooldown" data-translate="faucets_ph_cooldown" placeholder="24 часа">
-          </div>
-          <div class="form-col">
-            <label class="form-label" data-translate="faucets_field_tags">Теги</label>
-            <input class="form-input" id="suggest_tags" data-translate="faucets_ph_tags" placeholder="ETH, Layer 2, Testnet">
-          </div>
-        </div>
-
         <div>
-          <label class="form-label" data-translate="faucets_field_desc">Описание</label>
-          <textarea class="form-input" id="suggest_desc" rows="3" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;"></textarea>
+          <div class="ae-label" data-translate="faucets_field_net">Сеть</div>
+          <select class="ae-select ae-input" id="suggest_net">
+            <option value="testnet" data-translate="faucets_net_testnet">Тестнет</option>
+            <option value="mainnet" data-translate="faucets_net_mainnet">Мейннет</option>
+          </select>
         </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="closeSuggestModal()" data-translate="close">Закрыть</button>
-          <button type="submit" class="btn-primary">
-            <i class="fas fa-paper-plane" style="margin-right:6px;"></i>
-            <span data-translate="send">Отправить</span>
-          </button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div class="ae-label" data-translate="faucets_field_reward">Награда (необязательно)</div>
+          <input class="ae-input" id="suggest_reward" data-translate="faucets_ph_reward" placeholder="0.5 ETH/день">
         </div>
-        
-        <div style="font-size:11px;color:#64748b;line-height:1.5;padding:12px;background:rgba(34,211,238,0.05);border-radius:8px;border:1px solid rgba(34,211,238,0.1);" data-translate="faucets_suggest_hint">
-          Предложения попадают в модерацию. После одобрения кран появится в списке.
+        <div>
+          <div class="ae-label" data-translate="faucets_field_cooldown">Кулдаун</div>
+          <input class="ae-input" id="suggest_cooldown" data-translate="faucets_ph_cooldown" placeholder="24ч">
         </div>
-      </form>
+      </div>
+      <div>
+        <div class="ae-label" data-translate="faucets_field_tags">Теги (через запятую)</div>
+        <input class="ae-input" id="suggest_tags" data-translate="faucets_ph_tags" placeholder="airdrop, hot, multi">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button onclick="submitSuggestion()" style="flex:1;padding:10px;background:linear-gradient(135deg,#22d3ee,#0ea5e9);border:none;border-radius:8px;color:white;font-size:13px;font-weight:800;cursor:pointer;">
+          <i class="fas fa-save" style="margin-right:6px;"></i><span data-translate="footer_account_save">Сохранить</span>
+        </button>
+        <button onclick="closeSuggestModal()" style="padding:10px 18px;background:rgba(30,37,56,0.8);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#94a3b8;font-size:13px;cursor:pointer;">
+          <span data-translate="footer_account_cancel">Отмена</span>
+        </button>
+      </div>
+      <div style="font-size:11px;color:#64748b;line-height:1.5;" data-translate="faucets_suggest_hint">
+        Предложения попадают в модерацию. После одобрения кран появится в списке.
+      </div>
     </div>
   </div>
 </div>
@@ -1723,11 +1709,22 @@ window.showUserInfo = async function(userId) {
       reagents: 0,
       streak: 0,
       invitedCount: 0,
+      referralEarnings: 0,
+      lastClaimDate: null,
       bio: '',
       country: '',
+      city: '',
+      firstName: '',
+      lastName: '',
+      nickname: '',
+      birthDate: '',
+      gender: '',
+      evmAddress: '',
+      solanaAddress: '',
       twitter: '',
       discord: '',
-      telegram: ''
+      telegram: '',
+      refCode: ''
     };
     
     if (userSnap.exists()) {
@@ -1744,16 +1741,25 @@ window.showUserInfo = async function(userId) {
         lastClaimDate: data.lastClaimDate,
         bio: data.bio || '',
         country: data.country || '',
+        city: data.city || '',
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        nickname: data.nickname || '',
+        birthDate: data.birthDate || '',
+        gender: data.gender || '',
+        evmAddress: data.evmAddress || '',
+        solanaAddress: data.solanaAddress || '',
         twitter: data.twitter || '',
         discord: data.discord || '',
-        telegram: data.telegram || ''
+        telegram: data.telegram || '',
+        refCode: data.refCode || ''
       };
     }
     
     const createdDate = userData.createdAt?.toDate?.() || new Date();
     const suggestionsCount = faucets.filter(f => f.submittedBy === userId).length;
     
-    // Создаем модальное окно в стиле footer.js
+    // Создаем модальное окно в стиле личного кабинета
     const old = document.getElementById('userInfoOverlayModal');
     if (old) old.remove();
 
@@ -1769,7 +1775,7 @@ window.showUserInfo = async function(userId) {
     const box = document.createElement('div');
     box.style.cssText = `
         background: #1e2538; border: 1px solid rgba(71,85,105,0.5);
-        border-radius: 20px; width: 100%; max-width: 680px; max-height: 90vh;
+        border-radius: 20px; width: 100%; max-width: 800px; max-height: 90vh;
         overflow: hidden; display: flex; flex-direction: column;
         position: relative; transform: scale(0.95); transition: transform 0.2s ease;
         box-shadow: 0 25px 60px rgba(0,0,0,0.5);
@@ -1804,9 +1810,10 @@ window.showUserInfo = async function(userId) {
     const contentWrap = document.createElement('div');
     contentWrap.style.cssText = 'overflow-y: auto; flex: 1;';
     
-    // HTML контент как в footer.js
+    // HTML контент в стиле личного кабинета
     contentWrap.innerHTML = `
         <div style="padding:32px;">
+            <!-- Заголовок профиля -->
             <div style="text-align:center;margin-bottom:32px;">
                 <div style="position:relative;display:inline-block;margin-bottom:16px;">
                     <img src="${userData.photoURL}" style="width:120px;height:120px;border-radius:50%;border:4px solid #22d3ee;object-fit:cover;" onerror="this.src='https://www.gravatar.com/avatar/?d=mp'">
@@ -1819,6 +1826,7 @@ window.showUserInfo = async function(userId) {
                 <p style="font-size:12px;color:#64748b;margin:0;">На платформе с ${createdDate.toLocaleDateString()}</p>
             </div>
 
+            <!-- Статистика -->
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:32px;">
                 <div style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:12px;padding:16px;text-align:center;">
                     <div style="font-size:24px;font-weight:700;color:#22d3ee;margin-bottom:4px;">${userData.reagents}</div>
@@ -1838,56 +1846,142 @@ window.showUserInfo = async function(userId) {
                 </div>
             </div>
 
+            <!-- Личная информация -->
             <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(71,85,105,0.3);border-radius:12px;padding:20px;margin-bottom:24px;">
                 <h3 style="font-size:16px;font-weight:600;color:#f1f5f9;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;">
-                    <i class="fas fa-info-circle" style="color:#22d3ee;"></i>
-                    Информация о пользователе
+                    <i class="fas fa-user-circle" style="color:#22d3ee;"></i>
+                    Личная информация
                 </h3>
-                <div style="display:grid;gap:12px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(71,85,105,0.2);">
-                        <span style="font-size:13px;color:#94a3b8;">ID пользователя:</span>
-                        <span style="font-size:13px;color:#f1f5f9;font-family:monospace;">${userId}</span>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">ID пользователя</div>
+                        <div style="font-size:13px;color:#f1f5f9;font-family:monospace;background:rgba(71,85,105,0.2);padding:6px 8px;border-radius:6px;">${userId}</div>
                     </div>
-                    ${userData.referralEarnings ? `
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(71,85,105,0.2);">
-                        <span style="font-size:13px;color:#94a3b8;">Реферальные доходы:</span>
-                        <span style="font-size:13px;color:#fbbf24;font-weight:600;">${userData.referralEarnings} RGT</span>
+                    ${userData.firstName ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Имя</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.firstName}</div>
                     </div>
                     ` : ''}
-                    ${userData.lastClaimDate ? `
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(71,85,105,0.2);">
-                        <span style="font-size:13px;color:#94a3b8;">Последний клейм:</span>
-                        <span style="font-size:13px;color:#f1f5f9;">${new Date(userData.lastClaimDate?.toDate?.() || userData.lastClaimDate).toLocaleDateString()}</span>
+                    ${userData.lastName ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Фамилия</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.lastName}</div>
+                    </div>
+                    ` : ''}
+                    ${userData.nickname ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Никнейм</div>
+                        <div style="font-size:13px;color:#f1f5f9;">@${userData.nickname}</div>
+                    </div>
+                    ` : ''}
+                    ${userData.birthDate ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Дата рождения</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.birthDate}</div>
+                    </div>
+                    ` : ''}
+                    ${userData.gender ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Пол</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.gender === 'male' ? 'Мужской' : userData.gender === 'female' ? 'Женский' : 'Другое'}</div>
                     </div>
                     ` : ''}
                     ${userData.country ? `
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(71,85,105,0.2);">
-                        <span style="font-size:13px;color:#94a3b8;">Страна:</span>
-                        <span style="font-size:13px;color:#f1f5f9;">${userData.country}</span>
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Страна</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.country}</div>
+                    </div>
+                    ` : ''}
+                    ${userData.city ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Город</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.city}</div>
                     </div>
                     ` : ''}
                     ${userData.bio ? `
-                    <div style="padding:8px 0;">
-                        <span style="font-size:13px;color:#94a3b8;display:block;margin-bottom:4px;">О себе:</span>
-                        <p style="font-size:13px;color:#f1f5f9;line-height:1.5;margin:0;">${userData.bio}</p>
+                    <div style="grid-column:1/-1;">
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">О себе</div>
+                        <div style="font-size:13px;color:#f1f5f9;line-height:1.5;background:rgba(71,85,105,0.2);padding:8px 12px;border-radius:6px;">${userData.bio}</div>
                     </div>
                     ` : ''}
                 </div>
             </div>
 
-            ${userData.twitter || userData.discord || userData.telegram ? `
-            <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(71,85,105,0.3);border-radius:12px;padding:20px;">
+            <!-- Крипто-адреса -->
+            ${(userData.evmAddress || userData.solanaAddress) ? `
+            <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(71,85,105,0.3);border-radius:12px;padding:20px;margin-bottom:24px;">
+                <h3 style="font-size:16px;font-weight:600;color:#f1f5f9;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;">
+                    <i class="fas fa-wallet" style="color:#22d3ee;"></i>
+                    Крипто-адреса
+                </h3>
+                <div style="display:grid;gap:12px;">
+                    ${userData.evmAddress ? `
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:16px;color:#8b5cf6;">Ξ</span>
+                        <div>
+                            <div style="font-size:12px;color:#94a3b8;">EVM адрес</div>
+                            <div style="font-size:13px;color:#f1f5f9;font-family:monospace;background:rgba(71,85,105,0.2);padding:6px 8px;border-radius:6px;">${userData.evmAddress}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    ${userData.solanaAddress ? `
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:16px;color:#14b8a6;">◎</span>
+                        <div>
+                            <div style="font-size:12px;color:#94a3b8;">Solana адрес</div>
+                            <div style="font-size:13px;color:#f1f5f9;font-family:monospace;background:rgba(71,85,105,0.2);padding:6px 8px;border-radius:6px;">${userData.solanaAddress}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- Социальные сети -->
+            ${(userData.twitter || userData.discord || userData.telegram) ? `
+            <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(71,85,105,0.3);border-radius:12px;padding:20px;margin-bottom:24px;">
                 <h3 style="font-size:16px;font-weight:600;color:#f1f5f9;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;">
                     <i class="fas fa-share-alt" style="color:#22d3ee;"></i>
                     Социальные сети
                 </h3>
-                <div style="display:flex;gap:12px;">
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
                     ${userData.twitter ? `<a href="https://twitter.com/${userData.twitter}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(29,161,242,0.1);border:1px solid rgba(29,161,242,0.3);border-radius:8px;color:#1da1f2;text-decoration:none;font-size:13px;transition:all 0.2s;" onmouseover="this.style.background='rgba(29,161,242,0.2)'" onmouseout="this.style.background='rgba(29,161,242,0.1)'"><i class="fab fa-twitter"></i> @${userData.twitter}</a>` : ''}
                     ${userData.discord ? `<div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(88,101,242,0.1);border:1px solid rgba(88,101,242,0.3);border-radius:8px;color:#8b9dc3;font-size:13px;"><i class="fab fa-discord"></i> ${userData.discord}</div>` : ''}
                     ${userData.telegram ? `<a href="https://t.me/${userData.telegram}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(0,136,204,0.1);border:1px solid rgba(0,136,204,0.3);border-radius:8px;color:#0088cc;text-decoration:none;font-size:13px;transition:all 0.2s;" onmouseover="this.style.background='rgba(0,136,204,0.2)'" onmouseout="this.style.background='rgba(0,136,204,0.1)'"><i class="fab fa-telegram"></i> @${userData.telegram}</a>` : ''}
                 </div>
             </div>
             ` : ''}
+
+            <!-- Реферальная программа -->
+            <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(71,85,105,0.3);border-radius:12px;padding:20px;">
+                <h3 style="font-size:16px;font-weight:600;color:#f1f5f9;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;">
+                    <i class="fas fa-gift" style="color:#22d3ee;"></i>
+                    Реферальная программа
+                </h3>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;">
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Ваш реф. код</div>
+                        <div style="font-size:13px;color:#f1f5f9;font-family:monospace;background:rgba(71,85,105,0.2);padding:6px 8px;border-radius:6px;">${userData.refCode || 'AL-' + userId.slice(0,6).toUpperCase()}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Приглашено</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.invitedCount} чел.</div>
+                    </div>
+                    ${userData.referralEarnings ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Реферальные доходы</div>
+                        <div style="font-size:13px;color:#fbbf24;font-weight:600;">${userData.referralEarnings} RGT</div>
+                    </div>
+                    ` : ''}
+                    ${userData.lastClaimDate ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Последний клейм</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${new Date(userData.lastClaimDate?.toDate?.() || userData.lastClaimDate).toLocaleDateString()}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
         </div>
     `;
 
@@ -1955,20 +2049,26 @@ window.rewardUser = async function(userId, suggestionId) {
     
     toast(isEn ? `Reward sent: ${amount} RGT` : `Награда отправлена: ${amount} RGT`);
     
-    // Отправляем уведомление пользователю
+    // Отправляем уведомление пользователю на его языке
     try {
       // Получаем информацию о предложении для уведомления
       const suggestionSnap = await getDoc(doc(db, COL_FAUCETS, suggestionId));
       const suggestionName = suggestionSnap.exists() ? suggestionSnap.data().name : 'предложение';
       
+      // Получаем язык пользователя из его профиля
+      const userSnap = await getDoc(doc(db, 'users', userId));
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      const userLang = userData.currentLang || 'ru'; // по умолчанию русский
+      const isUserEn = userLang === 'en';
+      
       // Создаем уведомление в коллекции notifications
       await addDoc(collection(db, 'notifications'), {
         userId: userId,
         type: 'reward',
-        title: isEn ? 'RGT Reward Received!' : 'Получена RGT награда!',
-        message: isEn 
-          ? `You received ${amount} RGT for your suggestion "${suggestionName}". Thank you for your contribution!`
-          : `Вы получили ${amount} RGT за ваше предложение "${suggestionName}". Спасибо за ваш вклад!`,
+        title: isUserEn ? 'RGT Reward Received!' : 'Получена RGT награда!',
+        message: isUserEn 
+          ? `You received <strong style="color:#22d3ee;">+${amount} RGT</strong> for your suggestion "${suggestionName}". Thank you for your contribution!`
+          : `Вы получили <strong style="color:#22d3ee;">+${amount} RGT</strong> за ваше предложение "${suggestionName}". Спасибо за ваш вклад!`,
         amount: Number(amount),
         suggestionId: suggestionId,
         suggestionName: suggestionName,
@@ -1976,7 +2076,7 @@ window.rewardUser = async function(userId, suggestionId) {
         createdAt: serverTimestamp()
       });
       
-      console.log('Notification sent to user:', userId);
+      console.log('Notification sent to user:', userId, 'Language:', userLang);
     } catch(notifError) {
       console.warn('Failed to send notification:', notifError);
     }
@@ -2119,7 +2219,24 @@ document.getElementById('addFaucetModal').addEventListener('click', function(e) 
 });
 
 // Suggest modal
-function openSuggestModal() { document.getElementById('suggestModal').classList.add('open'); }
+function openSuggestModal() { 
+  document.getElementById('suggestId').value = '';
+  document.getElementById('suggest_name').value = '';
+  document.getElementById('suggest_token').value = '';
+  document.getElementById('suggest_desc').value = '';
+  document.getElementById('suggest_links').value = '';
+  document.getElementById('suggest_logo').value = '';
+  document.getElementById('suggest_type').value = 'free';
+  document.getElementById('suggest_net').value = 'testnet';
+  document.getElementById('suggest_reward').value = '';
+  document.getElementById('suggest_cooldown').value = '';
+  document.getElementById('suggest_tags').value = '';
+  
+  const isEn = (window.currentLang === 'en');
+  document.getElementById('suggestModalTitle').textContent = isEn ? 'Suggest New Faucet' : 'Предложить новый кран';
+  
+  document.getElementById('suggestModal').classList.add('open'); 
+}
 function closeSuggestModal() { document.getElementById('suggestModal').classList.remove('open'); }
 window.openSuggestModal = openSuggestModal;
 window.closeSuggestModal = closeSuggestModal;
@@ -2201,6 +2318,7 @@ async function submitSuggestion() {
     // Очищаем форму
     document.getElementById('suggest_name').value = '';
     document.getElementById('suggest_token').value = '';
+    document.getElementById('suggest_desc').value = '';
     document.getElementById('suggest_links').value = '';
     document.getElementById('suggest_logo').value = '';
     document.getElementById('suggest_type').value = 'free';
@@ -2208,13 +2326,13 @@ async function submitSuggestion() {
     document.getElementById('suggest_reward').value = '';
     document.getElementById('suggest_cooldown').value = '';
     document.getElementById('suggest_tags').value = '';
-    document.getElementById('suggest_desc').value = '';
     document.getElementById('suggestId').value = '';
     
     // Возвращаем заголовок
     const titleEl = document.getElementById('suggestModalTitle');
     if (titleEl) {
-      titleEl.textContent = (window.currentLang === 'en') ? 'Предложить новый кран' : 'Предложить новый кран';
+      const isEn = (window.currentLang === 'en');
+      titleEl.textContent = isEn ? 'Suggest New Faucet' : 'Предложить новый кран';
     }
     
     await loadFaucetsFromFirestore();
