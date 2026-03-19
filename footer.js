@@ -7,14 +7,6 @@
 (function() {
     'use strict';
 
-    // Создаем изображения флагов и загружаем их
-    const uaFlagImg = new Image();
-    const usFlagImg = new Image();
-    uaFlagImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALCAIAAAD5gJpuAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMS42/Ixj6AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNui8sowAAAAWdEVYdENyZWF0aW9uIFRpbWUAMDcvMTUvMTTswFpAAAAA6SURBVHjaYmBgYGBoA4gRhYGJgZGBiYPjPAAEGAH//z9P7BkZGBgYGJgYGBgYGBgYGBgYGBgYGBgYGBgYGBl4AABQBDAwMjIyMjIyMAAAAABJRU5ErkJggg==';
-    usFlagImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALCAIAAAD5gJpuAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMS42/Ixj6AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNui8sowAAAAWdEVYdENyZWF0aW9uIFRpbWUAMDcvMTUvMTTswFpAAAAA6SURBVHjaYmBgYGBoA4gRhYGJgZGBiYPjPAAEGAH//z9P7BkZGBgYGJgYGBgYGBgYGBgYGBgYGBgYGBgYGBl4AABQBDAwMjIyMjIyMAAAAABJRU5ErkJggg==';
-    
-    console.log('Flag images created');
-    
     // Функция для обновления всех селекторов с флагами
     function updateAllFlagSelectors() {
         const selectors = ['profileLanguage', 'userLanguageSelect'];
@@ -2493,7 +2485,7 @@ function initAccountPage() {
     document.addEventListener('DOMContentLoaded', function() { setTimeout(updateFooterTranslations, 500); });
     window.updateFooterTranslations = updateFooterTranslations;
 
-    // Универсальная функция для получения отображения флага - ПРОСТОЙ ВАРИАНТ
+    // Универсальная функция для получения отображения флага - PNG ФАЙЛЫ
 window.getFlagDisplay = function(language) {
     // Определяем устройство и поддержка эмодзи
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -2516,12 +2508,12 @@ window.getFlagDisplay = function(language) {
             en: { flag: '🇺🇸', text: 'ENG' }
         }[language] || { flag: '🇺🇦', text: 'УКР' };
     } else {
-        // На ПК используем простые текстовые флаги - 100% работает
-        console.log('Using text flags for PC - guaranteed to work');
+        // На ПК используем PNG файлы - самый надежный способ
+        console.log('Using PNG flag files for PC');
         return {
-            ru: { flag: '<span style="display:inline-block;width:20px;height:14px;background:linear-gradient(to bottom,#005BBB 50%,#FFD500 50%);border-radius:2px;border:1px solid #ccc;"></span>', text: 'УКР' },
-            en: { flag: '<span style="display:inline-block;width:20px;height:14px;background:linear-gradient(to bottom,#B22234 0%,#B22234 40%,white 40%,white 60%,#B22234 60%,#B22234 100%);border-radius:2px;border:1px solid #ccc;position:relative;"><span style="position:absolute;top:0;left:0;width:8px;height:7px;background:#3C3B6E;"></span></span>', text: 'ENG' }
-        }[language] || { flag: '<span style="display:inline-block;width:20px;height:14px;background:linear-gradient(to bottom,#005BBB 50%,#FFD500 50%);border-radius:2px;border:1px solid #ccc;"></span>', text: 'УКР' };
+            ru: { flag: '<img src="./assets/flags/ua.png" alt="UA" style="width:20px;height:14px;border-radius:2px;border:1px solid #ccc;vertical-align:middle;">', text: 'УКР' },
+            en: { flag: '<img src="./assets/flags/us.png" alt="US" style="width:20px;height:14px;border-radius:2px;border:1px solid #ccc;vertical-align:middle;">', text: 'ENG' }
+        }[language] || { flag: '<img src="./assets/flags/ua.png" alt="UA" style="width:20px;height:14px;border-radius:2px;border:1px solid #ccc;vertical-align:middle;">', text: 'УКР' };
     }
 };
 
