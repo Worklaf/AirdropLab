@@ -2485,7 +2485,7 @@ function initAccountPage() {
     document.addEventListener('DOMContentLoaded', function() { setTimeout(updateFooterTranslations, 500); });
     window.updateFooterTranslations = updateFooterTranslations;
 
-    // Универсальная функция для получения отображения флага - SVG ФАЙЛЫ
+    // Универсальная функция для получения отображения флага - ТОЛЬКО SVG
 window.getFlagDisplay = function(language) {
     // Определяем устройство и поддержка эмодзи
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -2508,10 +2508,10 @@ window.getFlagDisplay = function(language) {
             en: { flag: '🇺🇸', text: 'ENG' }
         }[language] || { flag: '🇺🇦', text: 'УКР' };
     } else {
-        // На ПК используем SVG файлы с параметрами
+        // На ПК используем ТОЛЬКО SVG файлы
         console.log('Using SVG flag files for PC');
         
-        // Пробуем разные варианты путей
+        // Пробуем разные варианты путей для SVG
         const basePath = window.location.pathname.includes('faucet.html') ? './assets/flags/' : '../assets/flags/';
         const uaPath = basePath + 'ua.svg';
         const usPath = basePath + 'us.svg';
