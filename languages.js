@@ -710,6 +710,7 @@ passive_credited_to_upstream: 'Начислено вышестоящим по ц
     chat_with_user: 'Chat with User',
     chat_with_support: 'Support Chat',
     feedbacks_list: 'Feedback & Suggestions',
+    my_suggestions: 'My Suggestions',
     loading_chat: 'Loading chat...',
     loading_feedbacks: 'Loading feedbacks...',
     topic: 'Topic',
