@@ -15,12 +15,12 @@
             if (select && typeof window.getFlagDisplay === 'function') {
                 const currentValue = select.value || (window.currentLang === 'en' ? 'en' : 'ru');
                 const options = select.querySelectorAll('option');
+                
                 options.forEach(option => {
                     const lang = option.value;
                     const display = window.getFlagDisplay(lang);
-                    // Создаем элементы через DOM чтобы избежать экранирования
-                    option.innerHTML = '';
-                                        // SVG — вставляем через innerHTML
+                    
+                    // Просто вставляем HTML как есть
                     option.innerHTML = display.flag + ' ' + display.text;
                 });
                 select.value = currentValue;
