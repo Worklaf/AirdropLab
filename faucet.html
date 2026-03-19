@@ -1256,6 +1256,11 @@ function renderCard(f) {
   var badgeNet  = '<span class="badge badge-'+f.net+'" style="margin-left:4px;">'+( f.net==='testnet' ? (isEn ? 'Testnet' : 'Тестнет') : (isEn ? 'Mainnet' : 'Мейннет') )+'</span>';
   var extraBadges = (f.tags||[]).map(renderBadge).join('');
 
+  // Добавляем бейдж для предложения
+  if (f.status === 'pending') {
+    extraBadges += '<span class="badge" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);margin-left:4px;">' + (isEn ? 'PENDING' : 'НА МОДЕРАЦИИ') + '</span>';
+  }
+
   var linksHtml = (f.links||[]).map(function(url) {
     var short = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
     const u = safeText(url);
@@ -1285,13 +1290,45 @@ function renderCard(f) {
          + ' onerror="this.outerHTML=\'<div class=&quot;faucet-logo-placeholder&quot;><i class=&quot;' + networkIcon + '&quot;></i></div>\'">'
     : '<div class="faucet-logo-placeholder"><i class="' + networkIcon + '"></i></div>';
 
-  var editBtns = (editMode && isAdmin) ? '<div style="display:flex;gap:6px;margin-top:10px;">'
+  // Информация о пользователе для предложений
+  var userInfoHtml = '';
+  if (f.status === 'pending' && f.userName) {
+    const submittedDate = f.submittedAt?.toDate?.() || new Date(f.submittedAt);
+    const timeAgo = getTimeAgo(submittedDate);
+    userInfoHtml = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:rgba(34,211,238,0.1);border-radius:8px;border:1px solid rgba(34,211,238,0.2);">' +
+      '<img src="' + (f.userPhoto || 'https://www.gravatar.com/avatar/?d=mp') + '" ' +
+           'style="width:24px;height:24px;border-radius:50%;border:2px solid rgba(34,211,238,0.3);cursor:pointer;" ' +
+           'onclick="showUserInfo(\'' + (f.submittedBy || '') + '\')" ' +
+           'onerror="this.src=\'https://www.gravatar.com/avatar/?d=mp\'" ' +
+           'title="' + (f.userName || 'Anonymous') + '">' +
+      '<div style="flex:1;">' +
+        '<div style="font-size:12px;font-weight:600;color:#f1f5f9;cursor:pointer;" onclick="showUserInfo(\'' + (f.submittedBy || '') + '\')" title="Посмотреть профиль">' + (f.userName || 'Anonymous') + '</div>' +
+        '<div style="font-size:10px;color:#94a3b8;">' + timeAgo + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // Кнопки для админа для предложений
+  var adminBtns = '';
+  if (f.status === 'pending' && isAdmin) {
+    adminBtns = '<div style="display:flex;gap:6px;margin-top:10px;">' +
+      '<button onclick="editSuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);border-radius:6px;color:#22d3ee;font-size:11px;cursor:pointer;"><i class="fas fa-pen"></i> '+(isEn?'Edit':'Изменить')+'</button>' +
+      '<button onclick="approveSuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:6px;color:#34d399;font-size:11px;cursor:pointer;"><i class="fas fa-check"></i> '+(isEn?'Approve':'Одобрить')+'</button>' +
+      '<button onclick="deleteSuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete':'Удалить')+'</button>' +
+      '<button onclick="rewardUser(\''+safeText(f.submittedBy || '')+'\', \''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:6px;color:#fbbf24;font-size:11px;cursor:pointer;"><i class="fas fa-coins"></i> RGT</button>' +
+    '</div>';
+  }
+
+  var editBtns = (editMode && isAdmin && f.status !== 'pending') ? '<div style="display:flex;gap:6px;margin-top:10px;">'
     + '<button onclick="editFaucet(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);border-radius:6px;color:#22d3ee;font-size:11px;cursor:pointer;"><i class="fas fa-pen"></i> '+(isEn?'Edit':'Изменить')+'</button>'
     + '<button onclick="deleteFaucet(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete':'Удалить')+'</button>'
     + '</div>' : '';
 
+  // Особый стиль для предложений
+  var cardStyle = f.status === 'pending' ? 'border:2px solid rgba(239,68,68,0.3);background:linear-gradient(135deg,rgba(239,68,68,0.05),rgba(15,23,42,0.8));' : '';
+
   return '<div class="faucet-card '+typeClass+'" data-id="'+f.id+'" data-name="'+f.name.toLowerCase()+'" data-token="'+(f.token||'').toLowerCase()+'" data-type="'+f.type+'" data-net="'+f.net+'">'
-    + '<div style="padding:16px;">'
+    + '<div style="padding:16px;' + cardStyle + '">'
     + '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">'
     + logoHtml
     + '<div style="flex:1;min-width:0;">'
@@ -1305,9 +1342,11 @@ function renderCard(f) {
     + '</div>'
     + '</div>'
     + (f.desc ? '<p style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;margin-top:6px;">'+safeText(f.desc)+'</p>' : '')
+    + userInfoHtml // Добавляем информацию о пользователе
     + (chips ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">'+chips+'</div>' : '')
     + '<div class="faucet-links-list">'+linksHtml+'</div>'
-    + editBtns
+    + adminBtns // Кнопки модерации для предложений
+    + editBtns // Кнопки редактирования для обычных кранов
     + '</div>'
     + '</div>';
 }
@@ -1370,11 +1409,34 @@ function applyCurrentFilter() {
   
   // Если выбран фильтр предложений, показываем их вместо обычных кранов
   if (currentFilter === 'suggestions') {
-    renderSuggestions();
+    // Показываем только pending краны
+    document.querySelectorAll('.faucet-card').forEach(function(card) {
+      const faucetId = card.dataset.id;
+      const faucet = faucets.find(f => f.id === faucetId);
+      const isPending = faucet && faucet.status === 'pending';
+      const canSee = isPending && (isAdmin || (currentUser && faucet.submittedBy === currentUser.uid));
+      
+      var matchSearch = !query || card.dataset.name.includes(query) || card.dataset.token.includes(query);
+      card.style.display = (canSee && matchSearch) ? '' : 'none';
+    });
+    
+    document.querySelectorAll('.faucet-section').forEach(function(sec) {
+      var visible = Array.from(sec.querySelectorAll('.faucet-card')).some(function(c){ return c.style.display !== 'none'; });
+      sec.style.display = visible ? '' : 'none';
+    });
     return;
   }
   
   document.querySelectorAll('.faucet-card').forEach(function(card) {
+    const faucetId = card.dataset.id;
+    const faucet = faucets.find(f => f.id === faucetId);
+    
+    // Скрываем pending краны в обычных фильтрах
+    if (faucet && faucet.status === 'pending') {
+      card.style.display = 'none';
+      return;
+    }
+    
     // favorites filter = any favorited link inside this faucet
     var isFav = false;
     if (currentFilter === 'favorites') {
@@ -1746,27 +1808,44 @@ async function submitSuggestion() {
     alert((window.currentLang === 'en') ? 'Fill name, token and link' : 'Заполните название, токен и ссылку');
     return;
   }
-  await addDoc(collection(db, COL_SUGGESTIONS), {
+  
+  // Создаем кран со статусом pending
+  const faucetData = {
     name,
     token,
-    link,
+    links: [link],
     logoUrl: normalizeUrl(document.getElementById('s_logo').value.trim()),
     desc: document.getElementById('s_desc').value.trim(),
     type: document.getElementById('s_type').value,
     net: document.getElementById('s_net').value,
-    status: 'pending',
+    reward: '',
+    cooldown: '',
+    tags: [],
+    status: 'pending', // Статус для модерации
     submittedBy: currentUser.uid,
     submittedEmail: currentUser.email || '',
-    submittedAt: serverTimestamp()
-  });
+    submittedAt: serverTimestamp(),
+    ratingAvg: 0,
+    ratingCount: 0,
+    clickCount: 0,
+    createdAt: serverTimestamp()
+  };
+  
+  // Добавляем в коллекцию faucets со специальным ID
+  const ref = await addDoc(collection(db, COL_FAUCETS), faucetData);
+  
   closeSuggestModal();
   document.getElementById('s_name').value = '';
   document.getElementById('s_token').value = '';
   document.getElementById('s_link').value = '';
   document.getElementById('s_logo').value = '';
   document.getElementById('s_desc').value = '';
-  toast((window.currentLang === 'en') ? 'Suggestion sent' : 'Предложение отправлено');
-}
+  
+  toast((window.currentLang === 'en') ? 'Suggestion sent for moderation' : 'Предложение отправлено на модерацию');
+  
+  // Перезагружаем краны
+  await loadFaucetsFromFirestore();
+};
 window.submitSuggestion = submitSuggestion;
 
 // Auth modal helpers
@@ -1889,70 +1968,77 @@ async function loadFaucetsFromFirestore() {
   try {
     const snap = await getDocs(query(collection(db, COL_FAUCETS), orderBy('name')));
     faucets = [];
-    snap.forEach((d) => {
+    
+    for (const d of snap.docs) {
       const data = d.data();
-      faucets.push({ id: d.id, ...data });
-    });
-    // If DB is empty, still allow UI to show something meaningful
+      let faucetData = { id: d.id, ...data };
+      
+      // Если кран со статусом pending, загружаем информацию о пользователе
+      if (data.status === 'pending' && data.submittedBy) {
+        try {
+          const userSnap = await getDoc(doc(db, 'users', data.submittedBy));
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            faucetData.userName = userData.displayName || userData.email?.split('@')[0] || 'Anonymous';
+            faucetData.userEmail = userData.email || data.submittedEmail || 'No email';
+            faucetData.userPhoto = userData.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+          } else {
+            faucetData.userName = 'Anonymous';
+            faucetData.userEmail = data.submittedEmail || 'No email';
+            faucetData.userPhoto = 'https://www.gravatar.com/avatar/?d=mp';
+          }
+        } catch(e) { 
+          console.warn('Failed to load user info for', data.submittedBy); 
+          faucetData.userName = 'Anonymous';
+          faucetData.userEmail = data.submittedEmail || 'No email';
+          faucetData.userPhoto = 'https://www.gravatar.com/avatar/?d=mp';
+        }
+      }
+      
+      faucets.push(faucetData);
+    }
+    
     if (!faucets.length) {
-      // Show embedded defaults until the collection is seeded
       faucets = DEFAULT_FAUCETS.map((f) => ({
         id: f.id,
         name: f.name || '',
         token: f.token || '',
         type: f.type || 'free',
-        net: f.net || 'testnet',
+        net: f.net || 'mainnet',
         desc: f.desc || '',
-        links: (f.links || []).map(normalizeUrl).filter(Boolean),
+        links: f.links || [],
+        logoUrl: f.logoUrl || '',
         reward: f.reward || '',
         cooldown: f.cooldown || '',
-        tags: Array.isArray(f.tags) ? f.tags : [],
-        logoUrl: f.logoUrl || '',
+        tags: f.tags || [],
         ratingAvg: 0,
         ratingCount: 0,
-        clickCount: 0,
-        createdAt: null,
-        updatedAt: null,
-        _source: 'embedded'
+        clickCount: 0
       }));
-      const isEn = (window.currentLang === 'en');
       toast(isEn ? 'Database is empty — showing embedded defaults' : 'База пуста — показаны встроенные данные');
     }
   } catch (e) {
-    const code = e && (e.code || e.name) ? String(e.code || e.name) : '';
-    console.warn('[Faucets] load from Firestore failed:', e);
-    // Fallback to embedded defaults if permissions or offline
+    console.error('Failed to load faucets from Firestore:', e);
     faucets = DEFAULT_FAUCETS.map((f) => ({
       id: f.id,
       name: f.name || '',
       token: f.token || '',
       type: f.type || 'free',
-      net: f.net || 'testnet',
+      net: f.net || 'mainnet',
       desc: f.desc || '',
-      links: (f.links || []).map(normalizeUrl).filter(Boolean),
+      links: f.links || [],
+      logoUrl: f.logoUrl || '',
       reward: f.reward || '',
       cooldown: f.cooldown || '',
-      tags: Array.isArray(f.tags) ? f.tags : [],
-      logoUrl: f.logoUrl || '',
+      tags: f.tags || [],
       ratingAvg: 0,
       ratingCount: 0,
-      clickCount: 0,
-      createdAt: null,
-      updatedAt: null,
-      _source: 'embedded'
+      clickCount: 0
     }));
-    const isEn = (window.currentLang === 'en');
-    if (String(code).includes('permission-denied')) {
-      toast(isEn
-        ? 'Firestore permissions deny reading faucets. Showing embedded defaults.'
-        : 'Правила Firestore запрещают чтение кранов. Показаны встроенные данные.');
-    } else {
-      toast(isEn
-        ? 'Failed to load from Firestore. Showing embedded defaults.'
-        : 'Не удалось загрузить из Firestore. Показаны встроенные данные.');
-    }
+    toast(isEn
+      ? 'Firestore permissions deny reading faucets. Showing embedded defaults.'
+      : 'Правила Firestore запрещают чтение кранов. Показаны встроенные данные.');
   }
-
   renderAll();
   if (typeof window.updateAllTranslations === 'function') window.updateAllTranslations();
 }
@@ -1960,27 +2046,28 @@ async function loadFaucetsFromFirestore() {
 async function loadPendingSuggestions() {
   if (!isAdmin) return;
   try {
-    // Avoid composite index requirement: fetch by status only, sort client-side
-    const snap = await getDocs(query(collection(db, COL_SUGGESTIONS), where('status', '==', 'pending')));
+    // Загружаем pending краны из основной коллекции
+    const snap = await getDocs(query(collection(db, COL_FAUCETS), where('status', '==', 'pending')));
     pendingSuggestions = [];
+    
     for (const doc of snap.docs) {
       const data = doc.data();
       let userInfo = {
         userName: 'Anonymous',
-        userEmail: data.submittedEmail || data.userId,
+        userEmail: data.submittedEmail || data.submittedBy,
         userPhoto: 'https://www.gravatar.com/avatar/?d=mp'
       };
       
       // Try to get user info from users collection
       try {
-        const userSnap = await getDoc(doc(db, 'users', data.userId));
+        const userSnap = await getDoc(doc(db, 'users', data.submittedBy));
         if (userSnap.exists()) {
           const userData = userSnap.data();
           userInfo.userName = userData.displayName || userData.email?.split('@')[0] || 'Anonymous';
-          userInfo.userEmail = userData.email || data.submittedEmail || data.userId;
+          userInfo.userEmail = userData.email || data.submittedEmail || data.submittedBy;
           userInfo.userPhoto = userData.photoURL || userInfo.userPhoto;
         }
-      } catch(e) { console.warn('Failed to load user info for', data.userId); }
+      } catch(e) { console.warn('Failed to load user info for', data.submittedBy); }
       
       pendingSuggestions.push({
         id: doc.id,
@@ -2106,39 +2193,45 @@ function renderPendingPanel() {
 // Suggestion management functions
 window.approveSuggestion = async function(id) {
   if (!isAdmin) return;
-  const sref = doc(db, COL_SUGGESTIONS, id);
-  const snap = await getDoc(sref);
-  if (!snap.exists()) return;
-  const s = snap.data();
-  const faucetPayload = {
-    name: s.name || '',
-    token: s.token || '',
-    type: s.type || 'free',
-    net: s.net || 'testnet',
-    desc: s.desc || '',
-    links: (s.links || []).map(normalizeUrl).filter(Boolean),
-    logoUrl: s.logoUrl || '',
-    tags: [],
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    ratingAvg: 0,
-    ratingCount: 0,
-    clickCount: 0
-  };
-  await addDoc(collection(db, COL_FAUCETS), faucetPayload);
-  await updateDoc(sref, { status: 'approved', approvedAt: serverTimestamp(), approvedBy: currentUser.uid });
+  // Удаляем статус pending и делаем кран активным
+  await updateDoc(doc(db, COL_FAUCETS, id), { 
+    status: 'active',
+    approvedAt: serverTimestamp(),
+    approvedBy: currentUser.uid
+  });
   toast((window.currentLang==='en')?'Approved':'Одобрено');
-  await loadPendingSuggestions();
   await loadFaucetsFromFirestore();
+  if (isAdmin) await loadPendingSuggestions();
 };
 
 window.deleteSuggestion = async function(id) {
   if (!isAdmin) return;
-  if (!confirm((window.currentLang==='en')?'Delete suggestion?':'Удалить предложение?')) return;
-  await deleteDoc(doc(db, COL_SUGGESTIONS, id));
+  await deleteDoc(doc(db, COL_FAUCETS, id));
   toast((window.currentLang==='en')?'Deleted':'Удалено');
-  await loadPendingSuggestions();
+  await loadFaucetsFromFirestore();
+  if (isAdmin) await loadPendingSuggestions();
 };
+
+window.editSuggestion = function(id) {
+  const faucet = faucets.find(f => f.id === id);
+  if (!faucet) return;
+  
+  // Заполняем форму редактирования данными из предложения
+  document.getElementById('editId').value = faucet.id;
+  document.getElementById('f_name').value = faucet.name;
+  document.getElementById('f_token').value = faucet.token;
+  document.getElementById('f_link').value = (faucet.links || [])[0] || '';
+  document.getElementById('f_logo').value = faucet.logoUrl || '';
+  document.getElementById('f_desc').value = faucet.desc || '';
+  document.getElementById('f_type').value = faucet.type;
+  document.getElementById('f_net').value = faucet.net;
+  document.getElementById('f_reward').value = faucet.reward || '';
+  document.getElementById('f_cooldown').value = faucet.cooldown || '';
+  
+  document.getElementById('modalTitle').textContent = 'Редактировать предложение';
+  openAddModal();
+};
+
 // Favorites
 window.toggleFavoriteLink = async function(faucetId, url) {
   if (!faucetId || !url) return;
