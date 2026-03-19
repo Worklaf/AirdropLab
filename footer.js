@@ -2488,24 +2488,17 @@ function initAccountPage() {
     window.updateFooterTranslations = updateFooterTranslations;
 
     // Универсальная функция для получения отображения флага - инлайн SVG
+    // Универсальная функция для получения отображения флага - flag-icons CSS
 window.getFlagDisplay = function(language) {
-    var s = 'display:inline-block;width:20px;height:15px;border-radius:2px;' +
-            'border:1px solid rgba(255,255,255,0.2);vertical-align:middle;flex-shrink:0;';
-
-    var svgUA = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7410 3900" style="' + s + '">' +
-        '<path fill="#005BBB" d="M0 0h7410v3900H0"/>' +
-        '<path fill="#FFD500" d="M0 1950h7410v1950H0"/>' +
-        '</svg>';
-
-    var svgUS = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7410 3900" style="' + s + '">' +
-        '<path fill="#b31942" d="M0 0h7410v3900H0"/>' +
-        '<path stroke="#FFF" stroke-width="300" d="M0 450h7410m0 600H0m0 600h7410m0 600H0m0 600h7410m0 600H0m0 600h7410"/>' +
-        '<path fill="#0a3161" d="M0 0h2964v2100H0"/>' +
-        '</svg>';
-
     var data = {
-        ru: { flag: svgUA, text: 'УКР' },
-        en: { flag: svgUS, text: 'ENG' }
+        ru: {
+            flag: '<span class="fi fi-ua" style="width:20px;height:15px;display:inline-block;vertical-align:middle;border-radius:2px;flex-shrink:0;font-size:20px;line-height:15px;"></span>',
+            text: 'УКР'
+        },
+        en: {
+            flag: '<span class="fi fi-us" style="width:20px;height:15px;display:inline-block;vertical-align:middle;border-radius:2px;flex-shrink:0;font-size:20px;line-height:15px;"></span>',
+            text: 'ENG'
+        }
     };
 
     return data[language] || data['ru'];
