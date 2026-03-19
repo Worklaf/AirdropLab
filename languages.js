@@ -119,6 +119,7 @@ const translations = {
     chat_with_support: 'Чат с поддержкой',
     feedbacks_list: 'Отзывы и предложения',
     my_suggestions: 'Мои предложения',
+    suggestions: 'Предложения',
     loading_chat: 'Загрузка переписки...',
     loading_feedbacks: 'Загрузка отзывов...',
     topic: 'Тема обращения',
