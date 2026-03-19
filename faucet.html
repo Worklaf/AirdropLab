@@ -374,11 +374,6 @@
       
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(34,211,238,0.1);border-radius:8px;border:1px solid rgba(34,211,238,0.2);">
         <span style="font-size:12px;color:#94a3b8;" id="pendingCount">Загрузка...</span>
-        <button onclick="togglePendingPanel()" id="pendingToggleBtn" class="ab-btn ab-btn-purple" style="padding:6px 12px;">
-          <i class="fas fa-inbox"></i>
-          <span>Предложения</span>
-          <span id="pendingBadge" class="badge badge-multi" style="margin-left:6px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;">0</span>
-        </button>
       </div>
     </div>
   </div>
@@ -1258,7 +1253,16 @@ function renderCard(f) {
 
   // Добавляем бейдж для предложения
   if (f.status === 'pending') {
-    extraBadges += '<span class="badge" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);margin-left:4px;">' + (isEn ? 'PENDING' : 'НА МОДЕРАЦИИ') + '</span>';
+    const isAuthor = currentUser && f.submittedBy === currentUser.uid;
+    if (isAuthor) {
+      extraBadges += '<span class="badge" style="background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);margin-left:4px;">' + (isEn ? 'YOUR PENDING' : 'ВАШЕ ПРЕДЛОЖЕНИЕ') + '</span>';
+    } else if (isAdmin) {
+      extraBadges += '<span class="badge" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);margin-left:4px;">' + (isEn ? 'PENDING' : 'НА МОДЕРАЦИИ') + '</span>';
+    }
+  } else if (f.status === 'rejected' && currentUser && f.submittedBy === currentUser.uid) {
+    extraBadges += '<span class="badge" style="background:rgba(107,114,128,0.2);color:#9ca3af;border:1px solid rgba(107,114,128,0.3);margin-left:4px;">' + (isEn ? 'REJECTED' : 'ОТКЛОНЕНО') + '</span>';
+  } else if (f.status === 'active' && currentUser && f.submittedBy === currentUser.uid) {
+    extraBadges += '<span class="badge" style="background:rgba(16,185,129,0.2);color:#34d399;border:1px solid rgba(16,185,129,0.3);margin-left:4px;">' + (isEn ? 'APPROVED' : 'ОДОБРЕНО') + '</span>';
   }
 
   var linksHtml = (f.links||[]).map(function(url) {
@@ -1319,6 +1323,19 @@ function renderCard(f) {
     '</div>';
   }
 
+  // Кнопки для автора предложения
+  var authorBtns = '';
+  if (f.status === 'pending' && currentUser && f.submittedBy === currentUser.uid) {
+    authorBtns = '<div style="display:flex;gap:6px;margin-top:10px;">' +
+      '<button onclick="editSuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);border-radius:6px;color:#22d3ee;font-size:11px;cursor:pointer;"><i class="fas fa-pen"></i> '+(isEn?'Edit':'Изменить')+'</button>' +
+      '<button onclick="deleteMySuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete':'Удалить')+'</button>' +
+    '</div>';
+  } else if ((f.status === 'rejected' || f.status === 'pending') && currentUser && f.submittedBy === currentUser.uid) {
+    authorBtns = '<div style="display:flex;gap:6px;margin-top:10px;">' +
+      '<button onclick="deleteMySuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete':'Удалить')+'</button>' +
+    '</div>';
+  }
+
   var editBtns = (editMode && isAdmin && f.status !== 'pending') ? '<div style="display:flex;gap:6px;margin-top:10px;">'
     + '<button onclick="editFaucet(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);border-radius:6px;color:#22d3ee;font-size:11px;cursor:pointer;"><i class="fas fa-pen"></i> '+(isEn?'Edit':'Изменить')+'</button>'
     + '<button onclick="deleteFaucet(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete':'Удалить')+'</button>'
@@ -1346,6 +1363,7 @@ function renderCard(f) {
     + (chips ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">'+chips+'</div>' : '')
     + '<div class="faucet-links-list">'+linksHtml+'</div>'
     + adminBtns // Кнопки модерации для предложений
+    + authorBtns // Кнопки автора предложения
     + editBtns // Кнопки редактирования для обычных кранов
     + '</div>'
     + '</div>';
@@ -1431,8 +1449,14 @@ function applyCurrentFilter() {
     const faucetId = card.dataset.id;
     const faucet = faucets.find(f => f.id === faucetId);
     
-    // Скрываем pending краны в обычных фильтрах
-    if (faucet && faucet.status === 'pending') {
+    // Показываем кран если:
+    // 1. Не pending ИЛИ
+    // 2. Pending но автор текущий пользователь ИЛИ  
+    // 3. Pending и это админ
+    const isPending = faucet && faucet.status === 'pending';
+    const canSeePending = isPending && (isAdmin || (currentUser && faucet.submittedBy === currentUser.uid));
+    
+    if (isPending && !canSeePending) {
       card.style.display = 'none';
       return;
     }
@@ -1624,43 +1648,146 @@ window.editSuggestion = function(id) {
   openAddModal();
 };
 
-window.showUserInfo = function(userId) {
-  // Показываем модальное окно с информацией о пользователе
-  const user = pendingSuggestions.find(s => s.submittedBy === userId);
-  if (!user) return;
+window.showUserInfo = async function(userId) {
+  if (!userId) return;
   
   const isEn = (window.currentLang === 'en');
-  const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
-  modal.innerHTML = '<div style="background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid rgba(34,211,238,0.3);border-radius:16px;padding:24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
-      '<h3 style="font-size:18px;font-weight:700;color:#f1f5f9;">Информация о пользователе</h3>' +
-      '<button onclick="this.closest(\'div[style]\').parentElement.remove()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:20px;">&times;</button>' +
-    '</div>' +
-    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">' +
-      '<img src="' + (user.userPhoto || 'https://www.gravatar.com/avatar/?d=mp') + '" style="width:60px;height:60px;border-radius:50%;border:2px solid rgba(34,211,238,0.3);" onerror="this.src=\'https://www.gravatar.com/avatar/?d=mp\'">' +
-      '<div>' +
-        '<div style="font-size:16px;font-weight:600;color:#f1f5f9;margin-bottom:4px;">' + (user.userName || 'Anonymous') + '</div>' +
-        '<div style="font-size:14px;color:#94a3b8;">' + (user.submittedEmail || 'No email') + '</div>' +
+  
+  try {
+    // Загружаем полную информацию о пользователе
+    const userSnap = await getDoc(doc(db, 'users', userId));
+    let userData = {
+      displayName: 'Anonymous',
+      email: 'No email',
+      photoURL: 'https://www.gravatar.com/avatar/?d=mp',
+      createdAt: null,
+      reagents: 0,
+      streak: 0,
+      invitedCount: 0
+    };
+    
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      userData = {
+        displayName: data.displayName || data.email?.split('@')[0] || 'Anonymous',
+        email: data.email || 'No email',
+        photoURL: data.photoURL || 'https://www.gravatar.com/avatar/?d=mp',
+        createdAt: data.createdAt,
+        reagents: data.reagents || 0,
+        streak: data.streak || 0,
+        invitedCount: data.invitedCount || 0,
+        referralEarnings: data.referralEarnings || 0,
+        lastClaimDate: data.lastClaimDate
+      };
+    }
+    
+    const createdDate = userData.createdAt?.toDate?.() || new Date();
+    const suggestionsCount = faucets.filter(f => f.submittedBy === userId).length;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
+    modal.innerHTML = '<div style="background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid rgba(34,211,238,0.3);border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
+        '<h3 style="font-size:20px;font-weight:700;color:#f1f5f9;">Профиль пользователя</h3>' +
+        '<button onclick="this.closest(\'div[style]\').parentElement.remove()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:24px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" ' +
+                'onmouseover="this.style.background=\'rgba(239,68,68,0.2)\';this.style.color=\'#f87171\'" ' +
+                'onmouseout="this.style.background=\'transparent\';this.style.color=\'#64748b\'">&times;</button>' +
       '</div>' +
-    '</div>' +
-    '<div style="font-size:14px;color:#94a3b8;line-height:1.5;">' +
-      '<div style="margin-bottom:8px;"><strong>ID:</strong> ' + userId + '</div>' +
-      '<div style="margin-bottom:8px;"><strong>Предложений:</strong> ' + pendingSuggestions.filter(s => s.submittedBy === userId).length + '</div>' +
-      '<div><strong>Последнее предложение:</strong> ' + new Date(user.submittedAt?.toDate?.() || user.submittedAt).toLocaleDateString() + '</div>' +
-    '</div>' +
-  '</div>';
-  document.body.appendChild(modal);
+      '<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">' +
+        '<img src="' + userData.photoURL + '" style="width:80px;height:80px;border-radius:50%;border:3px solid rgba(34,211,238,0.3);" onerror="this.src=\'https://www.gravatar.com/avatar/?d=mp\'">' +
+        '<div>' +
+          '<div style="font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:4px;">' + userData.displayName + '</div>' +
+          '<div style="font-size:14px;color:#94a3b8;margin-bottom:2px;">' + userData.email + '</div>' +
+          '<div style="font-size:12px;color:#64748b;">На платформе с ' + createdDate.toLocaleDateString() + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;">' +
+        '<div style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:8px;padding:12px;text-align:center;">' +
+          '<div style="font-size:20px;font-weight:700;color:#22d3ee;">' + userData.reagents + '</div>' +
+          '<div style="font-size:12px;color:#94a3b8;">Реагентов</div>' +
+        '</div>' +
+        '<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:12px;text-align:center;">' +
+          '<div style="font-size:20px;font-weight:700;color:#fbbf24;">' + userData.streak + '</div>' +
+          '<div style="font-size:12px;color:#94a3b8;">Стрик</div>' +
+        '</div>' +
+        '<div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:12px;text-align:center;">' +
+          '<div style="font-size:20px;font-weight:700;color:#34d399;">' + userData.invitedCount + '</div>' +
+          '<div style="font-size:12px;color:#94a3b8;">Приглашено</div>' +
+        '</div>' +
+        '<div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:8px;padding:12px;text-align:center;">' +
+          '<div style="font-size:20px;font-weight:700;color:#a78bfa;">' + suggestionsCount + '</div>' +
+          '<div style="font-size:12px;color:#94a3b8;">Предложений</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="font-size:14px;color:#94a3b8;line-height:1.5;">' +
+        '<div style="margin-bottom:8px;"><strong>ID пользователя:</strong> ' + userId + '</div>' +
+        (userData.referralEarnings ? '<div style="margin-bottom:8px;"><strong>Реферальные доходы:</strong> ' + userData.referralEarnings + ' RGT</div>' : '') +
+        (userData.lastClaimDate ? '<div><strong>Последний клейм:</strong> ' + new Date(userData.lastClaimDate?.toDate?.() || userData.lastClaimDate).toLocaleDateString() + '</div>' : '') +
+      '</div>' +
+    '</div>';
+    document.body.appendChild(modal);
+    
+  } catch(e) {
+    console.error('Failed to load user info:', e);
+    alert('Не удалось загрузить информацию о пользователе');
+  }
 };
 
-window.rewardUser = function(userId, suggestionId) {
+window.deleteMySuggestion = async function(id) {
+  if (!currentUser) return;
+  
+  const isEn = (window.currentLang === 'en');
+  const confirmMsg = isEn ? 'Are you sure you want to delete your suggestion?' : 'Вы уверены, что хотите удалить свое предложение?';
+  
+  if (!confirm(confirmMsg)) return;
+  
+  try {
+    await deleteDoc(doc(db, COL_FAUCETS, id));
+    toast(isEn ? 'Suggestion deleted' : 'Предложение удалено');
+    await loadFaucetsFromFirestore();
+    if (isAdmin) await loadPendingSuggestions();
+  } catch(e) {
+    console.error('Failed to delete suggestion:', e);
+    toast(isEn ? 'Failed to delete suggestion' : 'Не удалось удалить предложение');
+  }
+};
+
+window.rewardUser = async function(userId, suggestionId) {
+  if (!isAdmin || !userId) return;
+  
   const isEn = (window.currentLang === 'en');
   const amount = prompt((isEn ? 'Enter RGT amount to reward:' : 'Введите количество RGT для награды:'), '100');
   
-  if (!amount || isNaN(amount)) return;
+  if (!amount || isNaN(amount) || Number(amount) <= 0) return;
   
-  // Здесь логика начисления RGT пользователю
-  alert((isEn ? 'Reward sent!' : 'Награда отправлена!') + ' ' + amount + ' RGT');
+  try {
+    // Обновляем баланс пользователя в коллекции users
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      reagents: increment(Number(amount))
+    });
+    
+    // Записываем транзакцию награды
+    await addDoc(collection(db, 'reward_transactions'), {
+      userId: userId,
+      amount: Number(amount),
+      type: 'suggestion_reward',
+      suggestionId: suggestionId,
+      rewardedBy: currentUser.uid,
+      rewardedAt: serverTimestamp()
+    });
+    
+    toast(isEn ? `Reward sent: ${amount} RGT` : `Награда отправлена: ${amount} RGT`);
+    
+    // Обновляем информацию о пользователе в интерфейсе
+    if (typeof window.updateUserInfo === 'function') {
+      window.updateUserInfo();
+    }
+    
+  } catch(e) {
+    console.error('Failed to send reward:', e);
+    toast(isEn ? 'Failed to send reward' : 'Не удалось отправить награду');
+  }
 };
 
 function sortFaucets(list) {
@@ -2217,18 +2344,31 @@ window.editSuggestion = function(id) {
   if (!faucet) return;
   
   // Заполняем форму редактирования данными из предложения
-  document.getElementById('editId').value = faucet.id;
-  document.getElementById('f_name').value = faucet.name;
-  document.getElementById('f_token').value = faucet.token;
-  document.getElementById('f_link').value = (faucet.links || [])[0] || '';
-  document.getElementById('f_logo').value = faucet.logoUrl || '';
-  document.getElementById('f_desc').value = faucet.desc || '';
-  document.getElementById('f_type').value = faucet.type;
-  document.getElementById('f_net').value = faucet.net;
-  document.getElementById('f_reward').value = faucet.reward || '';
-  document.getElementById('f_cooldown').value = faucet.cooldown || '';
+  const editIdEl = document.getElementById('editId');
+  const nameEl = document.getElementById('f_name');
+  const tokenEl = document.getElementById('f_token');
+  const linkEl = document.getElementById('f_link');
+  const logoEl = document.getElementById('f_logo');
+  const descEl = document.getElementById('f_desc');
+  const typeEl = document.getElementById('f_type');
+  const netEl = document.getElementById('f_net');
+  const rewardEl = document.getElementById('f_reward');
+  const cooldownEl = document.getElementById('f_cooldown');
   
-  document.getElementById('modalTitle').textContent = 'Редактировать предложение';
+  if (editIdEl) editIdEl.value = faucet.id;
+  if (nameEl) nameEl.value = faucet.name || '';
+  if (tokenEl) tokenEl.value = faucet.token || '';
+  if (linkEl) linkEl.value = (faucet.links || [])[0] || '';
+  if (logoEl) logoEl.value = faucet.logoUrl || '';
+  if (descEl) descEl.value = faucet.desc || '';
+  if (typeEl) typeEl.value = faucet.type || 'free';
+  if (netEl) netEl.value = faucet.net || 'mainnet';
+  if (rewardEl) rewardEl.value = faucet.reward || '';
+  if (cooldownEl) cooldownEl.value = faucet.cooldown || '';
+  
+  const modalTitleEl = document.getElementById('modalTitle');
+  if (modalTitleEl) modalTitleEl.textContent = 'Редактировать предложение';
+  
   openAddModal();
 };
 
