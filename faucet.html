@@ -73,10 +73,53 @@
 
     /* Admin panel */
     #adminBar {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
-      background: rgba(8,10,20,0.97); border-top: 1px solid rgba(34,211,238,0.3);
-      backdrop-filter: blur(16px); padding: 10px 20px;
-      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      position: fixed; top: 80px; right: 20px; z-index: 1001;
+      background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95)); 
+      border: 1px solid rgba(34,211,238,0.2); border-radius: 12px;
+      padding: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(34,211,238,0.1);
+      min-width: 280px; max-width: 320px; backdrop-filter: blur(20px);
+      transform: translateX(0); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #adminBar.collapsed {
+      transform: translateX(calc(100% - 48px));
+    }
+    #adminBar.collapsed .admin-content {
+      opacity: 0; pointer-events: none;
+    }
+    .admin-toggle {
+      position: absolute; left: -12px; top: 16px;
+      width: 32px; height: 32px; background: linear-gradient(135deg,#22d3ee,#0891b2);
+      border: 2px solid rgba(15,23,42,0.8); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: white; font-size: 14px;
+      box-shadow: 0 4px 12px rgba(34,211,238,0.4);
+      transition: all 0.2s;
+    }
+    .admin-toggle:hover {
+      transform: scale(1.1); box-shadow: 0 6px 16px rgba(34,211,238,0.6);
+    }
+    .admin-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; padding-bottom: 12px;
+      border-bottom: 1px solid rgba(34,211,238,0.2);
+    }
+    .admin-title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 700; color: #f1f5f9;
+    }
+    .admin-indicator {
+      width: 8px; height: 8px; border-radius: 50%; background: #ef4444;
+      animation: pulse 2s infinite;
+    }
+    .admin-indicator.active {
+      background: #22d3ee;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .admin-content {
+      transition: opacity 0.3s;
     }
     .ab-btn {
       display: inline-flex; align-items: center; gap: 6px;
@@ -298,30 +341,54 @@
 </main>
 
 <!-- Admin Bar (only for admin) -->
-<div id="adminBar" style="display:none;">
-  <div style="display:flex;align-items:center;gap:8px;">
-    <h3 style="font-size:14px;font-weight:900;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
-      <div style="width:8px;height:8px;border-radius:50%;background:#ef4444;" id="pendingIndicator"></div>
-      <i class="fas fa-user-shield"></i> Админ панель
-    </h3>
+<div id="adminBar" style="display:none;" class="collapsed">
+  <div class="admin-toggle" onclick="toggleAdminPanel()">
+    <i class="fas fa-user-shield" id="adminToggleIcon"></i>
   </div>
   
-  <div style="display:flex;gap:8px;align-items:center;">
-    <button class="ab-btn ab-btn-green" onclick="openAddModal()"><i class="fas fa-plus"></i><span data-translate="faucets_admin_add">Добавить</span></button>
-    <button class="ab-btn ab-btn-cyan" onclick="toggleEditMode()"><i class="fas fa-pen" id="editModeIcon"></i><span id="editModeLabel" data-translate="faucets_admin_edit_mode">Режим</span></button>
+  <div class="admin-content">
+    <div class="admin-header">
+      <div class="admin-title">
+        <div class="admin-indicator" id="pendingIndicator"></div>
+        <i class="fas fa-shield-alt"></i>
+        <span>Панель администратора</span>
+      </div>
+    </div>
     
-    <div id="pendingCount" style="font-size:12px;color:#94a3b8;margin:0 8px;">Загрузка...</div>
-    
-    <button onclick="togglePendingPanel()" id="pendingToggleBtn" class="ab-btn ab-btn-purple">
-      <i class="fas fa-inbox"></i>
-      Предложения <span id="pendingBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
-    </button>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;gap:8px;">
+        <button class="ab-btn ab-btn-green" onclick="openAddModal()" style="flex:1;">
+          <i class="fas fa-plus"></i>
+          <span data-translate="faucets_admin_add">Добавить</span>
+        </button>
+        <button class="ab-btn ab-btn-cyan" onclick="toggleEditMode()" style="flex:1;">
+          <i class="fas fa-pen" id="editModeIcon"></i>
+          <span id="editModeLabel" data-translate="faucets_admin_edit_mode">Режим</span>
+        </button>
+      </div>
+      
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(34,211,238,0.1);border-radius:8px;border:1px solid rgba(34,211,238,0.2);">
+        <span style="font-size:12px;color:#94a3b8;" id="pendingCount">Загрузка...</span>
+        <button onclick="togglePendingPanel()" id="pendingToggleBtn" class="ab-btn ab-btn-purple" style="padding:6px 12px;">
+          <i class="fas fa-inbox"></i>
+          <span>Предложения</span>
+          <span id="pendingBadge" class="badge badge-multi" style="margin-left:6px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;">0</span>
+        </button>
+      </div>
+    </div>
   </div>
   
-  <div id="pendingPanel" style="display:none;position:fixed;bottom:80px;right:20px;width:400px;max-height:400px;overflow-y:auto;background:rgba(8,10,20,0.98);border:1px solid rgba(34,211,238,0.3);border-radius:12px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:10000;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <h4 style="font-size:14px;font-weight:700;color:#f1f5f9;">Предложения кранов</h4>
-      <button onclick="togglePendingPanel()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;">&times;</button>
+  <div id="pendingPanel" style="display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);width:90%;max-width:500px;max-height:60vh;overflow-y:auto;background:linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,41,59,0.98));border:1px solid rgba(34,211,238,0.3);border-radius:16px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,0.5);z-index:10000;backdrop-filter:blur(20px);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(34,211,238,0.2);">
+      <h4 style="font-size:16px;font-weight:700;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-inbox" style="color:#22d3ee;"></i>
+        Предложения кранов
+      </h4>
+      <button onclick="togglePendingPanel()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
+              onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.color='#f87171'" 
+              onmouseout="this.style.background='transparent';this.style.color='#64748b'">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
     <div id="pendingList"></div>
   </div>
@@ -1723,6 +1790,11 @@ async function loadPendingSuggestions() {
     if (userBadgeEl) userBadgeEl.textContent = pendingSuggestions.length;
     if (indicatorEl) {
       indicatorEl.style.background = pendingSuggestions.length > 0 ? '#ef4444' : '#22d3ee';
+      if (pendingSuggestions.length > 0) {
+        indicatorEl.classList.add('active');
+      } else {
+        indicatorEl.classList.remove('active');
+      }
     }
     
     renderPendingPanel();
@@ -1746,6 +1818,20 @@ function togglePendingPanel() {
   }
 }
 window.togglePendingPanel = togglePendingPanel;
+
+function toggleAdminPanel() {
+  const adminBar = document.getElementById('adminBar');
+  const toggleIcon = document.getElementById('adminToggleIcon');
+  
+  if (adminBar.classList.contains('collapsed')) {
+    adminBar.classList.remove('collapsed');
+    toggleIcon.className = 'fas fa-times';
+  } else {
+    adminBar.classList.add('collapsed');
+    toggleIcon.className = 'fas fa-user-shield';
+  }
+}
+window.toggleAdminPanel = toggleAdminPanel;
 
 function renderPendingPanel() {
   const list = document.getElementById('pendingList');
