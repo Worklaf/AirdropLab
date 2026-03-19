@@ -2812,7 +2812,10 @@ window.editAndResubmit = function(id) {
   
   const isEn = (window.currentLang === 'en');
   
-  // Заполняем форму предложения данными из существующего
+  // Сначала открываем модальное окно
+  openSuggestModal();
+  
+  // Затем заполняем поля данными
   const nameEl = document.getElementById('suggest_name');
   const tokenEl = document.getElementById('suggest_token');
   const linksEl = document.getElementById('suggest_links');
@@ -2826,6 +2829,7 @@ window.editAndResubmit = function(id) {
   const idEl = document.getElementById('suggestId');
   const titleEl = document.getElementById('suggestModalTitle');
   
+  // Заполняем поля после открытия модального окна
   if (nameEl) nameEl.value = faucet.name || '';
   if (tokenEl) tokenEl.value = faucet.token || '';
   if (linksEl) linksEl.value = (faucet.links || []).join('\n');
@@ -2838,8 +2842,6 @@ window.editAndResubmit = function(id) {
   if (tagsEl) tagsEl.value = (faucet.tags || []).join(', ');
   if (idEl) idEl.value = faucet.id;
   if (titleEl) titleEl.textContent = isEn ? 'Edit & Resubmit Suggestion' : 'Изменить и отправить повторно';
-  
-  openSuggestModal();
 };
 
 window.editSuggestion = function(id) {
@@ -2848,8 +2850,10 @@ window.editSuggestion = function(id) {
   
   const isEn = (window.currentLang === 'en');
   
-  // Заполняем форму редактирования данными из предложения
-  const editIdEl = document.getElementById('editId');
+  // Сначала открываем модальное окно с ID
+  openAddModal(id);
+  
+  // Затем заполняем поля данными (после того как openAddModal их очистит и заполнит)
   const nameEl = document.getElementById('f_name');
   const tokenEl = document.getElementById('f_token');
   const linksEl = document.getElementById('f_links');
@@ -2860,23 +2864,20 @@ window.editSuggestion = function(id) {
   const rewardEl = document.getElementById('f_reward');
   const cooldownEl = document.getElementById('f_cooldown');
   const tagsEl = document.getElementById('f_tags');
-  
-  if (editIdEl) editIdEl.value = faucet.id;
-  if (nameEl) nameEl.value = faucet.name || '';
-  if (tokenEl) tokenEl.value = faucet.token || '';
-  if (linksEl) linksEl.value = (faucet.links || []).join('\n');
-  if (logoEl) logoEl.value = faucet.logoUrl || '';
-  if (descEl) descEl.value = faucet.desc || '';
-  if (typeEl) typeEl.value = faucet.type || 'free';
-  if (netEl) netEl.value = faucet.net || 'testnet';
-  if (rewardEl) rewardEl.value = faucet.reward || '';
-  if (cooldownEl) cooldownEl.value = faucet.cooldown || '';
-  if (tagsEl) tagsEl.value = (faucet.tags || []).join(', ');
-  
   const modalTitleEl = document.getElementById('modalTitle');
-  if (modalTitleEl) modalTitleEl.textContent = isEn ? 'Edit Suggestion' : 'Редактировать предложение';
   
-  openAddModal();
+  // Дополнительное заполнение на случай если openAddModal что-то пропустил
+  if (nameEl && !nameEl.value) nameEl.value = faucet.name || '';
+  if (tokenEl && !tokenEl.value) tokenEl.value = faucet.token || '';
+  if (linksEl && !linksEl.value) linksEl.value = (faucet.links || []).join('\n');
+  if (logoEl && !logoEl.value) logoEl.value = faucet.logoUrl || '';
+  if (descEl && !descEl.value) descEl.value = faucet.desc || '';
+  if (typeEl && typeEl.value === 'free' && faucet.type !== 'free') typeEl.value = faucet.type || 'free';
+  if (netEl && netEl.value === 'testnet' && faucet.net !== 'testnet') netEl.value = faucet.net || 'testnet';
+  if (rewardEl && !rewardEl.value) rewardEl.value = faucet.reward || '';
+  if (cooldownEl && !cooldownEl.value) cooldownEl.value = faucet.cooldown || '';
+  if (tagsEl && !tagsEl.value) tagsEl.value = (faucet.tags || []).join(', ');
+  if (modalTitleEl) modalTitleEl.textContent = isEn ? 'Edit Suggestion' : 'Редактировать предложение';
 };
 
 // Favorites
@@ -3026,6 +3027,17 @@ onAuthStateChanged(auth, async (user) => {
     };
     if (avaWrap) avaWrap.onclick = openAccount;
     if (nameWrap) nameWrap.onclick = openAccount;
+    
+    // Hook notifications button
+    const notifBtn = document.getElementById('notificationButton') || document.querySelector('[onclick*="openNotificationsModal"]');
+    if (notifBtn && !notifBtn.onclick) {
+      notifBtn.onclick = () => {
+        if (typeof window.openNotificationsModal === 'function') {
+          window.openNotificationsModal();
+        }
+      };
+      console.log('Notification button hooked');
+    }
   } catch(_) {}
 });
 </script>
