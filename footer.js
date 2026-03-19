@@ -20,11 +20,8 @@
                     const lang = option.value;
                     const display = window.getFlagDisplay(lang);
                     
-                    if (typeof display.flag === 'string' && display.flag.includes('🇺')) {
-                        // Эмодзи для мобильных
-                        option.textContent = display.flag + ' ' + display.text;
-                    } else {
-                        // CSS фоны для ПК
+                    if (display.cssUrl) {
+                        // CSS фоны для ПК (есть cssUrl)
                         option.textContent = ' ' + display.text;
                         option.style.paddingLeft = '28px';
                         option.style.backgroundImage = `url(${display.cssUrl})`;
@@ -32,6 +29,9 @@
                         option.style.backgroundRepeat = 'no-repeat';
                         option.style.backgroundPosition = '4px center';
                         option.style.borderRadius = '2px';
+                    } else {
+                        // Эмодзи для мобильных (нет cssUrl)
+                        option.textContent = display.flag + ' ' + display.text;
                     }
                 });
                 select.value = currentValue;
