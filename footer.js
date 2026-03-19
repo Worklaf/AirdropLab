@@ -7,6 +7,12 @@
 (function() {
     'use strict';
 
+    // Подключаем CSS библиотеку флагов
+    const flagIconsCSS = document.createElement('link');
+    flagIconsCSS.rel = 'stylesheet';
+    flagIconsCSS.href = 'https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css';
+    document.head.appendChild(flagIconsCSS);
+
     const FOOTER_CONFIG = {
         company: {
             name: 'AirdropLab',
@@ -909,8 +915,8 @@
                                 <label class="block text-sm font-medium text-slate-300 mb-2">Язык</label>
                                 <select id="profileLanguage" onchange="updateProfileLanguage(this.value)"
                                         class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:border-cyan-500 focus:outline-none">
-                                    <option value="ru" ${(userData.language === 'ru' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'ru')) ? 'selected' : ''}>${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('ru').flag : '🇺🇦')} ${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('ru').text : 'УКР')}</option>
-                                    <option value="en" ${(userData.language === 'en' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'en')) ? 'selected' : ''}>${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').flag : '🇺🇸')} ${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').text : 'ENG')}</option>
+                                    <option value="ru" ${(userData.language === 'ru' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'ru')) ? 'selected' : ''}>${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('ru').flag : '<span class="fi fi-ua"></span>')} ${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('ru').text : 'УКР')}</option>
+                                    <option value="en" ${(userData.language === 'en' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'en')) ? 'selected' : ''}>${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').flag : '<span class="fi fi-us"></span>')} ${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').text : 'ENG')}</option>
                                 </select>
                             </div>
                         </div>
@@ -2252,17 +2258,18 @@ function initAccountPage() {
             const currentLang = typeof window.currentLang !== 'undefined' ? window.currentLang : 'ru';
             
             // Используем нашу универсальную функцию
-            const display = window.getFlagDisplay ? window.getFlagDisplay(currentLang) : { flag: 'UA', text: 'УКР' };
+            const display = window.getFlagDisplay ? window.getFlagDisplay(currentLang) : { flag: '<span class="fi fi-ua"></span>', text: 'УКР' };
             
-            // Проверяем это SVG или текст
-            if (display.flag.includes('<svg')) {
-                // Это SVG - вставляем как HTML
+            // Проверяем это HTML (flag-icons) или текст (эмодзи)
+            if (display.flag.includes('<span')) {
+                // Это flag-icons CSS - вставляем как HTML
                 langFlag.innerHTML = display.flag;
-                langFlag.style.fontSize = '14px';
-            } else {
-                // Это текст/эмодзи
-                langFlag.textContent = display.flag;
                 langFlag.style.fontSize = '16px';
+                langFlag.style.lineHeight = '1';
+            } else {
+                // Это эмодзи
+                langFlag.textContent = display.flag;
+                langFlag.style.fontSize = '18px';
             }
             
             langText.textContent = display.text;
@@ -2401,9 +2408,11 @@ function initAccountPage() {
             options.forEach(option => {
                 const lang = option.value;
                 const display = window.getFlagDisplay(lang);
-                if (display.flag.includes('<svg')) {
+                if (display.flag.includes('<span')) {
+                    // Это flag-icons CSS
                     option.innerHTML = display.flag + ' ' + display.text;
                 } else {
+                    // Это эмодзи
                     option.textContent = display.flag + ' ' + display.text;
                 }
             });
@@ -2500,28 +2509,6 @@ window.getFlagDisplay = function(language) {
         return data.some(channel => channel !== 0);
     })();
     
-    // SVG флаги как в хедере
-    const uaFlagSVG = `
-        <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg" width="36" height="18" style="border-radius:2px;">
-            <rect width="60" height="30" fill="#005BBB"/>
-            <rect y="15" width="60" height="15" fill="#FFD500"/>
-        </svg>
-    `;
-    
-    const usFlagSVG = `
-        <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg" width="36" height="18" style="border-radius:2px;">
-            <rect width="60" height="30" fill="#B22234"/>
-            <rect y="2" width="60" height="2" fill="white"/>
-            <rect y="6" width="60" height="2" fill="white"/>
-            <rect y="10" width="60" height="2" fill="white"/>
-            <rect y="14" width="60" height="2" fill="white"/>
-            <rect y="18" width="60" height="2" fill="white"/>
-            <rect y="22" width="60" height="2" fill="white"/>
-            <rect y="26" width="60" height="2" fill="white"/>
-            <rect width="24" height="16" fill="#3C3B6E"/>
-        </svg>
-    `;
-    
     if (isMobile && supportsEmoji) {
         // На телефонах с поддержкой эмодзи
         return {
@@ -2529,11 +2516,11 @@ window.getFlagDisplay = function(language) {
             en: { flag: '🇺🇸', text: 'ENG' }
         }[language] || { flag: '🇺🇦', text: 'УКР' };
     } else {
-        // На ПК или если эмодзи не поддерживаются - используем SVG флаги
+        // На ПК или если эмодзи не поддерживаются - используем flag-icons CSS
         return {
-            ru: { flag: uaFlagSVG, text: 'УКР' },
-            en: { flag: usFlagSVG, text: 'ENG' }
-        }[language] || { flag: uaFlagSVG, text: 'УКР' };
+            ru: { flag: '<span class="fi fi-ua"></span>', text: 'УКР' },
+            en: { flag: '<span class="fi fi-us"></span>', text: 'ENG' }
+        }[language] || { flag: '<span class="fi fi-ua"></span>', text: 'УКР' };
     }
 };
 
