@@ -2288,11 +2288,11 @@ async function saveSuggestion() {
         return;
       }
       
-      // Сохраняем текущий статус (важно для Firestore правил)
+      // Сохраняем текущий статус
       const currentStatus = faucet.status || 'pending';
       
-      // Если предложение было удалено/отклонено, создаем новое вместо обновления
-      if (currentStatus === 'deleted' || currentStatus === 'rejected') {
+      // Если предложение не pending, всегда создаем новое
+      if (currentStatus !== 'pending') {
         // Создаем новое предложение с теми же данными
         const newPayload = {
           ...payload,
@@ -2307,8 +2307,8 @@ async function saveSuggestion() {
         await addDoc(collection(db, COL_FAUCETS), newPayload);
         toast((window.currentLang === 'en') ? 'Suggestion resubmitted!' : 'Предложение отправлено повторно!');
       } else {
-        // Обновляем существующее предложение (только pending)
-        payload.status = currentStatus; // сохраняем статус
+        // Обновляем существующее pending предложение
+        payload.status = 'pending'; // гарантируем статус pending
         await updateDoc(doc(db, COL_FAUCETS, id), payload);
         toast((window.currentLang === 'en') ? 'Suggestion updated!' : 'Предложение обновлено!');
       }
@@ -2524,11 +2524,8 @@ window.showNotifications = function() {
     return; 
   }
   
-  // Используем модальное окно из footer.js если доступно
-  if (typeof window.openNotificationsModal === 'function') {
-    window.openNotificationsModal();
-    return;
-  }
+  // Всегда используем нашу функцию, игнорируя footer.js
+  console.log('Using custom showNotifications function');
   
   // Создаем модальное окно поверх всего с высоким z-index
   const modal = document.createElement('div');
@@ -2574,7 +2571,7 @@ window.showNotifications = function() {
                 <p style="font-size:13px;color:#f1f5f9;line-height:1.4;margin:0 0 4px 0;">${notif.message}</p>
                 <p style="font-size:11px;color:#64748b;margin:0;">${new Date(notif.createdAt).toLocaleString()}</p>
               </div>
-              ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); this.closest('#notificationsModalOverlay').querySelector('.fa-bell').click();" style="background:none;border:none;color:#22d3ee;cursor:pointer;font-size:11px;padding:4px 8px;border-radius:4px;transition:all 0.2s;" onmouseover="this.style.background='rgba(34,211,238,0.2)'" onmouseout="this.style.background='transparent'">Отметить</button>` : ''}
+              ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); setTimeout(() => this.closest('#notificationsModalOverlay').remove(), 100);" style="background:none;border:none;color:#22d3ee;cursor:pointer;font-size:11px;padding:4px 8px;border-radius:4px;transition:all 0.2s;" onmouseover="this.style.background='rgba(34,211,238,0.2)'" onmouseout="this.style.background='transparent'">Отметить</button>` : ''}
             </div>
           </div>
         `).join('')
