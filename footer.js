@@ -2526,7 +2526,7 @@ function initAccountPage() {
 
     // Универсальная функция для получения отображения флага
 window.getFlagDisplay = function(language) {
-    // Определяем устройство и поддержку эмодзи
+    // Определяем устройство и поддержка эмодзи
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const supportsEmoji = (function() {
         const canvas = document.createElement('canvas');
@@ -2539,19 +2539,24 @@ window.getFlagDisplay = function(language) {
         return data.some(channel => channel !== 0);
     })();
     
+    // Прямые SVG флаги - самый надежный способ
+    const uaFlagSVG = '<svg width="20" height="14" viewBox="0 0 60 30" style="border-radius:2px;display:inline-block;vertical-align:middle;"><rect width="60" height="30" fill="#005BBB"/><rect y="15" width="60" height="15" fill="#FFD500"/></svg>';
+    const usFlagSVG = '<svg width="20" height="14" viewBox="0 0 60 30" style="border-radius:2px;display:inline-block;vertical-align:middle;"><rect width="60" height="30" fill="#B22234"/><rect y="2" width="60" height="2" fill="white"/><rect y="6" width="60" height="2" fill="white"/><rect y="10" width="60" height="2" fill="white"/><rect y="14" width="60" height="2" fill="white"/><rect y="18" width="60" height="2" fill="white"/><rect y="22" width="60" height="2" fill="white"/><rect y="26" width="60" height="2" fill="white"/><rect width="24" height="16" fill="#3C3B6E"/></svg>';
+    
     if (isMobile && supportsEmoji) {
         // На телефонах с поддержкой эмодзи
+        console.log('Using emoji flags for mobile');
         return {
             ru: { flag: '🇺🇦', text: 'УКР' },
             en: { flag: '🇺🇸', text: 'ENG' }
         }[language] || { flag: '🇺🇦', text: 'УКР' };
     } else {
-        // На ПК или если эмодзи не поддерживаются - используем встроенные CSS флаги
-        console.log('Using inline CSS flags for:', language);
+        // На ПК используем прямые SVG флаги
+        console.log('Using direct SVG flags for PC');
         return {
-            ru: { flag: '<span class="fi fi-ua" style="font-size: 16px;"></span>', text: 'УКР' },
-            en: { flag: '<span class="fi fi-us" style="font-size: 16px;"></span>', text: 'ENG' }
-        }[language] || { flag: '<span class="fi fi-ua" style="font-size: 16px;"></span>', text: 'УКР' };
+            ru: { flag: uaFlagSVG, text: 'УКР' },
+            en: { flag: usFlagSVG, text: 'ENG' }
+        }[language] || { flag: uaFlagSVG, text: 'УКР' };
     }
 };
 
