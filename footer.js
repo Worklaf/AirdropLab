@@ -18,8 +18,19 @@
                 options.forEach(option => {
                     const lang = option.value;
                     const display = window.getFlagDisplay(lang);
-                    // Всегда используем HTML для новых флагов
-                    option.innerHTML = display.flag + ' ' + display.text;
+                    // Создаем элементы через DOM чтобы избежать экранирования
+                    option.innerHTML = '';
+                    if (display.flag.includes('<img')) {
+                        // Если это img, создаем через DOM
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = display.flag;
+                        const img = tempDiv.firstChild;
+                        option.appendChild(img);
+                        option.appendChild(document.createTextNode(' ' + display.text));
+                    } else {
+                        // Если это текст или эмодзи
+                        option.textContent = display.flag + ' ' + display.text;
+                    }
                 });
                 select.value = currentValue;
             }
