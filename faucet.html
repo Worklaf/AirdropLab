@@ -1857,6 +1857,13 @@ window.showUserInfo = async function(userId) {
                         <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">ID пользователя</div>
                         <div style="font-size:13px;color:#f1f5f9;font-family:monospace;background:rgba(71,85,105,0.2);padding:6px 8px;border-radius:6px;">${userId}</div>
                     </div>
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Язык интерфейса</div>
+                        <select id="userLanguageSelect" onchange="updateUserLanguage(this.value)" style="font-size:13px;color:#f1f5f9;background:rgba(71,85,105,0.2);border:1px solid rgba(71,85,105,0.3);border-radius:6px;padding:6px 8px;width:100%;">
+                            <option value="ru" ${userData.language === 'ru' || (!userData.language && window.currentLang === 'ru') ? 'selected' : ''}>🇺🇦 УКР (Русский)</option>
+                            <option value="en" ${userData.language === 'en' || (!userData.language && window.currentLang === 'en') ? 'selected' : ''}>🇺🇸 ENG (English)</option>
+                        </select>
+                    </div>
                     ${userData.firstName ? `
                     <div>
                         <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Имя</div>
@@ -2059,12 +2066,17 @@ window.rewardUser = async function(userId, suggestionId) {
       const userSnap = await getDoc(doc(db, 'users', userId));
       const userData = userSnap.exists() ? userSnap.data() : {};
       
-      // Определяем язык пользователя: проверяем несколько возможных полей
+      // Определяем язык пользователя: userData.language имеет высший приоритет
       let userLang = 'ru'; // по умолчанию русский
-      if (userData.language) userLang = userData.language;
-      else if (userData.currentLang) userLang = userData.currentLang;
-      else if (userData.lang) userLang = userData.lang;
-      else if (window.currentLang && userData.uid === currentUser?.uid) userLang = window.currentLang;
+      if (userData.language) {
+        userLang = userData.language;
+      } else if (userData.currentLang) {
+        userLang = userData.currentLang;
+      } else if (userData.lang) {
+        userLang = userData.lang;
+      } else if (window.currentLang && userData.uid === currentUser?.uid) {
+        userLang = window.currentLang;
+      }
       
       const isUserEn = userLang === 'en' || userLang === 'en-US';
       
@@ -2516,6 +2528,49 @@ async function loadNotificationsFromFirestore() {
 }
 
 window.loadNotificationsFromFirestore = loadNotificationsFromFirestore;
+
+// Обновление языка пользователя
+window.updateUserLanguage = async function(language) {
+  if (!currentUser) {
+    toast('Сначала войдите в аккаунт');
+    return;
+  }
+  
+  try {
+    // Сохраняем язык в профиль пользователя
+    await updateDoc(doc(db, 'users', currentUser.uid), {
+      language: language,
+      updatedAt: serverTimestamp()
+    });
+    
+    // Обновляем глобальный язык
+    window.currentLang = language;
+    
+    // Обновляем язык в интерфейсе
+    if (typeof window.setLanguage === 'function') {
+      window.setLanguage(language);
+    }
+    
+    // Обновляем кнопку в футере
+    if (typeof window.updateFooterLanguageButton === 'function') {
+      window.updateFooterLanguageButton();
+    }
+    
+    toast(`Язык изменен на ${language === 'en' ? 'English' : 'Русский'}`);
+    
+    // Перезагружаем модальное окно для обновления текста
+    setTimeout(() => {
+      if (currentUser) {
+        showUserInfo(currentUser.uid);
+      }
+    }, 500);
+    
+    console.log('User language updated:', language);
+  } catch(e) {
+    console.error('Failed to update user language:', e);
+    toast('Ошибка при изменении языка');
+  }
+};
 
 // Функция показа уведомлений (из index.html)
 window.showNotifications = function() {
@@ -3217,6 +3272,34 @@ onAuthStateChanged(auth, async (user) => {
   window.currentUser = currentUser;
   isAdmin = !!(user && (user.uid === ADMIN_UID));
   document.getElementById('adminBar').style.display = isAdmin ? 'flex' : 'none';
+  
+  // Загружаем язык пользователя из профиля
+  if (user) {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // Загружаем язык пользователя из профиля
+        if (userData.language) {
+          window.currentLang = userData.language;
+          console.log('Loaded user language from profile:', userData.language);
+          
+          // Обновляем язык интерфейса
+          if (typeof window.setLanguage === 'function') {
+            window.setLanguage(userData.language);
+          }
+          
+          // Обновляем кнопку в футере
+          if (typeof window.updateFooterLanguageButton === 'function') {
+            window.updateFooterLanguageButton();
+          }
+        }
+      }
+    } catch(e) {
+      console.warn('Failed to load user language:', e);
+    }
+  }
   
   // Показываем/скрываем кнопки фильтров
   const mySuggestionsBtn = document.getElementById('mySuggestionsFilter');
