@@ -887,21 +887,31 @@
                         </div>
 
                         <!-- Gender -->
-                        <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-2">${lang('footer_account_gender')}</label>
-                            <div class="flex gap-4">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="gender" value="male" ${userData.gender === 'male' ? 'checked' : ''} class="text-cyan-500 bg-slate-800 border-slate-600">
-                                    <span class="text-sm text-slate-300">${lang('footer_account_male')}</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="gender" value="female" ${userData.gender === 'female' ? 'checked' : ''} class="text-cyan-500 bg-slate-800 border-slate-600">
-                                    <span class="text-sm text-slate-300">${lang('footer_account_female')}</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="gender" value="other" ${userData.gender === 'other' ? 'checked' : ''} class="text-cyan-500 bg-slate-800 border-slate-600">
-                                    <span class="text-sm text-slate-300">${lang('footer_account_other_gender')}</span>
-                                </label>
+                        <div class="flex justify-between items-end gap-4">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">${lang('footer_account_gender')}</label>
+                                <div class="flex gap-4">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="gender" value="male" ${userData.gender === 'male' ? 'checked' : ''} class="text-cyan-500 bg-slate-800 border-slate-600">
+                                        <span class="text-sm text-slate-300">${lang('footer_account_male')}</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="gender" value="female" ${userData.gender === 'female' ? 'checked' : ''} class="text-cyan-500 bg-slate-800 border-slate-600">
+                                        <span class="text-sm text-slate-300">${lang('footer_account_female')}</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="gender" value="other" ${userData.gender === 'other' ? 'checked' : ''} class="text-cyan-500 bg-slate-800 border-slate-600">
+                                        <span class="text-sm text-slate-300">${lang('footer_account_other_gender')}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="w-48">
+                                <label class="block text-sm font-medium text-slate-300 mb-2">Язык</label>
+                                <select id="profileLanguage" onchange="updateProfileLanguage(this.value)"
+                                        class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:border-cyan-500 focus:outline-none">
+                                    <option value="ru" ${(userData.language === 'ru' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'ru')) ? 'selected' : ''}>🇺🇦 УКР</option>
+                                    <option value="en" ${(userData.language === 'en' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'en')) ? 'selected' : ''}>🇺🇸 ENG</option>
+                                </select>
                             </div>
                         </div>
 
@@ -2442,6 +2452,50 @@ function initAccountPage() {
     document.addEventListener('languageChanged', updateFooterTranslations);
     document.addEventListener('DOMContentLoaded', function() { setTimeout(updateFooterTranslations, 500); });
     window.updateFooterTranslations = updateFooterTranslations;
+
+    window.updateProfileLanguage = async function(language) {
+        if (!currentUser) {
+            footerShowToast('Сначала войдите в аккаунт', 'error');
+            return;
+        }
+        
+        try {
+            // Используем функцию из faucet.html если доступна
+            if (typeof window.updateUserLanguage === 'function') {
+                window.updateUserLanguage(language);
+            } else {
+                // Иначе реализуем локально
+                const { getFirestore, doc, updateDoc, serverTimestamp } = window.__firestoreExports || {};
+                if (!getFirestore || !doc || !updateDoc) {
+                    footerShowToast('Ошибка: Firestore не доступен', 'error');
+                    return;
+                }
+                
+                const db = getFirestore();
+                await updateDoc(doc(db, 'users', currentUser.uid), {
+                    language: language,
+                    updatedAt: serverTimestamp()
+                });
+                
+                // Обновляем глобальный язык
+                window.currentLang = language;
+                
+                // Обновляем язык интерфейса
+                if (typeof window.setLanguage === 'function') {
+                    window.setLanguage(language);
+                }
+                
+                // Обновляем кнопку в футере
+                updateFooterLanguageButton();
+                
+                footerShowToast(`Язык изменен на ${language === 'en' ? 'English' : 'Русский'}`, 'success');
+                console.log('Profile language updated:', language);
+            }
+        } catch(e) {
+            console.error('Failed to update profile language:', e);
+            footerShowToast('Ошибка при изменении языка', 'error');
+        }
+    };
 
     // ============ HEADER AVATAR CLICK ============
 
