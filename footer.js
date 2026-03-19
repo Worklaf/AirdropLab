@@ -909,8 +909,8 @@
                                 <label class="block text-sm font-medium text-slate-300 mb-2">Язык</label>
                                 <select id="profileLanguage" onchange="updateProfileLanguage(this.value)"
                                         class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:border-cyan-500 focus:outline-none">
-                                    <option value="ru" ${(userData.language === 'ru' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'ru')) ? 'selected' : ''}>🇺🇦 УКР</option>
-                                    <option value="en" ${(userData.language === 'en' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'en')) ? 'selected' : ''}>🇺🇸 ENG</option>
+                                    <option value="ru" ${(userData.language === 'ru' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'ru')) ? 'selected' : ''}>${window.getFlagDisplay ? window.getFlagDisplay('ru').flag + ' ' + window.getFlagDisplay('ru').text : 'UA УКР'}</option>
+                                    <option value="en" ${(userData.language === 'en' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'en')) ? 'selected' : ''}>${window.getFlagDisplay ? window.getFlagDisplay('en').flag + ' ' + window.getFlagDisplay('en').text : 'US ENG'}</option>
                                 </select>
                             </div>
                         </div>
@@ -2250,9 +2250,22 @@ function initAccountPage() {
         const langText = document.querySelector('.lang-text-footer');
         if (langFlag && langText) {
             const currentLang = typeof window.currentLang !== 'undefined' ? window.currentLang : 'ru';
-            // Визуально: русский показываем как украинский (флаг UA, надпись УКР), но функционально остается 'ru'
-            langFlag.textContent = currentLang === 'en' ? '🇺🇸' : '🇺🇦';
-            langText.textContent = currentLang === 'en' ? 'ENG' : 'УКР';
+            
+            // Используем нашу универсальную функцию
+            const display = window.getFlagDisplay ? window.getFlagDisplay(currentLang) : { flag: 'UA', text: 'УКР' };
+            
+            // Проверяем это SVG или текст
+            if (display.flag.includes('<svg')) {
+                // Это SVG - вставляем как HTML
+                langFlag.innerHTML = display.flag;
+                langFlag.style.fontSize = '14px';
+            } else {
+                // Это текст/эмодзи
+                langFlag.textContent = display.flag;
+                langFlag.style.fontSize = '16px';
+            }
+            
+            langText.textContent = display.text;
         }
     }
 
@@ -2453,6 +2466,58 @@ function initAccountPage() {
     document.addEventListener('DOMContentLoaded', function() { setTimeout(updateFooterTranslations, 500); });
     window.updateFooterTranslations = updateFooterTranslations;
 
+    // Универсальная функция для получения отображения флага
+window.getFlagDisplay = function(language) {
+    // Определяем устройство и поддержку эмодзи
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const supportsEmoji = (function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const text = '🇺🇦';
+        ctx.textBaseline = 'top';
+        ctx.font = '16px Arial';
+        ctx.fillText(text, 0, 0);
+        const data = ctx.getImageData(0, 0, 16, 16).data;
+        return data.some(channel => channel !== 0);
+    })();
+    
+    // SVG флаги как в хедере
+    const uaFlagSVG = `
+        <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg" width="36" height="18" style="border-radius:2px;">
+            <rect width="60" height="30" fill="#005BBB"/>
+            <rect y="15" width="60" height="15" fill="#FFD500"/>
+        </svg>
+    `;
+    
+    const usFlagSVG = `
+        <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg" width="36" height="18" style="border-radius:2px;">
+            <rect width="60" height="30" fill="#B22234"/>
+            <rect y="2" width="60" height="2" fill="white"/>
+            <rect y="6" width="60" height="2" fill="white"/>
+            <rect y="10" width="60" height="2" fill="white"/>
+            <rect y="14" width="60" height="2" fill="white"/>
+            <rect y="18" width="60" height="2" fill="white"/>
+            <rect y="22" width="60" height="2" fill="white"/>
+            <rect y="26" width="60" height="2" fill="white"/>
+            <rect width="24" height="16" fill="#3C3B6E"/>
+        </svg>
+    `;
+    
+    if (isMobile && supportsEmoji) {
+        // На телефонах с поддержкой эмодзи
+        return {
+            ru: { flag: '🇺🇦', text: 'УКР' },
+            en: { flag: '🇺🇸', text: 'ENG' }
+        }[language] || { flag: '🇺🇦', text: 'УКР' };
+    } else {
+        // На ПК или если эмодзи не поддерживаются - используем SVG флаги
+        return {
+            ru: { flag: uaFlagSVG, text: 'УКР' },
+            en: { flag: usFlagSVG, text: 'ENG' }
+        }[language] || { flag: uaFlagSVG, text: 'УКР' };
+    }
+};
+
     window.updateProfileLanguage = async function(language) {
         if (!currentUser) {
             footerShowToast('Сначала войдите в аккаунт', 'error');
@@ -2460,37 +2525,33 @@ function initAccountPage() {
         }
         
         try {
-            // Используем функцию из faucet.html если доступна
-            if (typeof window.updateUserLanguage === 'function') {
-                window.updateUserLanguage(language);
-            } else {
-                // Иначе реализуем локально
-                const { getFirestore, doc, updateDoc, serverTimestamp } = window.__firestoreExports || {};
-                if (!getFirestore || !doc || !updateDoc) {
-                    footerShowToast('Ошибка: Firestore не доступен', 'error');
-                    return;
-                }
-                
-                const db = getFirestore();
-                await updateDoc(doc(db, 'users', currentUser.uid), {
-                    language: language,
-                    updatedAt: serverTimestamp()
-                });
-                
-                // Обновляем глобальный язык
-                window.currentLang = language;
-                
-                // Обновляем язык интерфейса
-                if (typeof window.setLanguage === 'function') {
-                    window.setLanguage(language);
-                }
-                
-                // Обновляем кнопку в футере
-                updateFooterLanguageButton();
-                
-                footerShowToast(`Язык изменен на ${language === 'en' ? 'English' : 'Русский'}`, 'success');
-                console.log('Profile language updated:', language);
+            // Используем Firestore напрямую чтобы не перезагружать модальное окно
+            const { getFirestore, doc, updateDoc, serverTimestamp } = window.__firestoreExports || {};
+            if (!getFirestore || !doc || !updateDoc) {
+                footerShowToast('Ошибка: Firestore не доступен', 'error');
+                return;
             }
+            
+            const db = getFirestore();
+            await updateDoc(doc(db, 'users', currentUser.uid), {
+                language: language,
+                updatedAt: serverTimestamp()
+            });
+            
+            // Обновляем глобальный язык
+            window.currentLang = language;
+            
+            // Обновляем язык интерфейса
+            if (typeof window.setLanguage === 'function') {
+                window.setLanguage(language);
+            }
+            
+            // Обновляем кнопку в футере
+            updateFooterLanguageButton();
+            
+            footerShowToast(`Язык изменен на ${language === 'en' ? 'English' : 'Русский'}`, 'success');
+            console.log('Profile language updated:', language);
+            
         } catch(e) {
             console.error('Failed to update profile language:', e);
             footerShowToast('Ошибка при изменении языка', 'error');
