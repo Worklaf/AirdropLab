@@ -953,9 +953,22 @@
 // Navigation toggle — ИСПРАВЛЕНО: position:fixed без scrollTop
 // ════════════════════════════════════════════════════
 window.alNavToggle = function(btn) {
-  var group    = btn.closest('.al-nav-group');
+  var group = btn.closest('.al-nav-group');
   var dropdown = group.querySelector('.al-nav-dropdown');
-  var isOpen   = dropdown.classList.contains('al-open');
+  
+  // Если меню не найдено в группе, ищем его в body по data-parent-id
+  if (!dropdown) {
+    // Ищем меню в body которое принадлежит этой группе
+    var groupId = group.id;
+    if (groupId) {
+      dropdown = document.querySelector('[data-parent-id="' + groupId + '"]');
+    }
+  }
+  
+  // Если все еще не найдено, выходим
+  if (!dropdown) return;
+  
+  var isOpen = dropdown.classList.contains('al-open');
 
   // Закрыть все открытые
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
@@ -977,7 +990,7 @@ window.alNavToggle = function(btn) {
     var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
     
     // Сохраняем ссылку на родительскую группу перед перемещением
-    var parentGroup = dropdown.closest('.al-nav-group');
+    var parentGroup = dropdown.closest('.al-nav-group') || group;
     
     // Перемещаем меню в body чтобы избежать ограничений родителя
     document.body.appendChild(dropdown);
