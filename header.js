@@ -1,5 +1,5 @@
 // ============================================================
-// header.js — AirdropLab (Fixed Navigation + Auth Sync + Modal)
+// header.js — AirdropLab (Desktop + Mobile, Fixed Dropdowns, Pro Modal, Auth Sync)
 // ============================================================
 (function () {
 
@@ -16,7 +16,7 @@
         <div class="relative max-w-[1600px] mx-auto px-4 py-3">
 
           <!-- ══════════════════════════════════════════════
-               DESKTOP (md+): ОРИГИНАЛЬНЫЙ LAYOUT БЕЗ ИЗМЕНЕНИЙ
+               DESKTOP (md+): ОРИГИНАЛЬНЫЙ LAYOUT
                ══════════════════════════════════════════════ -->
           <div class="hidden md:flex flex-row justify-between items-center gap-4">
 
@@ -169,7 +169,7 @@
               </div>
             </div>
           </div>
-          <!-- КОНЕЦ DESKTOP СЕКЦИИ -->
+          <!-- КОНЕЦ DESKTOP -->
 
 
           <!-- ══════════════════════════════════════════════
@@ -199,17 +199,14 @@
                   <span data-translate="login">Вход</span>
                 </button>
               </div>
-              <div id="mobLoggedInView" style="display:none;align-items:center;gap:6px;" class="flex">
-                <div 
-                  style="position:relative;flex-shrink:0;cursor:pointer;"
-                  onclick="var d=document.getElementById('userAvatarWrapper');if(d)d.click();"
-                  title="Профиль">
+              <div id="mobLoggedInView" style="display:none;align-items:center;gap:6px;">
+                <div style="position:relative;flex-shrink:0;cursor:pointer;"
+                     onclick="var d=document.getElementById('userAvatarWrapper');if(d)d.click();"
+                     title="Профиль">
                   <div style="position:absolute;inset:-2px;background:linear-gradient(135deg,#22d3ee,#3b82f6);border-radius:50%;filter:blur(4px);opacity:0.5;transition:opacity 0.2s;"
                        onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.5'"></div>
                   <img id="mobUserAvatar" src="" style="position:relative;width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(34,211,238,0.5);">
-                  <div style="position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;
-                              background:linear-gradient(135deg,#22d3ee,#3b82f6);border-radius:50%;
-                              border:1.5px solid #0b0f19;display:flex;align-items:center;justify-content:center;">
+                  <div style="position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;background:linear-gradient(135deg,#22d3ee,#3b82f6);border-radius:50%;border:1.5px solid #0b0f19;display:flex;align-items:center;justify-content:center;">
                     <i class="fas fa-pen" style="font-size:5px;color:white;"></i>
                   </div>
                 </div>
@@ -246,90 +243,59 @@
 
             <!-- Клейм -->
             <button id="mobClaimBtn" onclick="window.openClaimModal&&window.openClaimModal()"
-  style="position:relative;display:flex;align-items:center;gap:4px;padding:5px 10px;
-         background:rgba(8,145,178,0.2);border:1px solid rgba(34,211,238,0.3);
-         border-radius:10px;color:#22d3ee;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">
-  🧪 <span id="mobClaimSpan" style="font-size:11px;" data-translate="claim_btn_label">Клейм</span>
-</button>
+              style="position:relative;display:flex;align-items:center;gap:4px;padding:5px 10px;
+                     background:rgba(8,145,178,0.2);border:1px solid rgba(34,211,238,0.3);
+                     border-radius:10px;color:#22d3ee;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">
+              🧪 <span id="mobClaimSpan" style="font-size:11px;" data-translate="claim_btn_label">Клейм</span>
+            </button>
 
             <!-- Уведомления -->
             <button onclick="typeof showNotifications==='function'&&showNotifications()"
-              style="position:relative;padding:6px 9px;color:#94a3b8;
-                     background:transparent;border:1px solid rgba(71,85,105,0.3);
-                     border-radius:10px;cursor:pointer;font-size:14px;">
+              style="position:relative;padding:6px 9px;color:#94a3b8;background:transparent;border:1px solid rgba(71,85,105,0.3);border-radius:10px;cursor:pointer;font-size:14px;">
               <i class="fas fa-bell"></i>
               <span id="mobNotifBadge"
-                style="display:none;position:absolute;top:-4px;right:-4px;min-width:15px;height:15px;
-                       background:linear-gradient(135deg,#ef4444,#f97316);border-radius:999px;
-                       font-size:8px;font-weight:700;color:white;
-                       align-items:center;justify-content:center;padding:0 2px;"></span>
+                style="display:none;position:absolute;top:-4px;right:-4px;min-width:15px;height:15px;background:linear-gradient(135deg,#ef4444,#f97316);border-radius:999px;font-size:8px;font-weight:700;color:white;align-items:center;justify-content:center;padding:0 2px;"></span>
             </button>
 
-            <!-- Сообщения (скрыто до логина, синхронизируется) -->
+            <!-- Сообщения -->
             <button id="mobFeedbackBtn" onclick="typeof openFeedbackListModal==='function'&&openFeedbackListModal()"
-              style="display:none;position:relative;padding:6px 9px;color:#94a3b8;
-                     background:transparent;border:1px solid rgba(71,85,105,0.3);
-                     border-radius:10px;cursor:pointer;font-size:14px;">
+              style="display:none;position:relative;padding:6px 9px;color:#94a3b8;background:transparent;border:1px solid rgba(71,85,105,0.3);border-radius:10px;cursor:pointer;font-size:14px;">
               <i class="fas fa-comment-dots"></i>
               <span id="mobFeedbackBadge"
-                style="display:none;position:absolute;top:-4px;right:-4px;min-width:15px;height:15px;
-                       background:linear-gradient(135deg,#8b5cf6,#ec4899);border-radius:999px;
-                       font-size:8px;font-weight:700;color:white;
-                       align-items:center;justify-content:center;padding:0 2px;"></span>
+                style="display:none;position:absolute;top:-4px;right:-4px;min-width:15px;height:15px;background:linear-gradient(135deg,#8b5cf6,#ec4899);border-radius:999px;font-size:8px;font-weight:700;color:white;align-items:center;justify-content:center;padding:0 2px;"></span>
             </button>
 
             <!-- Язык -->
             <button onclick="typeof toggleLang==='function'&&toggleLang()" id="mobLangBtn"
-              style="display:flex;align-items:center;gap:5px;padding:5px 10px;
-                     border-radius:10px;border:1px solid rgba(239,68,68,0.3);
-                     background:rgba(239,68,68,0.1);cursor:pointer;
-                     font-size:11px;font-weight:700;color:#fff;white-space:nowrap;">
+              style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:10px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);cursor:pointer;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;">
               <span class="mob-lang-flag" style="font-size:1rem;"></span>
               <span class="mob-lang-text">ENG</span>
             </button>
 
-            <!-- Кнопка добавления проекта (скрыта до admin) -->
+            <!-- Admin кнопки (скрыты до активации) -->
             <button id="mobAddBtn" onclick="typeof openAddModal==='function'&&openAddModal()"
-              style="display:none;align-items:center;gap:4px;padding:5px 10px;
-                     background:linear-gradient(135deg,#0891b2,#2563eb);border:none;
-                     border-radius:8px;color:white;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;" class="flex">
+              style="display:none;align-items:center;gap:4px;padding:5px 10px;background:linear-gradient(135deg,#0891b2,#2563eb);border:none;border-radius:8px;color:white;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">
               <i class="fas fa-flask"></i>
               <span data-translate="new_test">Добавить</span>
             </button>
 
-            <!-- Остальные admin кнопки (скрыты до admin) -->
             <div id="mobAdminBtns" style="display:none;" class="flex gap-1 items-center flex-wrap">
-              <button onclick="typeof openStats==='function'&&openStats()" class="admin-action-btn admin-btn-orange" style="padding:5px 8px;font-size:11px;">
-                <i class="fas fa-chart-pie"></i>
-              </button>
-              <button onclick="typeof migrateToFirestore==='function'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" style="padding:5px 8px;font-size:11px;">
-                <i class="fas fa-cloud-upload-alt"></i>
-              </button>
-              <button onclick="typeof exportAllData==='function'&&exportAllData()" class="admin-action-btn admin-btn-emerald" style="padding:5px 8px;font-size:11px;">
-                <i class="fas fa-file-export"></i>
-              </button>
-              <button onclick="typeof openDeletedProjects==='function'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" style="padding:5px 8px;font-size:11px;">
-                <i class="fas fa-trash-restore"></i>
-              </button>
+              <button onclick="typeof openStats==='function'&&openStats()" class="admin-action-btn admin-btn-orange" style="padding:5px 8px;font-size:11px;"><i class="fas fa-chart-pie"></i></button>
+              <button onclick="typeof migrateToFirestore==='function'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" style="padding:5px 8px;font-size:11px;"><i class="fas fa-cloud-upload-alt"></i></button>
+              <button onclick="typeof exportAllData==='function'&&exportAllData()" class="admin-action-btn admin-btn-emerald" style="padding:5px 8px;font-size:11px;"><i class="fas fa-file-export"></i></button>
+              <button onclick="typeof openDeletedProjects==='function'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" style="padding:5px 8px;font-size:11px;"><i class="fas fa-trash-restore"></i></button>
             </div>
 
           </div>
-          <!-- КОНЕЦ MOBILE СЕКЦИИ -->
+          <!-- КОНЕЦ MOBILE -->
 
         </div>
       </header>
 
       <!-- CryptoRank Ticker -->
-      <div style="background:rgba(11,15,25,0.95);border-bottom:1px solid rgba(51,65,85,0.5);
-                  backdrop-filter:blur(12px);overflow:hidden;max-width:100vw;box-sizing:border-box;">
-        <div style="max-width:min(1600px,100%);margin:0 auto;padding:3px 16px;
-                    overflow:hidden;box-sizing:border-box;">
-          <div id="cr-widget-marquee"
-               data-coins="bitcoin,ethereum,tether,ripple,cardano"
-               data-theme="dark" data-show-symbol="true" data-show-icon="true"
-               data-show-period-change="true" data-period-change="24H"
-               data-api-url="https://api.cryptorank.io/v0"
-               style="max-width:100%;overflow:hidden;box-sizing:border-box;">
+      <div style="background:rgba(11,15,25,0.95);border-bottom:1px solid rgba(51,65,85,0.5);backdrop-filter:blur(12px);overflow:hidden;max-width:100vw;box-sizing:border-box;">
+        <div style="max-width:min(1600px,100%);margin:0 auto;padding:3px 16px;overflow:hidden;box-sizing:border-box;">
+          <div id="cr-widget-marquee" data-coins="bitcoin,ethereum,tether,ripple,cardano" data-theme="dark" data-show-symbol="true" data-show-icon="true" data-show-period-change="true" data-period-change="24H" data-api-url="https://api.cryptorank.io/v0" style="max-width:100%;overflow:hidden;box-sizing:border-box;">
             <a href="https://cryptorank.io" target="_blank">Coins by Cryptorank</a>
           </div>
         </div>
@@ -337,239 +303,242 @@
 
       <!-- Navigation Bar -->
       <div id="site-nav-wrapper" style="position:relative;z-index:9000;">
-      <nav id="site-nav" style="background:rgba(11,15,25,0.98);border-bottom:1px solid rgba(34,211,238,0.12);backdrop-filter:blur(12px);">
-        <div style="max-width:min(1600px,100%);margin:0 auto;padding:0 16px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
-          <div style="display:inline-flex;align-items:stretch;gap:0;vertical-align:top;">
+        <nav id="site-nav" style="background:rgba(11,15,25,0.98);border-bottom:1px solid rgba(34,211,238,0.12);backdrop-filter:blur(12px);">
+          <div style="max-width:min(1600px,100%);margin:0 auto;padding:0 16px;overflow:visible;position:relative;">
+            <div style="display:flex;align-items:stretch;gap:0;flex-wrap:nowrap;">
 
-            <!-- Активности -->
-            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
-              <button class="al-nav-btn" onclick="alNavToggle(this)">
-                <i class="fas fa-bolt" style="color:#22d3ee;"></i>
-                <span data-translate="menu_activities">Активности</span>
-                <i class="fas fa-chevron-down al-nav-arrow"></i>
-              </button>
-              <div class="al-nav-dropdown">
-                <a href="index.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-layer-group"></i><span data-translate="all_projects">Все активности</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-parachute-box"></i><span data-translate="airdrops_lotteries">Аирдропы и розыгрыши</span></a>
-                <a href="faucet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-faucet"></i><span data-translate="faucets">Краны</span></a>
-                <a href="index.html?filter=mainnet" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-network-wired"></i><span data-translate="mainnets">Мейннеты</span></a>
-                <a href="index.html?filter=testnet" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-flask"></i><span data-translate="testnets">Тестнеты</span></a>
+              <!-- Активности -->
+              <div class="al-nav-group" style="position:relative;">
+                <button class="al-nav-btn" onclick="alNavToggle(this)">
+                  <i class="fas fa-bolt" style="color:#22d3ee;"></i>
+                  <span data-translate="menu_activities">Активности</span>
+                  <i class="fas fa-chevron-down al-nav-arrow"></i>
+                </button>
+                <div class="al-nav-dropdown">
+                  <a href="index.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-layer-group"></i><span data-translate="all_projects">Все активности</span></a>
+                  <a href="index.html?filter=airdrop" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-parachute-box"></i><span data-translate="airdrops_lotteries">Аирдропы и розыгрыши</span></a>
+                  <a href="faucet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-faucet"></i><span data-translate="faucets">Краны</span></a>
+                  <a href="index.html?filter=mainnet" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-network-wired"></i><span data-translate="mainnets">Мейннеты</span></a>
+                  <a href="index.html?filter=testnet" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-flask"></i><span data-translate="testnets">Тестнеты</span></a>
+                </div>
               </div>
-            </div>
 
-            <!-- Гайды -->
-            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
-              <button class="al-nav-btn" onclick="alNavToggle(this)">
-                <i class="fas fa-map-signs" style="color:#22d3ee;"></i>
-                <span data-translate="menu_guides">Гайды</span>
-                <i class="fas fa-chevron-down al-nav-arrow"></i>
-              </button>
-              <div class="al-nav-dropdown">
-                <a href="guides.html" class="al-nav-item al-nav-item-accent" onclick="closeAlNav(this)"><i class="fas fa-th-large"></i><span data-translate="all_guides">Все гайды</span></a>
-                <div class="al-nav-divider"></div>
-                <a href="guides/Arc/Arc_Testnet_by_Circle.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#22d3ee;font-size:8px;"></i>Arc Testnet</a>
-                <a href="guides/Tempo/Tempo_Testnet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#a78bfa;font-size:8px;"></i>Tempo Testnet</a>
-                <a href="guides/Robinhood/robinhood-chain.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#34d399;font-size:8px;"></i>Robinhood Chain</a>
+              <!-- Гайды -->
+              <div class="al-nav-group" style="position:relative;">
+                <button class="al-nav-btn" onclick="alNavToggle(this)">
+                  <i class="fas fa-map-signs" style="color:#22d3ee;"></i>
+                  <span data-translate="menu_guides">Гайды</span>
+                  <i class="fas fa-chevron-down al-nav-arrow"></i>
+                </button>
+                <div class="al-nav-dropdown">
+                  <a href="guides.html" class="al-nav-item al-nav-item-accent" onclick="closeAlNav(this)"><i class="fas fa-th-large"></i><span data-translate="all_guides">Все гайды</span></a>
+                  <div class="al-nav-divider"></div>
+                  <a href="guides/Arc/Arc_Testnet_by_Circle.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#22d3ee;font-size:8px;"></i>Arc Testnet</a>
+                  <a href="guides/Tempo/Tempo_Testnet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#a78bfa;font-size:8px;"></i>Tempo Testnet</a>
+                  <a href="guides/Robinhood/robinhood-chain.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#34d399;font-size:8px;"></i>Robinhood Chain</a>
+                </div>
               </div>
-            </div>
 
-            <!-- Сообщество -->
-            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
-              <button class="al-nav-btn" onclick="alNavToggle(this)">
-                <i class="fas fa-users" style="color:#34d399;"></i>
-                <span data-translate="menu_community">Сообщество</span>
-                <i class="fas fa-chevron-down al-nav-arrow"></i>
-              </button>
-              <div class="al-nav-dropdown">
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-comments"></i><span data-translate="chat">Чат</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-trophy"></i><span data-translate="leaderboard">Таблица лидеров</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-share-alt"></i><span data-translate="referrals">Рефералы</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-comments-dollar"></i><span data-translate="forum">Форум</span></a>
+              <!-- Сообщество -->
+              <div class="al-nav-group" style="position:relative;">
+                <button class="al-nav-btn" onclick="alNavToggle(this)">
+                  <i class="fas fa-users" style="color:#34d399;"></i>
+                  <span data-translate="menu_community">Сообщество</span>
+                  <i class="fas fa-chevron-down al-nav-arrow"></i>
+                </button>
+                <div class="al-nav-dropdown">
+                  <a href="community.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-comments"></i><span data-translate="chat">Чат</span></a>
+                  <a href="community.html#leaderboard" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-trophy"></i><span data-translate="leaderboard">Таблица лидеров</span></a>
+                  <a href="community.html#referrals" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-share-alt"></i><span data-translate="referrals">Рефералы</span></a>
+                  <a href="community.html#forum" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-comments-dollar"></i><span data-translate="forum">Форум</span></a>
+                </div>
               </div>
-            </div>
 
-            <!-- Календарь -->
-            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
-              <button class="al-nav-btn" onclick="alNavToggle(this)">
-                <i class="fas fa-calendar-alt" style="color:#fbbf24;"></i>
-                <span data-translate="menu_calendar">Календарь</span>
-                <i class="fas fa-chevron-down al-nav-arrow"></i>
-              </button>
-              <div class="al-nav-dropdown">
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item al-nav-item-accent"><i class="fas fa-calendar-check"></i><span data-translate="all_events">Все события</span></a>
-                <div class="al-nav-divider"></div>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-hourglass-end" style="color:#f87171;"></i><span data-translate="deadlines">Дедлайны</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-rocket" style="color:#fbbf24;"></i>TGE / <span data-translate="listings">Листинги</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-star" style="color:#22d3ee;"></i><span data-translate="project_events">События проектов</span></a>
+              <!-- Календарь -->
+              <div class="al-nav-group" style="position:relative;">
+                <button class="al-nav-btn" onclick="alNavToggle(this)">
+                  <i class="fas fa-calendar-alt" style="color:#fbbf24;"></i>
+                  <span data-translate="menu_calendar">Календарь</span>
+                  <i class="fas fa-chevron-down al-nav-arrow"></i>
+                </button>
+                <div class="al-nav-dropdown">
+                  <a href="calendar.html" class="al-nav-item al-nav-item-accent" onclick="closeAlNav(this)"><i class="fas fa-calendar-check"></i><span data-translate="all_events">Все события</span></a>
+                  <div class="al-nav-divider"></div>
+                  <a href="calendar.html?type=deadline" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-hourglass-end" style="color:#f87171;"></i><span data-translate="deadlines">Дедлайны</span></a>
+                  <a href="calendar.html?type=tge" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-rocket" style="color:#fbbf24;"></i>TGE / <span data-translate="listings">Листинги</span></a>
+                  <a href="calendar.html?type=event" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-star" style="color:#22d3ee;"></i><span data-translate="project_events">События проектов</span></a>
+                </div>
               </div>
-            </div>
 
-            <!-- Биржи -->
-            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
-              <button class="al-nav-btn" onclick="alNavToggle(this)">
-                <i class="fas fa-chart-bar" style="color:#a78bfa;"></i>
-                <span data-translate="menu_exchanges">Биржи</span>
-                <i class="fas fa-chevron-down al-nav-arrow"></i>
-              </button>
-              <div class="al-nav-dropdown">
-                <a href="https://www.binance.com/ru" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#f0b90b;font-size:8px;"></i>Binance</a>
-                <a href="https://www.bybit.com/ru-RU/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#f7a600;font-size:8px;"></i>Bybit</a>
-                <a href="https://www.mexc.com/ru-RU" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#2354e6;font-size:8px;"></i>MEXC</a>
-                <a href="https://www.bitget.com/ru/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#00f0ff;font-size:8px;"></i>Bitget</a>
-                <a href="https://bingx.com/ru-ru/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#1890ff;font-size:8px;"></i>BingX</a>
-                <a href="https://www.lbank.com/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#ff5722;font-size:8px;"></i>LBank</a>
-                <a href="https://www.bitmart.com/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#0096ff;font-size:8px;"></i>Bitmart</a>
-                <div class="al-nav-divider"></div>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item al-nav-item-accent"><i class="fas fa-th-list"></i><span data-translate="all_exchanges">Все биржи</span></a>
+              <!-- Биржи -->
+              <div class="al-nav-group" style="position:relative;">
+                <button class="al-nav-btn" onclick="alNavToggle(this)">
+                  <i class="fas fa-chart-bar" style="color:#a78bfa;"></i>
+                  <span data-translate="menu_exchanges">Биржи</span>
+                  <i class="fas fa-chevron-down al-nav-arrow"></i>
+                </button>
+                <div class="al-nav-dropdown">
+                  <a href="https://www.binance.com/ru" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#f0b90b;font-size:8px;"></i>Binance</a>
+                  <a href="https://www.bybit.com/ru-RU/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#f7a600;font-size:8px;"></i>Bybit</a>
+                  <a href="https://www.mexc.com/ru-RU" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#2354e6;font-size:8px;"></i>MEXC</a>
+                  <a href="https://www.bitget.com/ru/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#00f0ff;font-size:8px;"></i>Bitget</a>
+                  <a href="https://bingx.com/ru-ru/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#1890ff;font-size:8px;"></i>BingX</a>
+                  <a href="https://www.lbank.com/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#ff5722;font-size:8px;"></i>LBank</a>
+                  <a href="https://www.bitmart.com/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#0096ff;font-size:8px;"></i>Bitmart</a>
+                  <div class="al-nav-divider"></div>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item al-nav-item-accent"><i class="fas fa-th-list"></i><span data-translate="all_exchanges">Все биржи</span></a>
+                </div>
               </div>
-            </div>
 
-            <!-- Новости -->
-            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
-              <button class="al-nav-btn" onclick="alNavToggle(this)">
-                <i class="fas fa-newspaper" style="color:#f87171;"></i>
-                <span data-translate="menu_news">Новости</span>
-                <i class="fas fa-chevron-down al-nav-arrow"></i>
-              </button>
-              <div class="al-nav-dropdown">
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-coins"></i><span data-translate="crypto_news">Криптовалютные новости</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-chart-line"></i><span data-translate="analytics_news">Новости аналитики</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-robot"></i><span data-translate="ai_news">Новости AI</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fab fa-bitcoin"></i><span data-translate="bitcoin_news">Новости Bitcoin</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-water"></i><span data-translate="defi_news">Новости DeFi</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-gamepad"></i><span data-translate="gamefi_news">Новости GameFi / Metaverse</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-rocket"></i><span data-translate="ido_news">Новости IDO/ICO/IFO/IEO</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-image"></i><span data-translate="nft_news">Новости NFT</span></a>
+              <!-- Новости -->
+              <div class="al-nav-group" style="position:relative;">
+                <button class="al-nav-btn" onclick="alNavToggle(this)">
+                  <i class="fas fa-newspaper" style="color:#f87171;"></i>
+                  <span data-translate="menu_news">Новости</span>
+                  <i class="fas fa-chevron-down al-nav-arrow"></i>
+                </button>
+                <div class="al-nav-dropdown">
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-coins"></i><span data-translate="crypto_news">Криптовалютные новости</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-chart-line"></i><span data-translate="analytics_news">Новости аналитики</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-robot"></i><span data-translate="ai_news">Новости AI</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fab fa-bitcoin"></i><span data-translate="bitcoin_news">Новости Bitcoin</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-water"></i><span data-translate="defi_news">Новости DeFi</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-gamepad"></i><span data-translate="gamefi_news">Новости GameFi / Metaverse</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-rocket"></i><span data-translate="ido_news">Новости IDO/ICO/IFO/IEO</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-image"></i><span data-translate="nft_news">Новости NFT</span></a>
+                </div>
               </div>
-            </div>
 
-            <!-- Инструменты -->
-            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
-              <button class="al-nav-btn" onclick="alNavToggle(this)">
-                <i class="fas fa-tools" style="color:#fbbf24;"></i>
-                <span data-translate="menu_tools">Инструменты</span>
-                <i class="fas fa-chevron-down al-nav-arrow"></i>
-              </button>
-              <div class="al-nav-dropdown">
-                <a href="faucet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-faucet"></i><span data-translate="faucets">Краны (Faucets)</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-calculator"></i><span data-translate="gas_calculator">Калькулятор газа</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-exchange-alt"></i><span data-translate="bridges">Бриджи</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-shield-alt"></i><span data-translate="wallet_checker">Проверка кошелька</span></a>
+              <!-- Инструменты -->
+              <div class="al-nav-group" style="position:relative;">
+                <button class="al-nav-btn" onclick="alNavToggle(this)">
+                  <i class="fas fa-tools" style="color:#fbbf24;"></i>
+                  <span data-translate="menu_tools">Инструменты</span>
+                  <i class="fas fa-chevron-down al-nav-arrow"></i>
+                </button>
+                <div class="al-nav-dropdown">
+                  <a href="faucet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-faucet"></i><span data-translate="faucets">Краны (Faucets)</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-calculator"></i><span data-translate="gas_calculator">Калькулятор газа</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-exchange-alt"></i><span data-translate="bridges">Бриджи</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-shield-alt"></i><span data-translate="wallet_checker">Проверка кошелька</span></a>
+                </div>
               </div>
-            </div>
 
-            <!-- Обучение -->
-            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
-              <button class="al-nav-btn" onclick="alNavToggle(this)">
-                <i class="fas fa-graduation-cap" style="color:#60a5fa;"></i>
-                <span data-translate="menu_learning">Обучение</span>
-                <i class="fas fa-chevron-down al-nav-arrow"></i>
-              </button>
-              <div class="al-nav-dropdown">
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-book-open"></i><span data-translate="what_is_airdrop">Что такое аирдроп</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-wallet"></i><span data-translate="how_setup_wallet">Как настроить кошелёк</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-shield-virus"></i><span data-translate="crypto_security">Безопасность в крипте</span></a>
-                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-question-circle"></i>FAQ</a>
+              <!-- Обучение -->
+              <div class="al-nav-group" style="position:relative;">
+                <button class="al-nav-btn" onclick="alNavToggle(this)">
+                  <i class="fas fa-graduation-cap" style="color:#60a5fa;"></i>
+                  <span data-translate="menu_learning">Обучение</span>
+                  <i class="fas fa-chevron-down al-nav-arrow"></i>
+                </button>
+                <div class="al-nav-dropdown">
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-book-open"></i><span data-translate="what_is_airdrop">Что такое аирдроп</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-wallet"></i><span data-translate="how_setup_wallet">Как настроить кошелёк</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-shield-virus"></i><span data-translate="crypto_security">Безопасность в крипте</span></a>
+                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-question-circle"></i>FAQ</a>
+                </div>
               </div>
-            </div>
 
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>
       </div>
 
-      <!-- Coming Soon Modal (PROFESSIONAL VERSION) -->
-      <div id="comingSoonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(16px);z-index:10000;align-items:center;justify-content:center;" onclick="closeComingSoon(event)">
-        <div style="background:linear-gradient(145deg,rgba(15,23,42,0.98),rgba(30,41,59,0.98));border:2px solid rgba(34,211,238,0.3);border-radius:24px;padding:48px;max-width:460px;text-align:center;position:relative;animation:modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);box-shadow:0 25px 80px rgba(34,211,238,0.25),0 0 120px rgba(34,211,238,0.08);" onclick="event.stopPropagation()">
-          <div style="position:absolute;inset:0;border-radius:24px;background:linear-gradient(145deg,rgba(34,211,238,0.08),rgba(139,92,246,0.08));pointer-events:none;"></div>
+      <!-- Coming Soon Modal — PROFESSIONAL REDESIGN -->
+      <div id="comingSoonModal" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,0.95);backdrop-filter:blur(20px);z-index:10000;align-items:center;justify-content:center;" onclick="closeComingSoon(event)">
+        <div style="background:linear-gradient(145deg,rgba(15,23,42,0.98),rgba(30,41,59,0.98));border:2px solid rgba(34,211,238,0.4);border-radius:28px;padding:64px 48px;max-width:480px;text-align:center;position:relative;animation:modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);box-shadow:0 25px 80px rgba(34,211,238,0.25),0 0 120px rgba(34,211,238,0.1);" onclick="event.stopPropagation()">
           
-          <!-- Animated Icon Container -->
-          <div style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:80px;height:80px;background:linear-gradient(145deg,#22d3ee,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 15px 40px rgba(34,211,238,0.5);animation:float 4s ease-in-out infinite;">
-            <div style="width:64px;height:64px;background:rgba(15,23,42,0.95);border-radius:50%;display:flex;align-items:center;justify-content:center;">
-              <i class="fas fa-rocket" style="font-size:28px;color:#22d3ee;animation:rocketGlow 2s ease-in-out infinite;"></i>
+          <!-- Glow ring -->
+          <div style="position:absolute;inset:-2px;border-radius:28px;background:linear-gradient(135deg,rgba(34,211,238,0.6),rgba(139,92,246,0.6));opacity:0.3;filter:blur(8px);pointer-events:none;animation:pulseGlow 3s infinite;"></div>
+          
+          <!-- Icon container -->
+          <div style="position:relative;margin-bottom:28px;">
+            <div style="width:90px;height:90px;background:linear-gradient(135deg,#0891b2,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 0 40px rgba(34,211,238,0.6);animation:float 4s ease-in-out infinite;">
+              <i class="fas fa-rocket" style="font-size:44px;color:white;animation:rocketBlink 2s infinite;"></i>
+            </div>
+            <!-- Notification badge on icon -->
+            <div style="position:absolute;top:0;right:50%;transform:translateX(50%);width:24px;height:24px;background:linear-gradient(135deg,#22d3ee,#34d399);border-radius:50%;border:3px solid rgba(15,23,42,0.98);display:flex;align-items:center;justify-content:center;animation:bellPulse 2s infinite;">
+              <i class="fas fa-bell" style="font-size:10px;color:white;"></i>
             </div>
           </div>
+
+          <!-- Title -->
+          <h2 style="font-size:28px;font-weight:800;color:#f1f5f9;margin:0 0 12px;line-height:1.3;text-shadow:0 2px 20px rgba(34,211,238,0.3);" data-translate="menu_in_development">
+            Раздел в разработке
+          </h2>
           
-          <div style="position:relative;margin-top:30px;">
-            <!-- Status Dots -->
-            <div style="display:flex;justify-content:center;gap:10px;margin-bottom:24px;">
-              <div style="width:12px;height:12px;background:linear-gradient(45deg,rgba(34,211,238,0.4),rgba(34,211,238,0.8));border-radius:50%;animation:pulse 2.5s infinite;box-shadow:0 0 16px rgba(34,211,238,0.5);"></div>
-              <div style="width:12px;height:12px;background:linear-gradient(45deg,rgba(139,92,246,0.4),rgba(139,92,246,0.8));border-radius:50%;animation:pulse 2.5s infinite 0.3s;box-shadow:0 0 16px rgba(139,92,246,0.5);"></div>
-              <div style="width:12px;height:12px;background:linear-gradient(45deg,rgba(236,72,153,0.4),rgba(236,72,153,0.8));border-radius:50%;animation:pulse 2.5s infinite 0.6s;box-shadow:0 0 16px rgba(236,72,153,0.5);"></div>
+          <!-- Subtitle -->
+          <p style="color:#94a3b8;margin:0 0 24px;font-size:15px;line-height:1.6;" data-translate="menu_coming_soon_desc">
+            Мы создаём для вас что-то по-настоящему крутое. Этот раздел скоро запустится — следите за обновлениями!
+          </p>
+
+          <!-- Info box with notification promise -->
+          <div style="background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(139,92,246,0.08));border:1px solid rgba(34,211,238,0.25);border-radius:16px;padding:20px;margin-bottom:28px;text-align:left;">
+            <div style="display:flex;align-items:center;gap:12px;color:#22d3ee;font-size:15px;margin-bottom:10px;font-weight:600;">
+              <i class="fas fa-info-circle" style="font-size:20px;animation:infoPulse 2s infinite;"></i>
+              <span>Вы получите уведомление</span>
             </div>
-            
-            <h2 style="font-size:28px;font-weight:800;color:#f1f5f9;margin:0 0 16px;text-shadow:0 2px 20px rgba(34,211,238,0.2);" data-translate="menu_in_development">Раздел в разработке</h2>
-            <p style="color:#cbd5e1;margin:0 0 28px;font-size:15px;line-height:1.6;" data-translate="menu_coming_soon">Мы активно работаем над этим разделом. Скоро здесь появятся новые возможности!</p>
-            
-            <!-- Progress Card -->
-            <div style="background:linear-gradient(135deg,rgba(34,211,238,0.08),rgba(139,92,246,0.08));border:1px solid rgba(34,211,238,0.15);border-radius:16px;padding:20px;margin-bottom:28px;">
-              <div style="display:flex;align-items:center;gap:12px;color:#22d3ee;font-size:14px;margin-bottom:12px;">
-                <i class="fas fa-info-circle" style="font-size:18px;animation:infoPulse 2s infinite;"></i>
-                <span style="font-weight:600;" data-translate="under_construction">Статус разработки</span>
-              </div>
-              <div style="display:flex;gap:8px;margin-bottom:12px;">
-                <div style="flex:1;height:6px;background:rgba(71,85,105,0.5);border-radius:3px;">
-                  <div style="height:100%;width:35%;background:linear-gradient(90deg,#22d3ee,#8b5cf6);border-radius:3px;animation:progressBar 2s ease-in-out infinite;"></div>
-                </div>
-              </div>
-              <div style="text-align:left;color:#94a3b8;font-size:13px;line-height:1.7;">
-                <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;">
-                  <i class="fas fa-check-circle" style="color:#22d3ee;"></i>
-                  <span>Улучшение функционала</span>
-                </div>
-                <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;">
-                  <i class="fas fa-check-circle" style="color:#8b5cf6;"></i>
-                  <span>Интеграция новых инструментов</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <i class="fas fa-clock" style="color:#fbbf24;"></i>
-                  <span>Ожидается: Q1-Q2 2025</span>
-                </div>
-              </div>
-            </div>
-            
-            <div style="display:flex;gap:12px;justify-content:center;">
-              <button onclick="closeComingSoon()" style="padding:14px 44px;background:linear-gradient(135deg,#22d3ee,#8b5cf6);border:none;border-radius:12px;color:white;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.3s;box-shadow:0 8px 32px rgba(34,211,238,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(34,211,238,0.4)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 32px rgba(34,211,238,0.3)';" data-translate="close">Понятно</button>
-              <button onclick="window.open('https://t.me/airdroplab','_blank')" style="padding:14px 28px;background:transparent;border:2px solid rgba(34,211,238,0.25);border-radius:12px;color:#22d3ee;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.3s;" onmouseover="this.style.background='rgba(34,211,238,0.08)';this.style.borderColor='rgba(34,211,238,0.4)';" onmouseout="this.style.background='transparent';this.style.borderColor='rgba(34,211,238,0.25)';">Telegram</button>
+            <div style="color:#cbd5e1;font-size:14px;line-height:1.6; padding-left:32px;">
+              Как только раздел станет доступен, мы отправим вам уведомление в личный кабинет и на почту (если подписаны). 
+              <br><span style="color:#34d399;font-weight:500;">Будет полезно — обещаем!</span>
             </div>
           </div>
+
+          <!-- Progress dots -->
+          <div style="display:flex;justify-content:center;gap:8px;margin-bottom:32px;">
+            <div style="width:6px;height:6px;background:#22d3ee;border-radius:50%;animation:progressDot 1.4s infinite;"></div>
+            <div style="width:6px;height:6px;background:#8b5cf6;border-radius:50%;animation:progressDot 1.4s infinite 0.2s;"></div>
+            <div style="width:6px;height:6px;background:#ec4899;border-radius:50%;animation:progressDot 1.4s infinite 0.4s;"></div>
+          </div>
+
+          <!-- Close button -->
+          <button onclick="closeComingSoon()" 
+            style="padding:14px 48px;background:linear-gradient(135deg,#22d3ee,#3b82f6);border:none;border-radius:14px;color:white;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.3s;box-shadow:0 8px 32px rgba(34,211,238,0.4);letter-spacing:0.5px;"
+            onmouseover="this.style.transform='translateY(-2px) scale(1.02)';this.style.boxShadow='0 12px 40px rgba(34,211,238,0.5)';"
+            onmouseout="this.style.transform='translateY(0) scale(1)';this.style.boxShadow='0 8px 32px rgba(34,211,238,0.4)';"
+            data-translate="close">
+            Понятно, жду запуск 🚀
+          </button>
+
         </div>
       </div>
 
       <style>
         @keyframes modalPopIn {
-          from { opacity:0; transform:scale(0.8) translateY(30px); }
+          from { opacity:0; transform:scale(0.9) translateY(20px); }
           to { opacity:1; transform:scale(1) translateY(0); }
         }
         @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-12px) rotate(3deg); }
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
         }
-        @keyframes pulse {
-          0%, 100% { opacity:0.4; transform:scale(1); }
-          50% { opacity:1; transform:scale(1.2); }
+        @keyframes rocketBlink {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); filter: brightness(1.2); }
         }
-        @keyframes rocketGlow {
-          0%, 100% { color:#22d3ee; text-shadow:0 0 16px rgba(34,211,238,0.6); }
-          50% { color:#8b5cf6; text-shadow:0 0 24px rgba(139,92,246,0.6); }
+        @keyframes pulseGlow {
+          0%, 100% { opacity: 0.2; }
+          50% { opacity: 0.5; }
+        }
+        @keyframes bellPulse {
+          0%, 100% { transform: translateX(50%) scale(1); }
+          50% { transform: translateX(50%) scale(1.15); }
         }
         @keyframes infoPulse {
-          0%, 100% { transform:scale(1); }
-          50% { transform:scale(1.1); }
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.1); opacity: 0.8; }
         }
-        @keyframes progressBar {
-          0%, 100% { width:35%; }
-          50% { width:65%; }
+        @keyframes progressDot {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.3); }
         }
         
+        /* Nav Dropdown Styles */
         #site-nav-wrapper { position: relative; z-index: 9000; }
+        #site-nav { overflow: visible !important; } /* Важно: убираем обрезку */
         #site-nav ::-webkit-scrollbar { display: none; }
-        .al-nav-dropdown::-webkit-scrollbar { width: 6px; }
-        .al-nav-dropdown::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-        .al-nav-dropdown::-webkit-scrollbar-thumb { background: rgba(34,211,238,0.3); border-radius: 3px; }
-        .al-nav-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(34,211,238,0.5); }
         
-        .al-nav-group { position: relative; display: inline-block; vertical-align: top; }
+        .al-nav-group { position: static; display: inline-block; vertical-align: top; }
         .al-nav-btn {
           display: inline-flex; align-items: center; gap: 6px;
           padding: 9px 14px; background: transparent; border: none;
@@ -588,41 +557,36 @@
         .al-nav-arrow { font-size: 9px; margin-left: 2px; transition: transform 0.2s; }
         .al-nav-btn.al-nav-open .al-nav-arrow { transform: rotate(180deg); }
         
-        /* DROPDOWN FIXED POSITION */
         .al-nav-dropdown {
           display: none;
-          position: absolute;
-          min-width: 220px;
+          position: fixed; /* FIXED — ключевая правка */
+          min-width: 240px;
           background: rgba(11,15,30,0.99);
-          border: 1px solid rgba(34,211,238,0.2);
+          border: 1px solid rgba(34,211,238,0.25);
           border-top: none;
-          border-radius: 0 0 12px 12px;
-          box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,211,238,0.05);
+          border-radius: 0 0 14px 14px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(34,211,238,0.1);
           backdrop-filter: blur(20px);
-          z-index: 9999;
-          padding: 6px 0;
-          animation: alNavFadeIn 0.15s ease;
-          /* FIXED POSITION BELOW BUTTON */
-          left: 0;
-          top: calc(100% + 2px);
+          z-index: 99999; /* Поверх всего */
+          padding: 8px 0;
+          animation: alNavFadeIn 0.2s ease;
         }
         .al-nav-dropdown.al-open { display: block; }
         @keyframes alNavFadeIn {
           from { opacity:0; transform:translateY(-8px); }
           to   { opacity:1; transform:translateY(0); }
         }
-        
         .al-nav-item {
           display: flex; align-items: center; gap: 10px;
-          padding: 8px 16px; color: #94a3b8; font-size: 13px;
-          text-decoration: none; transition: all 0.15s;
+          padding: 10px 18px; color: #cbd5e1; font-size: 13px;
+          text-decoration: none; transition: all 0.2s;
           white-space: nowrap;
         }
-        .al-nav-item i { width: 14px; text-align: center; font-size: 12px; color: #64748b; flex-shrink:0; }
-        .al-nav-item:hover { background: rgba(34,211,238,0.08); color: #f1f5f9; }
+        .al-nav-item i { width: 14px; text-align: center; font-size: 12px; color: #64748b; flex-shrink:0; transition: color 0.2s; }
+        .al-nav-item:hover { background: rgba(34,211,238,0.1); color: #f1f5f9; padding-left: 22px; }
         .al-nav-item:hover i { color: #22d3ee; }
-        .al-nav-item-accent { color: #22d3ee !important; font-weight: 600; }
-        .al-nav-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 4px 0; }
+        .al-nav-item-accent { color: #22d3ee !important; font-weight: 600; background: rgba(34,211,238,0.05); }
+        .al-nav-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 6px 0; }
       </style>
     `;
 
@@ -630,7 +594,6 @@
     var isMainPage = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/') || window.location.pathname === '';
     var desktopStats = document.querySelector('.flex.gap-5.text-sm');
     var mobileStats = document.querySelector('.mob-stats-row');
-    
     if (!isMainPage) {
       if (desktopStats) desktopStats.style.display = 'none';
       if (mobileStats) mobileStats.style.display = 'none';
@@ -649,7 +612,7 @@
     // ── MutationObserver синхронизации ──
     function setupObservers() {
 
-      // 1. Статистика
+      // 1. Статистика (десктоп → мобильная)
       [['statActive','mobStatActive'],['statToday','mobStatToday'],
        ['statFavorites','mobStatFavorites'],['statCompleted','mobStatCompleted']
       ].forEach(function(p) {
@@ -661,44 +624,121 @@
           .observe(from, { childList: true, characterData: true, subtree: true });
       });
 
-      // 2. Auth state (CRITICAL FIX for login display)
+      // 2. Auth state (loggedIn / loggedOut) — с надёжной синхронизацией
       var deskIn   = document.getElementById('loggedInView');
       var mobIn    = document.getElementById('mobLoggedInView');
       var mobOut   = document.getElementById('mobLoggedOutView');
       var deskAva  = document.getElementById('userAvatar');
       var mobAva   = document.getElementById('mobUserAvatar');
-      var deskOut  = document.getElementById('loggedOutView');
-      
+
       function syncAuth() {
         var isIn = deskIn && !deskIn.classList.contains('hidden');
-        // Принудительно проверяем состояние
-        if (isIn) {
-          if (mobIn)  mobIn.style.display  = 'flex';
-          if (mobOut) mobOut.style.display = 'none';
-          if (deskOut) deskOut.style.display = 'none';
-          deskIn.classList.remove('hidden');
-        } else {
-          if (mobIn)  mobIn.style.display  = 'none';
-          if (mobOut) mobOut.style.display = 'block';
-          if (deskOut) deskOut.style.display = 'block';
-          deskIn.classList.add('hidden');
-        }
+        if (mobIn)  mobIn.style.display  = isIn ? 'flex' : 'none';
+        if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
         if (deskAva && mobAva && deskAva.src) mobAva.src = deskAva.src;
       }
       
       if (deskIn) new MutationObserver(syncAuth).observe(deskIn, { attributes: true, attributeFilter: ['class','style'] });
-      if (deskOut) new MutationObserver(function(){ if (deskIn && !deskOut.classList.contains('hidden')) { if(deskIn)deskIn.classList.add('hidden'); syncAuth(); }}).observe(deskOut, { attributes: true, attributeFilter: ['class','style'] });
-      if (deskAva) new MutationObserver(function(){ if (mobAva && deskAva.src) mobAva.src = deskAva.src; })
+      if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
         .observe(deskAva, { attributes: true, attributeFilter: ['src'] });
       
-      // Запускаем проверку при каждой загрузке
       syncAuth();
-      
-      // Дополнительная проверка каждые 2 секунды
-      setInterval(syncAuth, 2000);
+      // 🔴 ВАЖНО: интервал для гарантированной синхронизации (исправляет «залипшую» кнопку «Вход»)
+      setInterval(syncAuth, 800);
+
+      // 3. Feedback panel
+      var deskFP  = document.getElementById('generalFeedbackPanel');
+      var mobFBtn = document.getElementById('mobFeedbackBtn');
+      var deskFBadge = document.getElementById('feedbackBadge');
+      var mobFBadge  = document.getElementById('mobFeedbackBadge');
+
+      function syncFeedback() {
+        var vis = deskFP && !deskFP.classList.contains('hidden');
+        if (mobFBtn) mobFBtn.style.display = vis ? 'block' : 'none';
+      }
+      function syncFBadge() {
+        if (!deskFBadge || !mobFBadge) return;
+        var hidden = deskFBadge.classList.contains('hidden');
+        mobFBadge.style.display = hidden ? 'none' : 'flex';
+        if (!hidden) mobFBadge.textContent = deskFBadge.textContent;
+      }
+      if (deskFP) new MutationObserver(syncFeedback).observe(deskFP, { attributes: true, attributeFilter: ['class','style'] });
+      if (deskFBadge) new MutationObserver(syncFBadge).observe(deskFBadge, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
+      syncFeedback(); syncFBadge();
+
+      // 4. Notification badge
+      var deskNBadge = document.getElementById('notificationBadge');
+      var mobNBadge  = document.getElementById('mobNotifBadge');
+      function syncNBadge() {
+        if (!deskNBadge || !mobNBadge) return;
+        var hidden = deskNBadge.classList.contains('hidden');
+        mobNBadge.style.display = hidden ? 'none' : 'flex';
+        if (!hidden) mobNBadge.textContent = deskNBadge.textContent;
+      }
+      if (deskNBadge) new MutationObserver(syncNBadge).observe(deskNBadge, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
+      syncNBadge();
+
+      // 5. Admin panel
+      var deskAdmin = document.getElementById('adminPanel');
+      var mobAdd    = document.getElementById('mobAddBtn');
+      var mobBtns   = document.getElementById('mobAdminBtns');
+      function syncAdmin() {
+        var vis = deskAdmin && deskAdmin.style.display !== 'none' && deskAdmin.style.display !== '';
+        if (mobAdd)  mobAdd.style.display  = vis ? 'flex' : 'none';
+        if (mobBtns) mobBtns.style.display = vis ? 'flex' : 'none';
+      }
+      if (deskAdmin) new MutationObserver(syncAdmin).observe(deskAdmin, { attributes: true, attributeFilter: ['style'] });
+      syncAdmin();
+
+      // 6. Lang button
+      var deskLang    = document.getElementById('langBtn');
+      var mobLangBtn  = document.getElementById('mobLangBtn');
+      var mobLangFlag = document.querySelector('.mob-lang-flag');
+      var mobLangText = document.querySelector('.mob-lang-text');
+      function syncLang() {
+        if (!deskLang) return;
+        var flag = deskLang.querySelector('.lang-flag');
+        var text = deskLang.querySelector('.lang-text');
+        if (mobLangFlag && flag) mobLangFlag.textContent = flag.textContent;
+        if (mobLangText && text) mobLangText.textContent = text.textContent;
+        if (mobLangBtn) {
+          var active = deskLang.classList.contains('lang-active');
+          mobLangBtn.style.background = active ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.1)';
+          mobLangBtn.style.borderColor = active ? 'rgba(34,197,94,0.5)' : 'rgba(239,68,68,0.3)';
+        }
+      }
+      if (deskLang) new MutationObserver(syncLang).observe(deskLang, { attributes: true, subtree: true, childList: true, characterData: true });
+      setTimeout(syncLang, 200);
+      setTimeout(syncLang, 600);
+
+      // 7. Claim button — визуальный индикатор состояния
+      var deskClaim = document.getElementById('headerClaimBtn');
+      var mobClaim  = document.getElementById('mobClaimBtn');
+
+      function syncClaimBtn() {
+        if (!deskClaim || !mobClaim) return;
+        var txt = deskClaim.textContent || '';
+        var isClaimed = deskClaim.disabled || /\d+:\d{2}/.test(txt) || txt.toLowerCase().includes('сброс') || txt.toLowerCase().includes('reset');
+
+        if (isClaimed) {
+          var lbl = (window.currentLang === 'en') ? 'Claimed' : 'Готово';
+          mobClaim.innerHTML = '🔒 <span style="font-size:11px;">' + lbl + '</span>';
+          mobClaim.style.cssText += 'background:rgba(71,85,105,0.2);border-color:rgba(71,85,105,0.35);color:#64748b;cursor:pointer;opacity:0.9;';
+        } else {
+          var lbl = (window.currentLang === 'en') ? 'Claim' : 'Клейм';
+          mobClaim.innerHTML = '🧪 <span id="mobClaimSpan" style="font-size:11px;" data-translate="claim_btn_label">' + lbl + '</span>';
+          mobClaim.style.cssText += 'background:rgba(8,145,178,0.2);border-color:rgba(34,211,238,0.3);color:#22d3ee;cursor:pointer;opacity:1;';
+        }
+      }
+
+      if (deskClaim) {
+        new MutationObserver(syncClaimBtn).observe(deskClaim, { childList: true, subtree: true, attributes: true, characterData: true });
+      }
+      setInterval(syncClaimBtn, 5000);
+      syncClaimBtn();
     }
 
-    setTimeout(setupObservers, 300);
+    setTimeout(setupObservers, 200);
 
     // ── Header height CSS variable ──
     function syncHeaderHeight() {
@@ -710,7 +750,7 @@
       if (window.ResizeObserver) {
         new ResizeObserver(syncHeaderHeight).observe(headerEl);
       } else {
-                [100, 500, 1500].forEach(function(t) { setTimeout(syncHeaderHeight, t); });
+        [100, 500, 1500].forEach(function(t) { setTimeout(syncHeaderHeight, t); });
       }
     }
     window.addEventListener('resize', syncHeaderHeight);
@@ -725,15 +765,15 @@
 
 })();
 
-// ── NAVIGATION DROPDOWN TOGGLE ──
+// ═══════════════════════════════════════════════════════════
+// Навигация: открытие/закрытие dropdown (Fixed positioning)
+// ═══════════════════════════════════════════════════════════
 window.alNavToggle = function(btn) {
   var group = btn.closest('.al-nav-group');
-  if (!group) return;
   var dropdown = group.querySelector('.al-nav-dropdown');
-  if (!dropdown) return;
-  
   var isOpen = dropdown.classList.contains('al-open');
 
+  // Закрываем все остальные
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
     d.classList.remove('al-open');
     var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
@@ -741,19 +781,20 @@ window.alNavToggle = function(btn) {
   });
 
   if (!isOpen) {
+    var rect = btn.getBoundingClientRect();
+    // Позиционируем строго под кнопкой (fixed, viewport coordinates)
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = rect.bottom + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px';
+    dropdown.style.zIndex = '99999';
+    
     dropdown.classList.add('al-open');
     btn.classList.add('al-nav-open');
-    // Фиксируем позицию относительно viewport
-    setTimeout(function() {
-      var rect = btn.getBoundingClientRect();
-      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      dropdown.style.position = 'fixed';
-      dropdown.style.top = (rect.bottom + scrollTop) + 'px';
-      dropdown.style.left = rect.left + 'px';
-    }, 10);
   }
 };
 
+// Закрытие при клике вне
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.al-nav-group')) {
     document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
@@ -764,18 +805,20 @@ document.addEventListener('click', function(e) {
   }
 });
 
+// При скролле — держим dropdown под кнопкой (если открыт)
 window.addEventListener('scroll', function() {
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
     var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
     if (b) {
       var rect = b.getBoundingClientRect();
-      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      d.style.top = (rect.bottom + scrollTop) + 'px';
+      d.style.top = rect.bottom + 'px';
       d.style.left = rect.left + 'px';
+      d.style.width = rect.width + 'px';
     }
   });
 }, { passive: true });
 
+// При резизе — закрываем (чтобы не было визуального глюка)
 window.addEventListener('resize', function() {
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
     d.classList.remove('al-open');
@@ -784,40 +827,28 @@ window.addEventListener('resize', function() {
   });
 });
 
-// ── COMING SOON MODAL FUNCTIONS ──
+// ═══════════════════════════════════════════════════════════
+// Coming Soon Modal
+// ═══════════════════════════════════════════════════════════
 window.showComingSoon = function() {
   var modal = document.getElementById('comingSoonModal');
   if (modal) {
     modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden'; // Блокируем скролл фона
+    // Анимация появления (если нужно сбросить)
+    modal.querySelector('div[style*="animation"]').style.animation = 'none';
+    setTimeout(function(){
+      modal.querySelector('div[style*="animation"]').style.animation = 'modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    }, 10);
   }
 };
 
 window.closeComingSoon = function(event) {
   if (event && event.target !== event.currentTarget) return;
   var modal = document.getElementById('comingSoonModal');
-  if (modal) {
-    modal.style.display = 'none';
-    document.body.style.overflow = ''; // Возвращаем скролл
-  }
+  if (modal) modal.style.display = 'none';
 };
 
-window.closeAlNav = function(el) {
-  var dropdown = el.closest('.al-nav-dropdown');
-  if (dropdown) {
-    dropdown.classList.remove('al-open');
-    var btn = dropdown.closest('.al-nav-group').querySelector('.al-nav-btn');
-    if (btn) btn.classList.remove('al-nav-open');
-  }
-};
-
+// Close modal on Escape key
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    closeComingSoon();
-    document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
-      d.classList.remove('al-open');
-      var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
-      if (b) b.classList.remove('al-nav-open');
-    });
-  }
+  if (e.key === 'Escape') closeComingSoon();
 });
