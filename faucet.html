@@ -226,23 +226,23 @@
 
   <!-- Фильтры + сортировка + поиск -->
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:24px;">
-    <button class="filter-tab af"    onclick="fFilter('all',this)"><i class="fas fa-th-large" style="margin-right:4px;"></i><span data-translate="all">Все</span> <span id="filterCntAll" class="badge badge-multi" style="margin-left:6px;">–</span></button>
-    <button class="filter-tab"       onclick="fFilter('free',this)"><i class="fas fa-gift" style="margin-right:4px;color:#34d399;"></i><span data-translate="faucets_filter_free">Бесплатные</span> <span id="filterCntFree" class="badge badge-multi" style="margin-left:6px;">–</span></button>
-    <button class="filter-tab"       onclick="fFilter('paid',this)"><i class="fas fa-coins" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="faucets_filter_paid">Платные</span> <span id="filterCntPaid" class="badge badge-multi" style="margin-left:6px;">–</span></button>
-    <button class="filter-tab"       onclick="fFilter('testnet',this)"><i class="fas fa-flask" style="margin-right:4px;color:#60a5fa;"></i><span data-translate="faucets_filter_testnet">Тестнеты</span> <span id="filterCntTestnet" class="badge badge-multi" style="margin-left:6px;">–</span></button>
-    <button class="filter-tab"       onclick="fFilter('mainnet',this)"><i class="fas fa-network-wired" style="margin-right:4px;color:#a78bfa;"></i><span data-translate="faucets_filter_mainnet">Мейннеты</span> <span id="filterCntMainnet" class="badge badge-multi" style="margin-left:6px;">–</span></button>
-    <button class="filter-tab" onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="favorites">Избранное</span> <span id="filterCntFavorites" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab af"    onclick="fFilter('all',this)"><i class="fas fa-th-large" style="margin-right:4px;"></i><span data-translate="filter_all">Все</span> <span id="filterCntAll" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('free',this)"><i class="fas fa-gift" style="margin-right:4px;color:#34d399;"></i><span data-translate="filter_free">Бесплатные</span> <span id="filterCntFree" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('paid',this)"><i class="fas fa-coins" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="filter_paid">Платные</span> <span id="filterCntPaid" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('testnet',this)"><i class="fas fa-flask" style="margin-right:4px;color:#60a5fa;"></i><span data-translate="filter_testnet">Тестнеты</span> <span id="filterCntTestnet" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('mainnet',this)"><i class="fas fa-network-wired" style="margin-right:4px;color:#a78bfa;"></i><span data-translate="filter_mainnet">Мейннеты</span> <span id="filterCntMainnet" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab" onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="filter_favorites">Избранное</span> <span id="filterCntFavorites" class="badge badge-multi" style="margin-left:6px;">–</span></button>
     <button class="filter-tab" onclick="fFilter('my-suggestions',this)" id="mySuggestionsFilter" style="display:block;background:rgba(139,92,256,0.12);color:#a78bfa;border-color:rgba(139,92,256,0.35);" data-filter="my-suggestions">
       <i class="fas fa-user-edit" style="margin-right:4px;"></i>
-      <span data-translate="my_suggestions">My Suggestions</span> <span id="mySuggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
+      <span data-translate="filter_my_suggestions">My Suggestions</span> <span id="mySuggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
     </button>
     <button class="filter-tab" onclick="fFilter('suggestions',this)" id="suggestionsFilter" style="display:none;background:rgba(239,68,68,0.12);color:#f87171;border-color:rgba(239,68,68,0.35);" data-filter="suggestions">
       <i class="fas fa-inbox" style="margin-right:4px;"></i>
-      <span data-translate="suggestions">Suggestions</span> <span id="suggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
+      <span data-translate="filter_suggestions">Suggestions</span> <span id="suggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
     </button>
     <button class="filter-tab" onclick="fFilter('hidden',this)" id="hiddenFilter" style="display:none;background:rgba(239,68,68,0.12);color:#f87171;border-color:rgba(239,68,68,0.35);" data-filter="hidden">
       <i class="fas fa-eye-slash" style="margin-right:4px;"></i>
-      <span>Скрытые</span> <span id="filterCntHidden" class="badge badge-multi" style="margin-left:6px;">0</span>
+      <span data-translate="filter_hidden">Скрытые</span> <span id="filterCntHidden" class="badge badge-multi" style="margin-left:6px;">0</span>
     </button>
 
     <select id="sortSelectFaucets" onchange="setSort(this.value)"
@@ -3358,15 +3358,15 @@ onAuthStateChanged(auth, async (user) => {
   <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
     <button onclick="toggleEditMode()" style="padding:6px 12px;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);border-radius:6px;color:#a78bfa;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;">
       <i id="editModeIcon" class="fas fa-pen"></i>
-      <span id="editModeLabel">Режим</span>
+      <span data-translate="faucets_admin_edit_mode">Режим</span>
     </button>
     <button onclick="openAddModal()" style="padding:6px 12px;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.3);border-radius:6px;color:#34d399;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;">
       <i class="fas fa-plus"></i>
-      <span>Добавить</span>
+      <span data-translate="faucets_admin_add">Добавить</span>
     </button>
     <button onclick="showAllHiddenFaucets()" style="padding:6px 12px;background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;">
       <i class="fas fa-eye-slash"></i>
-      <span>Скрытые</span> <span id="hiddenCount" class="badge badge-multi" style="margin-left:4px;">0</span>
+      <span data-translate="faucets_admin_hidden">Скрытые</span> <span id="hiddenCount" class="badge badge-multi" style="margin-left:4px;">0</span>
     </button>
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
