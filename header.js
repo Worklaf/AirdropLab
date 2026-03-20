@@ -968,9 +968,14 @@ window.alNavToggle = function(btn) {
     var rect = btn.getBoundingClientRect();
     var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-    // position:absolute - координаты относительно документа
-    dropdown.style.top  = (rect.bottom + scrollTop + 2) + 'px';
-    dropdown.style.left = (rect.left + scrollLeft) + 'px';
+    
+    // Перемещаем меню в body чтобы избежать ограничений родителя
+    document.body.appendChild(dropdown);
+    
+    // position:fixed - координаты относительно вьюпорта
+    dropdown.style.position = 'fixed';
+    dropdown.style.top  = (rect.bottom + 2) + 'px';
+    dropdown.style.left = rect.left + 'px';
     dropdown.style.width = rect.width + 'px'; // устанавливаем ширину равную кнопке
     // Визуальная отладка - красная рамка
     dropdown.style.border = '2px solid red';
@@ -990,16 +995,14 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// Обновление позиции при скролле (absolute - пересчитываем с учетом скролла)
+// Обновление позиции при скролле (fixed - пересчитываем по вьюпорту)
 window.addEventListener('scroll', function() {
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
     var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
     if (b) {
       var rect = b.getBoundingClientRect();
-      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-      d.style.top  = (rect.bottom + scrollTop + 2) + 'px';
-      d.style.left = (rect.left + scrollLeft) + 'px';
+      d.style.top  = (rect.bottom + 2) + 'px';
+      d.style.left = rect.left + 'px';
       d.style.width = rect.width + 'px'; // обновляем ширину при скролле
     }
   });
