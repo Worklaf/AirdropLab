@@ -1309,7 +1309,18 @@ function renderAll() {
 }
 
 function updateCounts() {
-  // Используем querySelector для надежного поиска элементов (уникальные ID для фильтров)
+  // Верхние счетчики (внутри strong тегов)
+  var topCntFree = document.querySelector('#cntFree');
+  var topCntPaid = document.querySelector('#cntPaid');
+  var topCntTestnet = document.querySelector('#cntTestnet');
+  var topCntMainnet = document.querySelector('#cntMainnet');
+  
+  if (topCntFree) topCntFree.textContent = faucets.filter(function(f){ return f.type==='free'; }).length || 0;
+  if (topCntPaid) topCntPaid.textContent = faucets.filter(function(f){ return f.type==='paid'; }).length || 0;
+  if (topCntTestnet) topCntTestnet.textContent = faucets.filter(function(f){ return f.net==='testnet'; }).length || 0;
+  if (topCntMainnet) topCntMainnet.textContent = faucets.filter(function(f){ return f.net==='mainnet'; }).length || 0;
+
+  // Счетчики в фильтрах (уникальные ID)
   var cntAll = document.querySelector('#filterCntAll');
   var cntFree = document.querySelector('#filterCntFree');
   var cntPaid = document.querySelector('#filterCntPaid');
