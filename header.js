@@ -670,9 +670,7 @@
         /* ─── КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: position:fixed, CSS управляет позицией ─── */
         .al-nav-dropdown {
           display: none;
-          position: fixed;
-          top: 0;
-          right: 0;
+          position: absolute;
           min-width: 280px; /* увеличена ширина */
           background: rgba(11,15,30,0.99);
           border: 1px solid rgba(34,211,238,0.2);
@@ -968,9 +966,11 @@ window.alNavToggle = function(btn) {
 
   if (!isOpen) {
     var rect = btn.getBoundingClientRect();
-    // position:fixed - координаты относительно вьюпорта, БЕЗ scrollY
-    dropdown.style.top  = (rect.bottom + 2) + 'px'; // небольшой отступ 2px
-    dropdown.style.left = rect.left + 'px';
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    // position:absolute - координаты относительно документа
+    dropdown.style.top  = (rect.bottom + scrollTop + 2) + 'px';
+    dropdown.style.left = (rect.left + scrollLeft) + 'px';
     dropdown.style.width = rect.width + 'px'; // устанавливаем ширину равную кнопке
     // Визуальная отладка - красная рамка
     dropdown.style.border = '2px solid red';
@@ -990,14 +990,16 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// Обновление позиции при скролле (fixed - пересчитываем по вьюпорту)
+// Обновление позиции при скролле (absolute - пересчитываем с учетом скролла)
 window.addEventListener('scroll', function() {
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
     var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
     if (b) {
       var rect = b.getBoundingClientRect();
-      d.style.top  = (rect.bottom + 2) + 'px'; // небольшой отступ 2px
-      d.style.left = rect.left + 'px';
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+      d.style.top  = (rect.bottom + scrollTop + 2) + 'px';
+      d.style.left = (rect.left + scrollLeft) + 'px';
       d.style.width = rect.width + 'px'; // обновляем ширину при скролле
     }
   });
