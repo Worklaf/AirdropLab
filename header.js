@@ -960,8 +960,15 @@ window.alNavToggle = function(btn) {
   // Закрыть все открытые
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
     d.classList.remove('al-open');
-    var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
-    if (b) b.classList.remove('al-nav-open');
+    // Ищем родительскую группу по атрибуту data-parent-group
+    var parentClass = d.getAttribute('data-parent-group');
+    if (parentClass) {
+      var parentGroup = document.querySelector('.' + parentClass.split(' ').join('.'));
+      if (parentGroup) {
+        var b = parentGroup.querySelector('.al-nav-btn');
+        if (b) b.classList.remove('al-nav-open');
+      }
+    }
   });
 
   if (!isOpen) {
