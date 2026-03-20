@@ -481,33 +481,51 @@
 
       <!-- Coming Soon Modal -->
       <div id="comingSoonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);z-index:10000;align-items:center;justify-content:center;" onclick="closeComingSoon(event)">
-        <div style="background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,41,59,0.95));border:1px solid rgba(34,211,238,0.3);border-radius:20px;padding:40px;max-width:400px;text-align:center;position:relative;animation:modalPopIn 0.3s ease;" onclick="event.stopPropagation()">
-          <div style="position:absolute;inset:0;border-radius:20px;background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(139,92,246,0.1));pointer-events:none;"></div>
-          <div style="position:relative;">
-            <div style="font-size:48px;margin-bottom:16px;display:inline-block;">
-              <span style="animation:bounce 1s infinite;">🚀</span>
-              <span style="animation:bounce 1s infinite 0.1s;">✨</span>
-              <span style="animation:bounce 1s infinite 0.2s;">⚡</span>
+        <div style="background:linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,41,59,0.98));border:1px solid rgba(34,211,238,0.3);border-radius:24px;padding:48px;max-width:450px;text-align:center;position:relative;animation:modalPopIn 0.3s ease;box-shadow:0 0 60px rgba(34,211,238,0.2);" onclick="event.stopPropagation()">
+          <div style="position:absolute;inset:0;border-radius:24px;background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(139,92,246,0.1));pointer-events:none;"></div>
+          <div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);width:80px;height:80px;background:linear-gradient(135deg,#22d3ee,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(34,211,238,0.5);">
+            <div style="width:60px;height:60px;background:rgba(15,23,42,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <i class="fas fa-rocket" style="font-size:28px;color:#22d3ee;animation:float 3s ease-in-out infinite;"></i>
             </div>
-            <h2 style="font-size:24px;font-weight:700;color:#f1f5f9;margin:0 0 12px;" data-translate="menu_in_development">Раздел находится в разработке</h2>
-            <p style="color:#94a3b8;margin:0 0 24px;font-size:14px;" data-translate="menu_coming_soon">Скоро появится!</p>
-            <div style="display:flex;justify-content:center;gap:8px;margin-bottom:20px;">
-              <div style="width:8px;height:8px;background:rgba(34,211,238,0.3);border-radius:50%;animation:pulse 1.5s infinite;"></div>
-              <div style="width:8px;height:8px;background:rgba(34,211,238,0.5);border-radius:50%;animation:pulse 1.5s infinite 0.2s;"></div>
-              <div style="width:8px;height:8px;background:rgba(34,211,238,0.7);border-radius:50%;animation:pulse 1.5s infinite 0.4s;"></div>
+          </div>
+          <div style="position:relative;margin-top:20px;">
+            <div style="display:flex;justify-content:center;gap:10px;margin-bottom:24px;">
+              <div style="width:12px;height:12px;background:rgba(34,211,238,0.3);border-radius:50%;animation:pulse 2s infinite;"></div>
+              <div style="width:12px;height:12px;background:rgba(139,92,246,0.3);border-radius:50%;animation:pulse 2s infinite 0.3s;"></div>
+              <div style="width:12px;height:12px;background:rgba(236,72,153,0.3);border-radius:50%;animation:pulse 2s infinite 0.6s;"></div>
             </div>
-            <button onclick="closeComingSoon()" style="padding:10px 32px;background:linear-gradient(135deg,#0891b2,#2563eb);border:none;border-radius:10px;color:white;font-size:14px;font-weight:600;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" data-translate="close">Закрыть</button>
+            <h2 style="font-size:28px;font-weight:700;color:#f1f5f9;margin:0 0 16px;" data-translate="menu_in_development">Раздел находится в разработке</h2>
+            <p style="color:#94a3b8;margin:0 0 32px;font-size:16px;line-height:1.5;" data-translate="menu_coming_soon">Скоро появится! Мы уже работаем над этим разделом.</p>
+            <div style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:12px;padding:16px;margin-bottom:32px;">
+              <div style="display:flex;align-items:center;gap:12px;color:#22d3ee;font-size:14px;">
+                <i class="fas fa-info-circle" style="font-size:18px;"></i>
+                <span>Следите за обновлениями в нашем Discord</span>
+              </div>
+            </div>
+            <button onclick="closeComingSoon()" style="padding:12px 40px;background:linear-gradient(135deg,#22d3ee,#8b5cf6);border:none;border-radius:12px;color:white;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 20px rgba(34,211,238,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 30px rgba(34,211,238,0.4)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 20px rgba(34,211,238,0.3)';" data-translate="close">Закрыть</button>
           </div>
         </div>
       </div>
 
       <style>
         @keyframes modalPopIn {
-          from { opacity:0; transform:scale(0.9); }
-          to { opacity:1; transform:scale(1); }
+          from { opacity:0; transform:scale(0.9) translateY(20px); }
+          to { opacity:1; transform:scale(1) translateY(0); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity:0.3; transform:scale(1); }
+          50% { opacity:0.8; transform:scale(1.2); }
         }
         #site-nav-wrapper { position: relative; z-index: 9000; }
         #site-nav ::-webkit-scrollbar { display: none; }
+        .al-nav-dropdown::-webkit-scrollbar { width: 6px; }
+        .al-nav-dropdown::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+        .al-nav-dropdown::-webkit-scrollbar-thumb { background: rgba(34,211,238,0.3); border-radius: 3px; }
+        .al-nav-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(34,211,238,0.5); }
         .al-nav-group { position: relative; display: inline-block; vertical-align: top; }
         .al-nav-btn {
           display: inline-flex; align-items: center; gap: 6px;
@@ -528,18 +546,19 @@
         .al-nav-btn.al-nav-open .al-nav-arrow { transform: rotate(180deg); }
         .al-nav-dropdown {
           display: none;
-          position: absolute;
+          position: fixed;
           min-width: 220px;
           background: rgba(11,15,30,0.99);
           border: 1px solid rgba(34,211,238,0.2);
+          border-top: none;
           border-radius: 0 0 12px 12px;
           box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,211,238,0.05);
           backdrop-filter: blur(20px);
           z-index: 9999;
           padding: 6px 0;
           animation: alNavFadeIn 0.15s ease;
-          top: 100%;
-          left: 0;
+          max-height: 400px;
+          overflow-y: auto;
         }
         .al-nav-dropdown.al-open { display: block; }
         @keyframes alNavFadeIn {
