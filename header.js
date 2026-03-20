@@ -318,7 +318,7 @@
                 </button>
                 <div class="al-nav-dropdown">
                   <a href="index.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-layer-group"></i><span data-translate="all_projects">Все активности</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-parachute-box"></i><span data-translate="airdrops_lotteries">Аирдропы и розыгрыши</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-parachute-box"></i><span data-translate="airdrops_lotteries">Аирдропы и розыгрыши</span></a>
                   <a href="faucet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-faucet"></i><span data-translate="faucets">Краны</span></a>
                   <a href="index.html?filter=mainnet" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-network-wired"></i><span data-translate="mainnets">Мейннеты</span></a>
                   <a href="index.html?filter=testnet" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-flask"></i><span data-translate="testnets">Тестнеты</span></a>
@@ -349,10 +349,10 @@
                   <i class="fas fa-chevron-down al-nav-arrow"></i>
                 </button>
                 <div class="al-nav-dropdown">
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-comments"></i><span data-translate="chat">Чат</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-trophy"></i><span data-translate="leaderboard">Таблица лидеров</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-share-alt"></i><span data-translate="referrals">Рефералы</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-comments-dollar"></i><span data-translate="forum">Форум</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-comments"></i><span data-translate="chat">Чат</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-trophy"></i><span data-translate="leaderboard">Таблица лидеров</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-share-alt"></i><span data-translate="referrals">Рефералы</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-comments-dollar"></i><span data-translate="forum">Форум</span></a>
                 </div>
               </div>
 
@@ -364,11 +364,11 @@
                   <i class="fas fa-chevron-down al-nav-arrow"></i>
                 </button>
                 <div class="al-nav-dropdown">
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item al-nav-item-accent"><i class="fas fa-calendar-check"></i><span data-translate="all_events">Все события</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item al-nav-item-accent"><i class="fas fa-calendar-check"></i><span data-translate="all_events">Все события</span></a>
                   <div class="al-nav-divider"></div>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-hourglass-end" style="color:#f87171;"></i><span data-translate="deadlines">Дедлайны</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-rocket" style="color:#fbbf24;"></i>TGE / <span data-translate="listings">Листинги</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-star" style="color:#22d3ee;"></i><span data-translate="project_events">События проектов</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-hourglass-end" style="color:#f87171;"></i><span data-translate="deadlines">Дедлайны</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-rocket" style="color:#fbbf24;"></i>TGE / <span data-translate="listings">Листинги</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-star" style="color:#22d3ee;"></i><span data-translate="project_events">События проектов</span></a>
                 </div>
               </div>
 
@@ -380,15 +380,15 @@
                   <i class="fas fa-chevron-down al-nav-arrow"></i>
                 </button>
                 <div class="al-nav-dropdown">
-                  <a href="https://www.binance.com/ru" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#f0b90b;font-size:8px;"></i>Binance</a>
-                  <a href="https://www.bybit.com/ru-RU/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#f7a600;font-size:8px;"></i>Bybit</a>
-                  <a href="https://www.mexc.com/ru-RU" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#2354e6;font-size:8px;"></i>MEXC</a>
-                  <a href="https://www.bitget.com/ru/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#00f0ff;font-size:8px;"></i>Bitget</a>
-                  <a href="https://bingx.com/ru-ru/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#1890ff;font-size:8px;"></i>BingX</a>
-                  <a href="https://www.lbank.com/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#ff5722;font-size:8px;"></i>LBank</a>
-                  <a href="https://www.bitmart.com/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#0096ff;font-size:8px;"></i>Bitmart</a>
+                  <a href="https://www.binance.com/ru" target="_blank" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#f0b90b;font-size:8px;"></i>Binance</a>
+                  <a href="https://www.bybit.com/ru-RU/" target="_blank" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#f7a600;font-size:8px;"></i>Bybit</a>
+                  <a href="https://www.mexc.com/ru-RU" target="_blank" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#2354e6;font-size:8px;"></i>MEXC</a>
+                  <a href="https://www.bitget.com/ru/" target="_blank" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#00f0ff;font-size:8px;"></i>Bitget</a>
+                  <a href="https://bingx.com/ru-ru/" target="_blank" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#1890ff;font-size:8px;"></i>BingX</a>
+                  <a href="https://www.lbank.com/" target="_blank" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#ff5722;font-size:8px;"></i>LBank</a>
+                  <a href="https://www.bitmart.com/" target="_blank" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#0096ff;font-size:8px;"></i>Bitmart</a>
                   <div class="al-nav-divider"></div>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item al-nav-item-accent"><i class="fas fa-th-list"></i><span data-translate="all_exchanges">Все биржи</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item al-nav-item-accent"><i class="fas fa-th-list"></i><span data-translate="all_exchanges">Все биржи</span></a>
                 </div>
               </div>
 
@@ -400,14 +400,14 @@
                   <i class="fas fa-chevron-down al-nav-arrow"></i>
                 </button>
                 <div class="al-nav-dropdown">
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-coins"></i><span data-translate="crypto_news">Криптовалютные новости</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-chart-line"></i><span data-translate="analytics_news">Новости аналитики</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-robot"></i><span data-translate="ai_news">Новости AI</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fab fa-bitcoin"></i><span data-translate="bitcoin_news">Новости Bitcoin</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-water"></i><span data-translate="defi_news">Новости DeFi</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-gamepad"></i><span data-translate="gamefi_news">Новости GameFi / Metaverse</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-rocket"></i><span data-translate="ido_news">Новости IDO/ICO/IFO/IEO</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-image"></i><span data-translate="nft_news">Новости NFT</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-coins"></i><span data-translate="crypto_news">Криптовалютные новости</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-chart-line"></i><span data-translate="analytics_news">Новости аналитики</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-robot"></i><span data-translate="ai_news">Новости AI</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fab fa-bitcoin"></i><span data-translate="bitcoin_news">Новости Bitcoin</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-water"></i><span data-translate="defi_news">Новости DeFi</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-gamepad"></i><span data-translate="gamefi_news">Новости GameFi / Metaverse</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-rocket"></i><span data-translate="ido_news">Новости IDO/ICO/IFO/IEO</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-image"></i><span data-translate="nft_news">Новости NFT</span></a>
                 </div>
               </div>
 
@@ -420,9 +420,9 @@
                 </button>
                 <div class="al-nav-dropdown">
                   <a href="faucet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-faucet"></i><span data-translate="faucets">Краны (Faucets)</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-calculator"></i><span data-translate="gas_calculator">Калькулятор газа</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-exchange-alt"></i><span data-translate="bridges">Бриджи</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-shield-alt"></i><span data-translate="wallet_checker">Проверка кошелька</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-calculator"></i><span data-translate="gas_calculator">Калькулятор газа</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-exchange-alt"></i><span data-translate="bridges">Бриджи</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-shield-alt"></i><span data-translate="wallet_checker">Проверка кошелька</span></a>
                 </div>
               </div>
 
@@ -434,10 +434,10 @@
                   <i class="fas fa-chevron-down al-nav-arrow"></i>
                 </button>
                 <div class="al-nav-dropdown">
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-book-open"></i><span data-translate="what_is_airdrop">Что такое аирдроп</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-wallet"></i><span data-translate="how_setup_wallet">Как настроить кошелёк</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-shield-virus"></i><span data-translate="crypto_security">Безопасность в крипте</span></a>
-                  <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-question-circle"></i>FAQ</a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-book-open"></i><span data-translate="what_is_airdrop">Что такое аирдроп</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-wallet"></i><span data-translate="how_setup_wallet">Как настроить кошелёк</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-shield-virus"></i><span data-translate="crypto_security">Безопасность в крипте</span></a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-question-circle"></i>FAQ</a>
                 </div>
               </div>
 
@@ -667,24 +667,22 @@
         .al-nav-arrow { font-size:9px; margin-left:2px; transition:transform 0.2s; }
         .al-nav-btn.al-nav-open .al-nav-arrow { transform:rotate(180deg); }
 
-        /* ─── КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: position:fixed, размер не привязан к кнопке ─── */
+        /* ─── КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: position:absolute, размер не привязан к кнопке ─── */
         .al-nav-dropdown {
-          display:none;
-          position:fixed;
-          min-width:220px;
-          background:rgba(9,12,28,0.99);
-          border:1px solid rgba(34,211,238,0.18);
-          border-top:2px solid rgba(34,211,238,0.35);
-          border-radius:0 0 14px 14px;
-          box-shadow:0 20px 60px rgba(0,0,0,0.8),
-                     0 0 0 1px rgba(34,211,238,0.04),
-                     0 0 40px rgba(34,211,238,0.04);
-          backdrop-filter:blur(24px);
-          z-index:99999;
-          padding:6px 0;
-          max-height:420px;
-          overflow-y:auto;
-          animation:alNavFadeIn 0.15s ease;
+          display: none;
+          position: absolute;
+          min-width: 220px;
+          background: rgba(11,15,30,0.99);
+          border: 1px solid rgba(34,211,238,0.2);
+          border-top: none;
+          border-radius: 0 0 12px 12px;
+          box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,211,238,0.05);
+          backdrop-filter: blur(20px);
+          z-index: 9999;
+          padding: 6px 0;
+          animation: alNavFadeIn 0.15s ease;
+          max-height: 400px;
+          overflow-y: auto;
         }
         .al-nav-dropdown.al-open { display:block; }
 
@@ -807,11 +805,20 @@
         if (mobIn)  mobIn.style.display  = isIn ? 'flex' : 'none';
         if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
         if (deskAva && mobAva && deskAva.src) mobAva.src = deskAva.src;
+        
+        // Принудительно обновляем состояние при каждом изменении
+        setTimeout(function() {
+          if (mobIn) mobIn.style.display  = isIn ? 'flex' : 'none';
+          if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
+        }, 100);
       }
       if (deskIn)  new MutationObserver(syncAuth).observe(deskIn,  { attributes:true, attributeFilter:['class','style'] });
       if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
                      .observe(deskAva, { attributes:true, attributeFilter:['src'] });
       syncAuth();
+      
+      // Дополнительная проверка каждую секунду на случай проблем с синхронизацией
+      setInterval(syncAuth, 1000);
 
       // 3. Feedback panel
       var deskFP     = document.getElementById('generalFeedbackPanel');
@@ -955,8 +962,9 @@ window.alNavToggle = function(btn) {
 
   if (!isOpen) {
     var rect = btn.getBoundingClientRect();
-    // position:fixed — координаты относительно вьюпорта, scrollTop НЕ добавляем
-    dropdown.style.top  = rect.bottom + 'px';
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    // position:absolute - координаты относительно документа, добавляем scrollTop
+    dropdown.style.top  = (rect.bottom + scrollTop) + 'px';
     dropdown.style.left = rect.left + 'px';
     dropdown.classList.add('al-open');
     btn.classList.add('al-nav-open');
@@ -974,13 +982,14 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// Обновление позиции при скролле (fixed — пересчитываем по вьюпорту)
+// Обновление позиции при скролле (absolute - пересчитываем с scrollTop)
 window.addEventListener('scroll', function() {
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
     var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
     if (b) {
       var rect = b.getBoundingClientRect();
-      d.style.top  = rect.bottom + 'px';
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      d.style.top  = (rect.bottom + scrollTop) + 'px';
       d.style.left = rect.left + 'px';
     }
   });
