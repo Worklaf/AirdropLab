@@ -240,6 +240,10 @@
       <i class="fas fa-inbox" style="margin-right:4px;"></i>
       <span data-translate="suggestions">Suggestions</span> <span id="suggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
     </button>
+    <button class="filter-tab" onclick="fFilter('hidden',this)" id="hiddenFilter" style="display:none;background:rgba(239,68,68,0.12);color:#f87171;border-color:rgba(239,68,68,0.35);" data-filter="hidden">
+      <i class="fas fa-eye-slash" style="margin-right:4px;"></i>
+      <span>Скрытые</span> <span id="cntHidden" class="badge badge-multi" style="margin-left:6px;">0</span>
+    </button>
 
     <select id="sortSelectFaucets" onchange="setSort(this.value)"
       style="padding:6px 12px;background:rgba(30,37,56,0.6);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#f1f5f9;font-size:12px;outline:none;">
@@ -1312,6 +1316,7 @@ function updateCounts() {
   var cntTestnet = document.getElementById('cntTestnet');
   var cntMainnet = document.getElementById('cntMainnet');
   var cntFavorites = document.getElementById('cntFavorites');
+  var cntHidden = document.getElementById('cntHidden');
   
   if (cntAll) cntAll.textContent = faucets.length || 0;
   if (cntFree) cntFree.textContent = faucets.filter(function(f){ return f.type==='free'; }).length || 0;
@@ -1319,6 +1324,7 @@ function updateCounts() {
   if (cntTestnet) cntTestnet.textContent = faucets.filter(function(f){ return f.net==='testnet'; }).length || 0;
   if (cntMainnet) cntMainnet.textContent = faucets.filter(function(f){ return f.net==='mainnet'; }).length || 0;
   if (cntFavorites) cntFavorites.textContent = linkFavoritesSet.size || 0;
+  if (cntHidden) cntHidden.textContent = faucets.filter(function(f){ return f.hidden === true; }).length || 0;
 
   var total = faucets.reduce(function(acc, f){ return acc + (f.links||[]).length; }, 0);
   const isEn = (window.currentLang === 'en');
@@ -1326,7 +1332,7 @@ function updateCounts() {
     ? (faucets.length + ' networks · ' + total + ' faucets')
     : (faucets.length + ' сетей · ' + total + ' кранов');
     
-  // Обновляем счетчик скрытых кранов
+  // Обновляем счетчик скрытых кранов в админ-панели
   var hiddenCount = document.getElementById('hiddenCount');
   if (hiddenCount) {
     var hiddenFaucetsCount = faucets.filter(function(f){ return f.hidden === true; }).length;
@@ -1469,25 +1475,39 @@ function applyCurrentFilter() {
     const isHidden = faucet && faucet.hidden === true;
     
     // Показываем кран если:
-    // 1. Не pending И не deleted ИЛИ
-    // 2. Pending но автор текущий пользователь ИЛИ  
-    // 3. Pending и это админ ИЛИ
-    // 4. Deleted но автор текущий пользователь
+    // 1. Не hidden ИЛИ это админ (чтобы админ видел скрытые)
+    // 2. Не pending И не deleted ИЛИ
+    // 3. Pending но автор текущий пользователь ИЛИ  
+    // 4. Pending и это админ ИЛИ
+    // 5. Deleted но автор текущий пользователь
     const isPending = faucet && faucet.status === 'pending';
     const isDeleted = faucet && faucet.status === 'deleted';
     const canSeePending = isPending && (isAdmin || (currentUser && faucet.submittedBy === currentUser.uid));
     const canSeeDeleted = isDeleted && currentUser && faucet.submittedBy === currentUser.uid;
     
-    if ((isPending && !canSeePending) || (isDeleted && !canSeeDeleted) || isHidden) {
+    // Если это фильтр скрытых - показываем только скрытые
+    if (currentFilter === 'hidden') {
+      card.style.display = (isHidden && isAdmin) ? '' : 'none';
+      return;
+    }
+    
+    // Для обычных фильтров - скрытые краны видимы только админу
+    if (isHidden && !isAdmin) {
       card.style.display = 'none';
       return;
     }
     
-    // favorites filter = any favorited link inside this faucet
+    if ((isPending && !canSeePending) || (isDeleted && !canSeeDeleted)) {
+      card.style.display = 'none';
+      return;
+    }
+    
+    // favorites filter = any favorited link inside this faucet OR faucet-level favorite
     var isFav = false;
     if (currentFilter === 'favorites') {
       const fid = card.dataset.id;
-      isFav = Array.from(linkFavoritesSet).some(k => k.startsWith(fid + '|'));
+      // Check link-level favorites (format: faucetId|linkId)
+      isFav = Array.from(linkFavoritesSet).some(k => k.startsWith(fid + '|')) || favoritesSet.has(fid);
     }
     var matchFilter = currentFilter === 'all'
       || currentFilter === 'favorites' && isFav
@@ -3271,6 +3291,7 @@ onAuthStateChanged(auth, async (user) => {
   // Показываем/скрываем кнопки фильтров
   const mySuggestionsBtn = document.getElementById('mySuggestionsFilter');
   const suggestionsBtn = document.getElementById('suggestionsFilter');
+  const hiddenFilterBtn = document.getElementById('hiddenFilter');
   
   if (mySuggestionsBtn) {
     mySuggestionsBtn.style.display = user ? 'inline-flex' : 'none';
@@ -3278,11 +3299,15 @@ onAuthStateChanged(auth, async (user) => {
   if (suggestionsBtn) {
     suggestionsBtn.style.display = isAdmin ? 'inline-flex' : 'none';
   }
+  if (hiddenFilterBtn) {
+    hiddenFilterBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+  }
   
   updateHeaderAuthUI(user);
   await loadFavorites();
+  updateCounts(); // Обновляем счетчики после загрузки избранного
   await loadFaucetsFromFirestore();
-  updateCounts(); // Обновляем счетчики после загрузки данных
+  updateCounts(); // Обновляем счетчики после загрузки кранов
   if (isAdmin) await loadPendingSuggestions();
   if (user) await loadNotificationsFromFirestore();
 
