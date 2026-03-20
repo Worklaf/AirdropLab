@@ -74,73 +74,7 @@
     .filter-tab.amysuggestions { background: rgba(139,92,246,0.12); color: #a78bfa; border-color: rgba(139,92,246,0.35); }
     .filter-tab.asuggestions { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.35); }
 
-    /* Admin panel */
-    #adminBar {
-      position: fixed; top: 80px; right: 20px; z-index: 1001;
-      background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95)); 
-      border: 1px solid rgba(34,211,238,0.2); border-radius: 12px;
-      padding: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(34,211,238,0.1);
-      min-width: 280px; max-width: 320px; backdrop-filter: blur(20px);
-      transform: translateX(0); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    #adminBar.collapsed {
-      transform: translateX(calc(100% - 48px));
-    }
-    #adminBar.collapsed .admin-content {
-      opacity: 0; pointer-events: none;
-    }
-    .admin-toggle {
-      position: absolute; left: -12px; top: 16px;
-      width: 32px; height: 32px; background: linear-gradient(135deg,#22d3ee,#0891b2);
-      border: 2px solid rgba(15,23,42,0.8); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: white; font-size: 14px;
-      box-shadow: 0 4px 12px rgba(34,211,238,0.4);
-      transition: all 0.2s;
-    }
-    .admin-toggle:hover {
-      transform: scale(1.1); box-shadow: 0 6px 16px rgba(34,211,238,0.6);
-    }
-    .admin-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 16px; padding-bottom: 12px;
-      border-bottom: 1px solid rgba(34,211,238,0.2);
-    }
-    .admin-title {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 14px; font-weight: 700; color: #f1f5f9;
-    }
-    .admin-indicator {
-      width: 8px; height: 8px; border-radius: 50%; background: #ef4444;
-      animation: pulse 2s infinite;
-    }
-    .admin-indicator.active {
-      background: #22d3ee;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    .admin-content {
-      transition: opacity 0.3s;
-    }
-    .ab-btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
-      cursor: pointer; border: none; transition: all 0.2s; color: white;
-    }
-    .ab-btn-cyan { background: rgba(34,211,238,0.2); border: 1px solid rgba(34,211,238,0.4); color: #22d3ee; }
-    .ab-btn-cyan:hover { background: rgba(34,211,238,0.35); }
-    .ab-btn-green { background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4); color: #34d399; }
-    .ab-btn-green:hover { background: rgba(16,185,129,0.35); }
-    .ab-btn-red   { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #f87171; }
-    .ab-btn-red:hover   { background: rgba(239,68,68,0.35); }
-    .ab-btn-purple { background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); color: #a78bfa; }
-    .ab-btn-purple:hover { background: rgba(139,92,246,0.35); }
-
     .admin-edit-overlay {
-      position: absolute; inset: 0; background: rgba(8,10,20,0.92);
-      border-radius: 12px; z-index: 10; padding: 14px;
       display: none; flex-direction: column; gap: 8px;
       backdrop-filter: blur(8px);
     }
@@ -292,11 +226,11 @@
 
   <!-- Фильтры + сортировка + поиск -->
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:24px;">
-    <button class="filter-tab" onclick="fFilter('all',this)"><i class="fas fa-th-large" style="margin-right:4px;"></i><span data-translate="all">Все</span> <span class="badge badge-multi" style="margin-left:6px;" id="cntAll">–</span></button>
-    <button class="filter-tab"       onclick="fFilter('free',this)"><i class="fas fa-gift" style="margin-right:4px;color:#34d399;"></i><span data-translate="faucets_filter_free">Бесплатные</span> <span class="badge badge-multi" style="margin-left:6px;" id="cntFree">–</span></button>
-    <button class="filter-tab"       onclick="fFilter('paid',this)"><i class="fas fa-coins" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="faucets_filter_paid">Платные</span> <span class="badge badge-multi" style="margin-left:6px;" id="cntPaid">–</span></button>
-    <button class="filter-tab"       onclick="fFilter('testnet',this)"><i class="fas fa-flask" style="margin-right:4px;color:#60a5fa;"></i><span data-translate="faucets_filter_testnet">Тестнеты</span> <span class="badge badge-multi" style="margin-left:6px;" id="cntTestnet">–</span></button>
-    <button class="filter-tab"       onclick="fFilter('mainnet',this)"><i class="fas fa-network-wired" style="margin-right:4px;color:#a78bfa;"></i><span data-translate="faucets_filter_mainnet">Мейннеты</span> <span class="badge badge-multi" style="margin-left:6px;" id="cntMainnet">–</span></button>
+    <button class="filter-tab af"    onclick="fFilter('all',this)"><i class="fas fa-th-large" style="margin-right:4px;"></i><span data-translate="all">Все</span></button>
+    <button class="filter-tab"       onclick="fFilter('free',this)"><i class="fas fa-gift" style="margin-right:4px;color:#34d399;"></i><span data-translate="faucets_filter_free">Бесплатные</span></button>
+    <button class="filter-tab"       onclick="fFilter('paid',this)"><i class="fas fa-coins" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="faucets_filter_paid">Платные</span></button>
+    <button class="filter-tab"       onclick="fFilter('testnet',this)"><i class="fas fa-flask" style="margin-right:4px;color:#60a5fa;"></i><span data-translate="faucets_filter_testnet">Тестнеты</span></button>
+    <button class="filter-tab"       onclick="fFilter('mainnet',this)"><i class="fas fa-network-wired" style="margin-right:4px;color:#a78bfa;"></i><span data-translate="faucets_filter_mainnet">Мейннеты</span></button>
     <button class="filter-tab" onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="favorites">Избранное</span></button>
     <button class="filter-tab" onclick="fFilter('my-suggestions',this)" id="mySuggestionsFilter" style="display:block;background:rgba(139,92,246,0.12);color:#a78bfa;border-color:rgba(139,92,246,0.35);" data-filter="my-suggestions">
       <i class="fas fa-user-edit" style="margin-right:4px;"></i>
@@ -344,55 +278,6 @@
     </div>
   </div>
 </main>
-
-<!-- Admin Bar (only for admin) -->
-<div id="adminBar" style="display:none;" class="collapsed">
-  <div class="admin-toggle" onclick="toggleAdminPanel()">
-    <i class="fas fa-user-shield" id="adminToggleIcon"></i>
-  </div>
-  
-  <div class="admin-content">
-    <div class="admin-header">
-      <div class="admin-title">
-        <div class="admin-indicator" id="pendingIndicator"></div>
-        <i class="fas fa-shield-alt"></i>
-        <span>Панель администратора</span>
-      </div>
-    </div>
-    
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <div style="display:flex;gap:8px;">
-        <button class="ab-btn ab-btn-green" onclick="openAddModal()" style="flex:1;">
-          <i class="fas fa-plus"></i>
-          <span data-translate="faucets_admin_add">Добавить</span>
-        </button>
-        <button class="ab-btn ab-btn-cyan" onclick="toggleEditMode()" style="flex:1;">
-          <i class="fas fa-pen" id="editModeIcon"></i>
-          <span id="editModeLabel" data-translate="faucets_admin_edit_mode">Режим</span>
-        </button>
-      </div>
-      
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(34,211,238,0.1);border-radius:8px;border:1px solid rgba(34,211,238,0.2);">
-        <span style="font-size:12px;color:#94a3b8;" id="pendingCount">Загрузка...</span>
-      </div>
-    </div>
-  </div>
-  
-  <div id="pendingPanel" style="display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);width:90%;max-width:500px;max-height:60vh;overflow-y:auto;background:linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,41,59,0.98));border:1px solid rgba(34,211,238,0.3);border-radius:16px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,0.5);z-index:10000;backdrop-filter:blur(20px);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(34,211,238,0.2);">
-      <h4 style="font-size:16px;font-weight:700;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
-        <i class="fas fa-inbox" style="color:#22d3ee;"></i>
-        Предложения кранов
-      </h4>
-      <button onclick="togglePendingPanel()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
-              onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.color='#f87171'" 
-              onmouseout="this.style.background='transparent';this.style.color='#64748b'">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div id="pendingList"></div>
-  </div>
-</div>
 
 <!-- Modal: добавить/редактировать кран -->
 <div id="addFaucetModal">
@@ -578,36 +463,6 @@
 </div>
 
 <!-- Rating modal (all users) -->
-<!-- Фиксированная админ-панель -->
-<div id="fixedAdminPanel" style="position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,37,56,0.95));border-top:1px solid rgba(139,92,246,0.3);backdrop-filter:blur(10px);padding:12px 20px;z-index:1000;display:none;align-items:center;justify-content:space-between;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
-  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <button onclick="toggleEditMode()" style="padding:6px 12px;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);border-radius:6px;color:#a78bfa;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;">
-        <i id="editModeIcon" class="fas fa-pen"></i>
-        <span id="editModeLabel" style="font-size:11px;">Режим редакт.</span>
-      </button>
-      <button onclick="openAddModal()" style="padding:6px 12px;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.3);border-radius:6px;color:#34d399;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;">
-        <i class="fas fa-plus"></i>
-        <span style="font-size:11px;">Добавить кран</span>
-      </button>
-      <button onclick="document.getElementById('suggestionsModal').style.display='block'" style="padding:6px 12px;background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;">
-        <i class="fas fa-inbox"></i>
-        <span style="font-size:11px;">Предложения (<span id="adminSuggestionsCount">0</span>)</span>
-      </button>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <button onclick="window.scrollTo({top:0,behavior:'smooth'})" style="padding:6px 12px;background:rgba(71,85,105,0.2);border:1px solid rgba(71,85,105,0.3);border-radius:6px;color:#94a3b8;font-size:12px;cursor:pointer;">
-        <i class="fas fa-arrow-up"></i>
-        <span style="font-size:11px;">Наверх</span>
-      </button>
-      <button onclick="document.getElementById('fixedAdminPanel').style.display='none'" style="padding:6px 12px;background:rgba(148,163,184,0.2);border:1px solid rgba(148,163,184,0.3);border-radius:6px;color:#94a3b8;font-size:12px;cursor:pointer;">
-        <i class="fas fa-times"></i>
-        <span style="font-size:11px;">Скрыть</span>
-      </button>
-    </div>
-  </div>
-</div>
-
 <script>
 function updateRatingDisplay(value) {
   const val = parseInt(value);
@@ -1295,6 +1150,9 @@ function renderCard(f) {
   var badgeType = '<span class="badge badge-'+f.type+'">'+( f.type==='free' ? (isEn ? 'FREE' : 'БЕСПЛАТНО') : (isEn ? 'PAID' : 'ПЛАТНЫЙ') )+'</span>';
   var badgeNet  = '<span class="badge badge-'+f.net+'" style="margin-left:4px;">'+( f.net==='testnet' ? (isEn ? 'Testnet' : 'Тестнет') : (isEn ? 'Mainnet' : 'Мейннет') )+'</span>';
   var extraBadges = (f.tags||[]).map(renderBadge).join('');
+  
+  // Добавляем checkbox для скрытия в режиме редактирования
+  var hideCheckbox = editMode ? '<input type="checkbox" id="hide-'+f.id+'" onchange="toggleFaucetVisibility(\''+f.id+'\')" style="margin-left:8px;cursor:pointer;" '+(localStorage.getItem('hiddenFaucets')?.includes(f.id)?'checked':'')+' title="'+(isEn?'Hide/Show faucet':'Скрыть/Показать кран')+'">' : '';
 
   // Добавляем бейдж для предложения
   if (f.status === 'pending') {
@@ -1446,18 +1304,10 @@ function renderAll() {
 }
 
 function updateCounts() {
-  document.getElementById('cntAll').textContent = faucets.length;
   document.getElementById('cntFree').textContent    = faucets.filter(function(f){ return f.type==='free'; }).length;
   document.getElementById('cntPaid').textContent    = faucets.filter(function(f){ return f.type==='paid'; }).length;
-  document.getElementById('cntFavorites').textContent = favoritesCount;
   document.getElementById('cntTestnet').textContent = faucets.filter(function(f){ return f.net==='testnet'; }).length;
   document.getElementById('cntMainnet').textContent = faucets.filter(function(f){ return f.net==='mainnet'; }).length;
-  
-  // Обновляем счетчик предложений для админа
-  const adminSuggestionsCount = document.getElementById('adminSuggestionsCount');
-  if (adminSuggestionsCount) {
-    adminSuggestionsCount.textContent = pendingSuggestions.length;
-  }
 
   var total = faucets.reduce(function(acc, f){ return acc + (f.links||[]).length; }, 0);
   const isEn = (window.currentLang === 'en');
@@ -1465,18 +1315,6 @@ function updateCounts() {
     ? (faucets.length + ' networks · ' + total + ' faucets')
     : (faucets.length + ' сетей · ' + total + ' кранов');
 }
-
-// ═══════════════════════════════════════════
-// FILTER / SEARCH
-// ═══════════════════════════════════════════
-function fFilter(type, btn) {
-  currentFilter = type;
-  document.querySelectorAll('.filter-tab').forEach(function(t){ t.className = 'filter-tab'; });
-  var map = { all:'af', free:'afree', paid:'apaid', testnet:'atest', mainnet:'amain', favorites:'afav', 'my-suggestions':'amysuggestions', suggestions:'asuggestions' };
-  if (btn) btn.classList.add(map[type] || 'af');
-  applyCurrentFilter();
-}
-window.fFilter = fFilter;
 
 // Функция для переключения видимости крана
 window.toggleFaucetVisibility = function(faucetId) {
@@ -1499,6 +1337,18 @@ window.toggleFaucetVisibility = function(faucetId) {
   }
 };
 
+// ═══════════════════════════════════════════
+// FILTER / SEARCH
+// ═══════════════════════════════════════════
+function fFilter(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-tab').forEach(function(t){ t.className = 'filter-tab'; });
+  var map = { all:'af', free:'afree', paid:'apaid', testnet:'atest', mainnet:'amain', favorites:'afav', 'my-suggestions':'amysuggestions', suggestions:'asuggestions' };
+  if (btn) btn.classList.add(map[type] || 'af');
+  applyCurrentFilter();
+}
+window.fFilter = fFilter;
+
 function applyCurrentFilter() {
   var query = (document.getElementById('faucetSearch').value || '').toLowerCase();
   const hiddenFaucets = JSON.parse(localStorage.getItem('hiddenFaucets') || '[]');
@@ -1511,9 +1361,9 @@ function applyCurrentFilter() {
       const faucet = faucets.find(f => f.id === faucetId);
       const isPending = faucet && faucet.status === 'pending';
       const canSee = isPending && (isAdmin || (currentUser && faucet.submittedBy === currentUser.uid));
+      const isHidden = hiddenFaucets.includes(faucetId);
       
       var matchSearch = !query || card.dataset.name.includes(query) || card.dataset.token.includes(query);
-      const isHidden = hiddenFaucets.includes(faucetId);
       card.style.display = (canSee && matchSearch && !isHidden) ? '' : 'none';
     });
     
@@ -1536,9 +1386,9 @@ function applyCurrentFilter() {
       const faucetId = card.dataset.id;
       const faucet = faucets.find(f => f.id === faucetId);
       const isMySuggestion = faucet && faucet.submittedBy === currentUser.uid;
+      const isHidden = hiddenFaucets.includes(faucetId);
       
       var matchSearch = !query || card.dataset.name.includes(query) || card.dataset.token.includes(query);
-      const isHidden = hiddenFaucets.includes(faucetId);
       card.style.display = (isMySuggestion && matchSearch && !isHidden) ? '' : 'none';
     });
     
@@ -1552,6 +1402,7 @@ function applyCurrentFilter() {
   document.querySelectorAll('.faucet-card').forEach(function(card) {
     const faucetId = card.dataset.id;
     const faucet = faucets.find(f => f.id === faucetId);
+    const isHidden = hiddenFaucets.includes(faucetId);
     
     // Показываем кран если:
     // 1. Не pending И не deleted ИЛИ
@@ -1562,7 +1413,6 @@ function applyCurrentFilter() {
     const isDeleted = faucet && faucet.status === 'deleted';
     const canSeePending = isPending && (isAdmin || (currentUser && faucet.submittedBy === currentUser.uid));
     const canSeeDeleted = isDeleted && currentUser && faucet.submittedBy === currentUser.uid;
-    const isHidden = hiddenFaucets.includes(faucetId);
     
     if ((isPending && !canSeePending) || (isDeleted && !canSeeDeleted) || isHidden) {
       card.style.display = 'none';
@@ -1679,7 +1529,6 @@ function renderSuggestionCard(s) {
     '<button onclick="approveSuggestion(\'' + s.id + '\')" style="padding:5px 12px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:6px;color:#34d399;font-size:11px;cursor:pointer;"><i class="fas fa-check"></i> '+(isEn?'Approve':'Одобрить')+'</button>' +
     '<button onclick="deleteSuggestion(\'' + s.id + '\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete':'Удалить')+'</button>' +
     '<button onclick="rewardUser(\'' + s.submittedBy + '\', \'' + s.id + '\')" style="padding:5px 12px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:6px;color:#fbbf24;font-size:11px;cursor:pointer;"><i class="fas fa-coins"></i> RGT</button>' +
-    '<input type="checkbox" onchange="toggleFaucetVisibility(\''+s.id+'\')" style="margin-left:8px;cursor:pointer;" title="Скрыть/показать кран">' +
   '</div>';
 
   return '<div class="faucet-card ' + typeClass + '" data-id="' + s.id + '" data-name="' + s.name.toLowerCase() + '" data-token="' + (s.token || '').toLowerCase() + '" data-type="' + s.type + '" data-net="' + s.net + '">' +
@@ -3041,20 +2890,6 @@ function togglePendingPanel() {
 }
 window.togglePendingPanel = togglePendingPanel;
 
-function toggleAdminPanel() {
-  const adminBar = document.getElementById('adminBar');
-  const toggleIcon = document.getElementById('adminToggleIcon');
-  
-  if (adminBar.classList.contains('collapsed')) {
-    adminBar.classList.remove('collapsed');
-    toggleIcon.className = 'fas fa-times';
-  } else {
-    adminBar.classList.add('collapsed');
-    toggleIcon.className = 'fas fa-user-shield';
-  }
-}
-window.toggleAdminPanel = toggleAdminPanel;
-
 function renderPendingPanel() {
   const list = document.getElementById('pendingList');
   if (!list) return;
@@ -3335,9 +3170,7 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user || null;
   window.currentUser = currentUser;
   isAdmin = !!(user && (user.uid === ADMIN_UID));
-  document.getElementById('adminBar').style.display = isAdmin ? 'flex' : 'none';
-  
-  // Показываем/скрываем фиксированную админ-панель
+  // Показываем фиксированную админ-панель
   const adminPanel = document.getElementById('fixedAdminPanel');
   if (adminPanel) {
     adminPanel.style.display = isAdmin ? 'flex' : 'none';
@@ -3413,5 +3246,28 @@ onAuthStateChanged(auth, async (user) => {
   } catch(_) {}
 });
 </script>
+
+<!-- Фиксированная админ-панель -->
+<div id="fixedAdminPanel" style="position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,37,56,0.95));border-top:1px solid rgba(139,92,246,0.3);backdrop-filter:blur(10px);padding:10px 20px;z-index:1000;display:none;align-items:center;justify-content:space-between;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <button onclick="toggleEditMode()" style="padding:6px 12px;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);border-radius:6px;color:#a78bfa;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+      <i id="editModeIcon" class="fas fa-pen"></i>
+      <span id="editModeLabel">Режим</span>
+    </button>
+    <button onclick="openAddModal()" style="padding:6px 12px;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.3);border-radius:6px;color:#34d399;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+      <i class="fas fa-plus"></i>
+      <span>Добавить</span>
+    </button>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button onclick="window.scrollTo({top:0,behavior:'smooth'})" style="padding:6px 12px;background:rgba(71,85,105,0.2);border:1px solid rgba(71,85,105,0.3);border-radius:6px;color:#94a3b8;font-size:12px;cursor:pointer;">
+      <i class="fas fa-arrow-up"></i>
+    </button>
+    <button onclick="document.getElementById('fixedAdminPanel').style.display='none'" style="padding:6px 12px;background:rgba(148,163,184,0.2);border:1px solid rgba(148,163,184,0.3);border-radius:6px;color:#94a3b8;font-size:12px;cursor:pointer;">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>
+
 </body>
 </html>
