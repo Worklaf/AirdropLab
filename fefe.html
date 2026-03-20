@@ -1,110 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Диагностика AirdropLab</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
-        button { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
-        button:hover { background: #2563eb; }
-        button.danger { background: #ef4444; }
-        button.danger:hover { background: #dc2626; }
-        .result { margin: 20px; padding: 15px; background: #f0f9ff; border-radius: 5px; text-align: left; }
-        .success { color: #059669; font-weight: bold; }
-        .warning { color: #d97706; font-weight: bold; }
-        .error { color: #dc2626; font-weight: bold; }
-        .info { color: #1e40af; }
-        pre { background: #f8f8f8; padding: 10px; border-radius: 3px; overflow-x: auto; }
-    </style>
+    <title>Stop Cycle</title>
 </head>
 <body>
-    <h1>🔧 Диагностика AirdropLab</h1>
-    
-    <div style="margin: 20px 0;">
-        <button onclick="checkAll()">🔍 Проверить всё</button>
-        <button onclick="clearLocalStorage()" class="danger">🗑️ Очистить localStorage</button>
-        <button onclick="clearSessionStorage()" class="danger">🗑️ Очистить sessionStorage</button>
-        <button onclick="stopAllTimers()" class="danger">⏹️ Остановить таймеры</button>
-    </div>
-    
-    <button onclick="goToSite()">🚀 Перейти на сайт</button>
-    
-    <div id="result"></div>
-    
+    <h1>Остановка бесконечного цикла...</h1>
     <script>
-        function checkAll() {
-            var html = '<div class="result">';
-            
-            // Проверка localStorage
-            var lsItems = Object.keys(localStorage);
-            html += '<p class="info">📦 localStorage (' + lsItems.length + ' элементов):</p>';
-            html += '<pre>' + JSON.stringify(localStorage, null, 2) + '</pre>';
-            
-            // Проверка sessionStorage
-            var ssItems = Object.keys(sessionStorage);
-            html += '<p class="info">📦 sessionStorage (' + ssItems.length + ' элементов):</p>';
-            html += '<pre>' + JSON.stringify(sessionStorage, null, 2) + '</pre>';
-            
-            // Проверка cookies
-            html += '<p class="info">🍪 Cookies:</p>';
-            html += '<pre>' + (document.cookie || 'Нет cookies') + '</pre>';
-            
-            // Проверка активных таймеров
-            html += '<p class="info">⏰ Активные таймеры:</p>';
-            var timerCount = setTimeout(function(){}, 0);
-            html += '<pre>setTimeout: ' + timerCount + '</pre>';
-            
-            // Проверка проблемных данных
-            var hasFirebaseData = localStorage.getItem('firestore_online_state_firestore/[DEFAULT]/testnet-hub/');
-            if (hasFirebaseData) {
-                html += '<p class="warning">⚠️ Обнаружены проблемные данные Firebase!</p>';
-            }
-            
-            html += '</div>';
-            
-            document.getElementById('result').innerHTML = html;
+        // Немедленно остановить все таймеры
+        var highest = setTimeout(function(){}, 0);
+        for(var i = 0; i < highest; i++) {
+            clearTimeout(i); 
+            clearInterval(i);
         }
         
-        function clearLocalStorage() {
-            var count = Object.keys(localStorage).length;
-            localStorage.clear();
-            document.getElementById('result').innerHTML = 
-                '<div class="result"><p class="success">✅ Очищено localStorage: ' + count + ' элементов</p></div>';
-        }
-        
-        function clearSessionStorage() {
-            var count = Object.keys(sessionStorage).length;
-            sessionStorage.clear();
-            document.getElementById('result').innerHTML = 
-                '<div class="result"><p class="success">✅ Очищено sessionStorage: ' + count + ' элементов</p></div>';
-        }
-        
-        function stopAllTimers() {
-            var highestTimeoutId = setTimeout(function(){}, 0);
-            var cleared = 0;
-            for (var i = 0; i < highestTimeoutId; i++) {
-                clearTimeout(i);
-                clearInterval(i);
-                cleared++;
-            }
-            document.getElementById('result').innerHTML = 
-                '<div class="result"><p class="success">✅ Остановлено таймеров: ' + cleared + '</p></div>';
-        }
-        
-        function goToSite() {
-            // Полная очистка перед переходом
-            localStorage.clear();
-            sessionStorage.clear();
-            stopAllTimers();
-            
-            // Переход на сайт
+        // Переход на основной сайт
+        setTimeout(function() {
             window.location.href = './index.html';
-        }
-        
-        // Автоматическая проверка при загрузке
-        window.onload = function() {
-            console.log('Загружена страница диагностики');
-            checkAll();
-        };
+        }, 1000);
     </script>
 </body>
 </html>
