@@ -954,15 +954,18 @@
 // ════════════════════════════════════════════════════
 window.alNavToggle = function(btn) {
   var group = btn.closest('.al-nav-group');
+  
+  // Убеждаемся что у группы есть ID для поиска
+  if (!group.id) {
+    group.id = 'al-nav-group-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  }
+  
   var dropdown = group.querySelector('.al-nav-dropdown');
   
   // Если меню не найдено в группе, ищем его в body по data-parent-id
   if (!dropdown) {
     // Ищем меню в body которое принадлежит этой группе
-    var groupId = group.id;
-    if (groupId) {
-      dropdown = document.querySelector('[data-parent-id="' + groupId + '"]');
-    }
+    dropdown = document.querySelector('[data-parent-id="' + group.id + '"]');
   }
   
   // Если все еще не найдено, выходим
@@ -994,11 +997,6 @@ window.alNavToggle = function(btn) {
     
     // Перемещаем меню в body чтобы избежать ограничений родителя
     document.body.appendChild(dropdown);
-    
-    // Создаем уникальный ID для родителя если его нет
-    if (!parentGroup.id) {
-      parentGroup.id = 'al-nav-group-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-    }
     
     // Сохраняем ID родительской группы в атрибуте меню
     dropdown.setAttribute('data-parent-id', parentGroup.id);
