@@ -960,10 +960,10 @@ window.alNavToggle = function(btn) {
   // Закрыть все открытые
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
     d.classList.remove('al-open');
-    // Ищем родительскую группу по атрибуту data-parent-group
-    var parentClass = d.getAttribute('data-parent-group');
-    if (parentClass) {
-      var parentGroup = document.querySelector('.' + parentClass.split(' ').join('.'));
+    // Ищем родительскую группу по ID
+    var parentId = d.getAttribute('data-parent-id');
+    if (parentId) {
+      var parentGroup = document.getElementById(parentId);
       if (parentGroup) {
         var b = parentGroup.querySelector('.al-nav-btn');
         if (b) b.classList.remove('al-nav-open');
@@ -982,8 +982,13 @@ window.alNavToggle = function(btn) {
     // Перемещаем меню в body чтобы избежать ограничений родителя
     document.body.appendChild(dropdown);
     
-    // Сохраняем ссылку на родительскую группу в атрибуте меню
-    dropdown.setAttribute('data-parent-group', parentGroup ? parentGroup.className : '');
+    // Создаем уникальный ID для родителя если его нет
+    if (!parentGroup.id) {
+      parentGroup.id = 'al-nav-group-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    // Сохраняем ID родительской группы в атрибуте меню
+    dropdown.setAttribute('data-parent-id', parentGroup.id);
     
     // position:fixed - координаты относительно вьюпорта
     dropdown.style.position = 'fixed';
@@ -1000,10 +1005,10 @@ document.addEventListener('click', function(e) {
   if (!e.target.closest('.al-nav-group')) {
     document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
       d.classList.remove('al-open');
-      // Ищем кнопку по атрибуту data-parent-group или через querySelector
-      var parentClass = d.getAttribute('data-parent-group');
-      if (parentClass) {
-        var parentGroup = document.querySelector('.' + parentClass.split(' ').join('.'));
+      // Ищем родительскую группу по ID
+      var parentId = d.getAttribute('data-parent-id');
+      if (parentId) {
+        var parentGroup = document.getElementById(parentId);
         if (parentGroup) {
           var b = parentGroup.querySelector('.al-nav-btn');
           if (b) b.classList.remove('al-nav-open');
@@ -1016,10 +1021,10 @@ document.addEventListener('click', function(e) {
 // Обновление позиции при скролле (fixed - пересчитываем по вьюпорту)
 window.addEventListener('scroll', function() {
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
-    // Ищем родительскую группу по атрибуту
-    var parentClass = d.getAttribute('data-parent-group');
-    if (parentClass) {
-      var parentGroup = document.querySelector('.' + parentClass.split(' ').join('.'));
+    // Ищем родительскую группу по ID
+    var parentId = d.getAttribute('data-parent-id');
+    if (parentId) {
+      var parentGroup = document.getElementById(parentId);
       if (parentGroup) {
         var b = parentGroup.querySelector('.al-nav-btn');
         if (b) {
@@ -1037,10 +1042,10 @@ window.addEventListener('scroll', function() {
 window.addEventListener('resize', function() {
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
     d.classList.remove('al-open');
-    // Ищем кнопку по атрибуту data-parent-group
-    var parentClass = d.getAttribute('data-parent-group');
-    if (parentClass) {
-      var parentGroup = document.querySelector('.' + parentClass.split(' ').join('.'));
+    // Ищем родительскую группу по ID
+    var parentId = d.getAttribute('data-parent-id');
+    if (parentId) {
+      var parentGroup = document.getElementById(parentId);
       if (parentGroup) {
         var b = parentGroup.querySelector('.al-nav-btn');
         if (b) b.classList.remove('al-nav-open');
