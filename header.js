@@ -822,7 +822,7 @@
       syncAuth();
       
       // Дополнительная проверка каждые 500мс на случай проблем с синхронизацией
-      setInterval(syncAuth, 500);
+     // setInterval(syncAuth, 500);  // ЗАКОММЕНТИРУЙ ЭТУ СТРОКУ
 
       // 3. Feedback panel
       var deskFP     = document.getElementById('generalFeedbackPanel');
