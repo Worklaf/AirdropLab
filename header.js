@@ -651,18 +651,18 @@
         .al-nav-group { position:relative; display:inline-block; vertical-align:top; }
 
         .al-nav-btn {
-          display:inline-flex; align-items:center; gap:6px;
-          padding:9px 14px; background:transparent; border:none;
-          color:#94a3b8; font-size:13px; font-weight:500;
-          cursor:pointer; white-space:nowrap;
-          border-bottom:2px solid transparent;
-          transition:color 0.2s,border-color 0.2s,background 0.2s;
-          font-family:'Inter',sans-serif; vertical-align:top;
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 9px 14px; background: transparent; border: none;
+          color: #94a3b8; font-size: 13px; font-weight: 500;
+          cursor: pointer; white-space: nowrap;
+          transition: color 0.2s, background 0.2s;
+          font-family: 'Inter', sans-serif;
+          vertical-align: top;
+          position: relative;
         }
         .al-nav-btn:hover, .al-nav-btn.al-nav-open {
-          color:#f1f5f9;
-          background:rgba(34,211,238,0.06);
-          border-bottom-color:#22d3ee;
+          color: #f1f5f9;
+          background: rgba(34,211,238,0.06);
         }
         .al-nav-arrow { font-size:9px; margin-left:2px; transition:transform 0.2s; }
         .al-nav-btn.al-nav-open .al-nav-arrow { transform:rotate(180deg); }
@@ -674,11 +674,10 @@
           min-width: 280px; /* увеличена ширина */
           background: rgba(11,15,30,0.99);
           border: 1px solid rgba(34,211,238,0.2);
-          border-top: none;
-          border-radius: 0 0 12px 12px;
+          border-radius: 12px;
           box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,211,238,0.05);
           backdrop-filter: blur(20px);
-          z-index: 9999;
+          z-index: 99999; /* увеличен для поверх всех элементов */
           padding: 6px 0;
           animation: alNavFadeIn 0.15s ease;
           max-height: 400px;
@@ -811,14 +810,20 @@
           if (mobIn) mobIn.style.display  = isIn ? 'flex' : 'none';
           if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
         }, 100);
+        
+        // Дополнительное обновление через короткое время
+        setTimeout(function() {
+          if (mobIn) mobIn.style.display  = isIn ? 'flex' : 'none';
+          if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
+        }, 500);
       }
       if (deskIn)  new MutationObserver(syncAuth).observe(deskIn,  { attributes:true, attributeFilter:['class','style'] });
       if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
                      .observe(deskAva, { attributes:true, attributeFilter:['src'] });
       syncAuth();
       
-      // Дополнительная проверка каждую секунду на случай проблем с синхронизацией
-      setInterval(syncAuth, 1000);
+      // Дополнительная проверка каждые 500мс на случай проблем с синхронизацией
+      setInterval(syncAuth, 500);
 
       // 3. Feedback panel
       var deskFP     = document.getElementById('generalFeedbackPanel');
@@ -963,7 +968,7 @@ window.alNavToggle = function(btn) {
   if (!isOpen) {
     var rect = btn.getBoundingClientRect();
     // position:fixed - координаты относительно вьюпорта, scrollTop НЕ добавляем
-    dropdown.style.top  = rect.bottom + 'px';
+    dropdown.style.top  = (rect.bottom + 2) + 'px'; // небольшое смещение вниз
     dropdown.style.left = rect.left + 'px';
     dropdown.style.width = rect.width + 'px'; // устанавливаем ширину равную кнопке
     dropdown.classList.add('al-open');
@@ -988,7 +993,7 @@ window.addEventListener('scroll', function() {
     var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
     if (b) {
       var rect = b.getBoundingClientRect();
-      d.style.top  = rect.bottom + 'px';
+      d.style.top  = (rect.bottom + 2) + 'px'; // небольшое смещение вниз
       d.style.left = rect.left + 'px';
       d.style.width = rect.width + 'px'; // обновляем ширину при скролле
     }
