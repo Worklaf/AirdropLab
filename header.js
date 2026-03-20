@@ -671,7 +671,7 @@
         .al-nav-dropdown {
           display: none;
           position: absolute;
-          min-width: 220px;
+          min-width: 280px; /* увеличена ширина */
           background: rgba(11,15,30,0.99);
           border: 1px solid rgba(34,211,238,0.2);
           border-top: none;
@@ -966,6 +966,7 @@ window.alNavToggle = function(btn) {
     // position:absolute - координаты относительно документа, добавляем scrollTop
     dropdown.style.top  = (rect.bottom + scrollTop) + 'px';
     dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px'; // устанавливаем ширину равную кнопке
     dropdown.classList.add('al-open');
     btn.classList.add('al-nav-open');
   }
@@ -991,6 +992,7 @@ window.addEventListener('scroll', function() {
       var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       d.style.top  = (rect.bottom + scrollTop) + 'px';
       d.style.left = rect.left + 'px';
+      d.style.width = rect.width + 'px'; // обновляем ширину при скролле
     }
   });
 }, { passive: true });
