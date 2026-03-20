@@ -969,8 +969,8 @@ window.alNavToggle = function(btn) {
   if (!isOpen) {
     var rect = btn.getBoundingClientRect();
     console.log('Button rect:', rect); // отладка
-    // position:fixed - координаты относительно вьюпорта
-    dropdown.style.top  = (rect.bottom + window.scrollY) + 'px';
+    // position:fixed - координаты относительно вьюпорта, БЕЗ scrollY
+    dropdown.style.top  = rect.bottom + 'px';
     dropdown.style.left = rect.left + 'px';
     dropdown.style.width = rect.width + 'px'; // устанавливаем ширину равную кнопке
     console.log('Menu position:', {top: dropdown.style.top, left: dropdown.style.left}); // отладка
@@ -996,7 +996,7 @@ window.addEventListener('scroll', function() {
     var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
     if (b) {
       var rect = b.getBoundingClientRect();
-      d.style.top  = (rect.bottom + window.scrollY) + 'px';
+      d.style.top  = rect.bottom + 'px';
       d.style.left = rect.left + 'px';
       d.style.width = rect.width + 'px'; // обновляем ширину при скролле
     }
