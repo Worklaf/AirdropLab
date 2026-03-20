@@ -343,70 +343,70 @@
           <div style="display:inline-flex;align-items:stretch;gap:0;vertical-align:top;">
 
             <!-- Активности -->
-            <div class="al-nav-group">
+            <div class="al-nav-group" style="position:relative;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-bolt" style="color:#22d3ee;"></i>
                 <span data-translate="menu_activities">Активности</span>
                 <i class="fas fa-chevron-down al-nav-arrow"></i>
               </button>
               <div class="al-nav-dropdown">
-                <a href="index.html" class="al-nav-item"><i class="fas fa-layer-group"></i><span data-translate="all_projects">Все активности</span></a>
-                <a href="index.html?filter=airdrop" class="al-nav-item"><i class="fas fa-parachute-box"></i><span data-translate="airdrops_lotteries">Аирдропы и розыгрыши</span></a>
-                <a href="faucet.html" class="al-nav-item"><i class="fas fa-faucet"></i><span data-translate="faucets">Краны</span></a>
-                <a href="index.html?filter=mainnet" class="al-nav-item"><i class="fas fa-network-wired"></i><span data-translate="mainnets">Мейннеты</span></a>
-                <a href="index.html?filter=testnet" class="al-nav-item"><i class="fas fa-flask"></i><span data-translate="testnets">Тестнеты</span></a>
+                <a href="index.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-layer-group"></i><span data-translate="all_projects">Все активности</span></a>
+                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-parachute-box"></i><span data-translate="airdrops_lotteries">Аирдропы и розыгрыши</span></a>
+                <a href="faucet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-faucet"></i><span data-translate="faucets">Краны</span></a>
+                <a href="index.html?filter=mainnet" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-network-wired"></i><span data-translate="mainnets">Мейннеты</span></a>
+                <a href="index.html?filter=testnet" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-flask"></i><span data-translate="testnets">Тестнеты</span></a>
               </div>
             </div>
 
             <!-- Гайды -->
-            <div class="al-nav-group">
+            <div class="al-nav-group" style="position:relative;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-map-signs" style="color:#22d3ee;"></i>
                 <span data-translate="menu_guides">Гайды</span>
                 <i class="fas fa-chevron-down al-nav-arrow"></i>
               </button>
               <div class="al-nav-dropdown">
-                <a href="guides.html" class="al-nav-item al-nav-item-accent"><i class="fas fa-th-large"></i><span data-translate="all_guides">Все гайды</span></a>
+                <a href="guides.html" class="al-nav-item al-nav-item-accent" onclick="closeAlNav(this)"><i class="fas fa-th-large"></i><span data-translate="all_guides">Все гайды</span></a>
                 <div class="al-nav-divider"></div>
-                <a href="guides/Arc/Arc_Testnet_by_Circle.html" class="al-nav-item"><i class="fas fa-circle" style="color:#22d3ee;font-size:8px;"></i>Arc Testnet</a>
-                <a href="guides/Tempo/Tempo_Testnet.html" class="al-nav-item"><i class="fas fa-circle" style="color:#a78bfa;font-size:8px;"></i>Tempo Testnet</a>
-                <a href="guides/Robinhood/robinhood-chain.html" class="al-nav-item"><i class="fas fa-circle" style="color:#34d399;font-size:8px;"></i>Robinhood Chain</a>
+                <a href="guides/Arc/Arc_Testnet_by_Circle.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#22d3ee;font-size:8px;"></i>Arc Testnet</a>
+                <a href="guides/Tempo/Tempo_Testnet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#a78bfa;font-size:8px;"></i>Tempo Testnet</a>
+                <a href="guides/Robinhood/robinhood-chain.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-circle" style="color:#34d399;font-size:8px;"></i>Robinhood Chain</a>
               </div>
             </div>
 
             <!-- Сообщество -->
-            <div class="al-nav-group">
+            <div class="al-nav-group" style="position:relative;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-users" style="color:#34d399;"></i>
                 <span data-translate="menu_community">Сообщество</span>
                 <i class="fas fa-chevron-down al-nav-arrow"></i>
               </button>
               <div class="al-nav-dropdown">
-                <a href="community.html" class="al-nav-item"><i class="fas fa-comments"></i><span data-translate="chat">Чат</span></a>
-                <a href="community.html#leaderboard" class="al-nav-item"><i class="fas fa-trophy"></i><span data-translate="leaderboard">Таблица лидеров</span></a>
-                <a href="community.html#referrals" class="al-nav-item"><i class="fas fa-share-alt"></i><span data-translate="referrals">Рефералы</span></a>
-                <a href="community.html#forum" class="al-nav-item"><i class="fas fa-comments-dollar"></i><span data-translate="forum">Форум</span></a>
+                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-comments"></i><span data-translate="chat">Чат</span></a>
+                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-trophy"></i><span data-translate="leaderboard">Таблица лидеров</span></a>
+                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-share-alt"></i><span data-translate="referrals">Рефералы</span></a>
+                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-comments-dollar"></i><span data-translate="forum">Форум</span></a>
               </div>
             </div>
 
             <!-- Календарь -->
-            <div class="al-nav-group">
+            <div class="al-nav-group" style="position:relative;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-calendar-alt" style="color:#fbbf24;"></i>
                 <span data-translate="menu_calendar">Календарь</span>
                 <i class="fas fa-chevron-down al-nav-arrow"></i>
               </button>
               <div class="al-nav-dropdown">
-                <a href="calendar.html" class="al-nav-item al-nav-item-accent"><i class="fas fa-calendar-check"></i><span data-translate="all_events">Все события</span></a>
+                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item al-nav-item-accent"><i class="fas fa-calendar-check"></i><span data-translate="all_events">Все события</span></a>
                 <div class="al-nav-divider"></div>
-                <a href="calendar.html?type=deadline" class="al-nav-item"><i class="fas fa-hourglass-end" style="color:#f87171;"></i><span data-translate="deadlines">Дедлайны</span></a>
-                <a href="calendar.html?type=tge" class="al-nav-item"><i class="fas fa-rocket" style="color:#fbbf24;"></i>TGE / <span data-translate="listings">Листинги</span></a>
-                <a href="calendar.html?type=event" class="al-nav-item"><i class="fas fa-star" style="color:#22d3ee;"></i><span data-translate="project_events">События проектов</span></a>
+                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-hourglass-end" style="color:#f87171;"></i><span data-translate="deadlines">Дедлайны</span></a>
+                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-rocket" style="color:#fbbf24;"></i>TGE / <span data-translate="listings">Листинги</span></a>
+                <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-star" style="color:#22d3ee;"></i><span data-translate="project_events">События проектов</span></a>
               </div>
             </div>
 
             <!-- Биржи -->
-            <div class="al-nav-group">
+            <div class="al-nav-group" style="position:relative;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-chart-bar" style="color:#a78bfa;"></i>
                 <span data-translate="menu_exchanges">Биржи</span>
@@ -426,7 +426,7 @@
             </div>
 
             <!-- Новости -->
-            <div class="al-nav-group">
+            <div class="al-nav-group" style="position:relative;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-newspaper" style="color:#f87171;"></i>
                 <span data-translate="menu_news">Новости</span>
@@ -445,14 +445,14 @@
             </div>
 
             <!-- Инструменты -->
-            <div class="al-nav-group">
+            <div class="al-nav-group" style="position:relative;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-tools" style="color:#fbbf24;"></i>
                 <span data-translate="menu_tools">Инструменты</span>
                 <i class="fas fa-chevron-down al-nav-arrow"></i>
               </button>
               <div class="al-nav-dropdown">
-                <a href="faucet.html" class="al-nav-item"><i class="fas fa-faucet"></i><span data-translate="faucets">Краны (Faucets)</span></a>
+                <a href="faucet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-faucet"></i><span data-translate="faucets">Краны (Faucets)</span></a>
                 <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-calculator"></i><span data-translate="gas_calculator">Калькулятор газа</span></a>
                 <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-exchange-alt"></i><span data-translate="bridges">Бриджи</span></a>
                 <a href="#" onclick="showComingSoon();return false;" class="al-nav-item"><i class="fas fa-shield-alt"></i><span data-translate="wallet_checker">Проверка кошелька</span></a>
@@ -460,7 +460,7 @@
             </div>
 
             <!-- Обучение -->
-            <div class="al-nav-group">
+            <div class="al-nav-group" style="position:relative;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-graduation-cap" style="color:#60a5fa;"></i>
                 <span data-translate="menu_learning">Обучение</span>
@@ -508,7 +508,7 @@
         }
         #site-nav-wrapper { position: relative; z-index: 9000; }
         #site-nav ::-webkit-scrollbar { display: none; }
-        .al-nav-group { position: static; display: inline-block; vertical-align: top; }
+        .al-nav-group { position: relative; display: inline-block; vertical-align: top; }
         .al-nav-btn {
           display: inline-flex; align-items: center; gap: 6px;
           padding: 9px 14px; background: transparent; border: none;
@@ -532,7 +532,6 @@
           min-width: 220px;
           background: rgba(11,15,30,0.99);
           border: 1px solid rgba(34,211,238,0.2);
-          border-top: none;
           border-radius: 0 0 12px 12px;
           box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,211,238,0.05);
           backdrop-filter: blur(20px);
@@ -820,6 +819,14 @@ window.closeComingSoon = function(event) {
   if (event && event.target !== event.currentTarget) return;
   var modal = document.getElementById('comingSoonModal');
   if (modal) modal.style.display = 'none';
+};
+
+// Close nav dropdown when clicking a link
+window.closeAlNav = function(el) {
+  var dropdown = el.closest('.al-nav-dropdown');
+  if (dropdown) dropdown.classList.remove('al-open');
+  var btn = dropdown.closest('.al-nav-group').querySelector('.al-nav-btn');
+  if (btn) btn.classList.remove('al-nav-open');
 };
 
 // Close modal on Escape key
