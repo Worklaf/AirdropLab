@@ -335,6 +335,202 @@
           </div>
         </div>
       </div>
+
+      <!-- Navigation Bar -->
+      <div id="site-nav-wrapper" style="position:relative;z-index:9000;">
+      <nav id="site-nav" style="background:rgba(11,15,25,0.98);border-bottom:1px solid rgba(34,211,238,0.12);backdrop-filter:blur(12px);">
+        <div style="max-width:min(1600px,100%);margin:0 auto;padding:0 16px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+          <div style="display:inline-flex;align-items:stretch;gap:0;vertical-align:top;">
+
+            <!-- Активности -->
+            <div class="al-nav-group">
+              <button class="al-nav-btn" onclick="alNavToggle(this)">
+                <i class="fas fa-bolt" style="color:#22d3ee;"></i>
+                <span>Активности</span>
+                <i class="fas fa-chevron-down al-nav-arrow"></i>
+              </button>
+              <div class="al-nav-dropdown">
+                <a href="index.html" class="al-nav-item"><i class="fas fa-layer-group"></i>Все активности</a>
+                <a href="index.html?filter=airdrop" class="al-nav-item"><i class="fas fa-parachute-box"></i>Аирдропы и розыгрыши</a>
+                <a href="faucet.html" class="al-nav-item"><i class="fas fa-faucet"></i>Краны</a>
+                <a href="index.html?filter=mainnet" class="al-nav-item"><i class="fas fa-network-wired"></i>Мейннеты</a>
+                <a href="index.html?filter=testnet" class="al-nav-item"><i class="fas fa-flask"></i>Тестнеты</a>
+              </div>
+            </div>
+
+            <!-- Гайды -->
+            <div class="al-nav-group">
+              <button class="al-nav-btn" onclick="alNavToggle(this)">
+                <i class="fas fa-map-signs" style="color:#22d3ee;"></i>
+                <span>Гайды</span>
+                <i class="fas fa-chevron-down al-nav-arrow"></i>
+              </button>
+              <div class="al-nav-dropdown">
+                <a href="guides.html" class="al-nav-item al-nav-item-accent"><i class="fas fa-th-large"></i>Все гайды</a>
+                <div class="al-nav-divider"></div>
+                <a href="guides/Arc/Arc_Testnet_by_Circle.html" class="al-nav-item"><i class="fas fa-circle" style="color:#22d3ee;font-size:8px;"></i>Arc Testnet</a>
+                <a href="guides/Tempo/Tempo_Testnet.html" class="al-nav-item"><i class="fas fa-circle" style="color:#a78bfa;font-size:8px;"></i>Tempo Testnet</a>
+                <a href="guides/Robinhood/robinhood-chain.html" class="al-nav-item"><i class="fas fa-circle" style="color:#34d399;font-size:8px;"></i>Robinhood Chain</a>
+              </div>
+            </div>
+
+            <!-- Сообщество -->
+            <div class="al-nav-group">
+              <button class="al-nav-btn" onclick="alNavToggle(this)">
+                <i class="fas fa-users" style="color:#34d399;"></i>
+                <span>Сообщество</span>
+                <i class="fas fa-chevron-down al-nav-arrow"></i>
+              </button>
+              <div class="al-nav-dropdown">
+                <a href="community.html" class="al-nav-item"><i class="fas fa-comments"></i>Чат</a>
+                <a href="community.html#leaderboard" class="al-nav-item"><i class="fas fa-trophy"></i>Таблица лидеров</a>
+                <a href="community.html#referrals" class="al-nav-item"><i class="fas fa-share-alt"></i>Рефералы</a>
+                <a href="community.html#forum" class="al-nav-item"><i class="fas fa-comments-dollar"></i>Форум</a>
+              </div>
+            </div>
+
+            <!-- Календарь -->
+            <div class="al-nav-group">
+              <button class="al-nav-btn" onclick="alNavToggle(this)">
+                <i class="fas fa-calendar-alt" style="color:#fbbf24;"></i>
+                <span>Календарь</span>
+                <i class="fas fa-chevron-down al-nav-arrow"></i>
+              </button>
+              <div class="al-nav-dropdown">
+                <a href="calendar.html" class="al-nav-item al-nav-item-accent"><i class="fas fa-calendar-check"></i>Все события</a>
+                <div class="al-nav-divider"></div>
+                <a href="calendar.html?type=deadline" class="al-nav-item"><i class="fas fa-hourglass-end" style="color:#f87171;"></i>Дедлайны</a>
+                <a href="calendar.html?type=tge" class="al-nav-item"><i class="fas fa-rocket" style="color:#fbbf24;"></i>TGE / Листинги</a>
+                <a href="calendar.html?type=event" class="al-nav-item"><i class="fas fa-star" style="color:#22d3ee;"></i>События проектов</a>
+              </div>
+            </div>
+
+            <!-- Биржи -->
+            <div class="al-nav-group">
+              <button class="al-nav-btn" onclick="alNavToggle(this)">
+                <i class="fas fa-chart-bar" style="color:#a78bfa;"></i>
+                <span>Биржи</span>
+                <i class="fas fa-chevron-down al-nav-arrow"></i>
+              </button>
+              <div class="al-nav-dropdown">
+                <a href="https://www.binance.com/ru" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#f0b90b;font-size:8px;"></i>Binance</a>
+                <a href="https://www.bybit.com/ru-RU/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#f7a600;font-size:8px;"></i>Bybit</a>
+                <a href="https://www.mexc.com/ru-RU" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#2354e6;font-size:8px;"></i>MEXC</a>
+                <a href="https://www.bitget.com/ru/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#00f0ff;font-size:8px;"></i>Bitget</a>
+                <a href="https://bingx.com/ru-ru/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#1890ff;font-size:8px;"></i>BingX</a>
+                <a href="https://www.lbank.com/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#ff5722;font-size:8px;"></i>LBank</a>
+                <a href="https://www.bitmart.com/" target="_blank" class="al-nav-item"><i class="fas fa-circle" style="color:#0096ff;font-size:8px;"></i>Bitmart</a>
+                <div class="al-nav-divider"></div>
+                <a href="#" class="al-nav-item al-nav-item-accent"><i class="fas fa-th-list"></i>Все биржи</a>
+              </div>
+            </div>
+
+            <!-- Новости -->
+            <div class="al-nav-group">
+              <button class="al-nav-btn" onclick="alNavToggle(this)">
+                <i class="fas fa-newspaper" style="color:#f87171;"></i>
+                <span>Новости</span>
+                <i class="fas fa-chevron-down al-nav-arrow"></i>
+              </button>
+              <div class="al-nav-dropdown">
+                <a href="#" class="al-nav-item"><i class="fas fa-coins"></i>Криптовалютные новости</a>
+                <a href="#" class="al-nav-item"><i class="fas fa-chart-line"></i>Новости аналитики</a>
+                <a href="#" class="al-nav-item"><i class="fas fa-robot"></i>Новости AI</a>
+                <a href="#" class="al-nav-item"><i class="fab fa-bitcoin"></i>Новости Bitcoin</a>
+                <a href="#" class="al-nav-item"><i class="fas fa-water"></i>Новости DeFi</a>
+                <a href="#" class="al-nav-item"><i class="fas fa-gamepad"></i>Новости GameFi / Metaverse</a>
+                <a href="#" class="al-nav-item"><i class="fas fa-rocket"></i>Новости IDO/ICO/IFO/IEO</a>
+                <a href="#" class="al-nav-item"><i class="fas fa-image"></i>Новости NFT</a>
+              </div>
+            </div>
+
+            <!-- Инструменты -->
+            <div class="al-nav-group">
+              <button class="al-nav-btn" onclick="alNavToggle(this)">
+                <i class="fas fa-tools" style="color:#fbbf24;"></i>
+                <span>Инструменты</span>
+                <i class="fas fa-chevron-down al-nav-arrow"></i>
+              </button>
+              <div class="al-nav-dropdown">
+                <a href="faucet.html" class="al-nav-item"><i class="fas fa-faucet"></i>Краны (Faucets)</a>
+                <a href="#" class="al-nav-item"><i class="fas fa-calculator"></i>Калькулятор газа</a>
+                <a href="#" class="al-nav-item"><i class="fas fa-exchange-alt"></i>Бриджи</a>
+                <a href="#" class="al-nav-item"><i class="fas fa-shield-alt"></i>Проверка кошелька</a>
+              </div>
+            </div>
+
+            <!-- Обучение -->
+            <div class="al-nav-group">
+              <button class="al-nav-btn" onclick="alNavToggle(this)">
+                <i class="fas fa-graduation-cap" style="color:#60a5fa;"></i>
+                <span>Обучение</span>
+                <i class="fas fa-chevron-down al-nav-arrow"></i>
+              </button>
+              <div class="al-nav-dropdown">
+                <a href="#" class="al-nav-item"><i class="fas fa-book-open"></i>Что такое аирдроп</a>
+                <a href="#" class="al-nav-item"><i class="fas fa-wallet"></i>Как настроить кошелёк</a>
+                <a href="#" class="al-nav-item"><i class="fas fa-shield-virus"></i>Безопасность в крипте</a>
+                <a href="#" class="al-nav-item"><i class="fas fa-question-circle"></i>FAQ</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </nav>
+      </div>
+
+      <style>
+        #site-nav-wrapper { position: relative; z-index: 9000; }
+        #site-nav ::-webkit-scrollbar { display: none; }
+        .al-nav-group { position: static; display: inline-block; vertical-align: top; }
+        .al-nav-btn {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 9px 14px; background: transparent; border: none;
+          color: #94a3b8; font-size: 13px; font-weight: 500;
+          cursor: pointer; white-space: nowrap;
+          border-bottom: 2px solid transparent;
+          transition: color 0.2s, border-color 0.2s, background 0.2s;
+          font-family: 'Inter', sans-serif;
+          vertical-align: top;
+        }
+        .al-nav-btn:hover, .al-nav-btn.al-nav-open {
+          color: #f1f5f9;
+          background: rgba(34,211,238,0.06);
+          border-bottom-color: #22d3ee;
+        }
+        .al-nav-arrow { font-size: 9px; margin-left: 2px; transition: transform 0.2s; }
+        .al-nav-btn.al-nav-open .al-nav-arrow { transform: rotate(180deg); }
+        .al-nav-dropdown {
+          display: none;
+          position: fixed;
+          min-width: 220px;
+          background: rgba(11,15,30,0.99);
+          border: 1px solid rgba(34,211,238,0.2);
+          border-top: none;
+          border-radius: 0 0 12px 12px;
+          box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,211,238,0.05);
+          backdrop-filter: blur(20px);
+          z-index: 9999;
+          padding: 6px 0;
+          animation: alNavFadeIn 0.15s ease;
+        }
+        .al-nav-dropdown.al-open { display: block; }
+        @keyframes alNavFadeIn {
+          from { opacity:0; transform:translateY(-6px); }
+          to   { opacity:1; transform:translateY(0); }
+        }
+        .al-nav-item {
+          display: flex; align-items: center; gap: 10px;
+          padding: 8px 16px; color: #94a3b8; font-size: 13px;
+          text-decoration: none; transition: all 0.15s;
+          white-space: nowrap;
+        }
+        .al-nav-item i { width: 14px; text-align: center; font-size: 12px; color: #64748b; flex-shrink:0; }
+        .al-nav-item:hover { background: rgba(34,211,238,0.08); color: #f1f5f9; }
+        .al-nav-item:hover i { color: #22d3ee; }
+        .al-nav-item-accent { color: #22d3ee !important; font-weight: 600; }
+        .al-nav-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 4px 0; }
+      </style>
     `;
 
     // CryptoRank
@@ -526,3 +722,52 @@ syncClaimBtn();
   }
 
 })();
+
+window.alNavToggle = function(btn) {
+  var group = btn.closest('.al-nav-group');
+  var dropdown = group.querySelector('.al-nav-dropdown');
+  var isOpen = dropdown.classList.contains('al-open');
+
+  document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
+    d.classList.remove('al-open');
+    var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
+    if (b) b.classList.remove('al-nav-open');
+  });
+
+  if (!isOpen) {
+    var rect = btn.getBoundingClientRect();
+    dropdown.style.top = rect.bottom + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.classList.add('al-open');
+    btn.classList.add('al-nav-open');
+  }
+};
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.al-nav-group')) {
+    document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
+      d.classList.remove('al-open');
+      var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
+      if (b) b.classList.remove('al-nav-open');
+    });
+  }
+});
+
+window.addEventListener('scroll', function() {
+  document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
+    var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
+    if (b) {
+      var rect = b.getBoundingClientRect();
+      d.style.top = rect.bottom + 'px';
+      d.style.left = rect.left + 'px';
+    }
+  });
+}, { passive: true });
+
+window.addEventListener('resize', function() {
+  document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
+    d.classList.remove('al-open');
+    var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
+    if (b) b.classList.remove('al-nav-open');
+  });
+});
