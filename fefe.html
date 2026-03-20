@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Очистка cookies AirdropLab</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        button { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 10px; }
+        button:hover { background: #2563eb; }
+        .result { margin: 20px; padding: 10px; background: #f0f9ff; border-radius: 5px; }
+        .success { color: #059669; }
+        .info { color: #1e40af; }
+    </style>
+</head>
+<body>
+    <h1>Очистка cookies для AirdropLab</h1>
+    <p class="info">Этот файл очистит cookies только для текущего домена</p>
+    
+    <button onclick="clearCookies()">Очистить cookies AirdropLab</button>
+    <button onclick="showCookies()">Показать текущие cookies</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        function clearCookies() {
+            var cookies = document.cookie.split(";");
+            var cleared = 0;
+            var currentDomain = window.location.hostname;
+            
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i];
+                var eqPos = cookie.indexOf("=");
+                var name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                
+                if (name) {
+                    // Удаляем cookie для текущего домена и пути
+                    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + currentDomain;
+                    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;";
+                    cleared++;
+                }
+            }
+            
+            document.getElementById('result').innerHTML = 
+                '<div class="result">' +
+                '<p class="success">✅ Очищено cookies для домена ' + currentDomain + ': ' + cleared + '</p>' +
+                '<p>Теперь <a href="./index.html" style="color: #3b82f6;">перейдите на сайт</a></p>' +
+                '</div>';
+        }
+        
+        function showCookies() {
+            var cookies = document.cookie;
+            var currentDomain = window.location.hostname;
+            
+            document.getElementById('result').innerHTML = 
+                '<div class="result">' +
+                '<p class="info">🍪 Текущие cookies для ' + currentDomain + ':</p>' +
+                '<p style="font-family: monospace; background: #f8f8f8; padding: 10px; border-radius: 3px;">' + 
+                (cookies || 'Нет cookies') + '</p>' +
+                '</div>';
+        }
+        
+        // Показываем информацию при загрузке
+        window.onload = function() {
+            console.log('Домен:', window.location.hostname);
+            console.log('Текущие cookies:', document.cookie);
+        };
+    </script>
+</body>
+</html>
