@@ -667,10 +667,10 @@
         .al-nav-arrow { font-size:9px; margin-left:2px; transition:transform 0.2s; }
         .al-nav-btn.al-nav-open .al-nav-arrow { transform:rotate(180deg); }
 
-        /* ─── КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: position:fixed, размер не привязан к кнопке ─── */
+        /* ─── КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: position:absolute, CSS управляет позицией ─── */
         .al-nav-dropdown {
           display: none;
-          position: fixed;
+          position: absolute;
           min-width: 280px; /* увеличена ширина */
           background: rgba(11,15,30,0.99);
           border: 1px solid rgba(34,211,238,0.2);
@@ -682,6 +682,8 @@
           animation: alNavFadeIn 0.15s ease;
           max-height: 400px;
           overflow-y: auto;
+          top: 100%; /* позиционируем относительно родительской кнопки */
+          left: 0;
         }
         .al-nav-dropdown.al-open { display:block; }
 
@@ -966,11 +968,7 @@ window.alNavToggle = function(btn) {
   });
 
   if (!isOpen) {
-    var rect = btn.getBoundingClientRect();
-    // position:fixed - координаты относительно вьюпорта, scrollTop НЕ добавляем
-    dropdown.style.top  = (rect.bottom + 2) + 'px'; // небольшое смещение вниз
-    dropdown.style.left = rect.left + 'px';
-    dropdown.style.width = rect.width + 'px'; // устанавливаем ширину равную кнопке
+    // CSS управляет позицией через top: 100% и left: 0
     dropdown.classList.add('al-open');
     btn.classList.add('al-nav-open');
   }
@@ -986,19 +984,6 @@ document.addEventListener('click', function(e) {
     });
   }
 });
-
-// Обновление позиции при скролле (fixed - пересчитываем по вьюпорту)
-window.addEventListener('scroll', function() {
-  document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
-    var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
-    if (b) {
-      var rect = b.getBoundingClientRect();
-      d.style.top  = (rect.bottom + 2) + 'px'; // небольшое смещение вниз
-      d.style.left = rect.left + 'px';
-      d.style.width = rect.width + 'px'; // обновляем ширину при скролле
-    }
-  });
-}, { passive: true });
 
 // Закрытие при ресайзе
 window.addEventListener('resize', function() {
