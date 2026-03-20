@@ -968,12 +968,12 @@ window.alNavToggle = function(btn) {
 
   if (!isOpen) {
     var rect = btn.getBoundingClientRect();
-    console.log('Button rect:', rect); // отладка
     // position:fixed - координаты относительно вьюпорта, БЕЗ scrollY
     dropdown.style.top  = (rect.bottom + 2) + 'px'; // небольшой отступ 2px
     dropdown.style.left = rect.left + 'px';
     dropdown.style.width = rect.width + 'px'; // устанавливаем ширину равную кнопке
-    console.log('Menu position:', {top: dropdown.style.top, left: dropdown.style.left}); // отладка
+    // Визуальная отладка - красная рамка
+    dropdown.style.border = '2px solid red';
     dropdown.classList.add('al-open');
     btn.classList.add('al-nav-open');
   }
