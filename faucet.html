@@ -226,19 +226,19 @@
 
   <!-- Фильтры + сортировка + поиск -->
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:24px;">
-    <button class="filter-tab af"    onclick="fFilter('all',this)"><i class="fas fa-th-large" style="margin-right:4px;"></i><span data-translate="all">Все</span></button>
-    <button class="filter-tab"       onclick="fFilter('free',this)"><i class="fas fa-gift" style="margin-right:4px;color:#34d399;"></i><span data-translate="faucets_filter_free">Бесплатные</span></button>
-    <button class="filter-tab"       onclick="fFilter('paid',this)"><i class="fas fa-coins" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="faucets_filter_paid">Платные</span></button>
-    <button class="filter-tab"       onclick="fFilter('testnet',this)"><i class="fas fa-flask" style="margin-right:4px;color:#60a5fa;"></i><span data-translate="faucets_filter_testnet">Тестнеты</span></button>
-    <button class="filter-tab"       onclick="fFilter('mainnet',this)"><i class="fas fa-network-wired" style="margin-right:4px;color:#a78bfa;"></i><span data-translate="faucets_filter_mainnet">Мейннеты</span></button>
-    <button class="filter-tab" onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="favorites">Избранное</span></button>
+    <button class="filter-tab af"    onclick="fFilter('all',this)"><i class="fas fa-th-large" style="margin-right:4px;"></i><span data-translate="all">Все</span> <span id="cntAll" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('free',this)"><i class="fas fa-gift" style="margin-right:4px;color:#34d399;"></i><span data-translate="faucets_filter_free">Бесплатные</span> <span id="cntFree" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('paid',this)"><i class="fas fa-coins" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="faucets_filter_paid">Платные</span> <span id="cntPaid" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('testnet',this)"><i class="fas fa-flask" style="margin-right:4px;color:#60a5fa;"></i><span data-translate="faucets_filter_testnet">Тестнеты</span> <span id="cntTestnet" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('mainnet',this)"><i class="fas fa-network-wired" style="margin-right:4px;color:#a78bfa;"></i><span data-translate="faucets_filter_mainnet">Мейннеты</span> <span id="cntMainnet" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab" onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="favorites">Избранное</span> <span id="cntFavorites" class="badge badge-multi" style="margin-left:6px;">–</span></button>
     <button class="filter-tab" onclick="fFilter('my-suggestions',this)" id="mySuggestionsFilter" style="display:block;background:rgba(139,92,246,0.12);color:#a78bfa;border-color:rgba(139,92,246,0.35);" data-filter="my-suggestions">
       <i class="fas fa-user-edit" style="margin-right:4px;"></i>
       <span data-translate="my_suggestions">My Suggestions</span> <span id="mySuggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
     </button>
     <button class="filter-tab" onclick="fFilter('suggestions',this)" id="suggestionsFilter" style="display:none;background:rgba(239,68,68,0.12);color:#f87171;border-color:rgba(239,68,68,0.35);" data-filter="suggestions">
       <i class="fas fa-inbox" style="margin-right:4px;"></i>
-      <span data-translate="suggestions">Suggestions</span>
+      <span data-translate="suggestions">Suggestions</span> <span id="suggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
     </button>
 
     <select id="sortSelectFaucets" onchange="setSort(this.value)"
@@ -1151,8 +1151,8 @@ function renderCard(f) {
   var badgeNet  = '<span class="badge badge-'+f.net+'" style="margin-left:4px;">'+( f.net==='testnet' ? (isEn ? 'Testnet' : 'Тестнет') : (isEn ? 'Mainnet' : 'Мейннет') )+'</span>';
   var extraBadges = (f.tags||[]).map(renderBadge).join('');
   
-  // Добавляем checkbox для скрытия в режиме редактирования
-  var hideCheckbox = editMode ? '<input type="checkbox" id="hide-'+f.id+'" onchange="toggleFaucetVisibility(\''+f.id+'\')" style="margin-left:8px;cursor:pointer;" '+(localStorage.getItem('hiddenFaucets')?.includes(f.id)?'checked':'')+' title="'+(isEn?'Hide/Show faucet':'Скрыть/Показать кран')+'">' : '';
+  // Добавляем checkbox для скрытия в режиме редактирования (только для админа)
+  var hideCheckbox = (editMode && isAdmin) ? '<input type="checkbox" id="hide-'+f.id+'" onchange="toggleFaucetVisibility(\''+f.id+'\')" style="margin-left:8px;cursor:pointer;" '+(f.hidden===true?'checked':'')+' title="'+(isEn?'Hide/Show faucet for all users':'Скрыть/Показать кран для всех')+'">' : '';
 
   // Добавляем бейдж для предложения
   if (f.status === 'pending') {
@@ -1304,10 +1304,12 @@ function renderAll() {
 }
 
 function updateCounts() {
+  document.getElementById('cntAll').textContent = faucets.length;
   document.getElementById('cntFree').textContent    = faucets.filter(function(f){ return f.type==='free'; }).length;
   document.getElementById('cntPaid').textContent    = faucets.filter(function(f){ return f.type==='paid'; }).length;
   document.getElementById('cntTestnet').textContent = faucets.filter(function(f){ return f.net==='testnet'; }).length;
   document.getElementById('cntMainnet').textContent = faucets.filter(function(f){ return f.net==='mainnet'; }).length;
+  document.getElementById('cntFavorites').textContent = favoritesSet.size;
 
   var total = faucets.reduce(function(acc, f){ return acc + (f.links||[]).length; }, 0);
   const isEn = (window.currentLang === 'en');
@@ -1316,24 +1318,71 @@ function updateCounts() {
     : (faucets.length + ' сетей · ' + total + ' кранов');
 }
 
-// Функция для переключения видимости крана
-window.toggleFaucetVisibility = function(faucetId) {
-  const card = document.querySelector('[data-id="' + faucetId + '"]');
-  if (card) {
-    const isHidden = card.style.display === 'none';
-    card.style.display = isHidden ? '' : 'none';
+// Функция для переключения видимости крана (глобально через Firestore)
+window.toggleFaucetVisibility = async function(faucetId) {
+  if (!isAdmin) return;
+  
+  const faucet = faucets.find(f => f.id === faucetId);
+  if (!faucet) return;
+  
+  const isCurrentlyHidden = faucet.hidden === true;
+  const newHiddenStatus = !isCurrentlyHidden;
+  
+  try {
+    // Обновляем статус в Firestore
+    await updateDoc(doc(db, COL_FAUCETS, faucetId), {
+      hidden: newHiddenStatus,
+      hiddenAt: newHiddenStatus ? serverTimestamp() : null,
+      hiddenBy: newHiddenStatus ? currentUser.uid : null
+    });
     
-    // Сохраняем состояние скрытия в localStorage
-    const hiddenFaucets = JSON.parse(localStorage.getItem('hiddenFaucets') || '[]');
-    if (isHidden) {
-      // Показываем кран - удаляем из скрытых
-      const index = hiddenFaucets.indexOf(faucetId);
-      if (index > -1) hiddenFaucets.splice(index, 1);
-    } else {
-      // Скрываем кран - добавляем в скрытые
-      hiddenFaucets.push(faucetId);
-    }
-    localStorage.setItem('hiddenFaucets', JSON.stringify(hiddenFaucets));
+    // Обновляем локальный массив
+    faucet.hidden = newHiddenStatus;
+    
+    // Перерисовываем
+    renderAll();
+    updateCounts();
+    
+    const isEn = window.currentLang === 'en';
+    toast(isEn 
+      ? (newHiddenStatus ? 'Faucet hidden for all users' : 'Faucet shown to all users') 
+      : (newHiddenStatus ? 'Кран скрыт для всех' : 'Кран показан всем'));
+  } catch(e) {
+    console.error('Failed to toggle faucet visibility:', e);
+    alert(isEn ? 'Error updating status' : 'Ошибка обновления статуса');
+  }
+};
+
+// Показать всех скрытых кранов
+window.showAllHiddenFaucets = async function() {
+  if (!isAdmin) return;
+  
+  const hiddenFaucets = faucets.filter(f => f.hidden === true);
+  
+  if (hiddenFaucets.length === 0) {
+    alert('Нет скрытых кранов');
+    return;
+  }
+  
+  const names = hiddenFaucets.map(f => f.name).join('\n- ');
+  
+  if (confirm('Показать все скрытые краны?\n\n- ' + names)) {
+    const batch = [];
+    hiddenFaucets.forEach(f => {
+      batch.push(updateDoc(doc(db, COL_FAUCETS, f.id), {
+        hidden: false,
+        hiddenAt: null,
+        hiddenBy: null
+      }));
+      f.hidden = false;
+    });
+    
+    await Promise.all(batch);
+    renderAll();
+    updateCounts();
+    
+    const isEn = window.currentLang === 'en';
+    toast(isEn ? 'All hidden faucets shown' : 'Все скрытые краны показаны');
   }
 };
 
@@ -1351,7 +1400,6 @@ window.fFilter = fFilter;
 
 function applyCurrentFilter() {
   var query = (document.getElementById('faucetSearch').value || '').toLowerCase();
-  const hiddenFaucets = JSON.parse(localStorage.getItem('hiddenFaucets') || '[]');
   
   // Если выбран фильтр предложений админа, показываем их вместо обычных кранов
   if (currentFilter === 'suggestions') {
@@ -1361,7 +1409,7 @@ function applyCurrentFilter() {
       const faucet = faucets.find(f => f.id === faucetId);
       const isPending = faucet && faucet.status === 'pending';
       const canSee = isPending && (isAdmin || (currentUser && faucet.submittedBy === currentUser.uid));
-      const isHidden = hiddenFaucets.includes(faucetId);
+      const isHidden = faucet && faucet.hidden === true;
       
       var matchSearch = !query || card.dataset.name.includes(query) || card.dataset.token.includes(query);
       card.style.display = (canSee && matchSearch && !isHidden) ? '' : 'none';
@@ -1386,7 +1434,7 @@ function applyCurrentFilter() {
       const faucetId = card.dataset.id;
       const faucet = faucets.find(f => f.id === faucetId);
       const isMySuggestion = faucet && faucet.submittedBy === currentUser.uid;
-      const isHidden = hiddenFaucets.includes(faucetId);
+      const isHidden = faucet && faucet.hidden === true;
       
       var matchSearch = !query || card.dataset.name.includes(query) || card.dataset.token.includes(query);
       card.style.display = (isMySuggestion && matchSearch && !isHidden) ? '' : 'none';
@@ -1402,7 +1450,7 @@ function applyCurrentFilter() {
   document.querySelectorAll('.faucet-card').forEach(function(card) {
     const faucetId = card.dataset.id;
     const faucet = faucets.find(f => f.id === faucetId);
-    const isHidden = hiddenFaucets.includes(faucetId);
+    const isHidden = faucet && faucet.hidden === true;
     
     // Показываем кран если:
     // 1. Не pending И не deleted ИЛИ
@@ -3258,6 +3306,10 @@ onAuthStateChanged(auth, async (user) => {
       <i class="fas fa-plus"></i>
       <span>Добавить</span>
     </button>
+    <button onclick="showAllHiddenFaucets()" style="padding:6px 12px;background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+      <i class="fas fa-eye-slash"></i>
+      <span>Скрытые</span> <span id="hiddenCount" class="badge badge-multi" style="margin-left:4px;">0</span>
+    </button>
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <button onclick="window.scrollTo({top:0,behavior:'smooth'})" style="padding:6px 12px;background:rgba(71,85,105,0.2);border:1px solid rgba(71,85,105,0.3);border-radius:6px;color:#94a3b8;font-size:12px;cursor:pointer;">
@@ -3268,6 +3320,36 @@ onAuthStateChanged(auth, async (user) => {
     </button>
   </div>
 </div>
+
+<script>
+// Функция для переключения видимости скрытых кранов
+window.toggleHiddenFaucets = function() {
+  const hiddenFaucets = JSON.parse(localStorage.getItem('hiddenFaucets') || '[]');
+  if (hiddenFaucets.length === 0) {
+    alert('Нет скрытых кранов');
+    return;
+  }
+  
+  // Показываем диалог со списком скрытых кранов
+  const hiddenNames = hiddenFaucets.map(id => {
+    const f = faucets.find(faucet => faucet.id === id);
+    return f ? f.name : id;
+  }).join(', ');
+  
+  if (confirm('Показать все скрытые краны? (' + hiddenFaucets.length + ' шт.):\n' + hiddenNames)) {
+    localStorage.setItem('hiddenFaucets', '[]');
+    renderAll();
+    updateCounts();
+  }
+};
+
+// Обновление счетчика скрытых кранов
+window.updateHiddenCount = function() {
+  const hiddenFaucets = JSON.parse(localStorage.getItem('hiddenFaucets') || '[]');
+  const countEl = document.getElementById('hiddenCount');
+  if (countEl) countEl.textContent = hiddenFaucets.length;
+};
+</script>
 
 </body>
 </html>
