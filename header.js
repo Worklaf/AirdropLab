@@ -1,5 +1,5 @@
 // ============================================================
-// header.js — AirdropLab (Desktop unchanged + Mobile rows)
+// header.js — AirdropLab (Fixed Navigation + Auth Sync + Modal)
 // ============================================================
 (function () {
 
@@ -183,7 +183,7 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M9 3h6M12 3v5M8 8l-2 8c-.5 2 1 4 3 4h6c2 0 3.5-2 3-4l-2-8" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   <circle cx="10" cy="14" r="1" fill="#22d3ee" opacity="0.6"><animate attributeName="cy" values="14;12;14" dur="2s" repeatCount="indefinite"/></circle>
-                  <circle cx="14" cy="16" r="1" fill="#06b3d4" opacity="0.8"><animate attributeName="cy" values="16;13;16" dur="2.5s" repeatCount="indefinite"/></circle>
+                  <circle cx="14" cy="16" r="1" fill="#06b6d4" opacity="0.8"><animate attributeName="cy" values="16;13;16" dur="2.5s" repeatCount="indefinite"/></circle>
                 </svg>
               </div>
               <h1 style="font-size:17px;font-weight:900;line-height:1;margin:0;">
@@ -200,20 +200,19 @@
                 </button>
               </div>
               <div id="mobLoggedInView" style="display:none;align-items:center;gap:6px;" class="flex">
-  <div 
-    style="position:relative;flex-shrink:0;cursor:pointer;"
-    onclick="var d=document.getElementById('userAvatarWrapper');if(d)d.click();"
-    title="Профиль">
-    <div style="position:absolute;inset:-2px;background:linear-gradient(135deg,#22d3ee,#3b82f6);border-radius:50%;filter:blur(4px);opacity:0.5;transition:opacity 0.2s;"
-         onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.5'"></div>
-    <img id="mobUserAvatar" src="" style="position:relative;width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(34,211,238,0.5);">
-    <!-- Иконка-подсказка что можно кликнуть -->
-    <div style="position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;
-                background:linear-gradient(135deg,#22d3ee,#3b82f6);border-radius:50%;
-                border:1.5px solid #0b0f19;display:flex;align-items:center;justify-content:center;">
-      <i class="fas fa-pen" style="font-size:5px;color:white;"></i>
-    </div>
-  </div>
+                <div 
+                  style="position:relative;flex-shrink:0;cursor:pointer;"
+                  onclick="var d=document.getElementById('userAvatarWrapper');if(d)d.click();"
+                  title="Профиль">
+                  <div style="position:absolute;inset:-2px;background:linear-gradient(135deg,#22d3ee,#3b82f6);border-radius:50%;filter:blur(4px);opacity:0.5;transition:opacity 0.2s;"
+                       onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.5'"></div>
+                  <img id="mobUserAvatar" src="" style="position:relative;width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(34,211,238,0.5);">
+                  <div style="position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;
+                              background:linear-gradient(135deg,#22d3ee,#3b82f6);border-radius:50%;
+                              border:1.5px solid #0b0f19;display:flex;align-items:center;justify-content:center;">
+                    <i class="fas fa-pen" style="font-size:5px;color:white;"></i>
+                  </div>
+                </div>
                 <button onclick="typeof logout==='function'&&logout()"
                   style="padding:6px 7px;color:#64748b;background:transparent;border:1px solid rgba(71,85,105,0.3);border-radius:8px;cursor:pointer;font-size:13px;">
                   <i class="fas fa-sign-out-alt"></i>
@@ -343,7 +342,7 @@
           <div style="display:inline-flex;align-items:stretch;gap:0;vertical-align:top;">
 
             <!-- Активности -->
-            <div class="al-nav-group" style="position:relative;">
+            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-bolt" style="color:#22d3ee;"></i>
                 <span data-translate="menu_activities">Активности</span>
@@ -359,7 +358,7 @@
             </div>
 
             <!-- Гайды -->
-            <div class="al-nav-group" style="position:relative;">
+            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-map-signs" style="color:#22d3ee;"></i>
                 <span data-translate="menu_guides">Гайды</span>
@@ -375,7 +374,7 @@
             </div>
 
             <!-- Сообщество -->
-            <div class="al-nav-group" style="position:relative;">
+            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-users" style="color:#34d399;"></i>
                 <span data-translate="menu_community">Сообщество</span>
@@ -390,7 +389,7 @@
             </div>
 
             <!-- Календарь -->
-            <div class="al-nav-group" style="position:relative;">
+            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-calendar-alt" style="color:#fbbf24;"></i>
                 <span data-translate="menu_calendar">Календарь</span>
@@ -406,7 +405,7 @@
             </div>
 
             <!-- Биржи -->
-            <div class="al-nav-group" style="position:relative;">
+            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-chart-bar" style="color:#a78bfa;"></i>
                 <span data-translate="menu_exchanges">Биржи</span>
@@ -426,7 +425,7 @@
             </div>
 
             <!-- Новости -->
-            <div class="al-nav-group" style="position:relative;">
+            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-newspaper" style="color:#f87171;"></i>
                 <span data-translate="menu_news">Новости</span>
@@ -445,7 +444,7 @@
             </div>
 
             <!-- Инструменты -->
-            <div class="al-nav-group" style="position:relative;">
+            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-tools" style="color:#fbbf24;"></i>
                 <span data-translate="menu_tools">Инструменты</span>
@@ -460,7 +459,7 @@
             </div>
 
             <!-- Обучение -->
-            <div class="al-nav-group" style="position:relative;">
+            <div class="al-nav-group" style="position:relative; display: inline-block; vertical-align: top;">
               <button class="al-nav-btn" onclick="alNavToggle(this)">
                 <i class="fas fa-graduation-cap" style="color:#60a5fa;"></i>
                 <span data-translate="menu_learning">Обучение</span>
@@ -479,48 +478,59 @@
       </nav>
       </div>
 
-      <!-- Coming Soon Modal -->
-      <div id="comingSoonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.90);backdrop-filter:blur(20px);z-index:10000;align-items:center;justify-content:center;" onclick="closeComingSoon(event)">
-        <div style="background:linear-gradient(145deg,rgba(15,23,42,0.98),rgba(30,41,59,0.98));border:2px solid rgba(34,211,238,0.3);border-radius:32px;padding:56px;max-width:520px;text-align:center;position:relative;animation:modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);box-shadow:0 25px 80px rgba(34,211,238,0.3),0 0 120px rgba(34,211,238,0.1);" onclick="event.stopPropagation()">
-          <div style="position:absolute;inset:0;border-radius:32px;background:linear-gradient(145deg,rgba(34,211,238,0.1),rgba(139,92,246,0.1));pointer-events:none;"></div>
-          <div style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:100px;height:100px;background:linear-gradient(145deg,#22d3ee,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 15px 40px rgba(34,211,238,0.6);animation:float 4s ease-in-out infinite;">
-            <div style="width:80px;height:80px;background:rgba(15,23,42,0.95);border-radius:50%;display:flex;align-items:center;justify-content:center;">
-              <i class="fas fa-rocket" style="font-size:36px;color:#22d3ee;animation:rocketGlow 2s ease-in-out infinite;"></i>
+      <!-- Coming Soon Modal (PROFESSIONAL VERSION) -->
+      <div id="comingSoonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(16px);z-index:10000;align-items:center;justify-content:center;" onclick="closeComingSoon(event)">
+        <div style="background:linear-gradient(145deg,rgba(15,23,42,0.98),rgba(30,41,59,0.98));border:2px solid rgba(34,211,238,0.3);border-radius:24px;padding:48px;max-width:460px;text-align:center;position:relative;animation:modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);box-shadow:0 25px 80px rgba(34,211,238,0.25),0 0 120px rgba(34,211,238,0.08);" onclick="event.stopPropagation()">
+          <div style="position:absolute;inset:0;border-radius:24px;background:linear-gradient(145deg,rgba(34,211,238,0.08),rgba(139,92,246,0.08));pointer-events:none;"></div>
+          
+          <!-- Animated Icon Container -->
+          <div style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:80px;height:80px;background:linear-gradient(145deg,#22d3ee,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 15px 40px rgba(34,211,238,0.5);animation:float 4s ease-in-out infinite;">
+            <div style="width:64px;height:64px;background:rgba(15,23,42,0.95);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <i class="fas fa-rocket" style="font-size:28px;color:#22d3ee;animation:rocketGlow 2s ease-in-out infinite;"></i>
             </div>
           </div>
+          
           <div style="position:relative;margin-top:30px;">
-            <div style="display:flex;justify-content:center;gap:12px;margin-bottom:30px;">
-              <div style="width:16px;height:16px;background:linear-gradient(45deg,rgba(34,211,238,0.4),rgba(34,211,238,0.8));border-radius:50%;animation:pulse 2.5s infinite;box-shadow:0 0 20px rgba(34,211,238,0.6);"></div>
-              <div style="width:16px;height:16px;background:linear-gradient(45deg,rgba(139,92,246,0.4),rgba(139,92,246,0.8));border-radius:50%;animation:pulse 2.5s infinite 0.4s;box-shadow:0 0 20px rgba(139,92,246,0.6);"></div>
-              <div style="width:16px;height:16px;background:linear-gradient(45deg,rgba(236,72,153,0.4),rgba(236,72,153,0.8));border-radius:50%;animation:pulse 2.5s infinite 0.8s;box-shadow:0 0 20px rgba(236,72,153,0.6);"></div>
+            <!-- Status Dots -->
+            <div style="display:flex;justify-content:center;gap:10px;margin-bottom:24px;">
+              <div style="width:12px;height:12px;background:linear-gradient(45deg,rgba(34,211,238,0.4),rgba(34,211,238,0.8));border-radius:50%;animation:pulse 2.5s infinite;box-shadow:0 0 16px rgba(34,211,238,0.5);"></div>
+              <div style="width:12px;height:12px;background:linear-gradient(45deg,rgba(139,92,246,0.4),rgba(139,92,246,0.8));border-radius:50%;animation:pulse 2.5s infinite 0.3s;box-shadow:0 0 16px rgba(139,92,246,0.5);"></div>
+              <div style="width:12px;height:12px;background:linear-gradient(45deg,rgba(236,72,153,0.4),rgba(236,72,153,0.8));border-radius:50%;animation:pulse 2.5s infinite 0.6s;box-shadow:0 0 16px rgba(236,72,153,0.5);"></div>
             </div>
-            <h2 style="font-size:32px;font-weight:800;color:#f1f5f9;margin:0 0 20px;text-shadow:0 2px 20px rgba(34,211,238,0.3);" data-translate="menu_in_development">Раздел в разработке</h2>
-            <p style="color:#cbd5e1;margin:0 0 36px;font-size:18px;line-height:1.6;" data-translate="menu_coming_soon">Этот раздел скоро появится! Мы уже работаем над созданием потрясающего контента.</p>
             
-            <div style="background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(139,92,246,0.1));border:1px solid rgba(34,211,238,0.2);border-radius:16px;padding:24px;margin-bottom:36px;">
-              <div style="display:flex;align-items:center;gap:16px;color:#22d3ee;font-size:16px;margin-bottom:16px;">
-                <i class="fas fa-info-circle" style="font-size:24px;animation:infoPulse 2s infinite;"></i>
-                <span style="font-weight:600;">Что здесь будет?</span>
+            <h2 style="font-size:28px;font-weight:800;color:#f1f5f9;margin:0 0 16px;text-shadow:0 2px 20px rgba(34,211,238,0.2);" data-translate="menu_in_development">Раздел в разработке</h2>
+            <p style="color:#cbd5e1;margin:0 0 28px;font-size:15px;line-height:1.6;" data-translate="menu_coming_soon">Мы активно работаем над этим разделом. Скоро здесь появятся новые возможности!</p>
+            
+            <!-- Progress Card -->
+            <div style="background:linear-gradient(135deg,rgba(34,211,238,0.08),rgba(139,92,246,0.08));border:1px solid rgba(34,211,238,0.15);border-radius:16px;padding:20px;margin-bottom:28px;">
+              <div style="display:flex;align-items:center;gap:12px;color:#22d3ee;font-size:14px;margin-bottom:12px;">
+                <i class="fas fa-info-circle" style="font-size:18px;animation:infoPulse 2s infinite;"></i>
+                <span style="font-weight:600;" data-translate="under_construction">Статус разработки</span>
               </div>
-              <div style="text-align:left;color:#94a3b8;font-size:15px;line-height:1.6;">
-                <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+              <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <div style="flex:1;height:6px;background:rgba(71,85,105,0.5);border-radius:3px;">
+                  <div style="height:100%;width:35%;background:linear-gradient(90deg,#22d3ee,#8b5cf6);border-radius:3px;animation:progressBar 2s ease-in-out infinite;"></div>
+                </div>
+              </div>
+              <div style="text-align:left;color:#94a3b8;font-size:13px;line-height:1.7;">
+                <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;">
                   <i class="fas fa-check-circle" style="color:#22d3ee;"></i>
-                  <span>Актуальная информация и новости</span>
+                  <span>Улучшение функционала</span>
                 </div>
-                <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+                <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;">
                   <i class="fas fa-check-circle" style="color:#8b5cf6;"></i>
-                  <span>Интерактивные инструменты и гайды</span>
+                  <span>Интеграция новых инструментов</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <i class="fas fa-check-circle" style="color:#ec4899;"></i>
-                  <span>Сообщество и обсуждения</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <i class="fas fa-clock" style="color:#fbbf24;"></i>
+                  <span>Ожидается: Q1-Q2 2025</span>
                 </div>
               </div>
             </div>
             
-            <div style="display:flex;gap:16px;justify-content:center;">
-              <button onclick="closeComingSoon()" style="padding:16px 48px;background:linear-gradient(135deg,#22d3ee,#8b5cf6);border:none;border-radius:16px;color:white;font-size:18px;font-weight:700;cursor:pointer;transition:all 0.3s;box-shadow:0 8px 32px rgba(34,211,238,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 40px rgba(34,211,238,0.5)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 32px rgba(34,211,238,0.4)';" data-translate="close">Понятно</button>
-              <button onclick="window.open('https://discord.gg/airdroplab','_blank')" style="padding:16px 32px;background:transparent;border:2px solid rgba(34,211,238,0.3);border-radius:16px;color:#22d3ee;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s;" onmouseover="this.style.background='rgba(34,211,238,0.1)';this.style.borderColor='rgba(34,211,238,0.5)';" onmouseout="this.style.background='transparent';this.style.borderColor='rgba(34,211,238,0.3)';">Discord</button>
+            <div style="display:flex;gap:12px;justify-content:center;">
+              <button onclick="closeComingSoon()" style="padding:14px 44px;background:linear-gradient(135deg,#22d3ee,#8b5cf6);border:none;border-radius:12px;color:white;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.3s;box-shadow:0 8px 32px rgba(34,211,238,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(34,211,238,0.4)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 32px rgba(34,211,238,0.3)';" data-translate="close">Понятно</button>
+              <button onclick="window.open('https://t.me/airdroplab','_blank')" style="padding:14px 28px;background:transparent;border:2px solid rgba(34,211,238,0.25);border-radius:12px;color:#22d3ee;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.3s;" onmouseover="this.style.background='rgba(34,211,238,0.08)';this.style.borderColor='rgba(34,211,238,0.4)';" onmouseout="this.style.background='transparent';this.style.borderColor='rgba(34,211,238,0.25)';">Telegram</button>
             </div>
           </div>
         </div>
@@ -533,22 +543,32 @@
         }
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-15px) rotate(5deg); }
+          50% { transform: translateY(-12px) rotate(3deg); }
         }
         @keyframes pulse {
           0%, 100% { opacity:0.4; transform:scale(1); }
-          50% { opacity:1; transform:scale(1.3); }
+          50% { opacity:1; transform:scale(1.2); }
         }
         @keyframes rocketGlow {
-          0%, 100% { color:#22d3ee; text-shadow:0 0 20px rgba(34,211,238,0.8); }
-          50% { color:#8b5cf6; text-shadow:0 0 30px rgba(139,92,246,0.8); }
+          0%, 100% { color:#22d3ee; text-shadow:0 0 16px rgba(34,211,238,0.6); }
+          50% { color:#8b5cf6; text-shadow:0 0 24px rgba(139,92,246,0.6); }
         }
         @keyframes infoPulse {
           0%, 100% { transform:scale(1); }
           50% { transform:scale(1.1); }
         }
+        @keyframes progressBar {
+          0%, 100% { width:35%; }
+          50% { width:65%; }
+        }
+        
         #site-nav-wrapper { position: relative; z-index: 9000; }
         #site-nav ::-webkit-scrollbar { display: none; }
+        .al-nav-dropdown::-webkit-scrollbar { width: 6px; }
+        .al-nav-dropdown::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+        .al-nav-dropdown::-webkit-scrollbar-thumb { background: rgba(34,211,238,0.3); border-radius: 3px; }
+        .al-nav-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(34,211,238,0.5); }
+        
         .al-nav-group { position: relative; display: inline-block; vertical-align: top; }
         .al-nav-btn {
           display: inline-flex; align-items: center; gap: 6px;
@@ -567,9 +587,11 @@
         }
         .al-nav-arrow { font-size: 9px; margin-left: 2px; transition: transform 0.2s; }
         .al-nav-btn.al-nav-open .al-nav-arrow { transform: rotate(180deg); }
+        
+        /* DROPDOWN FIXED POSITION */
         .al-nav-dropdown {
           display: none;
-          position: fixed;
+          position: absolute;
           min-width: 220px;
           background: rgba(11,15,30,0.99);
           border: 1px solid rgba(34,211,238,0.2);
@@ -580,14 +602,16 @@
           z-index: 9999;
           padding: 6px 0;
           animation: alNavFadeIn 0.15s ease;
-          max-height: 400px;
-          overflow-y: auto;
+          /* FIXED POSITION BELOW BUTTON */
+          left: 0;
+          top: calc(100% + 2px);
         }
         .al-nav-dropdown.al-open { display: block; }
         @keyframes alNavFadeIn {
-          from { opacity:0; transform:translateY(-6px); }
+          from { opacity:0; transform:translateY(-8px); }
           to   { opacity:1; transform:translateY(0); }
         }
+        
         .al-nav-item {
           display: flex; align-items: center; gap: 10px;
           padding: 8px 16px; color: #94a3b8; font-size: 13px;
@@ -637,154 +661,44 @@
           .observe(from, { childList: true, characterData: true, subtree: true });
       });
 
-      // 2. Auth state (loggedIn / loggedOut)
+      // 2. Auth state (CRITICAL FIX for login display)
       var deskIn   = document.getElementById('loggedInView');
       var mobIn    = document.getElementById('mobLoggedInView');
       var mobOut   = document.getElementById('mobLoggedOutView');
       var deskAva  = document.getElementById('userAvatar');
       var mobAva   = document.getElementById('mobUserAvatar');
-
+      var deskOut  = document.getElementById('loggedOutView');
+      
       function syncAuth() {
         var isIn = deskIn && !deskIn.classList.contains('hidden');
-        if (mobIn)  mobIn.style.display  = isIn ? 'flex' : 'none';
-        if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
+        // Принудительно проверяем состояние
+        if (isIn) {
+          if (mobIn)  mobIn.style.display  = 'flex';
+          if (mobOut) mobOut.style.display = 'none';
+          if (deskOut) deskOut.style.display = 'none';
+          deskIn.classList.remove('hidden');
+        } else {
+          if (mobIn)  mobIn.style.display  = 'none';
+          if (mobOut) mobOut.style.display = 'block';
+          if (deskOut) deskOut.style.display = 'block';
+          deskIn.classList.add('hidden');
+        }
         if (deskAva && mobAva && deskAva.src) mobAva.src = deskAva.src;
-        
-        // Принудительно обновляем состояние при каждом изменении
-        setTimeout(function() {
-          if (mobIn) mobIn.style.display  = isIn ? 'flex' : 'none';
-          if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
-        }, 100);
       }
+      
       if (deskIn) new MutationObserver(syncAuth).observe(deskIn, { attributes: true, attributeFilter: ['class','style'] });
-      if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
+      if (deskOut) new MutationObserver(function(){ if (deskIn && !deskOut.classList.contains('hidden')) { if(deskIn)deskIn.classList.add('hidden'); syncAuth(); }}).observe(deskOut, { attributes: true, attributeFilter: ['class','style'] });
+      if (deskAva) new MutationObserver(function(){ if (mobAva && deskAva.src) mobAva.src = deskAva.src; })
         .observe(deskAva, { attributes: true, attributeFilter: ['src'] });
+      
+      // Запускаем проверку при каждой загрузке
       syncAuth();
       
-      // Дополнительная проверка каждую секунду на случай проблем с синхронизацией
-      setInterval(syncAuth, 1000);
-
-      // 3. Feedback panel (generalFeedbackPanel)
-      var deskFP  = document.getElementById('generalFeedbackPanel');
-      var mobFBtn = document.getElementById('mobFeedbackBtn');
-      var deskFBadge = document.getElementById('feedbackBadge');
-      var mobFBadge  = document.getElementById('mobFeedbackBadge');
-
-      function syncFeedback() {
-        var vis = deskFP && !deskFP.classList.contains('hidden');
-        if (mobFBtn) mobFBtn.style.display = vis ? 'block' : 'none';
-      }
-      function syncFBadge() {
-        if (!deskFBadge || !mobFBadge) return;
-        var hidden = deskFBadge.classList.contains('hidden');
-        mobFBadge.style.display = hidden ? 'none' : 'flex';
-        if (!hidden) mobFBadge.textContent = deskFBadge.textContent;
-      }
-      if (deskFP) new MutationObserver(syncFeedback).observe(deskFP, { attributes: true, attributeFilter: ['class','style'] });
-      if (deskFBadge) new MutationObserver(syncFBadge).observe(deskFBadge, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
-      syncFeedback(); syncFBadge();
-
-      // 4. Notification badge
-      var deskNBadge = document.getElementById('notificationBadge');
-      var mobNBadge  = document.getElementById('mobNotifBadge');
-      function syncNBadge() {
-        if (!deskNBadge || !mobNBadge) return;
-        var hidden = deskNBadge.classList.contains('hidden');
-        mobNBadge.style.display = hidden ? 'none' : 'flex';
-        if (!hidden) mobNBadge.textContent = deskNBadge.textContent;
-      }
-      if (deskNBadge) new MutationObserver(syncNBadge).observe(deskNBadge, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
-      syncNBadge();
-
-      // 5. Admin panel
-      var deskAdmin = document.getElementById('adminPanel');
-      var mobAdd    = document.getElementById('mobAddBtn');
-      var mobBtns   = document.getElementById('mobAdminBtns');
-      function syncAdmin() {
-        var vis = deskAdmin && deskAdmin.style.display !== 'none' && deskAdmin.style.display !== '';
-        if (mobAdd)  mobAdd.style.display  = vis ? 'flex' : 'none';
-        if (mobBtns) mobBtns.style.display = vis ? 'flex' : 'none';
-      }
-      if (deskAdmin) new MutationObserver(syncAdmin).observe(deskAdmin, { attributes: true, attributeFilter: ['style'] });
-      syncAdmin();
-
-      // 6. Lang button
-      var deskLang    = document.getElementById('langBtn');
-      var mobLangBtn  = document.getElementById('mobLangBtn');
-      var mobLangFlag = document.querySelector('.mob-lang-flag');
-      var mobLangText = document.querySelector('.mob-lang-text');
-      function syncLang() {
-        if (!deskLang) return;
-        var flag = deskLang.querySelector('.lang-flag');
-        var text = deskLang.querySelector('.lang-text');
-        if (mobLangFlag && flag) mobLangFlag.textContent = flag.textContent;
-        if (mobLangText && text) mobLangText.textContent = text.textContent;
-        if (mobLangBtn) {
-          var active = deskLang.classList.contains('lang-active');
-          mobLangBtn.style.background = active ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.1)';
-          mobLangBtn.style.borderColor = active ? 'rgba(34,197,94,0.5)' : 'rgba(239,68,68,0.3)';
-        }
-      }
-      if (deskLang) new MutationObserver(syncLang).observe(deskLang, { attributes: true, subtree: true, childList: true, characterData: true });
-      setTimeout(syncLang, 200);
-      setTimeout(syncLang, 600);
-     // ── 7. Claim button — визуальный индикатор состояния ──
-var deskClaim = document.getElementById('headerClaimBtn');
-var mobClaim  = document.getElementById('mobClaimBtn');
-
-function syncClaimBtn() {
-    if (!deskClaim || !mobClaim) return;
-
-    var txt = deskClaim.textContent || '';
-    var isClaimed = deskClaim.disabled
-        || /\d+:\d{2}/.test(txt)
-        || txt.toLowerCase().includes('сброс')
-        || txt.toLowerCase().includes('reset');
-
-    if (isClaimed) {
-        // ── СОСТОЯНИЕ: уже клеймил сегодня ──
-        var lbl = (window.currentLang === 'en') ? 'Claimed' : 'Готово';
-        mobClaim.innerHTML = '🔒 <span style="font-size:11px;">' + lbl + '</span>';
-        mobClaim.style.cssText += [
-            'background:rgba(71,85,105,0.2)',
-            'border-color:rgba(71,85,105,0.35)',
-            'color:#64748b',
-            'cursor:pointer'
-        ].join(';');
-        mobClaim.onclick = function() {
-            if (window.openClaimModal) window.openClaimModal();
-        };
-
-    } else {
-        // ── СОСТОЯНИЕ: можно клеймить ──
-        var lbl = (window.currentLang === 'en') ? 'Claim' : 'Клейм';
-        mobClaim.innerHTML = '🧪 <span id="mobClaimSpan" style="font-size:11px;"'
-            + ' data-translate="claim_btn_label">' + lbl + '</span>';
-        mobClaim.style.cssText += [
-            'background:rgba(8,145,178,0.2)',
-            'border-color:rgba(34,211,238,0.3)',
-            'color:#22d3ee',
-            'cursor:pointer',
-            'opacity:1'
-        ].join(';');
-        mobClaim.onclick = function() {
-            if (window.openClaimModal) window.openClaimModal();
-        };
-    }
-}
-
-if (deskClaim) {
-    new MutationObserver(syncClaimBtn).observe(deskClaim, {
-        childList: true, subtree: true,
-        attributes: true, characterData: true
-    });
-}
-
-setInterval(syncClaimBtn, 5000); // достаточно раз в 5 сек — не нужна секунда
-syncClaimBtn();
+      // Дополнительная проверка каждые 2 секунды
+      setInterval(syncAuth, 2000);
     }
 
-    setTimeout(setupObservers, 200);
+    setTimeout(setupObservers, 300);
 
     // ── Header height CSS variable ──
     function syncHeaderHeight() {
@@ -811,9 +725,13 @@ syncClaimBtn();
 
 })();
 
+// ── NAVIGATION DROPDOWN TOGGLE ──
 window.alNavToggle = function(btn) {
   var group = btn.closest('.al-nav-group');
+  if (!group) return;
   var dropdown = group.querySelector('.al-nav-dropdown');
+  if (!dropdown) return;
+  
   var isOpen = dropdown.classList.contains('al-open');
 
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
@@ -823,14 +741,16 @@ window.alNavToggle = function(btn) {
   });
 
   if (!isOpen) {
-    var rect = btn.getBoundingClientRect();
-    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    dropdown.style.position = 'fixed';
-    dropdown.style.top = (rect.bottom + scrollTop) + 'px';
-    dropdown.style.left = rect.left + 'px';
-    dropdown.style.width = rect.width + 'px';
     dropdown.classList.add('al-open');
     btn.classList.add('al-nav-open');
+    // Фиксируем позицию относительно viewport
+    setTimeout(function() {
+      var rect = btn.getBoundingClientRect();
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      dropdown.style.position = 'fixed';
+      dropdown.style.top = (rect.bottom + scrollTop) + 'px';
+      dropdown.style.left = rect.left + 'px';
+    }, 10);
   }
 };
 
@@ -852,7 +772,6 @@ window.addEventListener('scroll', function() {
       var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       d.style.top = (rect.bottom + scrollTop) + 'px';
       d.style.left = rect.left + 'px';
-      d.style.width = rect.width + 'px';
     }
   });
 }, { passive: true });
@@ -865,21 +784,40 @@ window.addEventListener('resize', function() {
   });
 });
 
-// Coming Soon Modal functions
+// ── COMING SOON MODAL FUNCTIONS ──
 window.showComingSoon = function() {
   var modal = document.getElementById('comingSoonModal');
-  if (modal) modal.style.display = 'flex';
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Блокируем скролл фона
+  }
 };
 
 window.closeComingSoon = function(event) {
   if (event && event.target !== event.currentTarget) return;
   var modal = document.getElementById('comingSoonModal');
-  if (modal) modal.style.display = 'none';
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = ''; // Возвращаем скролл
+  }
 };
 
-// Close modal on Escape key
+window.closeAlNav = function(el) {
+  var dropdown = el.closest('.al-nav-dropdown');
+  if (dropdown) {
+    dropdown.classList.remove('al-open');
+    var btn = dropdown.closest('.al-nav-group').querySelector('.al-nav-btn');
+    if (btn) btn.classList.remove('al-nav-open');
+  }
+};
+
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     closeComingSoon();
+    document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
+      d.classList.remove('al-open');
+      var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
+      if (b) b.classList.remove('al-nav-open');
+    });
   }
 });
