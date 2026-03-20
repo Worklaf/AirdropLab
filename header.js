@@ -679,7 +679,7 @@
           border-radius: 12px;
           box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,211,238,0.05);
           backdrop-filter: blur(20px);
-          z-index: 99999; /* увеличен для поверх всех элементов */
+          z-index: 999999; /* очень высокий для поверх ВСЕХ элементов */
           padding: 6px 0;
           animation: alNavFadeIn 0.15s ease;
           /* убрали max-height и overflow-y для отображения полного меню */
@@ -970,7 +970,7 @@ window.alNavToggle = function(btn) {
     var rect = btn.getBoundingClientRect();
     console.log('Button rect:', rect); // отладка
     // position:fixed - координаты относительно вьюпорта, БЕЗ scrollY
-    dropdown.style.top  = rect.bottom + 'px';
+    dropdown.style.top  = (rect.bottom + 2) + 'px'; // небольшой отступ 2px
     dropdown.style.left = rect.left + 'px';
     dropdown.style.width = rect.width + 'px'; // устанавливаем ширину равную кнопке
     console.log('Menu position:', {top: dropdown.style.top, left: dropdown.style.left}); // отладка
@@ -996,7 +996,7 @@ window.addEventListener('scroll', function() {
     var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
     if (b) {
       var rect = b.getBoundingClientRect();
-      d.style.top  = rect.bottom + 'px';
+      d.style.top  = (rect.bottom + 2) + 'px'; // небольшой отступ 2px
       d.style.left = rect.left + 'px';
       d.style.width = rect.width + 'px'; // обновляем ширину при скролле
     }
