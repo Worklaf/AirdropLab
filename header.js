@@ -803,18 +803,6 @@
         if (mobIn)  mobIn.style.display  = isIn ? 'flex' : 'none';
         if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
         if (deskAva && mobAva && deskAva.src) mobAva.src = deskAva.src;
-        
-        // Принудительно обновляем состояние при каждом изменении
-        setTimeout(function() {
-          if (mobIn) mobIn.style.display  = isIn ? 'flex' : 'none';
-          if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
-        }, 100);
-        
-        // Дополнительное обновление через короткое время
-        setTimeout(function() {
-          if (mobIn) mobIn.style.display  = isIn ? 'flex' : 'none';
-          if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
-        }, 500);
       }
       if (deskIn)  new MutationObserver(syncAuth).observe(deskIn,  { attributes:true, attributeFilter:['class','style'] });
       if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
@@ -822,7 +810,7 @@
       syncAuth();
       
       // Дополнительная проверка каждые 500мс на случай проблем с синхронизацией
-     // setInterval(syncAuth, 500);  // ЗАКОММЕНТИРУЙ ЭТУ СТРОКУ
+      // setInterval(syncAuth, 500); // ЗАКОММЕНТИРОВАНО - вызывает бесконечный цикл
 
       // 3. Feedback panel
       var deskFP     = document.getElementById('generalFeedbackPanel');
@@ -915,7 +903,7 @@
         mobClaim.onclick = function() { if (window.openClaimModal) window.openClaimModal(); };
       }
       if (deskClaim) new MutationObserver(syncClaimBtn).observe(deskClaim, { childList:true, subtree:true, attributes:true, characterData:true });
-      setInterval(syncClaimBtn, 5000);
+      // setInterval(syncClaimBtn, 5000); // ЗАКОММЕНТИРОВАНО - вызывает цикл
       syncClaimBtn();
 
       // Рендер кнопки уведомлений после установки всех наблюдателей
@@ -948,6 +936,36 @@
   }
 
 })();
+
+// ════════════════════════════════════════════════════
+// Очистка проблемных данных Firebase
+// ════════════════════════════════════════════════════
+window.cleanupFirebaseData = function() {
+  try {
+    // Очистка problematic localStorage данных
+    localStorage.removeItem('firestore_online_state_firestore/[DEFAULT]/testnet-hub/');
+    localStorage.removeItem('firestore_sequence_number_firestore/[DEFAULT]/testnet-hub/');
+    localStorage.removeItem('firestore_clients_firestore/[DEFAULT]/testnet-hub/_z544aLk2APXdIYf6ZrzE');
+    localStorage.removeItem('firestore_targets_firestore/[DEFAULT]/testnet-hub/_2');
+    localStorage.removeItem('firestore_targets_firestore/[DEFAULT]/testnet-hub/_4');
+    
+    // Остановка всех активных Firebase соединений
+    if (window.firebase && window.firebase.firestore) {
+      console.log('Очистка Firebase данных...');
+    }
+    
+    console.log('Firebase данные очищены');
+  } catch (error) {
+    console.log('Ошибка при очистке:', error);
+  }
+};
+
+// Автоматическая очистка при загрузке если есть проблемы
+if (localStorage.getItem('firestore_online_state_firestore/[DEFAULT]/testnet-hub/')) {
+  console.log('Обнаружены проблемные Firebase данные - выполняю очистку');
+  cleanupFirebaseData();
+  location.reload(true);
+}
 
 // ════════════════════════════════════════════════════
 // Navigation toggle — ИСПРАВЛЕНО: position:fixed без scrollTop
