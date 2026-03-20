@@ -680,10 +680,7 @@
           z-index: 99999; /* увеличен для поверх всех элементов */
           padding: 6px 0;
           animation: alNavFadeIn 0.15s ease;
-          max-height: 400px;
-          overflow-y: auto;
-          top: 100%; /* позиционируем относительно родительской кнопки */
-          left: 0;
+          /* убрали max-height и overflow-y для отображения полного меню */
         }
         .al-nav-dropdown.al-open { display:block; }
 
