@@ -667,10 +667,10 @@
         .al-nav-arrow { font-size:9px; margin-left:2px; transition:transform 0.2s; }
         .al-nav-btn.al-nav-open .al-nav-arrow { transform:rotate(180deg); }
 
-        /* ─── КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: position:absolute, размер не привязан к кнопке ─── */
+        /* ─── КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: position:fixed, размер не привязан к кнопке ─── */
         .al-nav-dropdown {
           display: none;
-          position: absolute;
+          position: fixed;
           min-width: 280px; /* увеличена ширина */
           background: rgba(11,15,30,0.99);
           border: 1px solid rgba(34,211,238,0.2);
@@ -962,9 +962,8 @@ window.alNavToggle = function(btn) {
 
   if (!isOpen) {
     var rect = btn.getBoundingClientRect();
-    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    // position:absolute - координаты относительно документа, добавляем scrollTop
-    dropdown.style.top  = (rect.bottom + scrollTop) + 'px';
+    // position:fixed - координаты относительно вьюпорта, scrollTop НЕ добавляем
+    dropdown.style.top  = rect.bottom + 'px';
     dropdown.style.left = rect.left + 'px';
     dropdown.style.width = rect.width + 'px'; // устанавливаем ширину равную кнопке
     dropdown.classList.add('al-open');
@@ -983,14 +982,13 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// Обновление позиции при скролле (absolute - пересчитываем с scrollTop)
+// Обновление позиции при скролле (fixed - пересчитываем по вьюпорту)
 window.addEventListener('scroll', function() {
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
     var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
     if (b) {
       var rect = b.getBoundingClientRect();
-      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      d.style.top  = (rect.bottom + scrollTop) + 'px';
+      d.style.top  = rect.bottom + 'px';
       d.style.left = rect.left + 'px';
       d.style.width = rect.width + 'px'; // обновляем ширину при скролле
     }
