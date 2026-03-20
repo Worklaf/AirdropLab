@@ -480,45 +480,72 @@
       </div>
 
       <!-- Coming Soon Modal -->
-      <div id="comingSoonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);z-index:10000;align-items:center;justify-content:center;" onclick="closeComingSoon(event)">
-        <div style="background:linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,41,59,0.98));border:1px solid rgba(34,211,238,0.3);border-radius:24px;padding:48px;max-width:450px;text-align:center;position:relative;animation:modalPopIn 0.3s ease;box-shadow:0 0 60px rgba(34,211,238,0.2);" onclick="event.stopPropagation()">
-          <div style="position:absolute;inset:0;border-radius:24px;background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(139,92,246,0.1));pointer-events:none;"></div>
-          <div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);width:80px;height:80px;background:linear-gradient(135deg,#22d3ee,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(34,211,238,0.5);">
-            <div style="width:60px;height:60px;background:rgba(15,23,42,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;">
-              <i class="fas fa-rocket" style="font-size:28px;color:#22d3ee;animation:float 3s ease-in-out infinite;"></i>
+      <div id="comingSoonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.90);backdrop-filter:blur(20px);z-index:10000;align-items:center;justify-content:center;" onclick="closeComingSoon(event)">
+        <div style="background:linear-gradient(145deg,rgba(15,23,42,0.98),rgba(30,41,59,0.98));border:2px solid rgba(34,211,238,0.3);border-radius:32px;padding:56px;max-width:520px;text-align:center;position:relative;animation:modalPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);box-shadow:0 25px 80px rgba(34,211,238,0.3),0 0 120px rgba(34,211,238,0.1);" onclick="event.stopPropagation()">
+          <div style="position:absolute;inset:0;border-radius:32px;background:linear-gradient(145deg,rgba(34,211,238,0.1),rgba(139,92,246,0.1));pointer-events:none;"></div>
+          <div style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:100px;height:100px;background:linear-gradient(145deg,#22d3ee,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 15px 40px rgba(34,211,238,0.6);animation:float 4s ease-in-out infinite;">
+            <div style="width:80px;height:80px;background:rgba(15,23,42,0.95);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <i class="fas fa-rocket" style="font-size:36px;color:#22d3ee;animation:rocketGlow 2s ease-in-out infinite;"></i>
             </div>
           </div>
-          <div style="position:relative;margin-top:20px;">
-            <div style="display:flex;justify-content:center;gap:10px;margin-bottom:24px;">
-              <div style="width:12px;height:12px;background:rgba(34,211,238,0.3);border-radius:50%;animation:pulse 2s infinite;"></div>
-              <div style="width:12px;height:12px;background:rgba(139,92,246,0.3);border-radius:50%;animation:pulse 2s infinite 0.3s;"></div>
-              <div style="width:12px;height:12px;background:rgba(236,72,153,0.3);border-radius:50%;animation:pulse 2s infinite 0.6s;"></div>
+          <div style="position:relative;margin-top:30px;">
+            <div style="display:flex;justify-content:center;gap:12px;margin-bottom:30px;">
+              <div style="width:16px;height:16px;background:linear-gradient(45deg,rgba(34,211,238,0.4),rgba(34,211,238,0.8));border-radius:50%;animation:pulse 2.5s infinite;box-shadow:0 0 20px rgba(34,211,238,0.6);"></div>
+              <div style="width:16px;height:16px;background:linear-gradient(45deg,rgba(139,92,246,0.4),rgba(139,92,246,0.8));border-radius:50%;animation:pulse 2.5s infinite 0.4s;box-shadow:0 0 20px rgba(139,92,246,0.6);"></div>
+              <div style="width:16px;height:16px;background:linear-gradient(45deg,rgba(236,72,153,0.4),rgba(236,72,153,0.8));border-radius:50%;animation:pulse 2.5s infinite 0.8s;box-shadow:0 0 20px rgba(236,72,153,0.6);"></div>
             </div>
-            <h2 style="font-size:28px;font-weight:700;color:#f1f5f9;margin:0 0 16px;" data-translate="menu_in_development">Раздел находится в разработке</h2>
-            <p style="color:#94a3b8;margin:0 0 32px;font-size:16px;line-height:1.5;" data-translate="menu_coming_soon">Скоро появится! Мы уже работаем над этим разделом.</p>
-            <div style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:12px;padding:16px;margin-bottom:32px;">
-              <div style="display:flex;align-items:center;gap:12px;color:#22d3ee;font-size:14px;">
-                <i class="fas fa-info-circle" style="font-size:18px;"></i>
-                <span>Следите за обновлениями в нашем Discord</span>
+            <h2 style="font-size:32px;font-weight:800;color:#f1f5f9;margin:0 0 20px;text-shadow:0 2px 20px rgba(34,211,238,0.3);" data-translate="menu_in_development">Раздел в разработке</h2>
+            <p style="color:#cbd5e1;margin:0 0 36px;font-size:18px;line-height:1.6;" data-translate="menu_coming_soon">Этот раздел скоро появится! Мы уже работаем над созданием потрясающего контента.</p>
+            
+            <div style="background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(139,92,246,0.1));border:1px solid rgba(34,211,238,0.2);border-radius:16px;padding:24px;margin-bottom:36px;">
+              <div style="display:flex;align-items:center;gap:16px;color:#22d3ee;font-size:16px;margin-bottom:16px;">
+                <i class="fas fa-info-circle" style="font-size:24px;animation:infoPulse 2s infinite;"></i>
+                <span style="font-weight:600;">Что здесь будет?</span>
+              </div>
+              <div style="text-align:left;color:#94a3b8;font-size:15px;line-height:1.6;">
+                <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+                  <i class="fas fa-check-circle" style="color:#22d3ee;"></i>
+                  <span>Актуальная информация и новости</span>
+                </div>
+                <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+                  <i class="fas fa-check-circle" style="color:#8b5cf6;"></i>
+                  <span>Интерактивные инструменты и гайды</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <i class="fas fa-check-circle" style="color:#ec4899;"></i>
+                  <span>Сообщество и обсуждения</span>
+                </div>
               </div>
             </div>
-            <button onclick="closeComingSoon()" style="padding:12px 40px;background:linear-gradient(135deg,#22d3ee,#8b5cf6);border:none;border-radius:12px;color:white;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 20px rgba(34,211,238,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 30px rgba(34,211,238,0.4)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 20px rgba(34,211,238,0.3)';" data-translate="close">Закрыть</button>
+            
+            <div style="display:flex;gap:16px;justify-content:center;">
+              <button onclick="closeComingSoon()" style="padding:16px 48px;background:linear-gradient(135deg,#22d3ee,#8b5cf6);border:none;border-radius:16px;color:white;font-size:18px;font-weight:700;cursor:pointer;transition:all 0.3s;box-shadow:0 8px 32px rgba(34,211,238,0.4);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 40px rgba(34,211,238,0.5)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 32px rgba(34,211,238,0.4)';" data-translate="close">Понятно</button>
+              <button onclick="window.open('https://discord.gg/airdroplab','_blank')" style="padding:16px 32px;background:transparent;border:2px solid rgba(34,211,238,0.3);border-radius:16px;color:#22d3ee;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s;" onmouseover="this.style.background='rgba(34,211,238,0.1)';this.style.borderColor='rgba(34,211,238,0.5)';" onmouseout="this.style.background='transparent';this.style.borderColor='rgba(34,211,238,0.3)';">Discord</button>
+            </div>
           </div>
         </div>
       </div>
 
       <style>
         @keyframes modalPopIn {
-          from { opacity:0; transform:scale(0.9) translateY(20px); }
+          from { opacity:0; transform:scale(0.8) translateY(30px); }
           to { opacity:1; transform:scale(1) translateY(0); }
         }
         @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-15px) rotate(5deg); }
         }
         @keyframes pulse {
-          0%, 100% { opacity:0.3; transform:scale(1); }
-          50% { opacity:0.8; transform:scale(1.2); }
+          0%, 100% { opacity:0.4; transform:scale(1); }
+          50% { opacity:1; transform:scale(1.3); }
+        }
+        @keyframes rocketGlow {
+          0%, 100% { color:#22d3ee; text-shadow:0 0 20px rgba(34,211,238,0.8); }
+          50% { color:#8b5cf6; text-shadow:0 0 30px rgba(139,92,246,0.8); }
+        }
+        @keyframes infoPulse {
+          0%, 100% { transform:scale(1); }
+          50% { transform:scale(1.1); }
         }
         #site-nav-wrapper { position: relative; z-index: 9000; }
         #site-nav ::-webkit-scrollbar { display: none; }
@@ -626,11 +653,20 @@
         if (mobIn)  mobIn.style.display  = isIn ? 'flex' : 'none';
         if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
         if (deskAva && mobAva && deskAva.src) mobAva.src = deskAva.src;
+        
+        // Принудительно обновляем состояние при каждом изменении
+        setTimeout(function() {
+          if (mobIn) mobIn.style.display  = isIn ? 'flex' : 'none';
+          if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
+        }, 100);
       }
       if (deskIn) new MutationObserver(syncAuth).observe(deskIn, { attributes: true, attributeFilter: ['class','style'] });
       if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
         .observe(deskAva, { attributes: true, attributeFilter: ['src'] });
       syncAuth();
+      
+      // Дополнительная проверка каждую секунду на случай проблем с синхронизацией
+      setInterval(syncAuth, 1000);
 
       // 3. Feedback panel (generalFeedbackPanel)
       var deskFP  = document.getElementById('generalFeedbackPanel');
@@ -792,8 +828,11 @@ window.alNavToggle = function(btn) {
 
   if (!isOpen) {
     var rect = btn.getBoundingClientRect();
-    dropdown.style.top = rect.bottom + 'px';
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = (rect.bottom + scrollTop) + 'px';
     dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px';
     dropdown.classList.add('al-open');
     btn.classList.add('al-nav-open');
   }
@@ -814,8 +853,10 @@ window.addEventListener('scroll', function() {
     var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
     if (b) {
       var rect = b.getBoundingClientRect();
-      d.style.top = rect.bottom + 'px';
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      d.style.top = (rect.bottom + scrollTop) + 'px';
       d.style.left = rect.left + 'px';
+      d.style.width = rect.width + 'px';
     }
   });
 }, { passive: true });
