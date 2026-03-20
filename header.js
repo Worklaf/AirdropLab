@@ -969,16 +969,20 @@ window.alNavToggle = function(btn) {
     var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
     
+    // Сохраняем ссылку на родительскую группу перед перемещением
+    var parentGroup = dropdown.closest('.al-nav-group');
+    
     // Перемещаем меню в body чтобы избежать ограничений родителя
     document.body.appendChild(dropdown);
+    
+    // Сохраняем ссылку на родительскую группу в атрибуте меню
+    dropdown.setAttribute('data-parent-group', parentGroup ? parentGroup.className : '');
     
     // position:fixed - координаты относительно вьюпорта
     dropdown.style.position = 'fixed';
     dropdown.style.top  = (rect.bottom + 2) + 'px';
     dropdown.style.left = rect.left + 'px';
     dropdown.style.width = rect.width + 'px'; // устанавливаем ширину равную кнопке
-    // Визуальная отладка - красная рамка
-    dropdown.style.border = '2px solid red';
     dropdown.classList.add('al-open');
     btn.classList.add('al-nav-open');
   }
@@ -989,8 +993,15 @@ document.addEventListener('click', function(e) {
   if (!e.target.closest('.al-nav-group')) {
     document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
       d.classList.remove('al-open');
-      var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
-      if (b) b.classList.remove('al-nav-open');
+      // Ищем кнопку по атрибуту data-parent-group или через querySelector
+      var parentClass = d.getAttribute('data-parent-group');
+      if (parentClass) {
+        var parentGroup = document.querySelector('.' + parentClass.split(' ').join('.'));
+        if (parentGroup) {
+          var b = parentGroup.querySelector('.al-nav-btn');
+          if (b) b.classList.remove('al-nav-open');
+        }
+      }
     });
   }
 });
@@ -998,12 +1009,19 @@ document.addEventListener('click', function(e) {
 // Обновление позиции при скролле (fixed - пересчитываем по вьюпорту)
 window.addEventListener('scroll', function() {
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
-    var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
-    if (b) {
-      var rect = b.getBoundingClientRect();
-      d.style.top  = (rect.bottom + 2) + 'px';
-      d.style.left = rect.left + 'px';
-      d.style.width = rect.width + 'px'; // обновляем ширину при скролле
+    // Ищем родительскую группу по атрибуту
+    var parentClass = d.getAttribute('data-parent-group');
+    if (parentClass) {
+      var parentGroup = document.querySelector('.' + parentClass.split(' ').join('.'));
+      if (parentGroup) {
+        var b = parentGroup.querySelector('.al-nav-btn');
+        if (b) {
+          var rect = b.getBoundingClientRect();
+          d.style.top  = (rect.bottom + 2) + 'px';
+          d.style.left = rect.left + 'px';
+          d.style.width = rect.width + 'px'; // обновляем ширину при скролле
+        }
+      }
     }
   });
 }, { passive: true });
@@ -1012,8 +1030,15 @@ window.addEventListener('scroll', function() {
 window.addEventListener('resize', function() {
   document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
     d.classList.remove('al-open');
-    var b = d.closest('.al-nav-group').querySelector('.al-nav-btn');
-    if (b) b.classList.remove('al-nav-open');
+    // Ищем кнопку по атрибуту data-parent-group
+    var parentClass = d.getAttribute('data-parent-group');
+    if (parentClass) {
+      var parentGroup = document.querySelector('.' + parentClass.split(' ').join('.'));
+      if (parentGroup) {
+        var b = parentGroup.querySelector('.al-nav-btn');
+        if (b) b.classList.remove('al-nav-open');
+      }
+    }
   });
 });
 
