@@ -1,67 +1,109 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Очистка cookies AirdropLab</title>
+    <title>Диагностика AirdropLab</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
-        button { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 10px; }
+        button { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
         button:hover { background: #2563eb; }
-        .result { margin: 20px; padding: 10px; background: #f0f9ff; border-radius: 5px; }
-        .success { color: #059669; }
+        button.danger { background: #ef4444; }
+        button.danger:hover { background: #dc2626; }
+        .result { margin: 20px; padding: 15px; background: #f0f9ff; border-radius: 5px; text-align: left; }
+        .success { color: #059669; font-weight: bold; }
+        .warning { color: #d97706; font-weight: bold; }
+        .error { color: #dc2626; font-weight: bold; }
         .info { color: #1e40af; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 3px; overflow-x: auto; }
     </style>
 </head>
 <body>
-    <h1>Очистка cookies для AirdropLab</h1>
-    <p class="info">Этот файл очистит cookies только для текущего домена</p>
+    <h1>🔧 Диагностика AirdropLab</h1>
     
-    <button onclick="clearCookies()">Очистить cookies AirdropLab</button>
-    <button onclick="showCookies()">Показать текущие cookies</button>
+    <div style="margin: 20px 0;">
+        <button onclick="checkAll()">🔍 Проверить всё</button>
+        <button onclick="clearLocalStorage()" class="danger">🗑️ Очистить localStorage</button>
+        <button onclick="clearSessionStorage()" class="danger">🗑️ Очистить sessionStorage</button>
+        <button onclick="stopAllTimers()" class="danger">⏹️ Остановить таймеры</button>
+    </div>
+    
+    <button onclick="goToSite()">🚀 Перейти на сайт</button>
     
     <div id="result"></div>
     
     <script>
-        function clearCookies() {
-            var cookies = document.cookie.split(";");
-            var cleared = 0;
-            var currentDomain = window.location.hostname;
+        function checkAll() {
+            var html = '<div class="result">';
             
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i];
-                var eqPos = cookie.indexOf("=");
-                var name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-                
-                if (name) {
-                    // Удаляем cookie для текущего домена и пути
-                    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + currentDomain;
-                    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;";
-                    cleared++;
-                }
+            // Проверка localStorage
+            var lsItems = Object.keys(localStorage);
+            html += '<p class="info">📦 localStorage (' + lsItems.length + ' элементов):</p>';
+            html += '<pre>' + JSON.stringify(localStorage, null, 2) + '</pre>';
+            
+            // Проверка sessionStorage
+            var ssItems = Object.keys(sessionStorage);
+            html += '<p class="info">📦 sessionStorage (' + ssItems.length + ' элементов):</p>';
+            html += '<pre>' + JSON.stringify(sessionStorage, null, 2) + '</pre>';
+            
+            // Проверка cookies
+            html += '<p class="info">🍪 Cookies:</p>';
+            html += '<pre>' + (document.cookie || 'Нет cookies') + '</pre>';
+            
+            // Проверка активных таймеров
+            html += '<p class="info">⏰ Активные таймеры:</p>';
+            var timerCount = setTimeout(function(){}, 0);
+            html += '<pre>setTimeout: ' + timerCount + '</pre>';
+            
+            // Проверка проблемных данных
+            var hasFirebaseData = localStorage.getItem('firestore_online_state_firestore/[DEFAULT]/testnet-hub/');
+            if (hasFirebaseData) {
+                html += '<p class="warning">⚠️ Обнаружены проблемные данные Firebase!</p>';
             }
             
-            document.getElementById('result').innerHTML = 
-                '<div class="result">' +
-                '<p class="success">✅ Очищено cookies для домена ' + currentDomain + ': ' + cleared + '</p>' +
-                '<p>Теперь <a href="./index.html" style="color: #3b82f6;">перейдите на сайт</a></p>' +
-                '</div>';
-        }
-        
-        function showCookies() {
-            var cookies = document.cookie;
-            var currentDomain = window.location.hostname;
+            html += '</div>';
             
-            document.getElementById('result').innerHTML = 
-                '<div class="result">' +
-                '<p class="info">🍪 Текущие cookies для ' + currentDomain + ':</p>' +
-                '<p style="font-family: monospace; background: #f8f8f8; padding: 10px; border-radius: 3px;">' + 
-                (cookies || 'Нет cookies') + '</p>' +
-                '</div>';
+            document.getElementById('result').innerHTML = html;
         }
         
-        // Показываем информацию при загрузке
+        function clearLocalStorage() {
+            var count = Object.keys(localStorage).length;
+            localStorage.clear();
+            document.getElementById('result').innerHTML = 
+                '<div class="result"><p class="success">✅ Очищено localStorage: ' + count + ' элементов</p></div>';
+        }
+        
+        function clearSessionStorage() {
+            var count = Object.keys(sessionStorage).length;
+            sessionStorage.clear();
+            document.getElementById('result').innerHTML = 
+                '<div class="result"><p class="success">✅ Очищено sessionStorage: ' + count + ' элементов</p></div>';
+        }
+        
+        function stopAllTimers() {
+            var highestTimeoutId = setTimeout(function(){}, 0);
+            var cleared = 0;
+            for (var i = 0; i < highestTimeoutId; i++) {
+                clearTimeout(i);
+                clearInterval(i);
+                cleared++;
+            }
+            document.getElementById('result').innerHTML = 
+                '<div class="result"><p class="success">✅ Остановлено таймеров: ' + cleared + '</p></div>';
+        }
+        
+        function goToSite() {
+            // Полная очистка перед переходом
+            localStorage.clear();
+            sessionStorage.clear();
+            stopAllTimers();
+            
+            // Переход на сайт
+            window.location.href = './index.html';
+        }
+        
+        // Автоматическая проверка при загрузке
         window.onload = function() {
-            console.log('Домен:', window.location.hostname);
-            console.log('Текущие cookies:', document.cookie);
+            console.log('Загружена страница диагностики');
+            checkAll();
         };
     </script>
 </body>
