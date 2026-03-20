@@ -226,13 +226,13 @@
 
   <!-- Фильтры + сортировка + поиск -->
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:24px;">
-    <button class="filter-tab af"    onclick="fFilter('all',this)"><i class="fas fa-th-large" style="margin-right:4px;"></i><span data-translate="all">Все</span> <span id="cntAll" class="badge badge-multi" style="margin-left:6px;">–</span></button>
-    <button class="filter-tab"       onclick="fFilter('free',this)"><i class="fas fa-gift" style="margin-right:4px;color:#34d399;"></i><span data-translate="faucets_filter_free">Бесплатные</span> <span id="cntFree" class="badge badge-multi" style="margin-left:6px;">–</span></button>
-    <button class="filter-tab"       onclick="fFilter('paid',this)"><i class="fas fa-coins" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="faucets_filter_paid">Платные</span> <span id="cntPaid" class="badge badge-multi" style="margin-left:6px;">–</span></button>
-    <button class="filter-tab"       onclick="fFilter('testnet',this)"><i class="fas fa-flask" style="margin-right:4px;color:#60a5fa;"></i><span data-translate="faucets_filter_testnet">Тестнеты</span> <span id="cntTestnet" class="badge badge-multi" style="margin-left:6px;">–</span></button>
-    <button class="filter-tab"       onclick="fFilter('mainnet',this)"><i class="fas fa-network-wired" style="margin-right:4px;color:#a78bfa;"></i><span data-translate="faucets_filter_mainnet">Мейннеты</span> <span id="cntMainnet" class="badge badge-multi" style="margin-left:6px;">–</span></button>
-    <button class="filter-tab" onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="favorites">Избранное</span> <span id="cntFavorites" class="badge badge-multi" style="margin-left:6px;">–</span></button>
-    <button class="filter-tab" onclick="fFilter('my-suggestions',this)" id="mySuggestionsFilter" style="display:block;background:rgba(139,92,246,0.12);color:#a78bfa;border-color:rgba(139,92,246,0.35);" data-filter="my-suggestions">
+    <button class="filter-tab af"    onclick="fFilter('all',this)"><i class="fas fa-th-large" style="margin-right:4px;"></i><span data-translate="all">Все</span> <span id="filterCntAll" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('free',this)"><i class="fas fa-gift" style="margin-right:4px;color:#34d399;"></i><span data-translate="faucets_filter_free">Бесплатные</span> <span id="filterCntFree" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('paid',this)"><i class="fas fa-coins" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="faucets_filter_paid">Платные</span> <span id="filterCntPaid" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('testnet',this)"><i class="fas fa-flask" style="margin-right:4px;color:#60a5fa;"></i><span data-translate="faucets_filter_testnet">Тестнеты</span> <span id="filterCntTestnet" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('mainnet',this)"><i class="fas fa-network-wired" style="margin-right:4px;color:#a78bfa;"></i><span data-translate="faucets_filter_mainnet">Мейннеты</span> <span id="filterCntMainnet" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab" onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="favorites">Избранное</span> <span id="filterCntFavorites" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab" onclick="fFilter('my-suggestions',this)" id="mySuggestionsFilter" style="display:block;background:rgba(139,92,256,0.12);color:#a78bfa;border-color:rgba(139,92,256,0.35);" data-filter="my-suggestions">
       <i class="fas fa-user-edit" style="margin-right:4px;"></i>
       <span data-translate="my_suggestions">My Suggestions</span> <span id="mySuggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
     </button>
@@ -242,7 +242,7 @@
     </button>
     <button class="filter-tab" onclick="fFilter('hidden',this)" id="hiddenFilter" style="display:none;background:rgba(239,68,68,0.12);color:#f87171;border-color:rgba(239,68,68,0.35);" data-filter="hidden">
       <i class="fas fa-eye-slash" style="margin-right:4px;"></i>
-      <span>Скрытые</span> <span id="cntHidden" class="badge badge-multi" style="margin-left:6px;">0</span>
+      <span>Скрытые</span> <span id="filterCntHidden" class="badge badge-multi" style="margin-left:6px;">0</span>
     </button>
 
     <select id="sortSelectFaucets" onchange="setSort(this.value)"
@@ -1309,14 +1309,14 @@ function renderAll() {
 }
 
 function updateCounts() {
-  // Безопасная установка счетчиков
-  var cntAll = document.getElementById('cntAll');
-  var cntFree = document.getElementById('cntFree');
-  var cntPaid = document.getElementById('cntPaid');
-  var cntTestnet = document.getElementById('cntTestnet');
-  var cntMainnet = document.getElementById('cntMainnet');
-  var cntFavorites = document.getElementById('cntFavorites');
-  var cntHidden = document.getElementById('cntHidden');
+  // Используем querySelector для надежного поиска элементов (уникальные ID для фильтров)
+  var cntAll = document.querySelector('#filterCntAll');
+  var cntFree = document.querySelector('#filterCntFree');
+  var cntPaid = document.querySelector('#filterCntPaid');
+  var cntTestnet = document.querySelector('#filterCntTestnet');
+  var cntMainnet = document.querySelector('#filterCntMainnet');
+  var cntFavorites = document.querySelector('#filterCntFavorites');
+  var cntHidden = document.querySelector('#filterCntHidden');
   
   if (cntAll) cntAll.textContent = faucets.length || 0;
   if (cntFree) cntFree.textContent = faucets.filter(function(f){ return f.type==='free'; }).length || 0;
@@ -1328,9 +1328,12 @@ function updateCounts() {
 
   var total = faucets.reduce(function(acc, f){ return acc + (f.links||[]).length; }, 0);
   const isEn = (window.currentLang === 'en');
-  document.getElementById('totalCount').textContent = isEn
-    ? (faucets.length + ' networks · ' + total + ' faucets')
-    : (faucets.length + ' сетей · ' + total + ' кранов');
+  var totalCountEl = document.getElementById('totalCount');
+  if (totalCountEl) {
+    totalCountEl.textContent = isEn
+      ? (faucets.length + ' networks · ' + total + ' faucets')
+      : (faucets.length + ' сетей · ' + total + ' кранов');
+  }
     
   // Обновляем счетчик скрытых кранов в админ-панели
   var hiddenCount = document.getElementById('hiddenCount');
@@ -3308,6 +3311,8 @@ onAuthStateChanged(auth, async (user) => {
   updateCounts(); // Обновляем счетчики после загрузки избранного
   await loadFaucetsFromFirestore();
   updateCounts(); // Обновляем счетчики после загрузки кранов
+  // Повторный вызов с задержкой для надежности
+  setTimeout(function() { updateCounts(); }, 500);
   if (isAdmin) await loadPendingSuggestions();
   if (user) await loadNotificationsFromFirestore();
 
