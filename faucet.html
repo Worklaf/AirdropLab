@@ -1242,9 +1242,10 @@ function renderCard(f) {
     '</div>';
   }
 
-  var editBtns = (editMode && isAdmin && f.status !== 'pending') ? '<div style="display:flex;gap:6px;margin-top:10px;">'
+  var editBtns = (editMode && isAdmin && f.status !== 'pending') ? '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">'
     + '<button onclick="editFaucet(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);border-radius:6px;color:#22d3ee;font-size:11px;cursor:pointer;"><i class="fas fa-pen"></i> '+(isEn?'Edit':'Изменить')+'</button>'
     + '<button onclick="deleteFaucet(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete':'Удалить')+'</button>'
+    + '<button onclick="toggleFaucetVisibility(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:'+(f.hidden===true?'rgba(16,185,129,0.15)':'rgba(239,68,68,0.15)')+';border:1px solid '+(f.hidden===true?'rgba(16,185,129,0.3)':'rgba(239,68,68,0.3)')+';border-radius:6px;color:'+(f.hidden===true?'#34d399':'#f87171')+';font-size:11px;cursor:pointer;"><i class="fas '+(f.hidden===true?'fa-eye':'fa-eye-slash')+'"></i> '+(f.hidden===true?(isEn?'Show':'Показать'):(isEn?'Hide':'Скрыть'))+'</button>'
     + '</div>' : '';
 
   // Особый стиль для предложений
@@ -1304,18 +1305,33 @@ function renderAll() {
 }
 
 function updateCounts() {
-  document.getElementById('cntAll').textContent = faucets.length;
-  document.getElementById('cntFree').textContent    = faucets.filter(function(f){ return f.type==='free'; }).length;
-  document.getElementById('cntPaid').textContent    = faucets.filter(function(f){ return f.type==='paid'; }).length;
-  document.getElementById('cntTestnet').textContent = faucets.filter(function(f){ return f.net==='testnet'; }).length;
-  document.getElementById('cntMainnet').textContent = faucets.filter(function(f){ return f.net==='mainnet'; }).length;
-  document.getElementById('cntFavorites').textContent = favoritesSet.size;
+  // Безопасная установка счетчиков
+  var cntAll = document.getElementById('cntAll');
+  var cntFree = document.getElementById('cntFree');
+  var cntPaid = document.getElementById('cntPaid');
+  var cntTestnet = document.getElementById('cntTestnet');
+  var cntMainnet = document.getElementById('cntMainnet');
+  var cntFavorites = document.getElementById('cntFavorites');
+  
+  if (cntAll) cntAll.textContent = faucets.length || 0;
+  if (cntFree) cntFree.textContent = faucets.filter(function(f){ return f.type==='free'; }).length || 0;
+  if (cntPaid) cntPaid.textContent = faucets.filter(function(f){ return f.type==='paid'; }).length || 0;
+  if (cntTestnet) cntTestnet.textContent = faucets.filter(function(f){ return f.net==='testnet'; }).length || 0;
+  if (cntMainnet) cntMainnet.textContent = faucets.filter(function(f){ return f.net==='mainnet'; }).length || 0;
+  if (cntFavorites) cntFavorites.textContent = linkFavoritesSet.size || 0;
 
   var total = faucets.reduce(function(acc, f){ return acc + (f.links||[]).length; }, 0);
   const isEn = (window.currentLang === 'en');
   document.getElementById('totalCount').textContent = isEn
     ? (faucets.length + ' networks · ' + total + ' faucets')
     : (faucets.length + ' сетей · ' + total + ' кранов');
+    
+  // Обновляем счетчик скрытых кранов
+  var hiddenCount = document.getElementById('hiddenCount');
+  if (hiddenCount) {
+    var hiddenFaucetsCount = faucets.filter(function(f){ return f.hidden === true; }).length;
+    hiddenCount.textContent = hiddenFaucetsCount || 0;
+  }
 }
 
 // Функция для переключения видимости крана (глобально через Firestore)
@@ -3266,6 +3282,7 @@ onAuthStateChanged(auth, async (user) => {
   updateHeaderAuthUI(user);
   await loadFavorites();
   await loadFaucetsFromFirestore();
+  updateCounts(); // Обновляем счетчики после загрузки данных
   if (isAdmin) await loadPendingSuggestions();
   if (user) await loadNotificationsFromFirestore();
 
@@ -3314,9 +3331,6 @@ onAuthStateChanged(auth, async (user) => {
   <div style="display:flex;align-items:center;gap:12px;">
     <button onclick="window.scrollTo({top:0,behavior:'smooth'})" style="padding:6px 12px;background:rgba(71,85,105,0.2);border:1px solid rgba(71,85,105,0.3);border-radius:6px;color:#94a3b8;font-size:12px;cursor:pointer;">
       <i class="fas fa-arrow-up"></i>
-    </button>
-    <button onclick="document.getElementById('fixedAdminPanel').style.display='none'" style="padding:6px 12px;background:rgba(148,163,184,0.2);border:1px solid rgba(148,163,184,0.3);border-radius:6px;color:#94a3b8;font-size:12px;cursor:pointer;">
-      <i class="fas fa-times"></i>
     </button>
   </div>
 </div>
