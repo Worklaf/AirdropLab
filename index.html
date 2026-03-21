@@ -9,6 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css">
     <!-- languages.js ДОЛЖЕН загружаться ПЕРЕД основным скриптом -->
     <script src="languages.js"></script>
     <script src="header.js"></script>
@@ -831,7 +832,7 @@ function getNewActivitiesCount(projectId) {
   }).length;
 }
 
-async function markActivityAsViewed(projectId, activityId) {
+function markActivityAsViewed(projectId, activityId) {
   if (!viewedActivitiesData[projectId]) viewedActivitiesData[projectId] = [];
   if (!viewedActivitiesData[projectId].includes(activityId)) {
     viewedActivitiesData[projectId].push(activityId);
@@ -841,40 +842,14 @@ async function markActivityAsViewed(projectId, activityId) {
     newActivitiesData[projectId] = newActivitiesData[projectId].filter(id => id !== activityId);
     localStorage.setItem(NEW_ACTIVITIES_KEY, JSON.stringify(newActivitiesData));
   }
-  
-  // Сохраняем в Firebase
-  if (currentUser) {
-    try {
-      const userRef = doc(db, "users", currentUser.uid);
-      await setDoc(userRef, { 
-        viewedActivities: viewedActivitiesData,
-        newActivities: newActivitiesData 
-      }, { merge: true });
-    } catch (error) {
-      console.error('Error saving viewed activities:', error);
-    }
-  }
-  
   applyFilters();
 }
 
-async function addNewActivity(projectId, activityId) {
+function addNewActivity(projectId, activityId) {
   if (!newActivitiesData[projectId]) newActivitiesData[projectId] = [];
   if (!newActivitiesData[projectId].includes(activityId)) {
     newActivitiesData[projectId].push(activityId);
     localStorage.setItem(NEW_ACTIVITIES_KEY, JSON.stringify(newActivitiesData));
-  }
-  
-  // Сохраняем в Firebase
-  if (currentUser) {
-    try {
-      const userRef = doc(db, "users", currentUser.uid);
-      await setDoc(userRef, { 
-        newActivities: newActivitiesData 
-      }, { merge: true });
-    } catch (error) {
-      console.error('Error saving new activities:', error);
-    }
   }
 }
 
@@ -1898,12 +1873,6 @@ function initUserSync(uid) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedArc));
             arcData = mergedArc;
         }
-        
-        // Загружаем пользовательские элементы для Tempo страницы
-        if (data.arcUserItems) {
-          window.userItems = data.arcUserItems;
-          localStorage.setItem('userItems_backup', JSON.stringify(window.userItems));
-        }
 
         // ✅ Дебаунс 300ms — не перерисовываем чаще чем нужно
         clearTimeout(syncTimer);
@@ -1929,7 +1898,7 @@ window.toggleComplete = async function(uid, aid) {
 
     // ✅ Снимаем пометку NEW при завершении (только для активностей, не для проекта)
     if (aid !== 'project') {
-      await markActivityAsViewed(uid, aid);
+      markActivityAsViewed(uid, aid);
     }
   }
 
@@ -2522,20 +2491,17 @@ window.openDetail = function(id) {
   document.getElementById('detailModal').classList.add('active');
 };
 
-window.toggleActivityDetail = async function(projId, actId) {
+window.toggleActivityDetail = function(actId) {
   const body = document.getElementById('body-' + actId);
   const icon = document.getElementById('icon-' + actId);
-  if (body && icon) {
-    const isOpen = body.classList.contains('open');
-    if (isOpen) {
-      body.classList.remove('open'); 
-      icon.classList.remove('rotate-180'); 
-    } else {
-      body.classList.add('open'); 
-      icon.classList.add('rotate-180'); 
-      if (currentDetailId) {
-        await markActivityAsViewed(currentDetailId, actId);
-      }
+  if (!body || !icon) return;
+  if (event.target.closest('.flex.items-center.gap-2 button')) return;
+  if (body.classList.contains('open')) { body.classList.remove('open'); icon.classList.remove('rotate-180'); }
+  else { 
+    body.classList.add('open'); 
+    icon.classList.add('rotate-180'); 
+    if (currentDetailId) {
+      markActivityAsViewed(currentDetailId, actId);
     }
   }
 };
@@ -2561,10 +2527,6 @@ function activateAdminMode() {
   isAdminMode = true;
   document.getElementById('adminPanel').style.display = 'flex';
   document.getElementById('generalFeedbackPanel').classList.remove('hidden');
-  
-  // Загрузить проекты из Firebase
-  loadProjectsFromFirebase();
-  
   const deletedCount = projects.filter(p => p.deleted).length;
 
   // ← data-translate чтобы updateAllTranslations() подхватывал при смене языка
@@ -2575,28 +2537,10 @@ function activateAdminMode() {
     '</span>';
 
   const indicator = document.getElementById('modeIndicator');
-  if (indicator) {
-    indicator.setAttribute('data-translate', 'admin_mode'); // ← добавляем атрибут
-    indicator.textContent = t('admin_mode');
-    indicator.classList.add('text-purple-400', 'font-bold');
-  }
+  indicator.setAttribute('data-translate', 'admin_mode'); // ← добавляем атрибут
+  indicator.textContent = t('admin_mode');
+  indicator.classList.add('text-purple-400', 'font-bold');
   applyFilters();
-}
-
-// Загрузка проектов из Firebase
-async function loadProjectsFromFirebase() {
-  try {
-    const projectsRef = collection(db, "projects");
-    const snapshot = await getDocs(projectsRef);
-    projects = [];
-    snapshot.forEach((doc) => {
-      projects.push({ id: doc.id, ...doc.data() });
-    });
-    console.log('Загружено проектов:', projects.length);
-    applyFilters();
-  } catch (error) {
-    console.error('Ошибка загрузки проектов:', error);
-  }
 }
 
 function setupSearchListener() {
@@ -2633,7 +2577,7 @@ window.openActivityEditor = function(actId = null) {
 
 window.closeActivityModal = function() { document.getElementById('activityModal').classList.remove('active'); editingActivityId = null; };
 
-window.saveActivityData = async function() {
+window.saveActivityData = function() {
   const title = document.getElementById('actName').value;
   if (!title) { showToast('Введите название'); return; }
   const selectedCats = Array.from(document.querySelectorAll('.act-cat-checkbox:checked')).map(cb => cb.value);
@@ -2659,7 +2603,7 @@ window.saveActivityData = async function() {
     if (idx !== -1) currentEditingActivities[idx] = actData;
   } else {
     currentEditingActivities.push(actData);
-    if (editingId) await addNewActivity(editingId, actData.id);
+    if (editingId) addNewActivity(editingId, actData.id);
   }
   const latestDate = getLatestActivityDate({ activities: currentEditingActivities });
   if (latestDate) document.getElementById('projLastUpdated').value = latestDate.split('T')[0];
@@ -2897,25 +2841,26 @@ window.editProject = function(id) {
   if (!isAdminMode) return;
   const project = projects.find(function(p) { return p.id === id; });
   if (!project) return;
-  
   editingId = id;
-  document.getElementById('projId').value = project.id;
+  document.getElementById('projId').value = id;
   document.getElementById('projName').value = project.name;
+  document.getElementById('projImage').value = project.image || '';
   document.getElementById('projGuideUrl').value = project.guideUrl || '';
+  document.getElementById('projCryptoRank').value = project.cryptoRankUrl || '';
+  document.getElementById('projTwitter').value = project.twitterUrl || '';
+  document.getElementById('projRef').value = project.referralLink || '';
   document.getElementById('projDesc').value = project.description || '';
-  document.getElementById('projDate').value = project.date || '';
-  document.getElementById('projEndDate').value = project.endDate || '';
+  document.getElementById('projStatus').value = project.status || 'active';
+  const latestActivityDate = getLatestActivityDate(project);
+  document.getElementById('projLastUpdated').value = latestActivityDate ? latestActivityDate.split('T')[0] : '';
+  document.getElementById('projDaily').checked = project.hasDaily || false;
   document.getElementById('projPriority').checked = project.priority === 'high';
   renderCategoryOptions();
   setSelectedCategories(project.categories || []);
-  
-  // Загружаем активности из проекта
   currentEditingActivities = project.activities || [];
   renderActivitiesAdminList();
-  
   document.getElementById('modalTitle').textContent = 'Редактировать проект';
   document.getElementById('deleteBtn').classList.remove('hidden');
-  document.getElementById('projLastUpdated').value = project.lastUpdated || '';
   isEditModalOpen = true;
   document.getElementById('addModal').classList.add('active');
   window.closeDetailModal();
