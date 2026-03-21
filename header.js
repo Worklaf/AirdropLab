@@ -810,8 +810,8 @@
           if (deskIn) deskIn.classList.remove('hidden');
           if (deskOut) deskOut.classList.add('hidden');
           if (guestWarning) guestWarning.classList.add('hidden');
-          if (userAvatar) userAvatar.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + (user.email || 'User') + '&background=random';
-          if (userName) userName.textContent = user.displayName || user.email.split('@')[0];
+          if (userAvatar) userAvatar.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.email || 'User') + '&background=random';
+          if (userName) userName.textContent = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
         } else if (user === null) {
           // Явный выход
           var deskIn  = document.getElementById('loggedInView');
