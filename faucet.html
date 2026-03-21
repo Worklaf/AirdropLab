@@ -2181,7 +2181,7 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 // Функция для принудительной очистки кэша и пересоздания переводов
-window.forceRecreateTranslations = async function(lang) {
+function forceRecreateTranslations(lang) {
   console.log(`🔄 Force recreating translations for ${lang}...`);
   
   // Очищаем кэш
@@ -2189,29 +2189,33 @@ window.forceRecreateTranslations = async function(lang) {
   localStorage.removeItem(`faucets_translations_${lang}`);
   
   // Создаем новые переводы
-  const translated = await translateAllDescriptions(lang);
-  cachedTranslations[lang] = translated;
-  
-  // Сохраняем в Firestore
-  if (currentUser && isAdmin) {
-    try {
-      const translationsRef = doc(db, "translations", `faucets_${lang}`);
-      await setDoc(translationsRef, {
-        faucets: translated,
-        updatedAt: new Date().toISOString()
-      });
-      console.log(`✅ Force saved translations for ${lang}`);
-    } catch (e) {
-      console.error('Failed to save translations:', e);
+  return translateAllDescriptions(lang).then(async translated => {
+    cachedTranslations[lang] = translated;
+    
+    // Сохраняем в Firestore
+    if (currentUser && isAdmin) {
+      try {
+        const translationsRef = doc(db, "translations", `faucets_${lang}`);
+        await setDoc(translationsRef, {
+          faucets: translated,
+          updatedAt: new Date().toISOString()
+        });
+        console.log(`✅ Force saved translations for ${lang}`);
+      } catch (e) {
+        console.error('Failed to save translations:', e);
+      }
     }
-  }
-  
-  // Обновляем отображение
-  renderAll();
-  updateCounts();
-  
-  console.log(`✅ Translation recreation completed for ${lang}`);
-};
+    
+    // Обновляем отображение
+    renderAll();
+    updateCounts();
+    
+    console.log(`✅ Translation recreation completed for ${lang}`);
+    return translated;
+  });
+}
+
+window.forceRecreateTranslations = forceRecreateTranslations;
 
 // Google Translate функция
 async function translateText(text, targetLang) {
