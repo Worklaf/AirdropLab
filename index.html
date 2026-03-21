@@ -2029,7 +2029,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     // ✅ Если пользователь вошел, но syncAuth не сработал, вызываем принудительно
     if (currentUser && typeof syncAuth === 'function') {
-      console.log('Forcing syncAuth call...');
+      console.log('Forcing syncAuth call with user...');
       syncAuth(currentUser);
     }
     // ✅ Принудительно рендерим header если он не загрузился
