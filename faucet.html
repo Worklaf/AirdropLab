@@ -1253,7 +1253,7 @@ function renderCard(f) {
   // Особый стиль для предложений
   var cardStyle = f.status === 'pending' ? 'border:2px solid rgba(239,68,68,0.3);background:linear-gradient(135deg,rgba(239,68,68,0.05),rgba(15,23,42,0.8));' : '';
 
-  return '<div class="faucet-card '+typeClass+'" data-id="'+f.id+'" data-name="'+f.name.toLowerCase()+'" data-token="'+(f.token||'').toLowerCase()+'" data-type="'+f.type+'" data-net="'+f.net+'">'
+  return '<div class="faucet-card '+typeClass+'" data-id="'+f.id+'" data-name="'+f.name.toLowerCase()+'" data-token="'+(f.token||'').toLowerCase()+'" data-type="'+f.type+'" data-net="'+f.net+'" onclick="window.openFaucetModal(' + JSON.stringify(f).replace(/"/g, '&quot;') + ')">'
     + '<div style="padding:16px;' + cardStyle + '">'
     + '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">'
     + logoHtml
@@ -1264,7 +1264,7 @@ function renderCard(f) {
     + badgeType + badgeNet + extraBadges
     + '</div></div>'
     + '<div style="display:flex;align-items:center;gap:8px;">'
-    + '<div class="rating-circle '+ratingClass(ratingAvg)+'" title="'+(isEn?'Rate (0-10)':'Оценить (0-10)')+'" onclick="window.openRating(\''+safeText(f.id)+'\')">'+ratingText+'</div>'
+    + '<div class="rating-circle '+ratingClass(ratingAvg)+'" title="'+(isEn?'Rate (0-10)':'Оценить (0-10)')+'" onclick="event.stopPropagation(); window.openRating(\''+safeText(f.id)+'\')">'+ratingText+'</div>'
     + '</div>'
     + '</div>'
     + (f.desc ? '<p style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;margin-top:6px;">'+safeText(f.desc)+'</p>' : '')
@@ -3384,6 +3384,26 @@ onAuthStateChanged(auth, async (user) => {
   </div>
 </div>
 
+<!-- Модальное окно крана с языковым переключателем -->
+<div id="faucetModal" class="modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.5);backdrop-filter:blur(5px);">
+  <div class="modal-content" style="background-color:#1e293b;border:1px solid rgba(139,92,246,0.3);border-radius:12px;margin:5% auto;width:90%;max-width:600px;height:auto;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+    <div style="padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+        <h3 id="modalFaucetName" style="color:#f1f5f9;margin:0;"></h3>
+        <span onclick="closeFaucetModal()" style="color:#94a3b8;cursor:pointer;font-size:24px;line-height:1;">&times;</span>
+      </div>
+      
+      <!-- Языковой переключатель -->
+      <div id="modalLangToggle" style="display:flex;justify-content:center;gap:8px;margin-bottom:15px;">
+        <button class="modal-lang-btn active" data-lang="ru">🇷🇺 RU</button>
+        <button class="modal-lang-btn" data-lang="en">🇬🇧 EN</button>
+      </div>
+      
+      <div id="modalFaucetContent" style="color:#e2e8f0;"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 // Функция для переключения видимости скрытых кранов
 window.toggleHiddenFaucets = function() {
@@ -3412,7 +3432,230 @@ window.updateHiddenCount = function() {
   const countEl = document.getElementById('hiddenCount');
   if (countEl) countEl.textContent = hiddenFaucets.length;
 };
+
+// ========== МОДАЛЬНОЕ ОКНО КРАНА С ЯЗЫКОВЫМ ПЕРЕКЛЮЧЕНИЕМ ==========
+let currentModalData = null;
+let currentModalLang = 'ru';
+
+// Открытие модального окна крана
+function openFaucetModal(faucet) {
+  const modal = document.getElementById('faucetModal');
+  const nameEl = document.getElementById('modalFaucetName');
+  const contentEl = document.getElementById('modalFaucetContent');
+  const langToggle = document.getElementById('modalLangToggle');
+  
+  // Сохраняем данные крана
+  currentModalData = {
+    name: faucet.name,
+    descriptions: {
+      ru: faucet.desc,
+      en: faucet.translatedDesc || faucet.desc // Используем переведенное описание если есть
+    },
+    reward: faucet.reward,
+    cooldown: faucet.cooldown,
+    links: faucet.links,
+    token: faucet.token,
+    type: faucet.type,
+    net: faucet.net
+  };
+  
+  currentModalLang = window.currentLang || 'ru';
+  
+  // Заполняем модальное окно
+  nameEl.textContent = faucet.name;
+  updateModalContent(currentModalLang);
+  updateModalLangButtons();
+  
+  // Показываем языковой переключатель если есть переводы
+  const hasTranslations = faucet.translatedDesc && faucet.translatedDesc !== faucet.desc;
+  langToggle.style.display = hasTranslations ? 'flex' : 'none';
+  
+  modal.style.display = 'block';
+}
+
+// Обновление контента модального окна
+function updateModalContent(lang) {
+  const contentEl = document.getElementById('modalFaucetContent');
+  if (!contentEl || !currentModalData) return;
+  
+  const desc = currentModalData.descriptions[lang] || 
+              currentModalData.descriptions.ru || 
+              currentModalData.descriptions.en || '';
+  
+  const content = `
+    <div style="margin-bottom:15px;">
+      <p style="margin-bottom:10px;">${desc}</p>
+      <div style="display:flex;gap:15px;flex-wrap:wrap;">
+        <span style="background:rgba(34,211,238,0.1);color:#22d3ee;padding:4px 8px;border-radius:4px;font-size:0.8rem;">
+          ${currentModalData.token}
+        </span>
+        <span style="background:rgba(16,185,129,0.1);color:#10b981;padding:4px 8px;border-radius:4px;font-size:0.8rem;">
+          ${currentModalData.type === 'free' ? 'Бесплатный' : 'Платный'}
+        </span>
+        <span style="background:rgba(139,92,246,0.1);color:#8b5cf6;padding:4px 8px;border-radius:4px;font-size:0.8rem;">
+          ${currentModalData.net}
+        </span>
+      </div>
+    </div>
+    
+    ${currentModalData.reward ? `
+    <div style="margin-bottom:10px;">
+      <strong>Награда:</strong> ${currentModalData.reward}
+    </div>
+    ` : ''}
+    
+    ${currentModalData.cooldown ? `
+    <div style="margin-bottom:15px;">
+      <strong>Кулдаун:</strong> ${currentModalData.cooldown}
+    </div>
+    ` : ''}
+    
+    ${currentModalData.links && currentModalData.links.length > 0 ? `
+    <div>
+      <strong>Ссылки:</strong>
+      <div style="margin-top:8px;">
+        ${currentModalData.links.map(link => `
+          <a href="${link}" target="_blank" style="display:inline-block;margin-right:10px;margin-bottom:5px;padding:6px 12px;background:#60a5fa;color:white;text-decoration:none;border-radius:6px;font-size:0.8rem;">
+            Открыть кран
+          </a>
+        `).join('')}
+      </div>
+    </div>
+    ` : ''}
+  `;
+  
+  contentEl.innerHTML = content;
+}
+
+// Обновление языковых кнопок
+function updateModalLangButtons() {
+  document.querySelectorAll('.modal-lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentModalLang);
+  });
+}
+
+// Закрытие модального окна
+function closeFaucetModal() {
+  const modal = document.getElementById('faucetModal');
+  modal.style.display = 'none';
+  currentModalData = null;
+}
+
+// Обработчики языковых кнопок
+document.addEventListener('DOMContentLoaded', function() {
+  // Языковой переключатель модального окна
+  document.querySelectorAll('.modal-lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentModalLang = btn.dataset.lang;
+      updateModalContent(currentModalLang);
+      updateModalLangButtons();
+    });
+  });
+  
+  // Закрытие модального окна при клике вне его
+  window.addEventListener('click', function(event) {
+    const modal = document.getElementById('faucetModal');
+    if (event.target === modal) {
+      closeFaucetModal();
+    }
+  });
+});
+
+// Глобальные функции
+window.openFaucetModal = openFaucetModal;
+window.closeFaucetModal = closeFaucetModal;
+
+// Функция для перезагрузки кранов при смене языка
+async function reloadFaucetsWithNewLanguage() {
+  const currentLang = window.currentLang || 'ru';
+  console.log(`🔄 Reloading faucets for language: ${currentLang}`);
+  
+  if (currentLang === 'ru') {
+    faucets = DEFAULT_FAUCETS.map((f) => ({
+      id: f.id,
+      name: f.name || '',
+      token: f.token || '',
+      type: f.type || 'free',
+      net: f.net || 'mainnet',
+      desc: f.desc || '',
+      links: f.links || [],
+      logoUrl: f.logoUrl || '',
+      reward: f.reward || '',
+      cooldown: f.cooldown || '',
+      tags: f.tags || [],
+      ratingAvg: 0,
+      ratingCount: 0,
+      clickCount: 0
+    }));
+  } else {
+    // Используем наш сервис перевода для кранов
+    console.log(`🌐 Using translation service for faucets...`);
+    
+    const translatedFaucets = DEFAULT_FAUCETS.map(async (faucet) => {
+      const translatedDesc = await translateText(faucet.desc || '', currentLang);
+      const translatedReward = await translateText(faucet.reward || '', currentLang);
+      const translatedCooldown = await translateText(faucet.cooldown || '', currentLang);
+      
+      return {
+        id: faucet.id,
+        name: faucet.name || '',
+        token: faucet.token || '',
+        type: faucet.type || 'free',
+        net: faucet.net || 'mainnet',
+        desc: faucet.desc || '',
+        translatedDesc: translatedDesc, // Сохраняем переведенное описание
+        links: faucet.links || [],
+        logoUrl: faucet.logoUrl || '',
+        reward: faucet.reward || '',
+        translatedReward: translatedReward, // Сохраняем переведенную награду
+        cooldown: faucet.cooldown || '',
+        translatedCooldown: translatedCooldown, // Сохраняем переведенный кулдаун
+        tags: faucet.tags || [],
+        ratingAvg: 0,
+        ratingCount: 0,
+        clickCount: 0
+      };
+    });
+    
+    // Ждем все переводы
+    faucets = await Promise.all(translatedFaucets);
+    console.log(`✅ All faucets translated for ${currentLang}`);
+  }
+  
+  renderAll();
+  updateCounts();
+}
+
+// Сделать функцией глобальной для вызова из languages.js
+window.reloadFaucetsWithNewLanguage = reloadFaucetsWithNewLanguage;
+
 </script>
+
+<style>
+/* Языковой переключатель модального окна */
+.modal-lang-btn {
+  padding:6px 14px;
+  border-radius:6px;
+  font-size:0.75rem;
+  font-weight:600;
+  cursor:pointer;
+  border:1px solid rgba(139,92,246,0.3);
+  background:transparent;
+  color:#94a3b8;
+  transition:all 0.2s;
+}
+
+.modal-lang-btn:hover {
+  border-color:#60a5fa;
+  color:#60a5fa;
+}
+
+.modal-lang-btn.active {
+  background:#60a5fa;
+  color:#fff;
+  border-color:#60a5fa;
+}
+</style>
 
 </body>
 </html>
