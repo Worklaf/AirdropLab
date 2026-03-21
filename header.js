@@ -798,42 +798,12 @@
       var deskAva = document.getElementById('userAvatar');
       var mobAva  = document.getElementById('mobUserAvatar');
 
-      function syncAuth(user) {
-        // Если передан пользователь, обновляем десктопный UI
-        if (user) {
-          var deskIn  = document.getElementById('loggedInView');
-          var deskOut = document.getElementById('loggedOutView');
-          var guestWarning = document.getElementById('guestWarning');
-          var userAvatar = document.getElementById('userAvatar');
-          var userName = document.getElementById('userName');
-          
-          if (deskIn) deskIn.classList.remove('hidden');
-          if (deskOut) deskOut.classList.add('hidden');
-          if (guestWarning) guestWarning.classList.add('hidden');
-          if (userAvatar) userAvatar.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.email || 'User') + '&background=random';
-          if (userName) userName.textContent = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
-        } else if (user === null) {
-          // Явный выход
-          var deskIn  = document.getElementById('loggedInView');
-          var deskOut = document.getElementById('loggedOutView');
-          var guestWarning = document.getElementById('guestWarning');
-          
-          if (deskIn) deskIn.classList.add('hidden');
-          if (deskOut) deskOut.classList.remove('hidden');
-          if (guestWarning) guestWarning.classList.remove('hidden');
-        }
-        // Если user undefined - ничего не делаем (для MutationObserver)
-        
-        // Синхронизируем мобильный view с десктопным
+      function syncAuth() {
         var isIn = deskIn && !deskIn.classList.contains('hidden');
         if (mobIn)  mobIn.style.display  = isIn ? 'flex' : 'none';
         if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
         if (deskAva && mobAva && deskAva.src) mobAva.src = deskAva.src;
       }
-      
-      // ✅ Экспортируем функции глобально для вызова из index.html
-      window.syncAuth = syncAuth;
-      
       if (deskIn)  new MutationObserver(syncAuth).observe(deskIn,  { attributes:true, attributeFilter:['class','style'] });
       if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
                      .observe(deskAva, { attributes:true, attributeFilter:['src'] });
@@ -958,9 +928,6 @@
     window.addEventListener('resize', syncHeaderHeight);
     setTimeout(syncHeaderHeight, 0);
   }
-
-  // ✅ Экспортируем функции глобально для вызова из index.html
-  window.injectHeader = injectHeader;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', injectHeader);
