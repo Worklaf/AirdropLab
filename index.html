@@ -1990,10 +1990,13 @@ function createSuccessRipple(button) {
 const EXTERNAL_DATA_URL = './data/projects.json';
 
 document.addEventListener('DOMContentLoaded', function() { 
+  console.log('DOMContentLoaded - currentUser:', currentUser);
+  console.log('DOMContentLoaded - window.currentUser:', window.currentUser);
+  
   checkAndAutoEndActivities();
   setInterval(checkAndAutoEndActivities, 60 * 60 * 1000);
   
-  // ✅ Восстанавливаем данные из localStorage если пользователь уже вошел
+  // Восстанавливаем данные из localStorage если пользователь уже вошел
   if (currentUser) {
     userFavorites = JSON.parse(localStorage.getItem('favorites_backup') || '[]');
     userCompleted = JSON.parse(localStorage.getItem(COMPLETED_KEY) || '[]');
@@ -2003,10 +2006,33 @@ document.addEventListener('DOMContentLoaded', function() {
       completed: userCompleted.length,
       arcData: Object.keys(arcData).length
     });
+  } else {
+    // Если currentUser еще не установлен, пробуем восстановить из localStorage
+    console.log('currentUser not set, checking localStorage...');
+    userFavorites = JSON.parse(localStorage.getItem('favorites_backup') || '[]');
+    userCompleted = JSON.parse(localStorage.getItem(COMPLETED_KEY) || '[]');
+    arcData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    console.log('Loaded from localStorage anyway:', {
+      favorites: userFavorites.length,
+      completed: userCompleted.length,
+      arcData: Object.keys(arcData).length
+    });
   }
   
   loadData(); 
   setupSearchListener();
+  
+  // ✅ Принудительно обновляем интерфейс после загрузки
+  setTimeout(() => {
+    if (projects.length > 0) {
+      applyFilters();
+    }
+    // ✅ Если пользователь вошел, но syncAuth не сработал, вызываем принудительно
+    if (currentUser && typeof syncAuth === 'function') {
+      console.log('Forcing syncAuth call...');
+      syncAuth(currentUser);
+    }
+  }, 1500);
   
   const richDescTextarea = document.getElementById('actRichDesc');
   if (richDescTextarea) {
@@ -2020,12 +2046,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-
-setTimeout(() => {
-  if (projects.length > 0) {
-    applyFilters();
-  }
-}, 1500);
 
   const searchDeletedInput = document.getElementById('searchDeletedInput');
   if (searchDeletedInput) {
