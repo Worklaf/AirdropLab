@@ -305,6 +305,10 @@
         <textarea class="ae-input" id="f_desc" rows="2" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;"></textarea>
       </div>
       <div>
+        <div class="ae-label">English Description</div>
+        <textarea class="ae-input" id="f_desc_en" rows="2" placeholder="English faucet description" style="resize:vertical;"></textarea>
+      </div>
+      <div>
         <div class="ae-label" data-translate="faucets_field_links">Ссылки (по одной в строке) *</div>
         <textarea class="ae-input" id="f_links" rows="4" data-translate="faucets_ph_links" placeholder="https://faucet.example.com&#10;https://another.example.com" style="resize:vertical;"></textarea>
       </div>
@@ -374,6 +378,10 @@
       <div>
         <div class="ae-label" data-translate="faucets_field_desc">Описание</div>
         <textarea class="ae-input" id="suggest_desc" rows="2" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;"></textarea>
+      </div>
+      <div>
+        <div class="ae-label">English Description</div>
+        <textarea class="ae-input" id="suggest_desc_en" rows="2" placeholder="English faucet description" style="resize:vertical;"></textarea>
       </div>
       <div>
         <div class="ae-label" data-translate="faucets_field_links">Ссылки (по одной в строке) *</div>
@@ -2176,6 +2184,7 @@ function openAddModal(id) {
   document.getElementById('f_name').value = '';
   document.getElementById('f_token').value = '';
   document.getElementById('f_desc').value = '';
+  document.getElementById('f_desc_en').value = ''; // Очищаем английское описание
   document.getElementById('f_links').value = '';
   document.getElementById('f_logo').value = '';
   document.getElementById('f_type').value = 'free';
@@ -2195,6 +2204,7 @@ function openAddModal(id) {
       document.getElementById('f_name').value = f.name || '';
       document.getElementById('f_token').value = f.token || '';
       document.getElementById('f_desc').value = f.desc || '';
+      document.getElementById('f_desc_en').value = f.desc_en || ''; // Загружаем английское описание
       document.getElementById('f_links').value = (f.links||[]).join('\n');
       document.getElementById('f_logo').value = f.logoUrl || '';
       document.getElementById('f_type').value = f.type || 'free';
@@ -2251,6 +2261,7 @@ async function saveFaucet() {
     type: document.getElementById('f_type').value,
     net: document.getElementById('f_net').value,
     desc: document.getElementById('f_desc').value.trim(),
+    desc_en: document.getElementById('f_desc_en').value.trim(), // Добавляем английское описание
     links,
     logoUrl: normalizeUrl(document.getElementById('f_logo').value.trim()),
     reward: document.getElementById('f_reward').value.trim(),
@@ -2302,6 +2313,7 @@ async function saveSuggestion() {
     type: document.getElementById('f_type').value,
     net: document.getElementById('f_net').value,
     desc: document.getElementById('f_desc').value.trim(),
+    desc_en: document.getElementById('f_desc_en').value.trim(), // Добавляем английское описание
     links,
     logoUrl: normalizeUrl(document.getElementById('f_logo').value.trim()),
     reward: document.getElementById('f_reward').value.trim(),
@@ -2418,6 +2430,7 @@ async function submitSuggestion() {
   const cooldown = document.getElementById('suggest_cooldown').value.trim();
   const tagsText = document.getElementById('suggest_tags').value.trim();
   const desc = document.getElementById('suggest_desc').value.trim();
+  const desc_en = document.getElementById('suggest_desc_en').value.trim(); // Добавляем английское описание
   const editId = document.getElementById('suggestId').value.trim();
   
   if (!name || !token || !linksText) {
@@ -2443,6 +2456,7 @@ async function submitSuggestion() {
         cooldown,
         tags,
         desc,
+        desc_en, // Добавляем английское описание
         status: 'pending', // Возвращаем в pending
         submittedAt: serverTimestamp() // Обновляем дату
       });
@@ -2460,6 +2474,7 @@ async function submitSuggestion() {
         cooldown,
         tags,
         desc,
+        desc_en, // Добавляем английское описание
         status: 'pending',
         submittedBy: currentUser.uid,
         submittedEmail: currentUser.email,
@@ -2479,6 +2494,7 @@ async function submitSuggestion() {
     document.getElementById('suggest_name').value = '';
     document.getElementById('suggest_token').value = '';
     document.getElementById('suggest_desc').value = '';
+    document.getElementById('suggest_desc_en').value = ''; // Очищаем английское описание
     document.getElementById('suggest_links').value = '';
     document.getElementById('suggest_logo').value = '';
     document.getElementById('suggest_type').value = 'free';
@@ -3448,8 +3464,8 @@ function openFaucetModal(faucet) {
   currentModalData = {
     name: faucet.name,
     descriptions: {
-      ru: faucet.desc,
-      en: faucet.translatedDesc || faucet.desc // Используем переведенное описание если есть
+      ru: faucet.desc || '',
+      en: faucet.desc_en || faucet.translatedDesc || faucet.desc || '' // Используем desc_en, затем translatedDesc, затем desc
     },
     reward: faucet.reward,
     cooldown: faucet.cooldown,
@@ -3466,8 +3482,9 @@ function openFaucetModal(faucet) {
   updateModalContent(currentModalLang);
   updateModalLangButtons();
   
-  // Показываем языковой переключатель если есть переводы
-  const hasTranslations = faucet.translatedDesc && faucet.translatedDesc !== faucet.desc;
+  // Показываем языковой переключатель если есть разные описания
+  const hasTranslations = (faucet.desc_en && faucet.desc_en !== faucet.desc) || 
+                        (faucet.translatedDesc && faucet.translatedDesc !== faucet.desc);
   langToggle.style.display = hasTranslations ? 'flex' : 'none';
   
   modal.style.display = 'block';
