@@ -2523,7 +2523,7 @@ window.openDetail = function(id) {
 };
 
 window.toggleActivityDetail = async function(projId, actId) {
-  const body = document.getElementById('activity-body-' + actId);
+  const body = document.getElementById('body-' + actId);
   const icon = document.getElementById('icon-' + actId);
   if (body && icon) {
     const isOpen = body.classList.contains('open');
@@ -2901,7 +2901,6 @@ window.editProject = function(id) {
   editingId = id;
   document.getElementById('projId').value = project.id;
   document.getElementById('projName').value = project.name;
-  document.getElementById('projUrl').value = project.url;
   document.getElementById('projGuideUrl').value = project.guideUrl || '';
   document.getElementById('projDescription').value = project.description || '';
   document.getElementById('projDate').value = project.date || '';
