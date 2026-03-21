@@ -2156,8 +2156,53 @@ function setSort(sortType) {
   renderAll();
 }
 
-// Сделать функцию глобальной
+// Сделать функции глобальными
 window.setSort = setSort;
+window.forceRecreateTranslations = forceRecreateTranslations;
+
+// Экспорт для других модулей
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    setSort,
+    forceRecreateTranslations,
+    loadTranslations,
+    translateText,
+    translateAllDescriptions
+  };
+}
+
+// Функция для принудительной очистки кэша и пересоздания переводов
+window.forceRecreateTranslations = async function(lang) {
+  console.log(`🔄 Force recreating translations for ${lang}...`);
+  
+  // Очищаем кэш
+  cachedTranslations = {};
+  localStorage.removeItem(`faucets_translations_${lang}`);
+  
+  // Создаем новые переводы
+  const translated = await translateAllDescriptions(lang);
+  cachedTranslations[lang] = translated;
+  
+  // Сохраняем в Firestore
+  if (currentUser && isAdmin) {
+    try {
+      const translationsRef = doc(db, "translations", `faucets_${lang}`);
+      await setDoc(translationsRef, {
+        faucets: translated,
+        updatedAt: new Date().toISOString()
+      });
+      console.log(`✅ Force saved translations for ${lang}`);
+    } catch (e) {
+      console.error('Failed to save translations:', e);
+    }
+  }
+  
+  // Обновляем отображение
+  renderAll();
+  updateCounts();
+  
+  console.log(`✅ Translation recreation completed for ${lang}`);
+};
 
 // Google Translate функция
 async function translateText(text, targetLang) {
