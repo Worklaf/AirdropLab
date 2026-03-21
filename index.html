@@ -1821,6 +1821,9 @@ onAuthStateChanged(auth, async function(user) {
             }
         } catch (e) { console.error('Error:', e); }
 
+        // ✅ Активируем админ режим если у пользователя есть isAdmin
+        await activateAdminMode();
+
         document.getElementById('loggedOutView').classList.add('hidden');
         document.getElementById('loggedInView').classList.remove('hidden');
         document.getElementById('guestWarning').classList.add('hidden');
@@ -2556,7 +2559,12 @@ async function activateAdminMode() {
   if (!currentUser) return;
   // ✅ Проверяем isAdmin из Firestore вместо hardcoded ID
   const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-  if (!userDoc.exists() || !userDoc.data().isAdmin) return;
+  console.log('Admin check - user exists:', userDoc.exists());
+  if (userDoc.exists()) {
+    console.log('Admin check - user data:', userDoc.data());
+    console.log('Admin check - isAdmin value:', userDoc.data().isAdmin);
+  }
+  if (!userDoc.exists() || userDoc.data().isAdmin !== true) return;
   
   isAdminMode = true;
   document.getElementById('adminPanel').style.display = 'flex';
