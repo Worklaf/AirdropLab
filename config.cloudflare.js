@@ -1,5 +1,5 @@
 // Firebase Configuration - Production с Environment Variables
-// Работает на Cloudflare Pages как ES модуль
+// Работает на Cloudflare Pages как обычный скрипт
 const firebaseConfig = {
     apiKey: globalThis.CF_API_KEY || "AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk",
     authDomain: globalThis.CF_AUTH_DOMAIN || "testnet-hub.firebaseapp.com",
@@ -9,15 +9,5 @@ const firebaseConfig = {
     appId: globalThis.CF_APP_ID || "1:497813176653:web:089188fdd1555d76cd7704"
 };
 
-// Экспорт для использования в основном файле
-export { firebaseConfig };
-
-// Также делаем доступным глобально для совместимости
-if (typeof window !== 'undefined') {
-    window.firebaseConfig = firebaseConfig;
-}
-
-// Для CommonJS совместимости
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { firebaseConfig };
-}
+// Делаем доступным глобально
+window.firebaseConfig = firebaseConfig;
