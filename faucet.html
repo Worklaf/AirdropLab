@@ -569,6 +569,9 @@ window.updateRatingDisplay = updateRatingDisplay;
   </div>
 </div>
 
+<script src="config.cloudflare.js"></script>
+
+<!-- Firebase и приложение -->
 <script type="module">
 // ═══════════════════════════════════════════
 // DATA — полный список кранов
@@ -927,13 +930,17 @@ let favoritesSet = new Set(); // faucetId
 let linkFavoritesSet = new Set(); // key: faucetId|url
 let pendingSuggestions = [];
 
-const ADMIN_UID = "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+// Глобальная константа для админского UID из Environment Variables
+const ADMIN_UID = globalThis.ADMIN_UID || "SAkz4mdW9reDaIsvqigCNZhEKJR2";
 
 // Firestore collections
 const COL_FAUCETS = 'faucets';
 const COL_SUGGESTIONS = 'faucet_suggestions';
 
-// Firebase init (same as index.html)
+// Firebase init - используем глобальную конфигурацию
+const firebaseConfig = window.firebaseConfig;
+
+// Firebase imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getAuth,
@@ -966,15 +973,6 @@ import {
   runTransaction,
   limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk",
-  authDomain: "testnet-hub.firebaseapp.com",
-  projectId: "testnet-hub",
-  storageBucket: "testnet-hub.firebasestorage.app",
-  messagingSenderId: "497813176653",
-  appId: "1:497813176653:web:089188fdd1555d76cd7704"
-};
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
