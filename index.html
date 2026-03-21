@@ -2115,6 +2115,26 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Forcing header injection...');
     injectHeader();
   }
+  
+  // ✅ Дополнительная проверка - если пользователь вошел, но UI не обновился
+  setTimeout(() => {
+    if (currentUser) {
+      const loggedInView = document.getElementById('loggedInView');
+      const loggedOutView = document.getElementById('loggedOutView');
+      
+      if (loggedInView && loggedOutView) {
+        const isLoggedIn = !loggedInView.classList.contains('hidden');
+        const isLoggedOut = !loggedOutView.classList.contains('hidden');
+        
+        if (isLoggedOut || !isLoggedIn) {
+          console.log('UI state incorrect, forcing syncAuth...');
+          if (typeof syncAuth === 'function') {
+            syncAuth(currentUser);
+          }
+        }
+      }
+    }
+  }, 2000);
 });
 
 let firstDataLoadComplete = false;
@@ -2152,6 +2172,18 @@ window.loadData = async function() {
       checkAndAutoEndActivities();
       applyFilters();
       document.dispatchEvent(new CustomEvent('projectsLoaded'));
+      
+      // ✅ Дополнительная проверка после загрузки проектов
+      if (currentUser && typeof syncAuth === 'function') {
+        setTimeout(() => {
+          const loggedInView = document.getElementById('loggedInView');
+          const loggedOutView = document.getElementById('loggedOutView');
+          if (loggedInView && loggedOutView && !loggedInView.classList.contains('hidden')) {
+            console.log('Projects loaded - forcing syncAuth...');
+            syncAuth(currentUser);
+          }
+        }, 500);
+      }
     },
 
     function(error) {
