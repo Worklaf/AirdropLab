@@ -2239,7 +2239,9 @@ async function loadTranslations(lang) {
     return DEFAULT_FAUCETS;
   }
   
+  // Сначала проверяем кэш
   if (cachedTranslations[lang]) {
+    console.log(`✅ Using cached translations for ${lang}`);
     return cachedTranslations[lang];
   }
   
@@ -2254,6 +2256,7 @@ async function loadTranslations(lang) {
       console.log(`✅ Loaded translations for ${lang} from Firestore`);
       return translatedData;
     } else {
+      console.log(`⚠️ No translations found for ${lang}, creating new ones...`);
       // Если переводов нет, создать их
       const translated = await translateAllDescriptions(lang);
       cachedTranslations[lang] = translated;
