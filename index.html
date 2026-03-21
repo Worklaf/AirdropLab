@@ -2937,6 +2937,11 @@ window.saveProject = async function(e) {
     if (existingProject) id = id + '_' + Math.random().toString(36).substring(2, 5);
   }
   const selectedCats = getSelectedCategories();
+  
+  // ✅ При редактировании всегда используем currentEditingActivities
+  // При создании нового проекта используем пустой массив
+  const activitiesToSave = editingId ? currentEditingActivities : [];
+  
   const projectData = {
     id: id,
     name: projName,
@@ -2952,7 +2957,7 @@ window.saveProject = async function(e) {
     priority: document.getElementById('projPriority').checked ? 'high' : 'normal',
     lastUpdated: document.getElementById('projLastUpdated').value || now.split('T')[0],
     createdAt: editingId ? (projects.find(function(p) { return p.id === editingId; })?.createdAt || now) : now,
-    activities: currentEditingActivities,
+    activities: activitiesToSave,
     deleted: false
   };
   try {
