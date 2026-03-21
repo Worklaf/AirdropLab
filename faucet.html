@@ -2231,8 +2231,12 @@ async function translateAllDescriptions(targetLang) {
 
 // Загрузка переводов из Firestore
 async function loadTranslations(lang) {
-  if (lang === 'ru' || cachedTranslations[lang]) {
-    return cachedTranslations[lang] || DEFAULT_FAUCETS;
+  if (lang === 'ru') {
+    return DEFAULT_FAUCETS;
+  }
+  
+  if (cachedTranslations[lang]) {
+    return cachedTranslations[lang];
   }
   
   try {
@@ -2240,9 +2244,11 @@ async function loadTranslations(lang) {
     const translationsDoc = await getDoc(translationsRef);
     
     if (translationsDoc.exists()) {
-      cachedTranslations[lang] = translationsDoc.data().faucets;
-      console.log(`✅ Loaded translations for ${lang}`);
-      return translationsDoc.data().faucets;
+      const translatedData = translationsDoc.data().faucets;
+      // Сохраняем в кэш для будущих запросов
+      cachedTranslations[lang] = translatedData;
+      console.log(`✅ Loaded translations for ${lang} from Firestore`);
+      return translatedData;
     } else {
       // Если переводов нет, создать их
       const translated = await translateAllDescriptions(lang);
