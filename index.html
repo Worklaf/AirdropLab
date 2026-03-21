@@ -842,6 +842,20 @@ function markActivityAsViewed(projectId, activityId) {
     newActivitiesData[projectId] = newActivitiesData[projectId].filter(id => id !== activityId);
     localStorage.setItem(NEW_ACTIVITIES_KEY, JSON.stringify(newActivitiesData));
   }
+  
+  // ✅ Синхронизация с Firebase
+  if (currentUser) {
+    try {
+      const userRef = doc(db, "users", currentUser.uid);
+      setDoc(userRef, { 
+        viewedActivities: viewedActivitiesData,
+        newActivities: newActivitiesData 
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error saving viewed activities:', error);
+    }
+  }
+  
   applyFilters();
 }
 
@@ -850,6 +864,18 @@ function addNewActivity(projectId, activityId) {
   if (!newActivitiesData[projectId].includes(activityId)) {
     newActivitiesData[projectId].push(activityId);
     localStorage.setItem(NEW_ACTIVITIES_KEY, JSON.stringify(newActivitiesData));
+    
+    // ✅ Синхронизация с Firebase
+    if (currentUser) {
+      try {
+        const userRef = doc(db, "users", currentUser.uid);
+        setDoc(userRef, { 
+          newActivities: newActivitiesData 
+        }, { merge: true });
+      } catch (error) {
+        console.error('Error saving new activities:', error);
+      }
+    }
   }
 }
 
@@ -1874,6 +1900,22 @@ function initUserSync(uid) {
             const mergedArc = { ...localArc, ...data.arcGuideStats };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedArc));
             arcData = mergedArc;
+        }
+        
+        // Загружаем просмотренные активности
+        if (data.viewedActivities) {
+          const localViewed = JSON.parse(localStorage.getItem(VIEWED_ACTIVITIES_KEY) || '{}');
+          const mergedViewed = { ...localViewed, ...data.viewedActivities };
+          viewedActivitiesData = mergedViewed;
+          localStorage.setItem(VIEWED_ACTIVITIES_KEY, JSON.stringify(mergedViewed));
+        }
+        
+        // Загружаем новые активности
+        if (data.newActivities) {
+          const localNew = JSON.parse(localStorage.getItem(NEW_ACTIVITIES_KEY) || '{}');
+          const mergedNew = { ...localNew, ...data.newActivities };
+          newActivitiesData = mergedNew;
+          localStorage.setItem(NEW_ACTIVITIES_KEY, JSON.stringify(mergedNew));
         }
 
         // ✅ Дебаунс 300ms — не перерисовываем чаще чем нужно
