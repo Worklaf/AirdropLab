@@ -70,75 +70,11 @@
     .filter-tab.apaid { background: rgba(245,158,11,0.12); color: #fbbf24; border-color: rgba(245,158,11,0.35); }
     .filter-tab.atest { background: rgba(59,130,246,0.12); color: #60a5fa; border-color: rgba(59,130,246,0.35); }
     .filter-tab.amain { background: rgba(139,92,246,0.12); color: #a78bfa; border-color: rgba(139,92,246,0.35); }
+    .filter-tab.afav   { background: rgba(245,158,11,0.12); color: #fbbf24; border-color: rgba(245,158,11,0.35); }
+    .filter-tab.amysuggestions { background: rgba(139,92,246,0.12); color: #a78bfa; border-color: rgba(139,92,246,0.35); }
     .filter-tab.asuggestions { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.35); }
 
-    /* Admin panel */
-    #adminBar {
-      position: fixed; top: 80px; right: 20px; z-index: 1001;
-      background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95)); 
-      border: 1px solid rgba(34,211,238,0.2); border-radius: 12px;
-      padding: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(34,211,238,0.1);
-      min-width: 280px; max-width: 320px; backdrop-filter: blur(20px);
-      transform: translateX(0); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    #adminBar.collapsed {
-      transform: translateX(calc(100% - 48px));
-    }
-    #adminBar.collapsed .admin-content {
-      opacity: 0; pointer-events: none;
-    }
-    .admin-toggle {
-      position: absolute; left: -12px; top: 16px;
-      width: 32px; height: 32px; background: linear-gradient(135deg,#22d3ee,#0891b2);
-      border: 2px solid rgba(15,23,42,0.8); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: white; font-size: 14px;
-      box-shadow: 0 4px 12px rgba(34,211,238,0.4);
-      transition: all 0.2s;
-    }
-    .admin-toggle:hover {
-      transform: scale(1.1); box-shadow: 0 6px 16px rgba(34,211,238,0.6);
-    }
-    .admin-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 16px; padding-bottom: 12px;
-      border-bottom: 1px solid rgba(34,211,238,0.2);
-    }
-    .admin-title {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 14px; font-weight: 700; color: #f1f5f9;
-    }
-    .admin-indicator {
-      width: 8px; height: 8px; border-radius: 50%; background: #ef4444;
-      animation: pulse 2s infinite;
-    }
-    .admin-indicator.active {
-      background: #22d3ee;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    .admin-content {
-      transition: opacity 0.3s;
-    }
-    .ab-btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
-      cursor: pointer; border: none; transition: all 0.2s; color: white;
-    }
-    .ab-btn-cyan { background: rgba(34,211,238,0.2); border: 1px solid rgba(34,211,238,0.4); color: #22d3ee; }
-    .ab-btn-cyan:hover { background: rgba(34,211,238,0.35); }
-    .ab-btn-green { background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4); color: #34d399; }
-    .ab-btn-green:hover { background: rgba(16,185,129,0.35); }
-    .ab-btn-red   { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #f87171; }
-    .ab-btn-red:hover   { background: rgba(239,68,68,0.35); }
-    .ab-btn-purple { background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); color: #a78bfa; }
-    .ab-btn-purple:hover { background: rgba(139,92,246,0.35); }
-
     .admin-edit-overlay {
-      position: absolute; inset: 0; background: rgba(8,10,20,0.92);
-      border-radius: 12px; z-index: 10; padding: 14px;
       display: none; flex-direction: column; gap: 8px;
       backdrop-filter: blur(8px);
     }
@@ -290,15 +226,23 @@
 
   <!-- Фильтры + сортировка + поиск -->
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:24px;">
-    <button class="filter-tab af"    onclick="fFilter('all',this)"><i class="fas fa-th-large" style="margin-right:4px;"></i><span data-translate="all">Все</span></button>
-    <button class="filter-tab"       onclick="fFilter('free',this)"><i class="fas fa-gift" style="margin-right:4px;color:#34d399;"></i><span data-translate="faucets_filter_free">Бесплатные</span></button>
-    <button class="filter-tab"       onclick="fFilter('paid',this)"><i class="fas fa-coins" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="faucets_filter_paid">Платные</span></button>
-    <button class="filter-tab"       onclick="fFilter('testnet',this)"><i class="fas fa-flask" style="margin-right:4px;color:#60a5fa;"></i><span data-translate="faucets_filter_testnet">Тестнеты</span></button>
-    <button class="filter-tab"       onclick="fFilter('mainnet',this)"><i class="fas fa-network-wired" style="margin-right:4px;color:#a78bfa;"></i><span data-translate="faucets_filter_mainnet">Мейннеты</span></button>
-    <button class="filter-tab"       onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="favorites">Избранное</span></button>
+    <button class="filter-tab af"    onclick="fFilter('all',this)"><i class="fas fa-th-large" style="margin-right:4px;"></i><span data-translate="filter_all">Все</span> <span id="filterCntAll" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('free',this)"><i class="fas fa-gift" style="margin-right:4px;color:#34d399;"></i><span data-translate="filter_free">Бесплатные</span> <span id="filterCntFree" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('paid',this)"><i class="fas fa-coins" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="filter_paid">Платные</span> <span id="filterCntPaid" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('testnet',this)"><i class="fas fa-flask" style="margin-right:4px;color:#60a5fa;"></i><span data-translate="filter_testnet">Тестнеты</span> <span id="filterCntTestnet" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab"       onclick="fFilter('mainnet',this)"><i class="fas fa-network-wired" style="margin-right:4px;color:#a78bfa;"></i><span data-translate="filter_mainnet">Мейннеты</span> <span id="filterCntMainnet" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab" onclick="fFilter('favorites',this)"><i class="fas fa-star" style="margin-right:4px;color:#fbbf24;"></i><span data-translate="filter_favorites">Избранное</span> <span id="filterCntFavorites" class="badge badge-multi" style="margin-left:6px;">–</span></button>
+    <button class="filter-tab" onclick="fFilter('my-suggestions',this)" id="mySuggestionsFilter" style="display:block;background:rgba(139,92,256,0.12);color:#a78bfa;border-color:rgba(139,92,256,0.35);" data-filter="my-suggestions">
+      <i class="fas fa-user-edit" style="margin-right:4px;"></i>
+      <span data-translate="filter_my_suggestions">My Suggestions</span> <span id="mySuggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
+    </button>
     <button class="filter-tab" onclick="fFilter('suggestions',this)" id="suggestionsFilter" style="display:none;background:rgba(239,68,68,0.12);color:#f87171;border-color:rgba(239,68,68,0.35);" data-filter="suggestions">
       <i class="fas fa-inbox" style="margin-right:4px;"></i>
-      Предложения <span id="suggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
+      <span data-translate="filter_suggestions">Suggestions</span> <span id="suggestionsBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
+    </button>
+    <button class="filter-tab" onclick="fFilter('hidden',this)" id="hiddenFilter" style="display:none;background:rgba(239,68,68,0.12);color:#f87171;border-color:rgba(239,68,68,0.35);" data-filter="hidden">
+      <i class="fas fa-eye-slash" style="margin-right:4px;"></i>
+      <span data-translate="filter_hidden">Скрытые</span> <span id="filterCntHidden" class="badge badge-multi" style="margin-left:6px;">0</span>
     </button>
 
     <select id="sortSelectFaucets" onchange="setSort(this.value)"
@@ -312,12 +256,6 @@
     <button class="filter-tab" onclick="openSuggestModal()" style="margin-left:auto;">
       <i class="fas fa-plus-circle" style="margin-right:4px;color:#22d3ee;"></i>
       <span data-translate="faucets_suggest_btn">Предложить кран</span>
-    </button>
-
-    <button class="filter-tab" onclick="togglePendingPanel()" id="userPendingBtn" style="display:none;">
-      <i class="fas fa-inbox" style="margin-right:4px;color:#a78bfa;"></i>
-      <span>Предложения</span>
-      <span id="userPendingBadge" class="badge badge-multi" style="margin-left:6px;">0</span>
     </button>
 
     <input id="faucetSearch" type="text" data-translate="faucets_search_placeholder" placeholder="Поиск по сети или токену..."
@@ -344,60 +282,6 @@
     </div>
   </div>
 </main>
-
-<!-- Admin Bar (only for admin) -->
-<div id="adminBar" style="display:none;" class="collapsed">
-  <div class="admin-toggle" onclick="toggleAdminPanel()">
-    <i class="fas fa-user-shield" id="adminToggleIcon"></i>
-  </div>
-  
-  <div class="admin-content">
-    <div class="admin-header">
-      <div class="admin-title">
-        <div class="admin-indicator" id="pendingIndicator"></div>
-        <i class="fas fa-shield-alt"></i>
-        <span>Панель администратора</span>
-      </div>
-    </div>
-    
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <div style="display:flex;gap:8px;">
-        <button class="ab-btn ab-btn-green" onclick="openAddModal()" style="flex:1;">
-          <i class="fas fa-plus"></i>
-          <span data-translate="faucets_admin_add">Добавить</span>
-        </button>
-        <button class="ab-btn ab-btn-cyan" onclick="toggleEditMode()" style="flex:1;">
-          <i class="fas fa-pen" id="editModeIcon"></i>
-          <span id="editModeLabel" data-translate="faucets_admin_edit_mode">Режим</span>
-        </button>
-      </div>
-      
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(34,211,238,0.1);border-radius:8px;border:1px solid rgba(34,211,238,0.2);">
-        <span style="font-size:12px;color:#94a3b8;" id="pendingCount">Загрузка...</span>
-        <button onclick="togglePendingPanel()" id="pendingToggleBtn" class="ab-btn ab-btn-purple" style="padding:6px 12px;">
-          <i class="fas fa-inbox"></i>
-          <span>Предложения</span>
-          <span id="pendingBadge" class="badge badge-multi" style="margin-left:6px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;">0</span>
-        </button>
-      </div>
-    </div>
-  </div>
-  
-  <div id="pendingPanel" style="display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);width:90%;max-width:500px;max-height:60vh;overflow-y:auto;background:linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,41,59,0.98));border:1px solid rgba(34,211,238,0.3);border-radius:16px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,0.5);z-index:10000;backdrop-filter:blur(20px);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(34,211,238,0.2);">
-      <h4 style="font-size:16px;font-weight:700;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
-        <i class="fas fa-inbox" style="color:#22d3ee;"></i>
-        Предложения кранов
-      </h4>
-      <button onclick="togglePendingPanel()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
-              onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.color='#f87171'" 
-              onmouseout="this.style.background='transparent';this.style.color='#64748b'">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div id="pendingList"></div>
-  </div>
-</div>
 
 <!-- Modal: добавить/редактировать кран -->
 <div id="addFaucetModal">
@@ -470,56 +354,71 @@
   </div>
 </div>
 
-<!-- Modal: suggest faucet -->
+<!-- Modal: suggest faucet (same as add faucet) -->
 <div id="suggestModal">
   <div class="modal-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h2 style="font-size:16px;font-weight:800;color:#f1f5f9;" data-translate="faucets_suggest_title">Предложить новый кран</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="font-size:16px;font-weight:700;color:#f1f5f9;" id="suggestModalTitle" data-translate="faucets_suggest_title">Предложить новый кран</h2>
       <button onclick="closeSuggestModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;">&times;</button>
     </div>
-    <div style="display:flex;flex-direction:column;gap:12px;">
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <input type="hidden" id="suggestId">
       <div>
         <div class="ae-label" data-translate="faucets_field_name">Название сети *</div>
-        <input class="ae-input" id="s_name" data-translate="faucets_ph_name" placeholder="Например: Ethereum Sepolia">
+        <input class="ae-input" id="suggest_name" data-translate="faucets_ph_name" placeholder="Например: Ethereum Sepolia">
       </div>
       <div>
         <div class="ae-label" data-translate="faucets_field_token">Токен *</div>
-        <input class="ae-input" id="s_token" data-translate="faucets_ph_token" placeholder="Например: ETH, BTC, SOL">
-      </div>
-      <div>
-        <div class="ae-label" data-translate="faucets_field_links">Ссылка *</div>
-        <input class="ae-input" id="s_link" data-translate="faucets_suggest_ph_link" placeholder="https://faucet.example.com">
-      </div>
-      <div>
-        <div class="ae-label" data-translate="faucets_field_logo">Логотип (URL)</div>
-        <input class="ae-input" id="s_logo" data-translate="faucets_ph_logo" placeholder="https://.../logo.png">
+        <input class="ae-input" id="suggest_token" data-translate="faucets_ph_token" placeholder="Например: ETH, BTC, SOL">
       </div>
       <div>
         <div class="ae-label" data-translate="faucets_field_desc">Описание</div>
-        <textarea class="ae-input" id="s_desc" rows="2" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;"></textarea>
+        <textarea class="ae-input" id="suggest_desc" rows="2" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;"></textarea>
+      </div>
+      <div>
+        <div class="ae-label" data-translate="faucets_field_links">Ссылки (по одной в строке) *</div>
+        <textarea class="ae-input" id="suggest_links" rows="4" data-translate="faucets_ph_links" placeholder="https://faucet.example.com&#10;https://another.example.com" style="resize:vertical;"></textarea>
+      </div>
+      <div>
+        <div class="ae-label" data-translate="faucets_field_logo">Логотип (URL)</div>
+        <input class="ae-input" id="suggest_logo" data-translate="faucets_ph_logo" placeholder="https://.../logo.png">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
           <div class="ae-label" data-translate="faucets_field_type">Тип</div>
-          <select class="ae-select ae-input" id="s_type">
+          <select class="ae-select ae-input" id="suggest_type">
             <option value="free" data-translate="faucets_type_free">Бесплатный</option>
             <option value="paid" data-translate="faucets_type_paid">Платный</option>
           </select>
         </div>
         <div>
           <div class="ae-label" data-translate="faucets_field_net">Сеть</div>
-          <select class="ae-select ae-input" id="s_net">
+          <select class="ae-select ae-input" id="suggest_net">
             <option value="testnet" data-translate="faucets_net_testnet">Тестнет</option>
             <option value="mainnet" data-translate="faucets_net_mainnet">Мейннет</option>
           </select>
         </div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div class="ae-label" data-translate="faucets_field_reward">Награда (необязательно)</div>
+          <input class="ae-input" id="suggest_reward" data-translate="faucets_ph_reward" placeholder="0.5 ETH/день">
+        </div>
+        <div>
+          <div class="ae-label" data-translate="faucets_field_cooldown">Кулдаун</div>
+          <input class="ae-input" id="suggest_cooldown" data-translate="faucets_ph_cooldown" placeholder="24ч">
+        </div>
+      </div>
+      <div>
+        <div class="ae-label" data-translate="faucets_field_tags">Теги (через запятую)</div>
+        <input class="ae-input" id="suggest_tags" data-translate="faucets_ph_tags" placeholder="airdrop, hot, multi">
+      </div>
       <div style="display:flex;gap:10px;margin-top:4px;">
-        <button onclick="submitSuggestion()" style="flex:1;padding:10px;background:linear-gradient(135deg,#8b5cf6,#2563eb);border:none;border-radius:8px;color:white;font-size:13px;font-weight:800;cursor:pointer;">
-          <i class="fas fa-paper-plane" style="margin-right:6px;"></i><span data-translate="send">Отправить</span>
+        <button onclick="submitSuggestion()" style="flex:1;padding:10px;background:linear-gradient(135deg,#22d3ee,#0ea5e9);border:none;border-radius:8px;color:white;font-size:13px;font-weight:800;cursor:pointer;">
+          <i class="fas fa-save" style="margin-right:6px;"></i><span data-translate="footer_account_save">Сохранить</span>
         </button>
         <button onclick="closeSuggestModal()" style="padding:10px 18px;background:rgba(30,37,56,0.8);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#94a3b8;font-size:13px;cursor:pointer;">
-          <span data-translate="close">Закрыть</span>
+          <span data-translate="footer_account_cancel">Отмена</span>
         </button>
       </div>
       <div style="font-size:11px;color:#64748b;line-height:1.5;" data-translate="faucets_suggest_hint">
@@ -1255,10 +1154,24 @@ function renderCard(f) {
   var badgeType = '<span class="badge badge-'+f.type+'">'+( f.type==='free' ? (isEn ? 'FREE' : 'БЕСПЛАТНО') : (isEn ? 'PAID' : 'ПЛАТНЫЙ') )+'</span>';
   var badgeNet  = '<span class="badge badge-'+f.net+'" style="margin-left:4px;">'+( f.net==='testnet' ? (isEn ? 'Testnet' : 'Тестнет') : (isEn ? 'Mainnet' : 'Мейннет') )+'</span>';
   var extraBadges = (f.tags||[]).map(renderBadge).join('');
+  
+  // Добавляем checkbox для скрытия в режиме редактирования (только для админа)
+  var hideCheckbox = (editMode && isAdmin) ? '<input type="checkbox" id="hide-'+f.id+'" onchange="toggleFaucetVisibility(\''+f.id+'\')" style="margin-left:8px;cursor:pointer;" '+(f.hidden===true?'checked':'')+' title="'+(isEn?'Hide/Show faucet for all users':'Скрыть/Показать кран для всех')+'">' : '';
 
   // Добавляем бейдж для предложения
   if (f.status === 'pending') {
-    extraBadges += '<span class="badge" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);margin-left:4px;">' + (isEn ? 'PENDING' : 'НА МОДЕРАЦИИ') + '</span>';
+    const isAuthor = currentUser && f.submittedBy === currentUser.uid;
+    if (isAuthor) {
+      extraBadges += '<span class="badge" style="background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);margin-left:4px;">' + (isEn ? 'YOUR PENDING' : 'ВАШЕ ПРЕДЛОЖЕНИЕ') + '</span>';
+    } else if (isAdmin) {
+      extraBadges += '<span class="badge" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);margin-left:4px;">' + (isEn ? 'PENDING' : 'НА МОДЕРАЦИИ') + '</span>';
+    }
+  } else if (f.status === 'rejected' && currentUser && f.submittedBy === currentUser.uid) {
+    extraBadges += '<span class="badge" style="background:rgba(107,114,128,0.2);color:#9ca3af;border:1px solid rgba(107,114,128,0.3);margin-left:4px;">' + (isEn ? 'REJECTED' : 'ОТКЛОНЕНО') + '</span>';
+  } else if (f.status === 'deleted' && currentUser && f.submittedBy === currentUser.uid) {
+    extraBadges += '<span class="badge" style="background:rgba(107,114,128,0.2);color:#9ca3af;border:1px solid rgba(107,114,128,0.3);margin-left:4px;">' + (isEn ? 'DELETED' : 'УДАЛЕНО') + '</span>';
+  } else if (f.status === 'active' && currentUser && f.submittedBy === currentUser.uid) {
+    extraBadges += '<span class="badge" style="background:rgba(16,185,129,0.2);color:#34d399;border:1px solid rgba(16,185,129,0.3);margin-left:4px;">' + (isEn ? 'APPROVED' : 'ОДОБРЕНО') + '</span>';
   }
 
   var linksHtml = (f.links||[]).map(function(url) {
@@ -1319,9 +1232,24 @@ function renderCard(f) {
     '</div>';
   }
 
-  var editBtns = (editMode && isAdmin && f.status !== 'pending') ? '<div style="display:flex;gap:6px;margin-top:10px;">'
+  // Кнопки для автора предложения
+  var authorBtns = '';
+  if (f.status === 'pending' && currentUser && f.submittedBy === currentUser.uid) {
+    authorBtns = '<div style="display:flex;gap:6px;margin-top:10px;">' +
+      '<button onclick="editSuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);border-radius:6px;color:#22d3ee;font-size:11px;cursor:pointer;"><i class="fas fa-pen"></i> '+(isEn?'Edit':'Изменить')+'</button>' +
+      '<button onclick="deleteMySuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete':'Удалить')+'</button>' +
+    '</div>';
+  } else if ((f.status === 'rejected' || f.status === 'deleted') && currentUser && f.submittedBy === currentUser.uid) {
+    authorBtns = '<div style="display:flex;gap:6px;margin-top:10px;">' +
+      '<button onclick="editAndResubmit(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);border-radius:6px;color:#22d3ee;font-size:11px;cursor:pointer;"><i class="fas fa-redo"></i> '+(isEn?'Edit & Resubmit':'Изменить и отправить повторно')+'</button>' +
+      '<button onclick="deleteMySuggestion(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete Forever':'Удалить навсегда')+'</button>' +
+    '</div>';
+  }
+
+  var editBtns = (editMode && isAdmin && f.status !== 'pending') ? '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">'
     + '<button onclick="editFaucet(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(34,211,238,0.15);border:1px solid rgba(34,211,238,0.3);border-radius:6px;color:#22d3ee;font-size:11px;cursor:pointer;"><i class="fas fa-pen"></i> '+(isEn?'Edit':'Изменить')+'</button>'
     + '<button onclick="deleteFaucet(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:11px;cursor:pointer;"><i class="fas fa-trash"></i> '+(isEn?'Delete':'Удалить')+'</button>'
+    + '<button onclick="toggleFaucetVisibility(\''+safeText(f.id)+'\')" style="padding:5px 12px;background:'+(f.hidden===true?'rgba(16,185,129,0.15)':'rgba(239,68,68,0.15)')+';border:1px solid '+(f.hidden===true?'rgba(16,185,129,0.3)':'rgba(239,68,68,0.3)')+';border-radius:6px;color:'+(f.hidden===true?'#34d399':'#f87171')+';font-size:11px;cursor:pointer;"><i class="fas '+(f.hidden===true?'fa-eye':'fa-eye-slash')+'"></i> '+(f.hidden===true?(isEn?'Show':'Показать'):(isEn?'Hide':'Скрыть'))+'</button>'
     + '</div>' : '';
 
   // Особый стиль для предложений
@@ -1346,6 +1274,7 @@ function renderCard(f) {
     + (chips ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">'+chips+'</div>' : '')
     + '<div class="faucet-links-list">'+linksHtml+'</div>'
     + adminBtns // Кнопки модерации для предложений
+    + authorBtns // Кнопки автора предложения
     + editBtns // Кнопки редактирования для обычных кранов
     + '</div>'
     + '</div>';
@@ -1380,17 +1309,118 @@ function renderAll() {
 }
 
 function updateCounts() {
-  document.getElementById('cntFree').textContent    = faucets.filter(function(f){ return f.type==='free'; }).length;
-  document.getElementById('cntPaid').textContent    = faucets.filter(function(f){ return f.type==='paid'; }).length;
-  document.getElementById('cntTestnet').textContent = faucets.filter(function(f){ return f.net==='testnet'; }).length;
-  document.getElementById('cntMainnet').textContent = faucets.filter(function(f){ return f.net==='mainnet'; }).length;
+  // Верхние счетчики (внутри strong тегов)
+  var topCntFree = document.querySelector('#cntFree');
+  var topCntPaid = document.querySelector('#cntPaid');
+  var topCntTestnet = document.querySelector('#cntTestnet');
+  var topCntMainnet = document.querySelector('#cntMainnet');
+  
+  if (topCntFree) topCntFree.textContent = faucets.filter(function(f){ return f.type==='free'; }).length || 0;
+  if (topCntPaid) topCntPaid.textContent = faucets.filter(function(f){ return f.type==='paid'; }).length || 0;
+  if (topCntTestnet) topCntTestnet.textContent = faucets.filter(function(f){ return f.net==='testnet'; }).length || 0;
+  if (topCntMainnet) topCntMainnet.textContent = faucets.filter(function(f){ return f.net==='mainnet'; }).length || 0;
+
+  // Счетчики в фильтрах (уникальные ID)
+  var cntAll = document.querySelector('#filterCntAll');
+  var cntFree = document.querySelector('#filterCntFree');
+  var cntPaid = document.querySelector('#filterCntPaid');
+  var cntTestnet = document.querySelector('#filterCntTestnet');
+  var cntMainnet = document.querySelector('#filterCntMainnet');
+  var cntFavorites = document.querySelector('#filterCntFavorites');
+  var cntHidden = document.querySelector('#filterCntHidden');
+  
+  if (cntAll) cntAll.textContent = faucets.length || 0;
+  if (cntFree) cntFree.textContent = faucets.filter(function(f){ return f.type==='free'; }).length || 0;
+  if (cntPaid) cntPaid.textContent = faucets.filter(function(f){ return f.type==='paid'; }).length || 0;
+  if (cntTestnet) cntTestnet.textContent = faucets.filter(function(f){ return f.net==='testnet'; }).length || 0;
+  if (cntMainnet) cntMainnet.textContent = faucets.filter(function(f){ return f.net==='mainnet'; }).length || 0;
+  if (cntFavorites) cntFavorites.textContent = linkFavoritesSet.size || 0;
+  if (cntHidden) cntHidden.textContent = faucets.filter(function(f){ return f.hidden === true; }).length || 0;
 
   var total = faucets.reduce(function(acc, f){ return acc + (f.links||[]).length; }, 0);
   const isEn = (window.currentLang === 'en');
-  document.getElementById('totalCount').textContent = isEn
-    ? (faucets.length + ' networks · ' + total + ' faucets')
-    : (faucets.length + ' сетей · ' + total + ' кранов');
+  var totalCountEl = document.getElementById('totalCount');
+  if (totalCountEl) {
+    totalCountEl.textContent = isEn
+      ? (faucets.length + ' networks · ' + total + ' faucets')
+      : (faucets.length + ' сетей · ' + total + ' кранов');
+  }
+    
+  // Обновляем счетчик скрытых кранов в админ-панели
+  var hiddenCount = document.getElementById('hiddenCount');
+  if (hiddenCount) {
+    var hiddenFaucetsCount = faucets.filter(function(f){ return f.hidden === true; }).length;
+    hiddenCount.textContent = hiddenFaucetsCount || 0;
+  }
 }
+
+// Функция для переключения видимости крана (глобально через Firestore)
+window.toggleFaucetVisibility = async function(faucetId) {
+  if (!isAdmin) return;
+  
+  const faucet = faucets.find(f => f.id === faucetId);
+  if (!faucet) return;
+  
+  const isCurrentlyHidden = faucet.hidden === true;
+  const newHiddenStatus = !isCurrentlyHidden;
+  
+  try {
+    // Обновляем статус в Firestore
+    await updateDoc(doc(db, COL_FAUCETS, faucetId), {
+      hidden: newHiddenStatus,
+      hiddenAt: newHiddenStatus ? serverTimestamp() : null,
+      hiddenBy: newHiddenStatus ? currentUser.uid : null
+    });
+    
+    // Обновляем локальный массив
+    faucet.hidden = newHiddenStatus;
+    
+    // Перерисовываем
+    renderAll();
+    updateCounts();
+    
+    const isEn = window.currentLang === 'en';
+    toast(isEn 
+      ? (newHiddenStatus ? 'Faucet hidden for all users' : 'Faucet shown to all users') 
+      : (newHiddenStatus ? 'Кран скрыт для всех' : 'Кран показан всем'));
+  } catch(e) {
+    console.error('Failed to toggle faucet visibility:', e);
+    alert(isEn ? 'Error updating status' : 'Ошибка обновления статуса');
+  }
+};
+
+// Показать всех скрытых кранов
+window.showAllHiddenFaucets = async function() {
+  if (!isAdmin) return;
+  
+  const hiddenFaucets = faucets.filter(f => f.hidden === true);
+  
+  if (hiddenFaucets.length === 0) {
+    alert('Нет скрытых кранов');
+    return;
+  }
+  
+  const names = hiddenFaucets.map(f => f.name).join('\n- ');
+  
+  if (confirm('Показать все скрытые краны?\n\n- ' + names)) {
+    const batch = [];
+    hiddenFaucets.forEach(f => {
+      batch.push(updateDoc(doc(db, COL_FAUCETS, f.id), {
+        hidden: false,
+        hiddenAt: null,
+        hiddenBy: null
+      }));
+      f.hidden = false;
+    });
+    
+    await Promise.all(batch);
+    renderAll();
+    updateCounts();
+    
+    const isEn = window.currentLang === 'en';
+    toast(isEn ? 'All hidden faucets shown' : 'Все скрытые краны показаны');
+  }
+};
 
 // ═══════════════════════════════════════════
 // FILTER / SEARCH
@@ -1398,7 +1428,7 @@ function updateCounts() {
 function fFilter(type, btn) {
   currentFilter = type;
   document.querySelectorAll('.filter-tab').forEach(function(t){ t.className = 'filter-tab'; });
-  var map = { all:'af', free:'afree', paid:'apaid', testnet:'atest', mainnet:'amain', suggestions:'asuggestions' };
+  var map = { all:'af', free:'afree', paid:'apaid', testnet:'atest', mainnet:'amain', favorites:'afav', 'my-suggestions':'amysuggestions', suggestions:'asuggestions' };
   if (btn) btn.classList.add(map[type] || 'af');
   applyCurrentFilter();
 }
@@ -1407,7 +1437,7 @@ window.fFilter = fFilter;
 function applyCurrentFilter() {
   var query = (document.getElementById('faucetSearch').value || '').toLowerCase();
   
-  // Если выбран фильтр предложений, показываем их вместо обычных кранов
+  // Если выбран фильтр предложений админа, показываем их вместо обычных кранов
   if (currentFilter === 'suggestions') {
     // Показываем только pending краны
     document.querySelectorAll('.faucet-card').forEach(function(card) {
@@ -1415,9 +1445,35 @@ function applyCurrentFilter() {
       const faucet = faucets.find(f => f.id === faucetId);
       const isPending = faucet && faucet.status === 'pending';
       const canSee = isPending && (isAdmin || (currentUser && faucet.submittedBy === currentUser.uid));
+      const isHidden = faucet && faucet.hidden === true;
       
       var matchSearch = !query || card.dataset.name.includes(query) || card.dataset.token.includes(query);
-      card.style.display = (canSee && matchSearch) ? '' : 'none';
+      card.style.display = (canSee && matchSearch && !isHidden) ? '' : 'none';
+    });
+    
+    document.querySelectorAll('.faucet-section').forEach(function(sec) {
+      var visible = Array.from(sec.querySelectorAll('.faucet-card')).some(function(c){ return c.style.display !== 'none'; });
+      sec.style.display = visible ? '' : 'none';
+    });
+    return;
+  }
+  
+  // Если выбран фильтр "Мои предложения"
+  if (currentFilter === 'my-suggestions') {
+    if (!currentUser) {
+      document.querySelectorAll('.faucet-card').forEach(function(card) { card.style.display = 'none'; });
+      document.querySelectorAll('.faucet-section').forEach(function(sec) { sec.style.display = 'none'; });
+      return;
+    }
+    
+    document.querySelectorAll('.faucet-card').forEach(function(card) {
+      const faucetId = card.dataset.id;
+      const faucet = faucets.find(f => f.id === faucetId);
+      const isMySuggestion = faucet && faucet.submittedBy === currentUser.uid;
+      const isHidden = faucet && faucet.hidden === true;
+      
+      var matchSearch = !query || card.dataset.name.includes(query) || card.dataset.token.includes(query);
+      card.style.display = (isMySuggestion && matchSearch && !isHidden) ? '' : 'none';
     });
     
     document.querySelectorAll('.faucet-section').forEach(function(sec) {
@@ -1430,18 +1486,42 @@ function applyCurrentFilter() {
   document.querySelectorAll('.faucet-card').forEach(function(card) {
     const faucetId = card.dataset.id;
     const faucet = faucets.find(f => f.id === faucetId);
+    const isHidden = faucet && faucet.hidden === true;
     
-    // Скрываем pending краны в обычных фильтрах
-    if (faucet && faucet.status === 'pending') {
+    // Показываем кран если:
+    // 1. Не hidden ИЛИ это админ (чтобы админ видел скрытые)
+    // 2. Не pending И не deleted ИЛИ
+    // 3. Pending но автор текущий пользователь ИЛИ  
+    // 4. Pending и это админ ИЛИ
+    // 5. Deleted но автор текущий пользователь
+    const isPending = faucet && faucet.status === 'pending';
+    const isDeleted = faucet && faucet.status === 'deleted';
+    const canSeePending = isPending && (isAdmin || (currentUser && faucet.submittedBy === currentUser.uid));
+    const canSeeDeleted = isDeleted && currentUser && faucet.submittedBy === currentUser.uid;
+    
+    // Если это фильтр скрытых - показываем только скрытые
+    if (currentFilter === 'hidden') {
+      card.style.display = (isHidden && isAdmin) ? '' : 'none';
+      return;
+    }
+    
+    // Для обычных фильтров - скрытые краны видимы только админу
+    if (isHidden && !isAdmin) {
       card.style.display = 'none';
       return;
     }
     
-    // favorites filter = any favorited link inside this faucet
+    if ((isPending && !canSeePending) || (isDeleted && !canSeeDeleted)) {
+      card.style.display = 'none';
+      return;
+    }
+    
+    // favorites filter = any favorited link inside this faucet OR faucet-level favorite
     var isFav = false;
     if (currentFilter === 'favorites') {
       const fid = card.dataset.id;
-      isFav = Array.from(linkFavoritesSet).some(k => k.startsWith(fid + '|'));
+      // Check link-level favorites (format: faucetId|linkId)
+      isFav = Array.from(linkFavoritesSet).some(k => k.startsWith(fid + '|')) || favoritesSet.has(fid);
     }
     var matchFilter = currentFilter === 'all'
       || currentFilter === 'favorites' && isFav
@@ -1624,43 +1704,436 @@ window.editSuggestion = function(id) {
   openAddModal();
 };
 
-window.showUserInfo = function(userId) {
-  // Показываем модальное окно с информацией о пользователе
-  const user = pendingSuggestions.find(s => s.submittedBy === userId);
-  if (!user) return;
+window.showUserInfo = async function(userId) {
+  if (!userId) return;
   
   const isEn = (window.currentLang === 'en');
-  const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
-  modal.innerHTML = '<div style="background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid rgba(34,211,238,0.3);border-radius:16px;padding:24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
-      '<h3 style="font-size:18px;font-weight:700;color:#f1f5f9;">Информация о пользователе</h3>' +
-      '<button onclick="this.closest(\'div[style]\').parentElement.remove()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:20px;">&times;</button>' +
-    '</div>' +
-    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">' +
-      '<img src="' + (user.userPhoto || 'https://www.gravatar.com/avatar/?d=mp') + '" style="width:60px;height:60px;border-radius:50%;border:2px solid rgba(34,211,238,0.3);" onerror="this.src=\'https://www.gravatar.com/avatar/?d=mp\'">' +
-      '<div>' +
-        '<div style="font-size:16px;font-weight:600;color:#f1f5f9;margin-bottom:4px;">' + (user.userName || 'Anonymous') + '</div>' +
-        '<div style="font-size:14px;color:#94a3b8;">' + (user.submittedEmail || 'No email') + '</div>' +
-      '</div>' +
-    '</div>' +
-    '<div style="font-size:14px;color:#94a3b8;line-height:1.5;">' +
-      '<div style="margin-bottom:8px;"><strong>ID:</strong> ' + userId + '</div>' +
-      '<div style="margin-bottom:8px;"><strong>Предложений:</strong> ' + pendingSuggestions.filter(s => s.submittedBy === userId).length + '</div>' +
-      '<div><strong>Последнее предложение:</strong> ' + new Date(user.submittedAt?.toDate?.() || user.submittedAt).toLocaleDateString() + '</div>' +
-    '</div>' +
-  '</div>';
-  document.body.appendChild(modal);
+  
+  try {
+    // Загружаем полную информацию о пользователе
+    const userSnap = await getDoc(doc(db, 'users', userId));
+    let userData = {
+      displayName: 'Anonymous',
+      email: 'No email',
+      photoURL: 'https://www.gravatar.com/avatar/?d=mp',
+      createdAt: null,
+      reagents: 0,
+      streak: 0,
+      invitedCount: 0,
+      referralEarnings: 0,
+      lastClaimDate: null,
+      bio: '',
+      country: '',
+      city: '',
+      firstName: '',
+      lastName: '',
+      nickname: '',
+      birthDate: '',
+      gender: '',
+      evmAddress: '',
+      solanaAddress: '',
+      twitter: '',
+      discord: '',
+      telegram: '',
+      refCode: ''
+    };
+    
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      userData = {
+        displayName: data.displayName || data.email?.split('@')[0] || 'Anonymous',
+        email: data.email || 'No email',
+        photoURL: data.photoURL || 'https://www.gravatar.com/avatar/?d=mp',
+        createdAt: data.createdAt,
+        reagents: data.reagents || 0,
+        streak: data.streak || 0,
+        invitedCount: data.invitedCount || 0,
+        referralEarnings: data.referralEarnings || 0,
+        lastClaimDate: data.lastClaimDate,
+        bio: data.bio || '',
+        country: data.country || '',
+        city: data.city || '',
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        nickname: data.nickname || '',
+        birthDate: data.birthDate || '',
+        gender: data.gender || '',
+        evmAddress: data.evmAddress || '',
+        solanaAddress: data.solanaAddress || '',
+        twitter: data.twitter || '',
+        discord: data.discord || '',
+        telegram: data.telegram || '',
+        refCode: data.refCode || ''
+      };
+    }
+    
+    const createdDate = userData.createdAt?.toDate?.() || new Date();
+    const suggestionsCount = faucets.filter(f => f.submittedBy === userId).length;
+    
+    // Создаем модальное окно в стиле личного кабинета
+    const old = document.getElementById('userInfoOverlayModal');
+    if (old) old.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'userInfoOverlayModal';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; z-index: 9999;
+        background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 16px; opacity: 0; transition: opacity 0.2s ease;
+    `;
+
+    const box = document.createElement('div');
+    box.style.cssText = `
+        background: #1e2538; border: 1px solid rgba(71,85,105,0.5);
+        border-radius: 20px; width: 100%; max-width: 800px; max-height: 90vh;
+        overflow: hidden; display: flex; flex-direction: column;
+        position: relative; transform: scale(0.95); transition: transform 0.2s ease;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    `;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    closeBtn.style.cssText = `
+        position: absolute; top: 16px; right: 16px; z-index: 10;
+        width: 32px; height: 32px; border-radius: 50%;
+        background: rgba(71,85,105,0.5); border: none; color: #94a3b8;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        font-size: 14px; transition: all 0.2s;
+    `;
+    closeBtn.onmouseover = () => { closeBtn.style.background = 'rgba(239,68,68,0.3)'; closeBtn.style.color = '#f87171'; };
+    closeBtn.onmouseout  = () => { closeBtn.style.background = 'rgba(71,85,105,0.5)';  closeBtn.style.color = '#94a3b8'; };
+
+    function closeOverlay() {
+        overlay.style.opacity = '0';
+        box.style.transform = 'scale(0.95)';
+        setTimeout(() => overlay.remove(), 200);
+    }
+
+    closeBtn.onclick = closeOverlay;
+    overlay.addEventListener('mousedown', function(e) { if (e.target === overlay) closeOverlay(); });
+
+    function onKeyDown(e) {
+        if (e.key === 'Escape') { closeOverlay(); document.removeEventListener('keydown', onKeyDown); }
+    }
+    document.addEventListener('keydown', onKeyDown);
+
+    const contentWrap = document.createElement('div');
+    contentWrap.style.cssText = 'overflow-y: auto; flex: 1;';
+    
+    // HTML контент в стиле личного кабинета
+    contentWrap.innerHTML = `
+        <div style="padding:32px;">
+            <!-- Заголовок профиля -->
+            <div style="text-align:center;margin-bottom:32px;">
+                <div style="position:relative;display:inline-block;margin-bottom:16px;">
+                    <img src="${userData.photoURL}" style="width:120px;height:120px;border-radius:50%;border:4px solid #22d3ee;object-fit:cover;" onerror="this.src='https://www.gravatar.com/avatar/?d=mp'">
+                    <div style="position:absolute;bottom:0;right:0;width:32px;height:32px;background:#22d3ee;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #1e2538;">
+                        <i class="fas fa-user" style="color:#fff;font-size:14px;"></i>
+                    </div>
+                </div>
+                <h2 style="font-size:24px;font-weight:700;color:#f1f5f9;margin:0 0 8px 0;">${userData.displayName}</h2>
+                <p style="font-size:14px;color:#94a3b8;margin:0 0 4px 0;">${userData.email}</p>
+                <p style="font-size:12px;color:#64748b;margin:0;">На платформе с ${createdDate.toLocaleDateString()}</p>
+            </div>
+
+            <!-- Статистика -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:32px;">
+                <div style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:12px;padding:16px;text-align:center;">
+                    <div style="font-size:24px;font-weight:700;color:#22d3ee;margin-bottom:4px;">${userData.reagents}</div>
+                    <div style="font-size:12px;color:#94a3b8;">Реагентов</div>
+                </div>
+                <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:16px;text-align:center;">
+                    <div style="font-size:24px;font-weight:700;color:#fbbf24;margin-bottom:4px;">${userData.streak}</div>
+                    <div style="font-size:12px;color:#94a3b8;">Стрик</div>
+                </div>
+                <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:16px;text-align:center;">
+                    <div style="font-size:24px;font-weight:700;color:#34d399;margin-bottom:4px;">${userData.invitedCount}</div>
+                    <div style="font-size:12px;color:#94a3b8;">Приглашено</div>
+                </div>
+                <div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:16px;text-align:center;">
+                    <div style="font-size:24px;font-weight:700;color:#a78bfa;margin-bottom:4px;">${suggestionsCount}</div>
+                    <div style="font-size:12px;color:#94a3b8;">Предложений</div>
+                </div>
+            </div>
+
+            <!-- Личная информация -->
+            <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(71,85,105,0.3);border-radius:12px;padding:20px;margin-bottom:24px;">
+                <h3 style="font-size:16px;font-weight:600;color:#f1f5f9;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;">
+                    <i class="fas fa-user-circle" style="color:#22d3ee;"></i>
+                    Личная информация
+                </h3>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">ID пользователя</div>
+                        <div style="font-size:13px;color:#f1f5f9;font-family:monospace;background:rgba(71,85,105,0.2);padding:6px 8px;border-radius:6px;">${userId}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Язык интерфейса</div>
+                        <select id="userLanguageSelect" onchange="updateUserLanguage(this.value)" style="font-size:13px;color:#f1f5f9;background:rgba(71,85,105,0.2);border:1px solid rgba(71,85,105,0.3);border-radius:6px;padding:6px 8px;width:100%;">
+                            <option value="ru" ${userData.language === 'ru' || (!userData.language && window.currentLang === 'ru') ? 'selected' : ''}>${typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('ru').flag + ' ' + window.getFlagDisplay('ru').text + ' (Русский)' : '<span class="fi fi-ua"></span> УКР (Русский)'}</option>
+                            <option value="en" ${userData.language === 'en' || (!userData.language && window.currentLang === 'en') ? 'selected' : ''}>${typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').flag + ' ' + window.getFlagDisplay('en').text + ' (English)' : '<span class="fi fi-us"></span> ENG (English)'}</option>
+                        </select>
+                    </div>
+                    ${userData.firstName ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Имя</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.firstName}</div>
+                    </div>
+                    ` : ''}
+                    ${userData.lastName ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Фамилия</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.lastName}</div>
+                    </div>
+                    ` : ''}
+                    ${userData.nickname ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Никнейм</div>
+                        <div style="font-size:13px;color:#f1f5f9;">@${userData.nickname}</div>
+                    </div>
+                    ` : ''}
+                    ${userData.birthDate ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Дата рождения</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.birthDate}</div>
+                    </div>
+                    ` : ''}
+                    ${userData.gender ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Пол</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.gender === 'male' ? 'Мужской' : userData.gender === 'female' ? 'Женский' : 'Другое'}</div>
+                    </div>
+                    ` : ''}
+                    ${userData.country ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Страна</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.country}</div>
+                    </div>
+                    ` : ''}
+                    ${userData.city ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Город</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.city}</div>
+                    </div>
+                    ` : ''}
+                    ${userData.bio ? `
+                    <div style="grid-column:1/-1;">
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">О себе</div>
+                        <div style="font-size:13px;color:#f1f5f9;line-height:1.5;background:rgba(71,85,105,0.2);padding:8px 12px;border-radius:6px;">${userData.bio}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            <!-- Крипто-адреса -->
+            ${(userData.evmAddress || userData.solanaAddress) ? `
+            <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(71,85,105,0.3);border-radius:12px;padding:20px;margin-bottom:24px;">
+                <h3 style="font-size:16px;font-weight:600;color:#f1f5f9;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;">
+                    <i class="fas fa-wallet" style="color:#22d3ee;"></i>
+                    Крипто-адреса
+                </h3>
+                <div style="display:grid;gap:12px;">
+                    ${userData.evmAddress ? `
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:16px;color:#8b5cf6;">Ξ</span>
+                        <div>
+                            <div style="font-size:12px;color:#94a3b8;">EVM адрес</div>
+                            <div style="font-size:13px;color:#f1f5f9;font-family:monospace;background:rgba(71,85,105,0.2);padding:6px 8px;border-radius:6px;">${userData.evmAddress}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    ${userData.solanaAddress ? `
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:16px;color:#14b8a6;">◎</span>
+                        <div>
+                            <div style="font-size:12px;color:#94a3b8;">Solana адрес</div>
+                            <div style="font-size:13px;color:#f1f5f9;font-family:monospace;background:rgba(71,85,105,0.2);padding:6px 8px;border-radius:6px;">${userData.solanaAddress}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- Социальные сети -->
+            ${(userData.twitter || userData.discord || userData.telegram) ? `
+            <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(71,85,105,0.3);border-radius:12px;padding:20px;margin-bottom:24px;">
+                <h3 style="font-size:16px;font-weight:600;color:#f1f5f9;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;">
+                    <i class="fas fa-share-alt" style="color:#22d3ee;"></i>
+                    Социальные сети
+                </h3>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    ${userData.twitter ? `<a href="https://twitter.com/${userData.twitter}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(29,161,242,0.1);border:1px solid rgba(29,161,242,0.3);border-radius:8px;color:#1da1f2;text-decoration:none;font-size:13px;transition:all 0.2s;" onmouseover="this.style.background='rgba(29,161,242,0.2)'" onmouseout="this.style.background='rgba(29,161,242,0.1)'"><i class="fab fa-twitter"></i> @${userData.twitter}</a>` : ''}
+                    ${userData.discord ? `<div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(88,101,242,0.1);border:1px solid rgba(88,101,242,0.3);border-radius:8px;color:#8b9dc3;font-size:13px;"><i class="fab fa-discord"></i> ${userData.discord}</div>` : ''}
+                    ${userData.telegram ? `<a href="https://t.me/${userData.telegram}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(0,136,204,0.1);border:1px solid rgba(0,136,204,0.3);border-radius:8px;color:#0088cc;text-decoration:none;font-size:13px;transition:all 0.2s;" onmouseover="this.style.background='rgba(0,136,204,0.2)'" onmouseout="this.style.background='rgba(0,136,204,0.1)'"><i class="fab fa-telegram"></i> @${userData.telegram}</a>` : ''}
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- Реферальная программа -->
+            <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(71,85,105,0.3);border-radius:12px;padding:20px;">
+                <h3 style="font-size:16px;font-weight:600;color:#f1f5f9;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;">
+                    <i class="fas fa-gift" style="color:#22d3ee;"></i>
+                    Реферальная программа
+                </h3>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;">
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Ваш реф. код</div>
+                        <div style="font-size:13px;color:#f1f5f9;font-family:monospace;background:rgba(71,85,105,0.2);padding:6px 8px;border-radius:6px;">${userData.refCode || 'AL-' + userId.slice(0,6).toUpperCase()}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Приглашено</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${userData.invitedCount} чел.</div>
+                    </div>
+                    ${userData.referralEarnings ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Реферальные доходы</div>
+                        <div style="font-size:13px;color:#fbbf24;font-weight:600;">${userData.referralEarnings} RGT</div>
+                    </div>
+                    ` : ''}
+                    ${userData.lastClaimDate ? `
+                    <div>
+                        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Последний клейм</div>
+                        <div style="font-size:13px;color:#f1f5f9;">${new Date(userData.lastClaimDate?.toDate?.() || userData.lastClaimDate).toLocaleDateString()}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+
+    box.appendChild(closeBtn);
+    box.appendChild(contentWrap);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            box.style.transform = 'scale(1)';
+        });
+    });
+    
+  } catch(e) {
+    console.error('Failed to load user info:', e);
+    alert('Не удалось загрузить информацию о пользователе');
+  }
 };
 
-window.rewardUser = function(userId, suggestionId) {
+window.deleteMySuggestion = async function(id) {
+  if (!currentUser) return;
+  
+  const isEn = (window.currentLang === 'en');
+  const confirmMsg = isEn ? 'Are you sure you want to delete your suggestion?' : 'Вы уверены, что хотите удалить свое предложение?';
+  
+  if (!confirm(confirmMsg)) return;
+  
+  try {
+    await deleteDoc(doc(db, COL_FAUCETS, id));
+    toast(isEn ? 'Suggestion deleted' : 'Предложение удалено');
+    await loadFaucetsFromFirestore();
+    if (isAdmin) await loadPendingSuggestions();
+  } catch(e) {
+    console.error('Failed to delete suggestion:', e);
+    toast(isEn ? 'Failed to delete suggestion' : 'Не удалось удалить предложение');
+  }
+};
+
+window.rewardUser = async function(userId, suggestionId) {
+  if (!isAdmin || !userId) return;
+  
   const isEn = (window.currentLang === 'en');
   const amount = prompt((isEn ? 'Enter RGT amount to reward:' : 'Введите количество RGT для награды:'), '100');
   
-  if (!amount || isNaN(amount)) return;
+  if (!amount || isNaN(amount) || Number(amount) <= 0) return;
   
-  // Здесь логика начисления RGT пользователю
-  alert((isEn ? 'Reward sent!' : 'Награда отправлена!') + ' ' + amount + ' RGT');
+  try {
+    // Обновляем баланс пользователя в коллекции users
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      reagents: increment(Number(amount))
+    });
+    
+    // Записываем транзакцию награды
+    await addDoc(collection(db, 'reward_transactions'), {
+      userId: userId,
+      amount: Number(amount),
+      type: 'suggestion_reward',
+      suggestionId: suggestionId,
+      rewardedBy: currentUser.uid,
+      rewardedAt: serverTimestamp()
+    });
+    
+    toast(isEn ? `Reward sent: ${amount} RGT` : `Награда отправлена: ${amount} RGT`);
+    
+    // Отправляем уведомление пользователю на его языке
+    try {
+      // Получаем информацию о предложении для уведомления
+      const suggestionSnap = await getDoc(doc(db, COL_FAUCETS, suggestionId));
+      const suggestionName = suggestionSnap.exists() ? suggestionSnap.data().name : 'предложение';
+      
+      // Получаем язык пользователя из его профиля
+      const userSnap = await getDoc(doc(db, 'users', userId));
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      
+      // Определяем язык пользователя: userData.language имеет высший приоритет
+      let userLang = 'ru'; // по умолчанию русский
+      if (userData.language) {
+        userLang = userData.language;
+      } else if (userData.currentLang) {
+        userLang = userData.currentLang;
+      } else if (userData.lang) {
+        userLang = userData.lang;
+      } else if (window.currentLang && userData.uid === currentUser?.uid) {
+        userLang = window.currentLang;
+      }
+      
+      const isUserEn = userLang === 'en' || userLang === 'en-US';
+      
+      console.log('User language detection:', { 
+        userId, 
+        profileLang: userData.language,
+        currentLang: userData.currentLang, 
+        globalLang: window.currentLang,
+        detected: userLang,
+        isEn: isUserEn 
+      });
+      
+      // Создаем уведомление в коллекции notifications
+      await addDoc(collection(db, 'notifications'), {
+        userId: userId,
+        type: 'reward',
+        title: isUserEn ? 'RGT Reward Received!' : 'Получена RGT награда!',
+        message: isUserEn 
+          ? `You received <strong style="color:#22d3ee;">+${amount} RGT</strong> for your suggestion "${suggestionName}". Thank you for your contribution!`
+          : `Вы получили <strong style="color:#22d3ee;">+${amount} RGT</strong> за ваше предложение "${suggestionName}". Спасибо за ваш вклад!`,
+        amount: Number(amount),
+        suggestionId: suggestionId,
+        suggestionName: suggestionName,
+        read: false,
+        createdAt: serverTimestamp()
+      });
+      
+      console.log('Notification sent to user:', userId, 'Language:', userLang, 'Is English:', isUserEn);
+      
+      // Обновляем уведомления для пользователя (если это текущий пользователь)
+      if (currentUser && currentUser.uid === userId) {
+        await loadNotificationsFromFirestore();
+      }
+    } catch(notifError) {
+      console.warn('Failed to send notification:', notifError);
+    }
+    
+    // Обновляем информацию о пользователе в интерфейсе
+    if (typeof window.updateUserInfo === 'function') {
+      window.updateUserInfo();
+    }
+    
+  } catch(e) {
+    console.error('Failed to send reward:', e);
+    toast(isEn ? 'Failed to send reward' : 'Не удалось отправить награду');
+  }
 };
 
 function sortFaucets(list) {
@@ -1703,8 +2176,11 @@ function openAddModal(id) {
   document.getElementById('f_cooldown').value = '';
   document.getElementById('f_tags').value = '';
   const isEn = (window.currentLang === 'en');
-  document.getElementById('modalTitle').textContent = id ? (isEn?'Edit faucet':'Редактировать кран') : (isEn?'Add faucet':'Добавить кран');
-
+  
+  // Определяем тип операции
+  let operationType = 'admin'; // по умолчанию админская операция
+  let titleText = id ? (isEn?'Edit faucet':'Редактировать кран') : (isEn?'Add faucet':'Добавить кран');
+  
   if (id) {
     var f = faucets.find(function(x){ return x.id === id; });
     if (f) {
@@ -1718,8 +2194,29 @@ function openAddModal(id) {
       document.getElementById('f_reward').value = f.reward || '';
       document.getElementById('f_cooldown').value = f.cooldown || '';
       document.getElementById('f_tags').value = (f.tags||[]).join(', ');
+      
+      // Если это предложение пользователя, меняем тип операции
+      if (f.status === 'pending' && f.submittedBy === currentUser?.uid) {
+        operationType = 'suggestion';
+        titleText = isEn ? 'Edit Suggestion' : 'Редактировать предложение';
+      }
     }
   }
+  
+  document.getElementById('modalTitle').textContent = titleText;
+  
+  // Изменяем кнопку сохранения в зависимости от типа операции
+  const saveBtn = document.querySelector('#addFaucetModal button[onclick*="save"]');
+  if (saveBtn) {
+    if (operationType === 'suggestion') {
+      saveBtn.setAttribute('onclick', 'saveSuggestion()');
+      saveBtn.innerHTML = '<i class="fas fa-save" style="margin-right:6px;"></i><span data-translate="save">Сохранить</span>';
+    } else {
+      saveBtn.setAttribute('onclick', 'saveFaucet()');
+      saveBtn.innerHTML = '<i class="fas fa-save" style="margin-right:6px;"></i><span data-translate="save">Сохранить</span>';
+    }
+  }
+  
   document.getElementById('addFaucetModal').classList.add('open');
 }
 window.openAddModal = openAddModal;
@@ -1772,6 +2269,90 @@ async function saveFaucet() {
 }
 window.saveFaucet = saveFaucet;
 
+// Функция для сохранения предложений пользователями
+async function saveSuggestion() {
+  if (!currentUser) { 
+    alert((window.currentLang === 'en') ? 'Please login first' : 'Сначала войдите в аккаунт'); 
+    return; 
+  }
+  
+  const name = document.getElementById('f_name').value.trim();
+  const token = document.getElementById('f_token').value.trim();
+  const linksRaw = document.getElementById('f_links').value.trim();
+  if (!name || !token || !linksRaw) { 
+    alert((window.currentLang === 'en') ? 'Fill name, token and at least one link' : 'Заполните название, токен и хотя бы одну ссылку'); 
+    return; 
+  }
+
+  const links = linksRaw.split('\n').map(l => normalizeUrl(l)).filter(Boolean);
+  const tags = document.getElementById('f_tags').value.split(',').map(t => t.trim()).filter(Boolean);
+  const id = document.getElementById('editId').value;
+
+  const payload = {
+    name,
+    token,
+    type: document.getElementById('f_type').value,
+    net: document.getElementById('f_net').value,
+    desc: document.getElementById('f_desc').value.trim(),
+    links,
+    logoUrl: normalizeUrl(document.getElementById('f_logo').value.trim()),
+    reward: document.getElementById('f_reward').value.trim(),
+    cooldown: document.getElementById('f_cooldown').value.trim(),
+    tags,
+    updatedAt: serverTimestamp()
+  };
+
+  try {
+    if (id) {
+      // Проверяем, что это предложение текущего пользователя
+      const faucet = faucets.find(f => f.id === id);
+      if (!faucet || faucet.submittedBy !== currentUser.uid) {
+        alert((window.currentLang === 'en') ? 'Access denied' : 'Доступ запрещен');
+        return;
+      }
+      
+      // Сохраняем текущий статус
+      const currentStatus = faucet.status || 'pending';
+      
+      // Если предложение не pending, всегда создаем новое
+      if (currentStatus !== 'pending') {
+        // Создаем новое предложение с теми же данными
+        const newPayload = {
+          ...payload,
+          status: 'pending',
+          submittedBy: currentUser.uid,
+          createdAt: serverTimestamp(),
+          ratingAvg: 0,
+          ratingCount: 0,
+          clickCount: 0
+        };
+        
+        await addDoc(collection(db, COL_FAUCETS), newPayload);
+        toast((window.currentLang === 'en') ? 'Suggestion resubmitted!' : 'Предложение отправлено повторно!');
+      } else {
+        // Обновляем существующее pending предложение
+        payload.status = 'pending'; // гарантируем статус pending
+        await updateDoc(doc(db, COL_FAUCETS, id), payload);
+        toast((window.currentLang === 'en') ? 'Suggestion updated!' : 'Предложение обновлено!');
+      }
+    } else {
+      // Создание нового предложения через submitSuggestion
+      closeAddModal();
+      openSuggestModal();
+      return;
+    }
+
+    closeAddModal();
+    await loadFaucetsFromFirestore();
+    if (isAdmin) await loadPendingSuggestions();
+  } catch(e) {
+    console.error('Failed to save suggestion:', e);
+    toast((window.currentLang === 'en') ? 'Error saving suggestion' : 'Ошибка при сохранении предложения');
+  }
+}
+
+window.saveSuggestion = saveSuggestion;
+
 function editFaucet(id) { openAddModal(id); }
 window.editFaucet = editFaucet;
 
@@ -1790,7 +2371,24 @@ document.getElementById('addFaucetModal').addEventListener('click', function(e) 
 });
 
 // Suggest modal
-function openSuggestModal() { document.getElementById('suggestModal').classList.add('open'); }
+function openSuggestModal() { 
+  document.getElementById('suggestId').value = '';
+  document.getElementById('suggest_name').value = '';
+  document.getElementById('suggest_token').value = '';
+  document.getElementById('suggest_desc').value = '';
+  document.getElementById('suggest_links').value = '';
+  document.getElementById('suggest_logo').value = '';
+  document.getElementById('suggest_type').value = 'free';
+  document.getElementById('suggest_net').value = 'testnet';
+  document.getElementById('suggest_reward').value = '';
+  document.getElementById('suggest_cooldown').value = '';
+  document.getElementById('suggest_tags').value = '';
+  
+  const isEn = (window.currentLang === 'en');
+  document.getElementById('suggestModalTitle').textContent = isEn ? 'Suggest New Faucet' : 'Предложить новый кран';
+  
+  document.getElementById('suggestModal').classList.add('open'); 
+}
 function closeSuggestModal() { document.getElementById('suggestModal').classList.remove('open'); }
 window.openSuggestModal = openSuggestModal;
 window.closeSuggestModal = closeSuggestModal;
@@ -1801,52 +2399,311 @@ document.getElementById('suggestModal').addEventListener('click', function(e) {
 
 async function submitSuggestion() {
   if (!currentUser) { openLoginModal(); return; }
-  const name = document.getElementById('s_name').value.trim();
-  const token = document.getElementById('s_token').value.trim();
-  const link = normalizeUrl(document.getElementById('s_link').value.trim());
-  if (!name || !token || !link) {
-    alert((window.currentLang === 'en') ? 'Fill name, token and link' : 'Заполните название, токен и ссылку');
+  
+  const name = document.getElementById('suggest_name').value.trim();
+  const token = document.getElementById('suggest_token').value.trim();
+  const linksText = document.getElementById('suggest_links').value.trim();
+  const logo = document.getElementById('suggest_logo').value.trim();
+  const type = document.getElementById('suggest_type').value;
+  const net = document.getElementById('suggest_net').value;
+  const reward = document.getElementById('suggest_reward').value.trim();
+  const cooldown = document.getElementById('suggest_cooldown').value.trim();
+  const tagsText = document.getElementById('suggest_tags').value.trim();
+  const desc = document.getElementById('suggest_desc').value.trim();
+  const editId = document.getElementById('suggestId').value.trim();
+  
+  if (!name || !token || !linksText) {
+    alert((window.currentLang === 'en') ? 'Fill name, token and links' : 'Заполните название, токен и ссылки');
     return;
   }
   
-  // Создаем кран со статусом pending
-  const faucetData = {
-    name,
-    token,
-    links: [link],
-    logoUrl: normalizeUrl(document.getElementById('s_logo').value.trim()),
-    desc: document.getElementById('s_desc').value.trim(),
-    type: document.getElementById('s_type').value,
-    net: document.getElementById('s_net').value,
-    reward: '',
-    cooldown: '',
-    tags: [],
-    status: 'pending', // Статус для модерации
-    submittedBy: currentUser.uid,
-    submittedEmail: currentUser.email || '',
-    submittedAt: serverTimestamp(),
-    ratingAvg: 0,
-    ratingCount: 0,
-    clickCount: 0,
-    createdAt: serverTimestamp()
-  };
+  // Парсим ссылки и теги
+  const links = linksText.split('\n').map(l => l.trim()).filter(l => l);
+  const tags = tagsText ? tagsText.split(',').map(t => t.trim()).filter(t => t) : [];
   
-  // Добавляем в коллекцию faucets со специальным ID
-  const ref = await addDoc(collection(db, COL_FAUCETS), faucetData);
-  
-  closeSuggestModal();
-  document.getElementById('s_name').value = '';
-  document.getElementById('s_token').value = '';
-  document.getElementById('s_link').value = '';
-  document.getElementById('s_logo').value = '';
-  document.getElementById('s_desc').value = '';
-  
-  toast((window.currentLang === 'en') ? 'Suggestion sent for moderation' : 'Предложение отправлено на модерацию');
-  
-  // Перезагружаем краны
-  await loadFaucetsFromFirestore();
-};
+  try {
+    if (editId) {
+      // Обновляем существующее предложение (повторная отправка)
+      await updateDoc(doc(db, COL_FAUCETS, editId), {
+        name,
+        token,
+        links,
+        logoUrl: logo,
+        type,
+        net,
+        reward,
+        cooldown,
+        tags,
+        desc,
+        status: 'pending', // Возвращаем в pending
+        submittedAt: serverTimestamp() // Обновляем дату
+      });
+      toast((window.currentLang === 'en') ? 'Suggestion resubmitted!' : 'Предложение отправлено повторно!');
+    } else {
+      // Создаем новое предложение
+      const faucetData = {
+        name,
+        token,
+        links,
+        logoUrl: logo,
+        type,
+        net,
+        reward,
+        cooldown,
+        tags,
+        desc,
+        status: 'pending',
+        submittedBy: currentUser.uid,
+        submittedEmail: currentUser.email,
+        submittedAt: serverTimestamp(),
+        ratingAvg: 0,
+        ratingCount: 0,
+        clickCount: 0
+      };
+      
+      await addDoc(collection(db, COL_FAUCETS), faucetData);
+      toast((window.currentLang === 'en') ? 'Suggestion sent!' : 'Предложение отправлено!');
+    }
+    
+    closeSuggestModal();
+    
+    // Очищаем форму
+    document.getElementById('suggest_name').value = '';
+    document.getElementById('suggest_token').value = '';
+    document.getElementById('suggest_desc').value = '';
+    document.getElementById('suggest_links').value = '';
+    document.getElementById('suggest_logo').value = '';
+    document.getElementById('suggest_type').value = 'free';
+    document.getElementById('suggest_net').value = 'testnet';
+    document.getElementById('suggest_reward').value = '';
+    document.getElementById('suggest_cooldown').value = '';
+    document.getElementById('suggest_tags').value = '';
+    document.getElementById('suggestId').value = '';
+    
+    // Возвращаем заголовок
+    const titleEl = document.getElementById('suggestModalTitle');
+    if (titleEl) {
+      const isEn = (window.currentLang === 'en');
+      titleEl.textContent = isEn ? 'Suggest New Faucet' : 'Предложить новый кран';
+    }
+    
+    await loadFaucetsFromFirestore();
+    if (isAdmin) await loadPendingSuggestions();
+  } catch(e) {
+    console.error('Failed to submit suggestion:', e);
+    toast((window.currentLang === 'en') ? 'Error sending suggestion' : 'Ошибка при отправке предложения');
+  }
+}
+
 window.submitSuggestion = submitSuggestion;
+
+// Загрузка уведомлений из Firestore
+async function loadNotificationsFromFirestore() {
+  if (!currentUser) return;
+  
+  try {
+    const notificationsSnap = await getDocs(query(
+      collection(db, 'notifications'),
+      where('userId', '==', currentUser.uid),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    ));
+    
+    const notifications = [];
+    notificationsSnap.forEach(doc => {
+      const data = doc.data();
+      notifications.push({
+        id: doc.id,
+        type: data.type === 'reward' ? 'success' : 'info',
+        message: data.message,
+        read: data.read || false,
+        createdAt: data.createdAt?.toDate?.() || new Date()
+      });
+    });
+    
+    // Обновляем глобальную переменную для footer.js
+    window.notifications = notifications;
+    
+    // Обновляем бейдж уведомлений если он есть
+    const unreadCount = notifications.filter(n => !n.read).length;
+    const notifBadge = document.getElementById('notificationBadge');
+    if (notifBadge) {
+      notifBadge.textContent = unreadCount;
+      notifBadge.style.display = unreadCount > 0 ? 'block' : 'none';
+    }
+    
+    console.log('Loaded notifications from Firestore:', notifications.length);
+  } catch(e) {
+    console.warn('Failed to load notifications from Firestore:', e);
+  }
+}
+
+window.loadNotificationsFromFirestore = loadNotificationsFromFirestore;
+
+// Обновление языка пользователя
+window.updateUserLanguage = async function(language) {
+  if (!currentUser) {
+    toast('Сначала войдите в аккаунт');
+    return;
+  }
+  
+  try {
+    // Сохраняем язык в профиль пользователя
+    await updateDoc(doc(db, 'users', currentUser.uid), {
+      language: language,
+      updatedAt: serverTimestamp()
+    });
+    
+    // Обновляем глобальный язык
+    window.currentLang = language;
+    
+    // Обновляем язык в интерфейсе
+    if (typeof window.setLanguage === 'function') {
+      window.setLanguage(language);
+    }
+    
+    // Обновляем кнопку в футере
+    if (typeof window.updateFooterLanguageButton === 'function') {
+      window.updateFooterLanguageButton();
+    }
+    
+    toast(`Язык изменен на ${language === 'en' ? 'English' : 'Русский'}`);
+    
+    // Перезагружаем модальное окно для обновления текста
+    setTimeout(() => {
+      if (currentUser) {
+        showUserInfo(currentUser.uid);
+      }
+    }, 500);
+    
+    console.log('User language updated:', language);
+  } catch(e) {
+    console.error('Failed to update user language:', e);
+    toast('Ошибка при изменении языка');
+  }
+};
+
+// Функция показа уведомлений (из index.html)
+window.showNotifications = function() {
+  if (!currentUser) { 
+    toast('Войдите в аккаунт'); 
+    return; 
+  }
+  
+  // Всегда используем нашу функцию, игнорируя footer.js
+  console.log('Using custom showNotifications function');
+  
+  // Создаем модальное окно поверх всего с высоким z-index
+  const modal = document.createElement('div');
+  modal.id = 'notificationsModalOverlay';
+  modal.style.cssText = `
+    position: fixed; inset: 0; z-index: 99999;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px; opacity: 0; transition: opacity 0.2s ease;
+  `;
+  
+  const content = document.createElement('div');
+  content.style.cssText = `
+    background: #1e2538; border: 1px solid rgba(71,85,105,0.5);
+    border-radius: 20px; width: 100%; max-width: 500px; max-height: 70vh;
+    overflow: hidden; display: flex; flex-direction: column;
+    transform: scale(0.95); transition: transform 0.2s ease;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  `;
+  
+  const notifications = window.notifications || [];
+  
+  content.innerHTML = `
+    <div style="padding:20px;border-bottom:1px solid rgba(71,85,105,0.3);">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h2 style="font-size:18px;font-weight:700;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
+          <i class="fas fa-bell" style="color:#22d3ee;"></i>
+          Уведомления
+        </h2>
+        <button onclick="this.closest('#notificationsModalOverlay').remove()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:18px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
+                onmouseover="this.style.background='rgba(239,68,68,0.3)';this.style.color='#f87171'" 
+                onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">&times;</button>
+      </div>
+    </div>
+    <div style="padding:20px;overflow-y:auto;flex:1;">
+      ${notifications.length === 0 
+        ? '<p style="text-align:center;color:#94a3b8;padding:20px;">Нет уведомлений</p>'
+        : notifications.map(notif => `
+          <div style="background:${notif.read ? 'rgba(71,85,105,0.2)' : 'rgba(34,211,238,0.1)'};border:1px solid ${notif.read ? 'rgba(71,85,105,0.3)' : 'rgba(34,211,238,0.2)'};border-radius:8px;padding:12px;margin-bottom:8px;">
+            <div style="display:flex;align-items:start;gap:8px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:${notif.type === 'reward' ? '#22d3ee' : '#64748b'};margin-top:6px;flex-shrink:0;"></div>
+              <div style="flex:1;">
+                <p style="font-size:13px;color:#f1f5f9;line-height:1.4;margin:0 0 4px 0;">${notif.message}</p>
+                <p style="font-size:11px;color:#64748b;margin:0;">${new Date(notif.createdAt).toLocaleString()}</p>
+              </div>
+              ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); setTimeout(() => this.closest('#notificationsModalOverlay').remove(), 100);" style="background:none;border:none;color:#22d3ee;cursor:pointer;font-size:11px;padding:4px 8px;border-radius:4px;transition:all 0.2s;" onmouseover="this.style.background='rgba(34,211,238,0.2)'" onmouseout="this.style.background='transparent'">Отметить</button>` : ''}
+            </div>
+          </div>
+        `).join('')
+      }
+    </div>
+  `;
+  
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+  
+  // Анимация появления
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      modal.style.opacity = '1';
+      content.style.transform = 'scale(1)';
+    });
+  });
+  
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      modal.style.opacity = '0';
+      content.style.transform = 'scale(0.95)';
+      setTimeout(() => modal.remove(), 200);
+    }
+  });
+  
+  // Закрытие по Escape
+  function onKeyDown(e) {
+    if (e.key === 'Escape') { 
+      modal.style.opacity = '0';
+      content.style.transform = 'scale(0.95)';
+      setTimeout(() => modal.remove(), 200);
+      document.removeEventListener('keydown', onKeyDown);
+    }
+  }
+  document.addEventListener('keydown', onKeyDown);
+};
+
+// Отметить уведомление как прочитанное
+window.markNotificationAsRead = async function(notifId) {
+  if (!currentUser || !notifId) return;
+  
+  try {
+    await updateDoc(doc(db, 'notifications', notifId), {
+      read: true
+    });
+    
+    // Обновляем локальный массив
+    if (window.notifications) {
+      const notif = window.notifications.find(n => n.id === notifId);
+      if (notif) notif.read = true;
+    }
+    
+    // Обновляем бейдж
+    const unreadCount = window.notifications ? window.notifications.filter(n => !n.read).length : 0;
+    const notifBadge = document.getElementById('notificationBadge');
+    if (notifBadge) {
+      notifBadge.textContent = unreadCount;
+      notifBadge.style.display = unreadCount > 0 ? 'block' : 'none';
+    }
+    
+    console.log('Notification marked as read:', notifId);
+  } catch(e) {
+    console.error('Failed to mark notification as read:', e);
+  }
+};
 
 // Auth modal helpers
 function openLoginModal() {
@@ -2041,10 +2898,17 @@ async function loadFaucetsFromFirestore() {
   }
   renderAll();
   if (typeof window.updateAllTranslations === 'function') window.updateAllTranslations();
+  
+  // Обновляем бейдж "Мои предложения"
+  if (currentUser) {
+    const mySuggestionsCount = faucets.filter(f => f.submittedBy === currentUser.uid).length;
+    const mySuggestionsBadgeEl = document.getElementById('mySuggestionsBadge');
+    if (mySuggestionsBadgeEl) mySuggestionsBadgeEl.textContent = mySuggestionsCount;
+  }
 }
 
 async function loadPendingSuggestions() {
-  if (!isAdmin) return;
+  if (!isAdmin && !currentUser) return;
   try {
     // Загружаем pending краны из основной коллекции
     const snap = await getDocs(query(collection(db, COL_FAUCETS), where('status', '==', 'pending')));
@@ -2079,14 +2943,20 @@ async function loadPendingSuggestions() {
     // Update UI
     const countEl = document.getElementById('pendingCount');
     const badgeEl = document.getElementById('pendingBadge');
-    const userBadgeEl = document.getElementById('userPendingBadge');
     const suggestionsBadgeEl = document.getElementById('suggestionsBadge');
+    const mySuggestionsBadgeEl = document.getElementById('mySuggestionsBadge');
     const indicatorEl = document.getElementById('pendingIndicator');
     
     if (countEl) countEl.textContent = pendingSuggestions.length + ' предложений';
     if (badgeEl) badgeEl.textContent = pendingSuggestions.length;
-    if (userBadgeEl) userBadgeEl.textContent = pendingSuggestions.length;
     if (suggestionsBadgeEl) suggestionsBadgeEl.textContent = pendingSuggestions.length;
+    
+    // Считаем предложения текущего пользователя
+    if (currentUser) {
+      const mySuggestionsCount = faucets.filter(f => f.submittedBy === currentUser.uid).length;
+      if (mySuggestionsBadgeEl) mySuggestionsBadgeEl.textContent = mySuggestionsCount;
+    }
+    
     if (indicatorEl) {
       indicatorEl.style.background = pendingSuggestions.length > 0 ? '#ef4444' : '#22d3ee';
       if (pendingSuggestions.length > 0) {
@@ -2117,20 +2987,6 @@ function togglePendingPanel() {
   }
 }
 window.togglePendingPanel = togglePendingPanel;
-
-function toggleAdminPanel() {
-  const adminBar = document.getElementById('adminBar');
-  const toggleIcon = document.getElementById('adminToggleIcon');
-  
-  if (adminBar.classList.contains('collapsed')) {
-    adminBar.classList.remove('collapsed');
-    toggleIcon.className = 'fas fa-times';
-  } else {
-    adminBar.classList.add('collapsed');
-    toggleIcon.className = 'fas fa-user-shield';
-  }
-}
-window.toggleAdminPanel = toggleAdminPanel;
 
 function renderPendingPanel() {
   const list = document.getElementById('pendingList');
@@ -2206,30 +3062,91 @@ window.approveSuggestion = async function(id) {
 
 window.deleteSuggestion = async function(id) {
   if (!isAdmin) return;
-  await deleteDoc(doc(db, COL_FAUCETS, id));
+  const isEn = (window.currentLang === 'en');
+  if (!confirm(isEn ? 'Delete this suggestion?' : 'Удалить это предложение?')) return;
+  
+  await updateDoc(doc(db, COL_FAUCETS, id), { 
+    status: 'deleted',
+    deletedAt: serverTimestamp(),
+    deletedBy: currentUser.uid
+  });
   toast((window.currentLang==='en')?'Deleted':'Удалено');
   await loadFaucetsFromFirestore();
   if (isAdmin) await loadPendingSuggestions();
+};
+
+window.editAndResubmit = function(id) {
+  const faucet = faucets.find(f => f.id === id);
+  if (!faucet) return;
+  
+  const isEn = (window.currentLang === 'en');
+  
+  // Сначала открываем модальное окно
+  openSuggestModal();
+  
+  // Затем заполняем поля данными
+  const nameEl = document.getElementById('suggest_name');
+  const tokenEl = document.getElementById('suggest_token');
+  const linksEl = document.getElementById('suggest_links');
+  const logoEl = document.getElementById('suggest_logo');
+  const descEl = document.getElementById('suggest_desc');
+  const typeEl = document.getElementById('suggest_type');
+  const netEl = document.getElementById('suggest_net');
+  const rewardEl = document.getElementById('suggest_reward');
+  const cooldownEl = document.getElementById('suggest_cooldown');
+  const tagsEl = document.getElementById('suggest_tags');
+  const idEl = document.getElementById('suggestId');
+  const titleEl = document.getElementById('suggestModalTitle');
+  
+  // Заполняем поля после открытия модального окна
+  if (nameEl) nameEl.value = faucet.name || '';
+  if (tokenEl) tokenEl.value = faucet.token || '';
+  if (linksEl) linksEl.value = (faucet.links || []).join('\n');
+  if (logoEl) logoEl.value = faucet.logoUrl || '';
+  if (descEl) descEl.value = faucet.desc || '';
+  if (typeEl) typeEl.value = faucet.type || 'free';
+  if (netEl) netEl.value = faucet.net || 'testnet';
+  if (rewardEl) rewardEl.value = faucet.reward || '';
+  if (cooldownEl) cooldownEl.value = faucet.cooldown || '';
+  if (tagsEl) tagsEl.value = (faucet.tags || []).join(', ');
+  if (idEl) idEl.value = faucet.id;
+  if (titleEl) titleEl.textContent = isEn ? 'Edit & Resubmit Suggestion' : 'Изменить и отправить повторно';
 };
 
 window.editSuggestion = function(id) {
   const faucet = faucets.find(f => f.id === id);
   if (!faucet) return;
   
-  // Заполняем форму редактирования данными из предложения
-  document.getElementById('editId').value = faucet.id;
-  document.getElementById('f_name').value = faucet.name;
-  document.getElementById('f_token').value = faucet.token;
-  document.getElementById('f_link').value = (faucet.links || [])[0] || '';
-  document.getElementById('f_logo').value = faucet.logoUrl || '';
-  document.getElementById('f_desc').value = faucet.desc || '';
-  document.getElementById('f_type').value = faucet.type;
-  document.getElementById('f_net').value = faucet.net;
-  document.getElementById('f_reward').value = faucet.reward || '';
-  document.getElementById('f_cooldown').value = faucet.cooldown || '';
+  const isEn = (window.currentLang === 'en');
   
-  document.getElementById('modalTitle').textContent = 'Редактировать предложение';
-  openAddModal();
+  // Сначала открываем модальное окно с ID
+  openAddModal(id);
+  
+  // Затем заполняем поля данными (после того как openAddModal их очистит и заполнит)
+  const nameEl = document.getElementById('f_name');
+  const tokenEl = document.getElementById('f_token');
+  const linksEl = document.getElementById('f_links');
+  const logoEl = document.getElementById('f_logo');
+  const descEl = document.getElementById('f_desc');
+  const typeEl = document.getElementById('f_type');
+  const netEl = document.getElementById('f_net');
+  const rewardEl = document.getElementById('f_reward');
+  const cooldownEl = document.getElementById('f_cooldown');
+  const tagsEl = document.getElementById('f_tags');
+  const modalTitleEl = document.getElementById('modalTitle');
+  
+  // Дополнительное заполнение на случай если openAddModal что-то пропустил
+  if (nameEl && !nameEl.value) nameEl.value = faucet.name || '';
+  if (tokenEl && !tokenEl.value) tokenEl.value = faucet.token || '';
+  if (linksEl && !linksEl.value) linksEl.value = (faucet.links || []).join('\n');
+  if (logoEl && !logoEl.value) logoEl.value = faucet.logoUrl || '';
+  if (descEl && !descEl.value) descEl.value = faucet.desc || '';
+  if (typeEl && typeEl.value === 'free' && faucet.type !== 'free') typeEl.value = faucet.type || 'free';
+  if (netEl && netEl.value === 'testnet' && faucet.net !== 'testnet') netEl.value = faucet.net || 'testnet';
+  if (rewardEl && !rewardEl.value) rewardEl.value = faucet.reward || '';
+  if (cooldownEl && !cooldownEl.value) cooldownEl.value = faucet.cooldown || '';
+  if (tagsEl && !tagsEl.value) tagsEl.value = (faucet.tags || []).join(', ');
+  if (modalTitleEl) modalTitleEl.textContent = isEn ? 'Edit Suggestion' : 'Редактировать предложение';
 };
 
 // Favorites
@@ -2351,22 +3268,64 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user || null;
   window.currentUser = currentUser;
   isAdmin = !!(user && (user.uid === ADMIN_UID));
-  document.getElementById('adminBar').style.display = isAdmin ? 'flex' : 'none';
-  
-  // Show/hide user suggestions button and filter
-  const userPendingBtn = document.getElementById('userPendingBtn');
-  const suggestionsFilter = document.getElementById('suggestionsFilter');
-  if (userPendingBtn) {
-    userPendingBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+  // Показываем фиксированную админ-панель
+  const adminPanel = document.getElementById('fixedAdminPanel');
+  if (adminPanel) {
+    adminPanel.style.display = isAdmin ? 'flex' : 'none';
   }
-  if (suggestionsFilter) {
-    suggestionsFilter.style.display = isAdmin ? 'inline-flex' : 'none';
+  
+  // Загружаем язык пользователя из профиля
+  if (user) {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // Загружаем язык пользователя из профиля
+        if (userData.language) {
+          window.currentLang = userData.language;
+          console.log('Loaded user language from profile:', userData.language);
+          
+          // Обновляем язык интерфейса
+          if (typeof window.setLanguage === 'function') {
+            window.setLanguage(userData.language);
+          }
+          
+          // Обновляем кнопку в футере
+          if (typeof window.updateFooterLanguageButton === 'function') {
+            window.updateFooterLanguageButton();
+          }
+        }
+      }
+    } catch(e) {
+      console.warn('Failed to load user language:', e);
+    }
+  }
+  
+  // Показываем/скрываем кнопки фильтров
+  const mySuggestionsBtn = document.getElementById('mySuggestionsFilter');
+  const suggestionsBtn = document.getElementById('suggestionsFilter');
+  const hiddenFilterBtn = document.getElementById('hiddenFilter');
+  
+  if (mySuggestionsBtn) {
+    mySuggestionsBtn.style.display = user ? 'inline-flex' : 'none';
+  }
+  if (suggestionsBtn) {
+    suggestionsBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+  }
+  if (hiddenFilterBtn) {
+    hiddenFilterBtn.style.display = isAdmin ? 'inline-flex' : 'none';
   }
   
   updateHeaderAuthUI(user);
   await loadFavorites();
+  updateCounts(); // Обновляем счетчики после загрузки избранного
   await loadFaucetsFromFirestore();
+  updateCounts(); // Обновляем счетчики после загрузки кранов
+  // Повторный вызов с задержкой для надежности
+  setTimeout(function() { updateCounts(); }, 500);
   if (isAdmin) await loadPendingSuggestions();
+  if (user) await loadNotificationsFromFirestore();
 
   // Hook profile/account modal (footer.js)
   try {
@@ -2377,8 +3336,75 @@ onAuthStateChanged(auth, async (user) => {
     };
     if (avaWrap) avaWrap.onclick = openAccount;
     if (nameWrap) nameWrap.onclick = openAccount;
+    
+    // Hook notifications button
+    const notifBtn = document.getElementById('notificationButton') || document.querySelector('[onclick*="openNotificationsModal"]') || document.querySelector('[onclick*="showNotifications"]');
+    if (notifBtn && !notifBtn.onclick) {
+      notifBtn.onclick = () => {
+        if (typeof window.showNotifications === 'function') {
+          window.showNotifications();
+        } else if (typeof window.openNotificationsModal === 'function') {
+          window.openNotificationsModal();
+        }
+      };
+      console.log('Notification button hooked');
+    }
   } catch(_) {}
 });
 </script>
+
+<!-- Фиксированная админ-панель -->
+<div id="fixedAdminPanel" style="position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,37,56,0.95));border-top:1px solid rgba(139,92,246,0.3);backdrop-filter:blur(10px);padding:10px 20px;z-index:1000;display:none;align-items:center;justify-content:space-between;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <button onclick="toggleEditMode()" style="padding:6px 12px;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);border-radius:6px;color:#a78bfa;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+      <i id="editModeIcon" class="fas fa-pen"></i>
+      <span data-translate="faucets_admin_edit_mode">Режим</span>
+    </button>
+    <button onclick="openAddModal()" style="padding:6px 12px;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.3);border-radius:6px;color:#34d399;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+      <i class="fas fa-plus"></i>
+      <span data-translate="faucets_admin_add">Добавить</span>
+    </button>
+    <button onclick="showAllHiddenFaucets()" style="padding:6px 12px;background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.3);border-radius:6px;color:#f87171;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+      <i class="fas fa-eye-slash"></i>
+      <span data-translate="faucets_admin_hidden">Скрытые</span> <span id="hiddenCount" class="badge badge-multi" style="margin-left:4px;">0</span>
+    </button>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button onclick="window.scrollTo({top:0,behavior:'smooth'})" style="padding:6px 12px;background:rgba(71,85,105,0.2);border:1px solid rgba(71,85,105,0.3);border-radius:6px;color:#94a3b8;font-size:12px;cursor:pointer;">
+      <i class="fas fa-arrow-up"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+// Функция для переключения видимости скрытых кранов
+window.toggleHiddenFaucets = function() {
+  const hiddenFaucets = JSON.parse(localStorage.getItem('hiddenFaucets') || '[]');
+  if (hiddenFaucets.length === 0) {
+    alert('Нет скрытых кранов');
+    return;
+  }
+  
+  // Показываем диалог со списком скрытых кранов
+  const hiddenNames = hiddenFaucets.map(id => {
+    const f = faucets.find(faucet => faucet.id === id);
+    return f ? f.name : id;
+  }).join(', ');
+  
+  if (confirm('Показать все скрытые краны? (' + hiddenFaucets.length + ' шт.):\n' + hiddenNames)) {
+    localStorage.setItem('hiddenFaucets', '[]');
+    renderAll();
+    updateCounts();
+  }
+};
+
+// Обновление счетчика скрытых кранов
+window.updateHiddenCount = function() {
+  const hiddenFaucets = JSON.parse(localStorage.getItem('hiddenFaucets') || '[]');
+  const countEl = document.getElementById('hiddenCount');
+  if (countEl) countEl.textContent = hiddenFaucets.length;
+};
+</script>
+
 </body>
 </html>
