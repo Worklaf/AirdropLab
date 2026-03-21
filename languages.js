@@ -1327,7 +1327,13 @@ function setLanguage(lang) {
 
     // Обновляем переводы модального окна обратной связи
     updateFeedbackModalTranslations();
-document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: lang } }));
+    
+    // Перезегружаем краны с новыми переводами
+    if (typeof window.reloadFaucetsWithNewLanguage === 'function') {
+      window.reloadFaucetsWithNewLanguage();
+    }
+    
+    document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: lang } }));
     return true;
   }
   return false;
