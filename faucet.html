@@ -2235,6 +2235,35 @@ async function loadTranslations(lang) {
   }
 }
 
+// Функция для перезагрузки кранов при смене языка
+async function reloadFaucetsWithNewLanguage() {
+  const currentLang = window.currentLang || 'ru';
+  const translatedFaucets = await loadTranslations(currentLang);
+  
+  faucets = translatedFaucets.map((f) => ({
+    id: f.id,
+    name: f.name || '',
+    token: f.token || '',
+    type: f.type || 'free',
+    net: f.net || 'mainnet',
+    desc: f.desc || '',
+    links: f.links || [],
+    logoUrl: f.logoUrl || '',
+    reward: f.reward || '',
+    cooldown: f.cooldown || '',
+    tags: f.tags || [],
+    ratingAvg: 0,
+    ratingCount: 0,
+    clickCount: 0
+  }));
+  
+  renderAll();
+  updateCounts();
+}
+
+// Сделать функцией глобальной для вызова из languages.js
+window.reloadFaucetsWithNewLanguage = reloadFaucetsWithNewLanguage;
+
 // ═══════════════════════════════════════════
 // ADMIN ACTIONS
 // ═══════════════════════════════════════════
