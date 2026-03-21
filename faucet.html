@@ -2222,29 +2222,74 @@ async function translateText(text, targetLang) {
   if (!text || targetLang === 'ru') return text;
   
   try {
-    // Используем Firebase API key из конфигурации
-    const apiKey = window.firebaseConfig?.apiKey || 'AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk';
-    
-    const response = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${apiKey}&q=${encodeURIComponent(text)}&target=${targetLang}&source=ru`, {
+    // Используем бесплатный прокси для Google Translate API
+    const response = await fetch(`https://api.mymemory.translated.net/get_translation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       'Origin': window.location.origin
-      }
+      },
+      body: JSON.stringify({
+        text: text,
+        source_lang: 'ru',
+        target_lang: targetLang
+      })
     });
     
     const data = await response.json();
     
-    if (data.data && data.data.translations && data.data.translations[0]) {
-      return data.data.translations[0].translatedText || text;
+    if (data && data.translated_text) {
+      return data.translated_text;
     } else {
       console.warn('Translation API response:', data);
       return text;
     }
   } catch (e) {
     console.warn('Translation failed:', e);
-    return text;
+    // Fallback на базовые переводы
+    return getBasicTranslation(text, targetLang);
   }
+}
+
+// Базовые переводы для fallback
+function getBasicTranslation(text, targetLang) {
+  const basicTranslations = {
+    '24ч': targetLang === 'en' ? '24h' : text,
+    'день': targetLang === 'en' ? 'day' : text,
+    'нет': targetLang === 'en' ? 'none' : text,
+    'при регистрации': targetLang === 'en' ? 'on registration' : text,
+    'неограниченно': targetLang === 'en' ? 'unlimited' : text,
+    '24ч free / нет paid': targetLang === 'en' ? '24h free / no paid' : text,
+    'до 1 ETH': targetLang === 'en' ? 'up to 1 ETH' : text,
+    'до 5 ETH/день': targetLang === 'en' ? 'up to 5 ETH/day' : text,
+    '0.5 sETH/день': targetLang === 'en' ? '0.5 sETH/day' : text,
+    '0.1 gETH/день': targetLang === 'en' ? '0.1 gETH/day' : text,
+    '0.5 ETH/день': targetLang === 'en' ? '0.5 ETH/day' : text,
+    '2 MATIC/день': targetLang === 'en' ? '2 MATIC/day' : text,
+    '0.3 BNB/день': targetLang === 'en' ? '0.3 BNB/day' : text,
+    '1 MON/день': targetLang === 'en' ? '1 MON/day' : text,
+    '0.01 ETH': targetLang === 'en' ? '0.01 ETH' : text,
+    '0.5 MNT': targetLang === 'en' ? '0.5 MNT' : text,
+    '2 AVAX/день': targetLang === 'en' ? '2 AVAX/day' : text,
+    '1 FTM': targetLang === 'en' ? '1 FTM' : text,
+    '0.5 BERA': targetLang === 'en' ? '0.5 BERA' : text,
+    '200 NEAR': targetLang === 'en' ? '200 NEAR' : text,
+    '1000 ADA': targetLang === 'en' ? '1000 ADA' : text,
+    '10 ALGO': targetLang === 'en' ? '10 ALGO' : text,
+    '5 CELO': targetLang === 'en' ? '5 CELO' : text,
+    '20 LINK': targetLang === 'en' ? '20 LINK' : text,
+    '10 FLOW': targetLang === 'en' ? '10 FLOW' : text,
+    '0.01 xDAI': targetLang === 'en' ? '0.01 xDAI' : text,
+    '1 APT': targetLang === 'en' ? '1 APT' : text,
+    '1 SUI': targetLang === 'en' ? '1 SUI' : text,
+    '2 SOL': targetLang === 'en' ? '2 SOL' : text,
+    '5 tTON': targetLang === 'en' ? '5 tTON' : text,
+    '1000 XRP': targetLang === 'en' ? '1000 XRP' : text,
+    '500 STX': targetLang === 'en' ? '500 STX' : text,
+    '5 KLAY': targetLang === 'en' ? '5 KLAY' : text
+  };
+  
+  return basicTranslations[text] || text;
 }
 
 // Функция для перевода всех описаний
