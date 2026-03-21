@@ -2224,51 +2224,25 @@ function forceRecreateTranslations(lang) {
 
 window.forceRecreateTranslations = forceRecreateTranslations;
 
-// Google Translate функция
+// Google Translate функция (базовые переводы)
 async function translateText(text, targetLang) {
   if (!text || targetLang === 'ru') return text;
   
-  try {
-    // Используем бесплатный прокси для Google Translate API
-    const response = await fetch(`https://api.mymemory.translated.net/get_translation`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      'Origin': window.location.origin
-      },
-      body: JSON.stringify({
-        text: text,
-        source_lang: 'ru',
-        target_lang: targetLang
-      })
-    });
-    
-    const data = await response.json();
-    
-    if (data && data.translated_text) {
-      return data.translated_text;
-    } else {
-      console.warn('Translation API response:', data);
-      return text;
-    }
-  } catch (e) {
-    console.warn('Translation failed:', e);
-    // Fallback на базовые переводы
-    return getBasicTranslation(text, targetLang);
-  }
+  // Используем только базовые переводы без внешних API
+  return getBasicTranslation(text, targetLang);
 }
 
-// Базовые переводы для fallback
+// Базовые переводы для всех полей
 function getBasicTranslation(text, targetLang) {
   const basicTranslations = {
+    // Время и кулдауны
     '24ч': targetLang === 'en' ? '24h' : text,
-    'день': targetLang === 'en' ? 'day' : text,
-    'нет': targetLang === 'en' ? 'none' : text,
+    '8ч': targetLang === 'en' ? '8h' : text,
     'при регистрации': targetLang === 'en' ? 'on registration' : text,
+    'нет': targetLang === 'en' ? 'none' : text,
     'неограниченно': targetLang === 'en' ? 'unlimited' : text,
-    '24ч free / нет paid': targetLang === 'en' ? '24h free / no paid' : text,
-    'до 1 ETH': targetLang === 'en' ? 'up to 1 ETH' : text,
-    'до 5 ETH/день': targetLang === 'en' ? 'up to 5 ETH/day' : text,
+    
+    // Награды
     '0.5 sETH/день': targetLang === 'en' ? '0.5 sETH/day' : text,
     '0.1 gETH/день': targetLang === 'en' ? '0.1 gETH/day' : text,
     '0.5 ETH/день': targetLang === 'en' ? '0.5 ETH/day' : text,
@@ -2293,7 +2267,87 @@ function getBasicTranslation(text, targetLang) {
     '5 tTON': targetLang === 'en' ? '5 tTON' : text,
     '1000 XRP': targetLang === 'en' ? '1000 XRP' : text,
     '500 STX': targetLang === 'en' ? '500 STX' : text,
-    '5 KLAY': targetLang === 'en' ? '5 KLAY' : text
+    '5 KLAY': targetLang === 'en' ? '5 KLAY' : text,
+    
+    // Платные тарифы
+    '24ч free / нет paid': targetLang === 'en' ? '24h free / no paid' : text,
+    'до 1 ETH': targetLang === 'en' ? 'up to 1 ETH' : text,
+    'до 5 ETH/день': targetLang === 'en' ? 'up to 5 ETH/day' : text,
+    'неограниченно': targetLang === 'en' ? 'unlimited' : text,
+    
+    // Описания (ключевые слова)
+    'Краны': targetLang === 'en' ? 'Faucets' : text,
+    'тестнет': targetLang === 'en' ? 'testnet' : text,
+    'мейннет': targetLang === 'en' ? 'mainnet' : text,
+    'бесплатных': targetLang === 'en' ? 'free' : text,
+    'платных': targetLang === 'en' ? 'paid' : text,
+    'Для разработки': targetLang === 'en' ? 'For development' : text,
+    'Для тестирования': targetLang === 'en' ? 'For testing' : text,
+    'Официальный': targetLang === 'en' ? 'Official' : text,
+    'Активная экосистема': targetLang === 'en' ? 'Active ecosystem' : text,
+    'Требует': targetLang === 'en' ? 'Requires' : text,
+    'аккаунт': targetLang === 'en' ? 'account' : text,
+    'верификации': targetLang === 'en' ? 'verification' : text,
+    'Поддерживает': targetLang === 'en' ? 'Supports' : text,
+    'мультикран': targetLang === 'en' ? 'multi-faucet' : text,
+    'Discord-бот': targetLang === 'en' ? 'Discord bot' : text,
+    'ветке': targetLang === 'en' ? 'channel' : text,
+    'отправь': targetLang === 'en' ? 'send' : text,
+    'адрес': targetLang === 'en' ? 'address' : text,
+    'zkEVM L2': targetLang === 'en' ? 'zkEVM L2' : text,
+    'Нужен': targetLang === 'en' ? 'Needed for' : text,
+    'контрактов': targetLang === 'en' ? 'contracts' : text,
+    'Активная сеть': targetLang === 'en' ? 'Active network' : text,
+    'потенциальным аирдропом': targetLang === 'en' ? 'with potential airdrop' : text,
+    'Хорошо': targetLang === 'en' ? 'Good for' : text,
+    'on-chain активности': targetLang === 'en' ? 'on-chain activity' : text,
+    'от ConsenSys': targetLang === 'en' ? 'from ConsenSys' : text,
+    'MetaMask': targetLang === 'en' ? 'MetaMask' : text,
+    'ожидается аирдроп': targetLang === 'en' ? 'airdrop expected' : text,
+    'Высокопроизводительный': targetLang === 'en' ? 'High-performance' : text,
+    'один из самых ожидаемых': targetLang === 'en' ? 'one of the most anticipated' : text,
+    'Активность засчитывается': targetLang === 'en' ? 'Activity counts' : text,
+    'Активная экосистема': targetLang === 'en' ? 'Active ecosystem' : text,
+    'Взаимодействие': targetLang === 'en' ? 'Interaction' : text,
+    'учитываться': targetLang === 'en' ? 'may count' : text,
+    'будущих аирдропов': targetLang === 'en' ? 'for future airdrops' : text,
+    'от Matter Labs': targetLang === 'en' ? 'from Matter Labs' : text,
+    'Portal zkSync': targetLang === 'en' ? 'Portal zkSync' : text,
+    'официальный кран': targetLang === 'en' ? 'official faucet' : text,
+    'Активность в тестнете важна': targetLang === 'en' ? 'Testnet activity is important' : text,
+    'Выдаёт': targetLang === 'en' ? 'Issues' : text,
+    'тестовые': targetLang === 'en' ? 'test' : text,
+    'разработки': targetLang === 'en' ? 'development' : text,
+    'Несколько': targetLang === 'en' ? 'Several' : text,
+    'партнёрских': targetLang === 'en' ? 'partner' : text,
+    'мобильной блокчейн-платформы': targetLang === 'en' ? 'mobile blockchain platform' : text,
+    'с фокусом на': targetLang === 'en' ? 'focused on' : text,
+    'Tree-Graph консенсус': targetLang === 'en' ? 'Tree-Graph consensus' : text,
+    'Высокая пропускная способность': targetLang === 'en' ? 'High throughput' : text,
+    'блокчейн для IoT устройств': targetLang === 'en' ? 'Blockchain for IoT devices' : text,
+    'Децентрализованное архивирование': targetLang === 'en' ? 'Decentralized archiving' : text,
+    'через приложение': targetLang === 'en' ? 'via app' : text,
+    'Гейминг-фокусированный': targetLang === 'en' ? 'Gaming-focused' : text,
+    'через официальный Hub': targetLang === 'en' ? 'via official Hub' : text,
+    'NFT-фокусированный': targetLang === 'en' ? 'NFT-focused' : text,
+    'на базе Arbitrum': targetLang === 'en' ? 'based on Arbitrum' : text,
+    'Privacy-oriented': targetLang === 'en' ? 'Privacy-oriented' : text,
+    'Тестнет с': targetLang === 'en' ? 'Testnet with' : text,
+    'Разработан': targetLang === 'en' ? 'Developed by' : text,
+    'Шардированный блокчейн': targetLang === 'en' ? 'Sharded blockchain' : text,
+    'через официальный dev-кошелёк': targetLang === 'en' ? 'via official dev wallet' : text,
+    'Профессиональный провайдер': targetLang === 'en' ? 'Professional provider' : text,
+    'Бесплатный tier': targetLang === 'en' ? 'Free tier' : text,
+    'для новых пользователей': targetLang === 'en' ? 'for new users' : text,
+    'Платный доступ': targetLang === 'en' ? 'Paid access' : text,
+    'снимает лимиты': targetLang === 'en' ? 'removes limits' : text,
+    'Требует регистрацию': targetLang === 'en' ? 'Requires registration' : text,
+    'Инструмент для разработчиков': targetLang === 'en' ? 'Developer tool' : text,
+    'Виртуальные тестнеты': targetLang === 'en' ? 'Virtual testnets' : text,
+    'с неограниченными токенами': targetLang === 'en' ? 'with unlimited tokens' : text,
+    'Надёжный и стабильный провайдер': targetLang === 'en' ? 'Reliable and stable provider' : text,
+    'от Infura': targetLang === 'en' ? 'from Infura' : text,
+    'MetaMask': targetLang === 'en' ? 'MetaMask' : text
   };
   
   return basicTranslations[text] || text;
