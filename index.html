@@ -2614,6 +2614,17 @@ window.saveActivityData = function() {
   showToast('Активность сохранена');
 };
 
+window.deleteActivityFromList = function(actId) {
+  if (confirm('Удалить эту активность?')) {
+    currentEditingActivities = currentEditingActivities.filter(a => a.id !== actId);
+    const latestDate = getLatestActivityDate({ activities: currentEditingActivities });
+    if (latestDate) document.getElementById('projLastUpdated').value = latestDate.split('T')[0];
+    else document.getElementById('projLastUpdated').value = '';
+    renderActivitiesAdminList();
+    showToast('Активность удалена');
+  }
+};
+
 window.deleteActivity = function() {
   if (editingActivityId && confirm('Удалить эту активность?')) {
     currentEditingActivities = currentEditingActivities.filter(a => a.id !== editingActivityId);
@@ -2632,7 +2643,7 @@ function renderActivitiesAdminList() {
   container.innerHTML = currentEditingActivities.map(function(act) {
     const actDate = act.date ? formatDateForDisplay(act.date) : '';
     const actEndDate = act.endDate ? ' → ' + formatDateForDisplay(act.endDate) : '';
-    return '<div class="activity-item-admin"><div><div class="font-bold text-white">' + act.title + '</div><div class="text-xs text-slate-400">' + (actDate ? actDate + actEndDate + ' • ' : '') + (act.categories ? act.categories.join(', ') : '') + '</div></div><div class="flex gap-2"><button onclick="openActivityEditor(\'' + act.id + '\')" class="text-blue-400 hover:text-blue-300 p-1"><i class="fas fa-edit"></i></button><button onclick="currentEditingActivities = currentEditingActivities.filter(a => a.id !== \'' + act.id + '\'); renderActivitiesAdminList();" class="text-red-400 hover:text-red-300 p-1"><i class="fas fa-trash"></i></button></div></div>';
+    return '<div class="activity-item-admin"><div><div class="font-bold text-white">' + act.title + '</div><div class="text-xs text-slate-400">' + (actDate ? actDate + actEndDate + ' • ' : '') + (act.categories ? act.categories.join(', ') : '') + '</div></div><div class="flex gap-2"><button onclick="openActivityEditor(\'' + act.id + '\')" class="text-blue-400 hover:text-blue-300 p-1"><i class="fas fa-edit"></i></button><button onclick="deleteActivityFromList(\'' + act.id + '\')" class="text-red-400 hover:text-red-300 p-1"><i class="fas fa-trash"></i></button></div></div>';
   }).join('');
 }
 
