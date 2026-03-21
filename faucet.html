@@ -2211,6 +2211,7 @@ async function translateAllDescriptions(targetLang) {
   // Сохранить переводы в Firestore
   if (currentUser && isAdmin) {
     try {
+      console.log('Attempting to save translations for', targetLang);
       const translationsRef = doc(db, "translations", `faucets_${targetLang}`);
       await setDoc(translationsRef, {
         faucets: translatedFaucets,
@@ -2218,8 +2219,11 @@ async function translateAllDescriptions(targetLang) {
       });
       console.log(`✅ Translations saved for ${targetLang}`);
     } catch (e) {
-      console.warn('Failed to save translations:', e);
+      console.error('Failed to save translations:', e);
+      console.warn('Error details:', e.code, e.message);
     }
+  } else {
+    console.log('⚠️ Cannot save translations - not admin or not logged in');
   }
   
   return translatedFaucets;
