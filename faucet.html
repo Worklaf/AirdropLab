@@ -302,11 +302,11 @@
       </div>
       <div>
         <div class="ae-label" data-translate="faucets_field_desc">Описание</div>
-        <textarea class="ae-input" id="f_desc" rows="2" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;"></textarea>
+        <textarea class="ae-input" id="f_desc" rows="2" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;" oninput="autoTranslateDescription('f_desc', 'f_desc_en', 'ru')"></textarea>
       </div>
       <div>
         <div class="ae-label">English Description</div>
-        <textarea class="ae-input" id="f_desc_en" rows="2" placeholder="English faucet description" style="resize:vertical;"></textarea>
+        <textarea class="ae-input" id="f_desc_en" rows="2" placeholder="English faucet description" style="resize:vertical;" oninput="autoTranslateDescription('f_desc_en', 'f_desc', 'en')"></textarea>
       </div>
       <div>
         <div class="ae-label" data-translate="faucets_field_links">Ссылки (по одной в строке) *</div>
@@ -377,11 +377,11 @@
       </div>
       <div>
         <div class="ae-label" data-translate="faucets_field_desc">Описание</div>
-        <textarea class="ae-input" id="suggest_desc" rows="2" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;"></textarea>
+        <textarea class="ae-input" id="suggest_desc" rows="2" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;" oninput="autoTranslateDescription('suggest_desc', 'suggest_desc_en', 'ru')"></textarea>
       </div>
       <div>
         <div class="ae-label">English Description</div>
-        <textarea class="ae-input" id="suggest_desc_en" rows="2" placeholder="English faucet description" style="resize:vertical;"></textarea>
+        <textarea class="ae-input" id="suggest_desc_en" rows="2" placeholder="English faucet description" style="resize:vertical;" oninput="autoTranslateDescription('suggest_desc_en', 'suggest_desc', 'en')"></textarea>
       </div>
       <div>
         <div class="ae-label" data-translate="faucets_field_links">Ссылки (по одной в строке) *</div>
@@ -1261,7 +1261,7 @@ function renderCard(f) {
   // Особый стиль для предложений
   var cardStyle = f.status === 'pending' ? 'border:2px solid rgba(239,68,68,0.3);background:linear-gradient(135deg,rgba(239,68,68,0.05),rgba(15,23,42,0.8));' : '';
 
-  return '<div class="faucet-card '+typeClass+'" data-id="'+f.id+'" data-name="'+f.name.toLowerCase()+'" data-token="'+(f.token||'').toLowerCase()+'" data-type="'+f.type+'" data-net="'+f.net+'" onclick="window.openFaucetModal(' + JSON.stringify(f).replace(/"/g, '&quot;') + ')">'
+  return '<div class="faucet-card '+typeClass+'" data-id="'+f.id+'" data-name="'+f.name.toLowerCase()+'" data-token="'+(f.token||'').toLowerCase()+'" data-type="'+f.type+'" data-net="'+f.net+'">'
     + '<div style="padding:16px;' + cardStyle + '">'
     + '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">'
     + logoHtml
@@ -1272,7 +1272,7 @@ function renderCard(f) {
     + badgeType + badgeNet + extraBadges
     + '</div></div>'
     + '<div style="display:flex;align-items:center;gap:8px;">'
-    + '<div class="rating-circle '+ratingClass(ratingAvg)+'" title="'+(isEn?'Rate (0-10)':'Оценить (0-10)')+'" onclick="event.stopPropagation(); window.openRating(\''+safeText(f.id)+'\')">'+ratingText+'</div>'
+    + '<div class="rating-circle '+ratingClass(ratingAvg)+'" title="'+(isEn?'Rate (0-10)':'Оценить (0-10)')+'" onclick="window.openRating(\''+safeText(f.id)+'\')">'+ratingText+'</div>'
     + '</div>'
     + '</div>'
     + (f.desc ? '<p style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;margin-top:6px;">'+safeText(f.desc)+'</p>' : '')
@@ -3581,6 +3581,74 @@ document.addEventListener('DOMContentLoaded', function() {
 // Глобальные функции
 window.openFaucetModal = openFaucetModal;
 window.closeFaucetModal = closeFaucetModal;
+
+// ========== АВТОМАТИЧЕСКИЙ ПЕРЕВОД ОПИСАНИЙ ==========
+let translationTimeout = null;
+
+// Функция автоматического перевода между полями описаний
+async function autoTranslateDescription(sourceId, targetId, sourceLang) {
+  const sourceField = document.getElementById(sourceId);
+  const targetField = document.getElementById(targetId);
+  
+  if (!sourceField || !targetField) return;
+  
+  const sourceText = sourceField.value.trim();
+  if (!sourceText) {
+    targetField.value = '';
+    return;
+  }
+  
+  // Определяем язык перевода
+  const targetLang = sourceLang === 'ru' ? 'en' : 'ru';
+  
+  // Очищаем предыдущий таймаут
+  if (translationTimeout) {
+    clearTimeout(translationTimeout);
+  }
+  
+  // Устанавливаем задержку чтобы не спамить запросы
+  translationTimeout = setTimeout(async () => {
+    try {
+      // Показываем индикатор перевода
+      targetField.style.opacity = '0.6';
+      targetField.placeholder = sourceLang === 'ru' ? 'Переводим...' : 'Translating...';
+      
+      // Используем наш сервис перевода
+      const response = await fetch('http://localhost:3002/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: sourceText,
+          sourceLang: sourceLang,
+          targetLang: targetLang
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.translated) {
+          targetField.value = data.translated;
+          console.log(`✅ Auto-translated: "${sourceText}" → "${data.translated}"`);
+        }
+      } else {
+        console.warn('Translation service error:', response.status);
+      }
+    } catch (error) {
+      console.warn('Auto-translation failed:', error);
+    } finally {
+      // Восстанавливаем стили
+      targetField.style.opacity = '1';
+      targetField.placeholder = sourceLang === 'ru' ? 
+        'English faucet description' : 
+        'Краткое описание крана';
+    }
+  }, 800); // Задержка 800мс после окончания ввода
+}
+
+// Сделать функцией глобальной
+window.autoTranslateDescription = autoTranslateDescription;
 
 // Функция для перезагрузки кранов при смене языка
 async function reloadFaucetsWithNewLanguage() {
