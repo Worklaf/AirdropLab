@@ -3266,7 +3266,8 @@ document.addEventListener('languageChanged', function() {
 // Init
 onAuthStateChanged(auth, async (user) => {
   currentUser = user || null;
-  window.currentUser = currentUser;
+  // НЕ переопределяем window.currentUser чтобы не ломать синхронизацию в index.html
+  // window.currentUser = currentUser;
   isAdmin = !!(user && (user.uid === ADMIN_UID));
   // Показываем фиксированную админ-панель
   const adminPanel = document.getElementById('fixedAdminPanel');
