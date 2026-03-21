@@ -1327,13 +1327,7 @@ function setLanguage(lang) {
 
     // Обновляем переводы модального окна обратной связи
     updateFeedbackModalTranslations();
-    
-    // Перезегружаем краны с новыми переводами
-    if (typeof window.reloadFaucetsWithNewLanguage === 'function') {
-      window.reloadFaucetsWithNewLanguage();
-    }
-    
-    document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: lang } }));
+document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: lang } }));
     return true;
   }
   return false;
@@ -1529,4 +1523,3 @@ function updateDateFilterMonths() {
 window.currentLang = currentLang;
 window.translations = translations;
 window.setLanguage = setLanguage;
-
