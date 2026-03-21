@@ -1861,6 +1861,7 @@ onAuthStateChanged(auth, async function(user) {
 
         arcData       = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
         userCompleted = JSON.parse(localStorage.getItem(COMPLETED_KEY) || '[]');
+        userFavorites = JSON.parse(localStorage.getItem('favorites_backup') || '[]');
 
         applyFilters();
 
@@ -1991,6 +1992,19 @@ const EXTERNAL_DATA_URL = './data/projects.json';
 document.addEventListener('DOMContentLoaded', function() { 
   checkAndAutoEndActivities();
   setInterval(checkAndAutoEndActivities, 60 * 60 * 1000);
+  
+  // ✅ Восстанавливаем данные из localStorage если пользователь уже вошел
+  if (currentUser) {
+    userFavorites = JSON.parse(localStorage.getItem('favorites_backup') || '[]');
+    userCompleted = JSON.parse(localStorage.getItem(COMPLETED_KEY) || '[]');
+    arcData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    console.log('Restored user data from localStorage:', {
+      favorites: userFavorites.length,
+      completed: userCompleted.length,
+      arcData: Object.keys(arcData).length
+    });
+  }
+  
   loadData(); 
   setupSearchListener();
   
