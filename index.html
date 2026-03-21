@@ -646,14 +646,9 @@ import {
     increment
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk",
-    authDomain: "testnet-hub.firebaseapp.com",
-    projectId: "testnet-hub",
-    storageBucket: "testnet-hub.firebasestorage.app",
-    messagingSenderId: "497813176653",
-    appId: "1:497813176653:web:089188fdd1555d76cd7704"
-};
+import config from './config.js';
+
+const firebaseConfig = config.firebaseConfig;
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -958,10 +953,12 @@ window.logout = function() { signOut(auth).then(() => { showToast('Выход');
 let adminFeedbacks = [];
 let adminFeedbacksUnsubscribe = null;
 
-function initFeedbacksListener(uid) {
+async function initFeedbacksListener(uid) {
   if (adminFeedbacksUnsubscribe) { adminFeedbacksUnsubscribe(); adminFeedbacksUnsubscribe = null; }
   let q;
-  const isAdmin = uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  // Проверяем isAdmin из Firestore вместо hardcoded ID
+  const userDoc = await getDoc(doc(db, "users", uid));
+  const isAdmin = userDoc.exists() && userDoc.data().isAdmin === true;
   try {
     if (isAdmin) q = query(collection(db, "feedbacks"));
     else q = query(collection(db, "feedbacks"), where("userId", "==", uid));
@@ -1240,9 +1237,11 @@ window.closeFeedbackModal = function() {
   }
 };
 
-window.renderFeedbackList = function() {
+window.renderFeedbackList = async function() {
   const container = document.getElementById('feedbacksContainer');
-  const isAdmin = currentUser && currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  // ✅ Проверяем isAdmin из Firestore вместо hardcoded ID
+  const userDoc = currentUser ? await getDoc(doc(db, "users", currentUser.uid)) : null;
+  const isAdmin = userDoc && userDoc.exists() && userDoc.data().isAdmin === true;
 
   if (!adminFeedbacks || adminFeedbacks.length === 0) {
     container.innerHTML = `
@@ -1691,9 +1690,10 @@ window.sendAdminReply = async function(feedbackId) {
 window.markFeedbackRead = async function(id) { try { await updateDoc(doc(db, "feedbacks", id), { read: true }); } catch (e) { console.error(e); } };
 window.deleteAdminFeedback = async function(id) { if (!confirm('Удалить?')) return; try { await deleteDoc(doc(db, "feedbacks", id)); showToast('Удалено'); renderFeedbackList(); } catch (e) { showToast('Ошибка'); } };
 
-window.openFeedbackListModal = function() {
+window.openFeedbackListModal = async function() {
   if (!currentUser) { showToast('Войдите'); openLoginModal(); return; }
-  const isAdmin = currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+  const isAdmin = userDoc.exists() && userDoc.data().isAdmin === true;
   const titleContainer = document.querySelector('#feedbackListModal h2');
   if (titleContainer) titleContainer.innerHTML = isAdmin ? '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>' + t('all_requests') : '<i class="fas fa-comments text-purple-400 mr-2"></i>' + t('my_messages');
   document.getElementById('feedbackListModal').classList.add('active');
@@ -1831,18 +1831,6 @@ onAuthStateChanged(auth, async function(user) {
         document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
 
         initUserSync(user.uid);
-        initNotificationsListener(user.uid);
-
-        // ✅ Загружаем состояние hero из Firestore
-        await loadHeroStateFromFirestore(user.uid);
-
-        // ✅ ВЫЗЫВАЕМ activateAdminMode ТОЛЬКО ПОСЛЕ полной загрузки данных
-        if (user.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2") activateAdminMode();
-
-        applyFilters();
-
-        // ✅ Уведомляем другие модули
-        document.dispatchEvent(new CustomEvent('userAuthChanged', { detail: { user } }));
         document.dispatchEvent(new CustomEvent('authStateReady',  { detail: { user } }));
 
     } else {
@@ -2566,8 +2554,12 @@ window.openDetailLink = function(type) {
 window.openGuideFromDetail = function() { if(currentDetailId) { const project = projects.find(function(p) { return p.id === currentDetailId; }); window.trackGuideClick(currentDetailId, project ? project.guideUrl : ''); } };
 
 // Найдите и замените:
-function activateAdminMode() {
-  if (!currentUser || currentUser.uid !== "SAkz4mdW9reDaIsvqigCNZhEKJR2") return;
+async function activateAdminMode() {
+  if (!currentUser) return;
+  // ✅ Проверяем isAdmin из Firestore вместо hardcoded ID
+  const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+  if (!userDoc.exists() || !userDoc.data().isAdmin) return;
+  
   isAdminMode = true;
   document.getElementById('adminPanel').style.display = 'flex';
   document.getElementById('generalFeedbackPanel').classList.remove('hidden');
@@ -3125,7 +3117,7 @@ window.showToast = function(msg) {
 };
 function getAllCategoriesFromProjects() { const cats = new Set(); projects.forEach(function(p) { if(p.categories) p.categories.forEach(function(c) { cats.add(c); }); }); return Array.from(cats); }
 
-window.openStats = function() { if (!currentUser) { showToast('Войдите'); return; } if (currentUser.uid !== "SAkz4mdW9reDaIsvqigCNZhEKJR2") { showToast('Нет доступа'); return; } window.open('admin/stats.html', '_blank'); };
+window.openStats = async function() { if (!currentUser) { showToast('Войдите'); return; } const userDoc = await getDoc(doc(db, "users", currentUser.uid)); if (!userDoc.exists() || !userDoc.data().isAdmin) { showToast('Нет доступа'); return; } window.open('admin/stats.html', '_blank'); };
 function enableUserEnterSend() { const inp = document.getElementById('feedbackUserReplyText'); inp.onkeypress = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendUserFeedbackReply(); } }; }
 
 window.openDeletedProjects = function() { if (!isAdminMode) { showToast('Только для админа'); return; } loadDeletedProjects(); document.getElementById('deletedProjectsModal').classList.add('active'); };
@@ -3199,7 +3191,7 @@ document.getElementById('imageModal').addEventListener('click', function(e) { if
 document.addEventListener('keydown', function(e) { const imageModal = document.getElementById('imageModal'); if (!imageModal.classList.contains('active')) return; switch(e.key) { case 'Escape': closeImageModal(); break; case 'ArrowRight': nextImage(); break; case 'ArrowLeft': prevImage(); break; } });
 
 window.exportAllData = async function() {
-  if (!currentUser || currentUser.uid !== "SAkz4mdW9reDaIsvqigCNZhEKJR2") { showToast('Только админ'); return; }
+  if (!currentUser || !isAdminMode) { showToast('Только админ'); return; }
   if (!confirm('Экспортировать все проекты?')) return;
   
   const btn = event.target.closest('button');
@@ -3271,7 +3263,10 @@ async function createLocalBackup() {
 const originalSaveProject = window.saveProject;
 window.saveProject = async function(e) {
   await originalSaveProject(e);
-  if (currentUser && currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2") await createLocalBackup();
+  if (currentUser) {
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    if (userDoc.exists() && userDoc.data().isAdmin === true) await createLocalBackup();
+  };
 };
 
 window.__authReady.then(() => {
@@ -3433,15 +3428,13 @@ function detectNewActivities() {
         project.activities.forEach(act => {
           if (!isActivityViewed(project.id, act.id) &&
               !userCompleted.includes(project.id + '_' + act.id) &&
-              act.status !== 'ended') { // ✅ ended не помечаем
-            addNewActivity(project.id, act.id);
-          }
+              act.status !== 'ended') { 
+                addNewActivity(project.id, act.id);
+              }
         });
       }
     }
   });
-
-  applyFilters();
 }
 
 // Вызови эту функцию после загрузки данных
@@ -3449,7 +3442,8 @@ function detectNewActivities() {
 setTimeout(() => {
   detectNewActivities();
 }, 1000);
-    // Эту функцию нужно вызывать СРАЗУ ПОСЛЕ успешной регистрации
+
+// Эту функцию нужно вызывать СРАЗУ ПОСЛЕ успешной регистрации
 async function incrementUserCount() {
     try {
         const statsRef = doc(db, 'config', 'stats');
