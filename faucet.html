@@ -1291,6 +1291,12 @@ function renderAll() {
   var sections = getGroupedSections();
   var html = '';
 
+  // Проверяем что массив кранов не пустой
+  if (!faucets || faucets.length === 0) {
+    console.warn('⚠️ Faucets array is empty, using DEFAULT_FAUCETS');
+    faucets = DEFAULT_FAUCETS.slice();
+  }
+
   sections.forEach(function(sec) {
     var items = faucets.filter(sec.filter);
     if (items.length === 0) return;
