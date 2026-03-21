@@ -2619,6 +2619,70 @@ window.openActivityEditor = function(actId = null) {
   document.getElementById('activityModal').classList.add('active');
 };
 
+window.closeActivityModal = function() { 
+  document.getElementById('activityModal').classList.remove('active'); 
+  editingActivityId = null; 
+};
+
+window.saveActivityData = function() {
+  const title = document.getElementById('actName').value;
+  if (!title) { showToast('Введите название'); return; }
+  const selectedCats = Array.from(document.querySelectorAll('.act-cat-checkbox:checked')).map(cb => cb.value);
+
+  // ← Сохраняем createdAt: для новой — сейчас, для редактируемой — оригинальный
+  const existingAct = editingActivityId
+    ? currentEditingActivities.find(a => a.id === editingActivityId)
+    : null;
+
+  const actData = {
+    id: editingActivityId || 'act_' + Date.now(),
+    title: title,
+    date: document.getElementById('actDate').value,
+    endDate: document.getElementById('actEndDate').value,
+    categories: selectedCats.length > 0 ? selectedCats : mainProjectCategories,
+    description: document.getElementById('actRichDesc').value,
+    status: 'active',
+    createdAt: existingAct?.createdAt || new Date().toISOString()
+  };
+
+  if (editingActivityId) {
+    const idx = currentEditingActivities.findIndex(a => a.id === editingActivityId);
+    if (idx !== -1) currentEditingActivities[idx] = actData;
+  } else {
+    currentEditingActivities.push(actData);
+    if (editingId) addNewActivity(editingId, actData.id);
+  }
+  const latestDate = getLatestActivityDate({ activities: currentEditingActivities });
+  if (latestDate) document.getElementById('projLastUpdated').value = latestDate.split('T')[0];
+  renderActivitiesAdminList();
+  closeActivityModal();
+  showToast('Активность сохранена');
+  
+  // ✅ Автоматически сохраняем проект с обновленными активностями
+  if (editingId && currentUser) {
+    try {
+      const project = projects.find(p => p.id === editingId);
+      if (project) {
+        const projectData = {
+          activities: currentEditingActivities,
+          lastUpdated: latestDate ? latestDate.split('T')[0] : new Date().toISOString().split('T')[0]
+        };
+        setDoc(doc(db, "projects", editingId), projectData, { merge: true }).then(() => {
+          // Обновляем локальные данные проекта
+          const index = projects.findIndex(p => p.id === editingId);
+          if (index !== -1) {
+            projects[index].activities = currentEditingActivities;
+            projects[index].lastUpdated = projectData.lastUpdated;
+          }
+          applyFilters();
+        });
+      }
+    } catch (error) {
+      console.error('Error saving project with updated activities:', error);
+    }
+  }
+};
+
 function renderActivitiesAdminList() {
   const container = document.getElementById('activitiesListAdmin');
   if (currentEditingActivities.length === 0) { container.innerHTML = '<p class="text-slate-500 text-sm italic text-center py-4">Активности еще не добавлены.</p>'; return; }
