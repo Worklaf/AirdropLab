@@ -2505,44 +2505,6 @@ async function submitSuggestion() {
 
 window.submitSuggestion = submitSuggestion;
 
-// Google Translate функция (использует наш сервис)
-async function translateText(text, targetLang) {
-  if (!text || targetLang === 'ru') return text;
-  
-  try {
-    // Используем наш локальный сервис перевода
-    const response = await fetch(`http://localhost:3001/translate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: text,
-        sourceLang: 'ru',
-        targetLang: targetLang
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Translation service error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    if (data && data.translated) {
-      console.log(`✅ Translated: "${text}" → "${data.translated}"`);
-      return data.translated;
-    } else {
-      console.warn('Translation service response:', data);
-      return getBasicTranslation(text, targetLang);
-    }
-  } catch (e) {
-    console.warn('Translation service failed:', e);
-    // Fallback на базовые переводы
-    return getBasicTranslation(text, targetLang);
-  }
-}
-
 // Загрузка уведомлений из Firestore
 async function loadNotificationsFromFirestore() {
   if (!currentUser) return;
