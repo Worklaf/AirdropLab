@@ -1839,6 +1839,14 @@ onAuthStateChanged(auth, async function(user) {
         initUserSync(user.uid);
         document.dispatchEvent(new CustomEvent('authStateReady',  { detail: { user } }));
 
+        // ✅ Дополнительная проверка через 500ms чтобы гарантировать обновление UI
+        setTimeout(() => {
+            if (typeof syncAuth === 'function') {
+                console.log('Delayed syncAuth call for user...');
+                syncAuth(user);
+            }
+        }, 500);
+
     } else {
         currentUser   = null;
         window.currentUser = null;
@@ -2664,16 +2672,6 @@ async function activateAdminMode() {
     '<span data-translate="admin_mode">' + t('admin_mode') + '</span>' +
     ' • <span data-translate="deleted_count">' + t('deleted_count') + '</span>: ' + deletedCount +
     '</span>';
-
-  const indicator = document.getElementById('modeIndicator');
-  indicator.setAttribute('data-translate', 'admin_mode'); // ← добавляем атрибут
-  indicator.textContent = t('admin_mode');
-  indicator.classList.add('text-purple-400', 'font-bold');
-  applyFilters();
-}
-
-function setupSearchListener() {
-  const searchInput = document.getElementById('searchInput');
   searchInput.addEventListener('keyup', function() { applyFilters(null, true); });
 }
 
