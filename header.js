@@ -804,6 +804,10 @@
         if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
         if (deskAva && mobAva && deskAva.src) mobAva.src = deskAva.src;
       }
+      
+      // ✅ Экспортируем функцию глобально для вызова из index.html
+      window.syncAuth = syncAuth;
+      
       if (deskIn)  new MutationObserver(syncAuth).observe(deskIn,  { attributes:true, attributeFilter:['class','style'] });
       if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
                      .observe(deskAva, { attributes:true, attributeFilter:['src'] });
@@ -928,6 +932,9 @@
     window.addEventListener('resize', syncHeaderHeight);
     setTimeout(syncHeaderHeight, 0);
   }
+
+  // ✅ Экспортируем функции глобально для вызова из index.html
+  window.injectHeader = injectHeader;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', injectHeader);
