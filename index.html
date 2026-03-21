@@ -2619,66 +2619,6 @@ window.openActivityEditor = function(actId = null) {
   document.getElementById('activityModal').classList.add('active');
 };
 
-window.closeActivityModal = function() { document.getElementById('activityModal').classList.remove('active'); editingActivityId = null; };
-
-window.saveActivityData = function() {
-  const title = document.getElementById('actName').value;
-  if (!title) { showToast('Введите название'); return; }
-  const selectedCats = Array.from(document.querySelectorAll('.act-cat-checkbox:checked')).map(cb => cb.value);
-
-  // ← Сохраняем createdAt: для новой — сейчас, для редактируемой — оригинальный
-  const existingAct = editingActivityId
-    ? currentEditingActivities.find(a => a.id === editingActivityId)
-    : null;
-
-  const actData = {
-    id: editingActivityId || 'act_' + Date.now(),
-    title: title,
-    date: document.getElementById('actDate').value,
-    endDate: document.getElementById('actEndDate').value,
-    categories: selectedCats.length > 0 ? selectedCats : mainProjectCategories,
-    description: document.getElementById('actRichDesc').value,
-    status: 'active',
-    createdAt: existingAct?.createdAt || new Date().toISOString() // ← ДОБАВИТЬ
-  };
-
-  if (editingActivityId) {
-    const idx = currentEditingActivities.findIndex(a => a.id === editingActivityId);
-    if (idx !== -1) currentEditingActivities[idx] = actData;
-  } else {
-    currentEditingActivities.push(actData);
-    if (editingId) addNewActivity(editingId, actData.id);
-  }
-  const latestDate = getLatestActivityDate({ activities: currentEditingActivities });
-  if (latestDate) document.getElementById('projLastUpdated').value = latestDate.split('T')[0];
-  renderActivitiesAdminList();
-  closeActivityModal();
-  showToast('Активность сохранена');
-};
-
-window.deleteActivityFromList = function(actId) {
-  if (confirm('Удалить эту активность?')) {
-    currentEditingActivities = currentEditingActivities.filter(a => a.id !== actId);
-    const latestDate = getLatestActivityDate({ activities: currentEditingActivities });
-    if (latestDate) document.getElementById('projLastUpdated').value = latestDate.split('T')[0];
-    else document.getElementById('projLastUpdated').value = '';
-    renderActivitiesAdminList();
-    showToast('Активность удалена');
-  }
-};
-
-window.deleteActivity = function() {
-  if (editingActivityId && confirm('Удалить эту активность?')) {
-    currentEditingActivities = currentEditingActivities.filter(a => a.id !== editingActivityId);
-    const latestDate = getLatestActivityDate({ activities: currentEditingActivities });
-    if (latestDate) document.getElementById('projLastUpdated').value = latestDate.split('T')[0];
-    else document.getElementById('projLastUpdated').value = '';
-    renderActivitiesAdminList();
-    closeActivityModal();
-    showToast('Активность удалена');
-  }
-};
-
 function renderActivitiesAdminList() {
   const container = document.getElementById('activitiesListAdmin');
   if (currentEditingActivities.length === 0) { container.innerHTML = '<p class="text-slate-500 text-sm italic text-center py-4">Активности еще не добавлены.</p>'; return; }
