@@ -650,7 +650,7 @@ import {
 const firebaseConfig = window.firebaseConfig;
 
 // Глобальная константа для админского UID из Environment Variables
-const ADMIN_UID = typeof ADMIN_UID !== 'undefined' ? ADMIN_UID : "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+const ADMIN_UID = import.meta.env.ADMIN_UID || "SAkz4mdW9reDaIsvqigCNZhEKJR2";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
