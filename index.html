@@ -607,7 +607,8 @@
   }, 100);
 </script>
 
-<script src="config.js"></script>
+<!-- Продакшен на Cloudflare с Environment Variables -->
+<script src="config.cloudflare.js"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -647,6 +648,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = window.firebaseConfig;
+
+// Глобальная константа для админского UID из Environment Variables
+const ADMIN_UID = typeof ADMIN_UID !== 'undefined' ? ADMIN_UID : "SAkz4mdW9reDaIsvqigCNZhEKJR2";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -954,7 +958,7 @@ let adminFeedbacksUnsubscribe = null;
 function initFeedbacksListener(uid) {
   if (adminFeedbacksUnsubscribe) { adminFeedbacksUnsubscribe(); adminFeedbacksUnsubscribe = null; }
   let q;
-  const isAdmin = uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  const isAdmin = uid === ADMIN_UID;
   try {
     if (isAdmin) q = query(collection(db, "feedbacks"));
     else q = query(collection(db, "feedbacks"), where("userId", "==", uid));
@@ -1235,7 +1239,7 @@ window.closeFeedbackModal = function() {
 
 window.renderFeedbackList = function() {
   const container = document.getElementById('feedbacksContainer');
-  const isAdmin = currentUser && currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  const isAdmin = currentUser && currentUser.uid === ADMIN_UID;
 
   if (!adminFeedbacks || adminFeedbacks.length === 0) {
     container.innerHTML = `
@@ -1686,7 +1690,7 @@ window.deleteAdminFeedback = async function(id) { if (!confirm('Удалить?'
 
 window.openFeedbackListModal = function() {
   if (!currentUser) { showToast('Войдите'); openLoginModal(); return; }
-  const isAdmin = currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  const isAdmin = currentUser.uid === ADMIN_UID;
   const titleContainer = document.querySelector('#feedbackListModal h2');
   if (titleContainer) titleContainer.innerHTML = isAdmin ? '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>' + t('all_requests') : '<i class="fas fa-comments text-purple-400 mr-2"></i>' + t('my_messages');
   document.getElementById('feedbackListModal').classList.add('active');
@@ -1830,7 +1834,7 @@ onAuthStateChanged(auth, async function(user) {
         await loadHeroStateFromFirestore(user.uid);
 
         // ✅ ВЫЗЫВАЕМ activateAdminMode ТОЛЬКО ПОСЛЕ полной загрузки данных
-        if (user.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2") activateAdminMode();
+        if (user.uid === ADMIN_UID) activateAdminMode();
 
         applyFilters();
 
@@ -2560,7 +2564,7 @@ window.openGuideFromDetail = function() { if(currentDetailId) { const project = 
 
 // Найдите и замените:
 function activateAdminMode() {
-  if (!currentUser || currentUser.uid !== "SAkz4mdW9reDaIsvqigCNZhEKJR2") return;
+  if (!currentUser || currentUser.uid !== ADMIN_UID) return;
   isAdminMode = true;
   document.getElementById('adminPanel').style.display = 'flex';
   document.getElementById('generalFeedbackPanel').classList.remove('hidden');
@@ -3118,7 +3122,7 @@ window.showToast = function(msg) {
 };
 function getAllCategoriesFromProjects() { const cats = new Set(); projects.forEach(function(p) { if(p.categories) p.categories.forEach(function(c) { cats.add(c); }); }); return Array.from(cats); }
 
-window.openStats = function() { if (!currentUser) { showToast('Войдите'); return; } if (currentUser.uid !== "SAkz4mdW9reDaIsvqigCNZhEKJR2") { showToast('Нет доступа'); return; } window.open('admin/stats.html', '_blank'); };
+window.openStats = function() { if (!currentUser) { showToast('Войдите'); return; } if (currentUser.uid !== ADMIN_UID) { showToast('Нет доступа'); return; } window.open('admin/stats.html', '_blank'); };
 function enableUserEnterSend() { const inp = document.getElementById('feedbackUserReplyText'); inp.onkeypress = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendUserFeedbackReply(); } }; }
 
 window.openDeletedProjects = function() { if (!isAdminMode) { showToast('Только для админа'); return; } loadDeletedProjects(); document.getElementById('deletedProjectsModal').classList.add('active'); };
@@ -3192,7 +3196,7 @@ document.getElementById('imageModal').addEventListener('click', function(e) { if
 document.addEventListener('keydown', function(e) { const imageModal = document.getElementById('imageModal'); if (!imageModal.classList.contains('active')) return; switch(e.key) { case 'Escape': closeImageModal(); break; case 'ArrowRight': nextImage(); break; case 'ArrowLeft': prevImage(); break; } });
 
 window.exportAllData = async function() {
-  if (!currentUser || currentUser.uid !== "SAkz4mdW9reDaIsvqigCNZhEKJR2") { showToast('Только админ'); return; }
+  if (!currentUser || currentUser.uid !== ADMIN_UID) { showToast('Только админ'); return; }
   if (!confirm('Экспортировать все проекты?')) return;
   
   const btn = event.target.closest('button');
@@ -3264,7 +3268,7 @@ async function createLocalBackup() {
 const originalSaveProject = window.saveProject;
 window.saveProject = async function(e) {
   await originalSaveProject(e);
-  if (currentUser && currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2") await createLocalBackup();
+  if (currentUser && currentUser.uid === ADMIN_UID) await createLocalBackup();
 };
 
 window.__authReady.then(() => {
