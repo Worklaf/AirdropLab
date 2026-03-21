@@ -1773,7 +1773,6 @@ onAuthStateChanged(auth, async function(user) {
         await syncLocalStorageToFirestore(user.uid);
         document.getElementById('generalFeedbackPanel').classList.remove('hidden');
         initFeedbacksListener(user.uid);
-        if (user.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2") activateAdminMode();
 
         try {
             const userRef  = doc(db, "users", user.uid);
@@ -1810,6 +1809,9 @@ onAuthStateChanged(auth, async function(user) {
 
         // ✅ Загружаем состояние hero из Firestore
         await loadHeroStateFromFirestore(user.uid);
+
+        // ✅ ВЫЗЫВАЕМ activateAdminMode ТОЛЬКО ПОСЛЕ полной загрузки данных
+        if (user.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2") activateAdminMode();
 
         applyFilters();
 
