@@ -2152,8 +2152,11 @@ function sortFaucets(list) {
 // Функция для установки сортировки
 function setSort(sortType) {
   currentSort = sortType;
-  applyFilters();
+  renderAll();
 }
+
+// Сделать функцию глобальной
+window.setSort = setSort;
 
 // ═══════════════════════════════════════════
 // ADMIN ACTIONS
