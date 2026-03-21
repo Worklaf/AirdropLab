@@ -2149,14 +2149,21 @@ function sortFaucets(list) {
   return arr;
 }
 
+// Функция для установки сортировки
+function setSort(sortType) {
+  currentSort = sortType;
+  applyFilters();
+}
+
 // ═══════════════════════════════════════════
 // ADMIN ACTIONS
 // ═══════════════════════════════════════════
 function toggleEditMode() {
   editMode = !editMode;
-  document.getElementById('editModeIcon').className = editMode ? 'fas fa-eye-slash' : 'fas fa-pen';
-  const isEn = (window.currentLang === 'en');
-  document.getElementById('editModeLabel').textContent = editMode ? (isEn?'Disable edit':'Выкл. редакт.') : (isEn?'Edit mode':'Режим редакт.');
+  const icon = document.getElementById('editModeIcon');
+  if (icon) {
+    icon.className = editMode ? 'fas fa-eye-slash' : 'fas fa-pen';
+  }
   renderAll();
 }
 window.toggleEditMode = toggleEditMode;
