@@ -1831,6 +1831,11 @@ onAuthStateChanged(auth, async function(user) {
             || 'https://ui-avatars.com/api/?name=' + (user.email || 'User') + '&background=random';
         document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
 
+        // ✅ Обновляем header если доступна функция syncAuth
+        if (typeof syncAuth === 'function') {
+            syncAuth(user);
+        }
+
         initUserSync(user.uid);
         document.dispatchEvent(new CustomEvent('authStateReady',  { detail: { user } }));
 
@@ -1848,6 +1853,11 @@ onAuthStateChanged(auth, async function(user) {
         document.getElementById('loggedOutView').classList.remove('hidden');
         document.getElementById('loggedInView').classList.add('hidden');
         document.getElementById('guestWarning').classList.remove('hidden');
+
+        // ✅ Обновляем header при выходе
+        if (typeof syncAuth === 'function') {
+            syncAuth(null);
+        }
 
         arcData       = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
         userCompleted = JSON.parse(localStorage.getItem(COMPLETED_KEY) || '[]');
