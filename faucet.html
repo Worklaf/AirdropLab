@@ -2160,6 +2160,15 @@ function setSort(sortType) {
 window.setSort = setSort;
 window.forceRecreateTranslations = forceRecreateTranslations;
 
+// Проверка что функция существует перед вызовом
+window.safeForceRecreateTranslations = async function(lang) {
+  if (typeof window.forceRecreateTranslations === 'function') {
+    return await window.forceRecreateTranslations(lang);
+  } else {
+    console.error('forceRecreateTranslations function not available');
+  }
+};
+
 // Экспорт для других модулей
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
