@@ -3,16 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="AirdropLab - Faucets for crypto testnets and mainnets">
   <title>Краны (Faucets) — AirdropLab</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="alternate icon" href="assets/favicon.ico">
-  
-  <!-- Версия для сброса кэша -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
@@ -618,310 +611,310 @@ const DEFAULT_FAUCETS = [
   { id:'op1', name:'Optimism Sepolia', token:'ETH', type:'free', net:'testnet',
     desc:'L2 тестнет Optimism. Используется для Superchain разработки.',
     links:['https://app.optimism.io/faucet','https://faucet.paradigm.xyz/','https://optifaucet.com/'],
-    reward:"до 5 ETH/день", cooldown:"24ч", tags:['multi'] },
+    reward:'0.05 ETH/день', cooldown:'24ч', tags:['multi'] },
 
   // ── BASE ──
   { id:'base1', name:'Base Sepolia', token:'ETH', type:'free', net:'testnet',
     desc:'L2 от Coinbase. Активная экосистема, быстрый рост. Требует Coinbase аккаунт для верификации.',
     links:['https://www.coinbase.com/developer-platform/faucet','https://faucet.quicknode.com/base/sepolia'],
-    reward:"0.1 ETH/день", cooldown:"24ч", tags:['airdrop','hot'] },
+    reward:'0.1 ETH/день', cooldown:'24ч', tags:['airdrop','hot'] },
 
   // ── POLYGON ──
   { id:'poly1', name:'Polygon Amoy', token:'MATIC', type:'free', net:'testnet',
     desc:'Тестнет Polygon (замена Mumbai). Поддерживает мультикран с Ethereum Goerli.',
     links:['https://faucet.polygon.technology/','https://mumbaifaucet.com/','https://faucet.quicknode.com/polygon/mumbai','https://faucet.paradigm.xyz/','https://testmatic.vercel.app/'],
-    reward:"2 MATIC/день", cooldown:"24ч", tags:['multi'] },
+    reward:'2 MATIC/день', cooldown:'24ч', tags:['multi'] },
 
   // ── BNB CHAIN ──
   { id:'bnb1', name:'BNB Smart Chain Testnet', token:'BNB', type:'free', net:'testnet',
     desc:'Официальный тестнет BSC. Discord-бот: в ветке #testnet-faucet2 отправь /faucet <адрес>.',
     links:['https://testnet.binance.org/faucet-smart','https://faucet.triangleplatform.com/bnbsmartchain/testnet','https://faucet.quicknode.com/binance-smart-chain/bnb-testnet'],
-    reward:"0.3 BNB/день", cooldown:"24ч", tags:[] },
+    reward:'0.3 BNB/день', cooldown:'24ч', tags:[] },
 
   // ── SCROLL ──
   { id:'scroll1', name:'Scroll Sepolia', token:'ETH', type:'free', net:'testnet',
     desc:'zkEVM L2. Активная сеть с потенциальным аирдропом. Хорошо для набора on-chain активности.',
     links:['https://docs.scroll.io/en/user-guide/faucet/','https://faucet.quicknode.com/scroll/sepolia'],
-    reward:"0.5 ETH/день", cooldown:"24ч", tags:['airdrop','hot'] },
+    reward:'0.5 ETH/день', cooldown:'24ч', tags:['airdrop','hot'] },
 
   // ── LINEA ──
   { id:'linea1', name:'Linea Sepolia', token:'ETH', type:'free', net:'testnet',
     desc:'zkEVM L2 от ConsenSys (MetaMask). Активная экосистема, ожидается аирдроп.',
     links:['https://www.infura.io/faucet/linea','https://faucet.goerli.linea.build/'],
-    reward:"0.5 ETH/день", cooldown:"24ч", tags:['airdrop','hot'] },
+    reward:'0.5 ETH/день', cooldown:'24ч', tags:['airdrop','hot'] },
 
   // ── MONAD ──
   { id:'monad1', name:'Monad Testnet', token:'MON', type:'free', net:'testnet',
     desc:'Высокопроизводительный L1. Один из самых ожидаемых проектов 2025. Активность засчитывается для аирдропа.',
     links:['https://faucet.monad.xyz/'],
-    reward:"1 MON/день", cooldown:"24ч", tags:['airdrop','hot'] },
+    reward:'1 MON/день', cooldown:'24ч', tags:['airdrop','hot'] },
 
   // ── STARKNET ──
   { id:'stark1', name:'StarkNet Sepolia', token:'ETH', type:'free', net:'testnet',
     desc:'zkRollup L2. Активная экосистема. Взаимодействие может учитываться для будущих аирдропов.',
     links:['https://starknet-faucet.vercel.app/','https://faucet.goerli.starknet.io/','https://www.starkswap.co/app/faucet','https://goerli.starkgate.starknet.io/'],
-    reward:"0.01 ETH", cooldown:"24ч", tags:['airdrop','hot'] },
+    reward:'0.01 ETH', cooldown:'24ч', tags:['airdrop','hot'] },
 
   // ── ZKSYNC ──
   { id:'zk1', name:'zkSync Era Testnet', token:'ETH', type:'free', net:'testnet',
     desc:'zkEVM от Matter Labs. Portal zkSync — официальный кран. Активность в тестнете важна.',
     links:['https://portal.zksync.io/faucet'],
-    reward:"0.01 ETH", cooldown:"24ч", tags:['airdrop'] },
+    reward:'0.01 ETH', cooldown:'24ч', tags:['airdrop'] },
 
   // ── AVALANCHE ──
   { id:'avax1', name:'Avalanche Fuji', token:'AVAX', type:'free', net:'testnet',
     desc:'Официальный тестнет Avalanche (Fuji). Выдаёт тестовые AVAX для разработки.',
     links:['https://faucet.avax.network/'],
-    reward:"2 AVAX/день", cooldown:"24ч", tags:[] },
+    reward:'2 AVAX/день', cooldown:'24ч', tags:[] },
 
   // ── FANTOM ──
   { id:'ftm1', name:'Fantom Testnet', token:'FTM', type:'free', net:'testnet',
     desc:'Официальный тестнет Fantom Opera. Chainlink также предоставляет кран для FTM.',
     links:['https://faucet.fantom.network/','https://faucets.chain.link/fantom-testnet'],
-    reward:"1 FTM", cooldown:"24ч", tags:[] },
+    reward:'1 FTM', cooldown:'24ч', tags:[] },
 
   // ── BERACHAIN ──
   { id:'bera1', name:'Berachain Artio', token:'BERA', type:'free', net:'testnet',
     desc:'Инновационный L1 с механизмом Proof of Liquidity. Один из топ-тестнетов 2024-2025.',
     links:['https://artio.faucet.berachain.com/'],
-    reward:"0.5 BERA", cooldown:"8ч", tags:['airdrop','hot'] },
+    reward:'0.5 BERA', cooldown:'8ч', tags:['airdrop','hot'] },
 
   // ── NEAR ──
   { id:'near1', name:'NEAR Testnet', token:'NEAR', type:'free', net:'testnet',
     desc:'При создании тестового аккаунта NEAR выдаётся автоматически 200 NEAR.',
     links:['https://wallet.testnet.near.org/'],
-    reward:"200 NEAR", cooldown:"при регистрации", tags:[] },
+    reward:'200 NEAR', cooldown:'при регистрации', tags:[] },
 
   // ── CARDANO ──
   { id:'ada1', name:'Cardano Testnet', token:'ADA', type:'free', net:'testnet',
     desc:'Официальный кран тестнета Cardano от команды разработчиков.',
     links:['https://docs.cardano.org/cardano-testnet/tools/faucet'],
-    reward:"1000 ADA", cooldown:"24ч", tags:[] },
+    reward:'1000 ADA', cooldown:'24ч', tags:[] },
 
   // ── ALGORAND ──
   { id:'algo1', name:'Algorand Testnet', token:'ALGO', type:'free', net:'testnet',
     desc:'Несколько официальных и партнёрских кранов для тестнета Algorand.',
     links:['https://bank.testnet.algorand.network/','https://dispenser.testnet.aws.algodev.network/','https://testnet.algoexplorer.io/dispenser'],
-    reward:"10 ALGO", cooldown:"24ч", tags:[] },
+    reward:'10 ALGO', cooldown:'24ч', tags:[] },
 
   // ── MANTLE ──
   { id:'mnt1', name:'Mantle Testnet', token:'MNT', type:'free', net:'testnet',
     desc:'L2 от BitDAO. Также принимает BitDAO (BIT) токены из Ethereum Goerli.',
     links:['https://faucet.testnet.mantle.xyz/','https://www.incepthink.com/mantle/faucet'],
-    reward:"0.5 MNT", cooldown:"24ч", tags:['airdrop'] },
+    reward:'0.5 MNT', cooldown:'24ч', tags:['airdrop'] },
 
   // ── CELO ──
   { id:'celo1', name:'Celo Alfajores', token:'CELO', type:'free', net:'testnet',
     desc:'Тестнет Celo — мобильной блокчейн-платформы с фокусом на DeFi.',
     links:['https://celo.org/developers/faucet'],
-    reward:"5 CELO", cooldown:"24ч", tags:[] },
+    reward:'5 CELO', cooldown:'24ч', tags:[] },
 
   // ── CHAINLINK ──
   { id:'link1', name:'Chainlink Testnet', token:'LINK', type:'free', net:'testnet',
     desc:'Мультикран от Chainlink для получения тестовых LINK и нативных токенов.',
     links:['https://faucets.chain.link/'],
-    reward:"20 LINK", cooldown:"24ч", tags:['multi'] },
+    reward:'20 LINK', cooldown:'24ч', tags:['multi'] },
 
   // ── FLOW ──
   { id:'flow1', name:'Flow Testnet', token:'FLOW', type:'free', net:'testnet',
     desc:'Официальный кран тестнета Flow — блокчейна от Dapper Labs (NBA Top Shot).',
     links:['https://testnet-faucet.onflow.org/'],
-    reward:"10 FLOW", cooldown:"24ч", tags:[] },
+    reward:'10 FLOW', cooldown:'24ч', tags:[] },
 
   // ── GNOSIS ──
   { id:'gno1', name:'Gnosis Chain', token:'xDAI', type:'free', net:'testnet',
     desc:'Кран xDAI для Gnosis Chain. Stakely также предоставляет альтернативный кран.',
     links:['https://gnosisfaucet.com/','https://stakely.io/en/faucet/gnosis-chain-xdai'],
-    reward:"0.01 xDAI", cooldown:"24ч", tags:[] },
+    reward:'0.01 xDAI', cooldown:'24ч', tags:[] },
 
   // ── APTOS ──
   { id:'apt1', name:'Aptos Devnet', token:'APT', type:'free', net:'testnet',
     desc:'Официальный кран Aptos. Для тестирования Move-смарт-контрактов.',
     links:['https://aptoslabs.com/testnet-faucet','https://aptos.dev/en/network/faucet'],
-    reward:"1 APT", cooldown:"нет", tags:[] },
+    reward:'1 APT', cooldown:'нет', tags:[] },
 
   // ── SUI ──
   { id:'sui1', name:'Sui Testnet', token:'SUI', type:'free', net:'testnet',
     desc:'Официальный кран Sui. Для взаимодействия с dApps и тестирования Move-контрактов.',
     links:['https://faucet.sui.io/','https://faucet.triangleplatform.com/sui/testnet','https://bwarelabs.com/faucets/sui'],
-    reward:"1 SUI", cooldown:"нет", tags:[] },
+    reward:'1 SUI', cooldown:'нет', tags:[] },
 
   // ── SOLANA ──
   { id:'sol1', name:'Solana Devnet', token:'SOL', type:'free', net:'testnet',
     desc:'Официальный кран Solana. Devnet — основная тестовая среда для разработчиков.',
     links:['https://faucet.solana.com/','https://solfaucet.com/'],
-    reward:"2 SOL", cooldown:"нет", tags:[] },
+    reward:'2 SOL', cooldown:'нет', tags:[] },
 
   // ── TON ──
   { id:'ton1', name:'TON Testnet', token:'tTON', type:'free', net:'testnet',
     desc:'Кран для тестнета TON через Telegram-бот. Нужен для разработки Telegram Mini Apps.',
     links:['https://t.me/testgiver_ton_bot'],
-    reward:"5 tTON", cooldown:"нет", tags:[] },
+    reward:'5 tTON', cooldown:'нет', tags:[] },
 
   // ── RIPPLE XRP ──
   { id:'xrp1', name:'Ripple XRP Testnet', token:'XRP', type:'free', net:'testnet',
     desc:'Официальный кран XRP Ledger для тестнета. Используется для разработки на XRPL.',
     links:['https://xrpl.org/xrp-testnet-faucet.html'],
-    reward:"1000 XRP", cooldown:"нет", tags:[] },
+    reward:'1000 XRP', cooldown:'нет', tags:[] },
 
   // ── ASTAR ──
   { id:'astar1', name:'Astar Shiden', token:'SDN', type:'free', net:'testnet',
     desc:'Тестнет Astar Network на Kusama. Портал и сторонний кран.',
     links:['https://portal.astar.network/#/astar/assets','https://www.as-faucet.xyz/shiden#'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── AURORA ──
   { id:'aurora1', name:'Aurora Testnet', token:'ETH', type:'free', net:'testnet',
     desc:'EVM-совместимый тестнет на базе NEAR Protocol.',
     links:['https://aurora.dev/faucet'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── DOGECOIN ──
   { id:'doge1', name:'Dogecoin Testnet', token:'DOGE', type:'free', net:'testnet',
     desc:'Кран тестовой сети Dogecoin.',
     links:['https://testnet-faucet.com/doge-testnet/'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── LITECOIN ──
   { id:'ltc1', name:'Litecoin Testnet', token:'LTC', type:'free', net:'testnet',
     desc:'Кран тестовой сети Litecoin.',
     links:['https://testnet-faucet.com/ltc-testnet/'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── BITCOIN CASH ──
   { id:'bch1', name:'Bitcoin Cash Testnet', token:'BCH', type:'free', net:'testnet',
     desc:'Кран тестовой сети Bitcoin Cash.',
     links:['https://tbch.googol.cash/'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── EVMOS ──
   { id:'evmos1', name:'Evmos Testnet', token:'EVMOS', type:'free', net:'testnet',
     desc:'EVM-совместимая цепочка на Cosmos SDK.',
     links:['https://faucet.evmos.dev/'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── CRONOS ──
   { id:'cro1', name:'Cronos Testnet', token:'CRO', type:'free', net:'testnet',
     desc:'EVM-совместимый тестнет Crypto.com Chain.',
     links:['https://cronos.org/faucet'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── OMNI NETWORK ──
   { id:'omni1', name:'Omni Network', token:'OMNI', type:'free', net:'testnet',
     desc:'Interoperability layer для Ethereum L2. Горячий тестнет 2024.',
     links:['https://faucet.omni.network/'],
-    reward:"", cooldown:"", tags:['airdrop','hot'] },
+    reward:'', cooldown:'', tags:['airdrop','hot'] },
 
   // ── ZETACHAIN ──
   { id:'zeta1', name:'ZetaChain', token:'tZETA', type:'free', net:'testnet',
     desc:'Омничейн смарт-контракты. Несколько кранов от разных партнёров.',
     links:['https://labs.zetachain.com/get-zeta','https://www.covalenthq.com/platform/faucet/','https://zeta-faucet.starksport.finance/','https://zetachain.faucetme.pro/'],
-    reward:"", cooldown:"", tags:['airdrop'] },
+    reward:'', cooldown:'', tags:['airdrop'] },
 
   // ── SHARDEUM ──
   { id:'shm1', name:'Shardeum', token:'SHM', type:'free', net:'testnet',
     desc:'Линейно масштабируемый L1. Активный тестнет.',
     links:['https://faucet-dapps.shardeum.org/'],
-    reward:"", cooldown:"", tags:['airdrop'] },
+    reward:'', cooldown:'', tags:['airdrop'] },
 
   // ── STACKS ──
   { id:'stx1', name:'Stacks Testnet', token:'STX', type:'free', net:'testnet',
     desc:'Bitcoin L2 для смарт-контрактов. Кран через Stacks Explorer Sandbox.',
     links:['https://explorer.stacks.co/sandbox/faucet?chain=testnet'],
-    reward:"500 STX", cooldown:"нет", tags:[] },
+    reward:'500 STX', cooldown:'нет', tags:[] },
 
   // ── QUAI NETWORK ──
   { id:'quai1', name:'Quai Network', token:'QUAI', type:'free', net:'testnet',
     desc:'Proof-of-Work L1 с мультичейн архитектурой.',
     links:['https://faucet.quai.network/'],
-    reward:"", cooldown:"", tags:['airdrop'] },
+    reward:'', cooldown:'', tags:['airdrop'] },
 
   // ── CONFLUX ──
   { id:'cfx1', name:'Conflux Network', token:'CFX', type:'free', net:'testnet',
     desc:'Tree-Graph консенсус. Высокая пропускная способность.',
     links:['https://faucet.confluxnetwork.org/'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── IOTEX ──
   { id:'iotx1', name:'IoTeX Testnet', token:'IOTX', type:'free', net:'testnet',
     desc:'Блокчейн для IoT устройств. Официальный кран от разработчиков.',
     links:['https://developers.iotex.io/utils/public-faucet'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── KYVE ──
   { id:'kyve1', name:'KYVE Network', token:'KYVE', type:'free', net:'testnet',
     desc:'Децентрализованное архивирование данных. Кран через приложение KYVE.',
     links:['https://app.kyve.network/#/faucet'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── IMMUTABLE ──
   { id:'imx1', name:'Immutable zkEVM', token:'tIMX', type:'free', net:'testnet',
     desc:'Гейминг-фокусированный zkEVM. Кран через официальный Hub.',
     links:['https://hub.immutable.com/faucet'],
-    reward:"", cooldown:"", tags:['airdrop'] },
+    reward:'', cooldown:'', tags:['airdrop'] },
 
   // ── RARI CHAIN ──
   { id:'rari1', name:'Rari Chain Testnet', token:'ETH', type:'free', net:'testnet',
     desc:'NFT-фокусированный L3 на базе Arbitrum.',
     links:['https://testnet.rarichain.org/faucet'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── OASIS ──
   { id:'rose1', name:'Oasis Emerald', token:'ROSE', type:'free', net:'testnet',
     desc:'Privacy-oriented L1. Тестнет с Emerald ParaTime.',
     links:['https://ftp.cash/dashboard/faucet'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── KLAYTN ──
   { id:'klay1', name:'Klaytn Baobab', token:'KLAY', type:'free', net:'testnet',
     desc:'Тестнет Klaytn (Baobab). Разработан Kakao.',
     links:['https://baobab.wallet.klaytn.foundation/faucet'],
-    reward:"5 KLAY", cooldown:"24ч", tags:[] },
+    reward:'5 KLAY', cooldown:'24ч', tags:[] },
 
   // ── HEPTON ──
   { id:'hte1', name:'Hepton', token:'HTE', type:'free', net:'testnet',
     desc:'Новый EVM-совместимый тестнет.',
     links:['https://faucet.hepton.io/'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── LAMINA1 ──
   { id:'l1_1', name:'Lamina1', token:'L1', type:'free', net:'testnet',
     desc:'Метавселенная блокчейн от Нила Стивенсона.',
     links:['https://faucet-test.lamina1.network/'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── TRON ──
   { id:'trx1', name:'Tron Nile Testnet', token:'TRX/USDT/BTC', type:'free', net:'testnet',
     desc:'Тестнет Tron. Поддерживает TRX, BTT, USDT, JST, USDK, TRZ, WIN.',
     links:['https://nileex.io/join/getJoinPage'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── ZILLIQA ──
   { id:'zil1', name:'Zilliqa Testnet', token:'ZIL', type:'free', net:'testnet',
     desc:'Шардированный блокчейн. Кран через официальный dev-кошелёк.',
     links:['https://dev-wallet.zilliqa.com/faucet?network=testnet'],
-    reward:"", cooldown:"", tags:[] },
+    reward:'', cooldown:'', tags:[] },
 
   // ── ПЛАТНЫЕ ──
   { id:'qn1', name:'QuickNode Faucet', token:'Multi', type:'paid', net:'testnet',
     desc:'Профессиональный провайдер. Поддерживает Ethereum, Arbitrum, Optimism, Base, Polygon. Бесплатный tier для новых пользователей.',
     links:['https://faucet.quicknode.com/'],
-    reward:"до 1 ETH", cooldown:"нет лимита (платно)", tags:['multi'] },
+    reward:'до 1 ETH', cooldown:'нет лимита (платно)', tags:['multi'] },
 
   { id:'alc1', name:'Alchemy Faucets', token:'Multi', type:'paid', net:'testnet',
     desc:'Требует регистрацию. Платный доступ снимает лимиты. Поддерживает Sepolia, Arbitrum, Optimism.',
     links:['https://www.alchemy.com/faucets'],
-    reward:"до 5 ETH/день", cooldown:"24ч free / нет paid", tags:['multi'] },
+    reward:'до 5 ETH/день', cooldown:'24ч free / нет paid', tags:['multi'] },
 
   { id:'tend1', name:'Tenderly Faucet', token:'Multi', type:'paid', net:'testnet',
     desc:'Инструмент для разработчиков. Виртуальные тестнеты с неограниченными токенами.',
     links:['https://faucet.tenderly.co/'],
-    reward:"неограниченно", cooldown:"нет", tags:['multi'] },
+    reward:'неограниченно', cooldown:'нет', tags:['multi'] },
 
   { id:'inf1', name:'Infura Faucet', token:'sETH', type:'paid', net:'testnet',
     desc:'Кран от Infura (MetaMask). Требует регистрацию. Надёжный и стабильный провайдер.',
     links:['https://www.infura.io/faucet/sepolia'],
-    reward:"0.5 ETH/день", cooldown:"24ч", tags:[] },
+    reward:'0.5 ETH/день', cooldown:'24ч', tags:[] },
 ];
 
 // ═══════════════════════════════════════════
@@ -936,7 +929,6 @@ let isAdmin = false;
 let favoritesSet = new Set(); // faucetId
 let linkFavoritesSet = new Set(); // key: faucetId|url
 let pendingSuggestions = [];
-let cachedTranslations = {}; // Кэш переводов
 
 // Глобальная константа для админского UID из Environment Variables
 const ADMIN_UID = globalThis.ADMIN_UID || "SAkz4mdW9reDaIsvqigCNZhEKJR2";
@@ -1290,12 +1282,6 @@ function renderAll() {
   var container = document.getElementById('sectionsContainer');
   var sections = getGroupedSections();
   var html = '';
-
-  // Проверяем что массив кранов не пустой
-  if (!faucets || faucets.length === 0) {
-    console.warn('⚠️ Faucets array is empty, using DEFAULT_FAUCETS');
-    faucets = DEFAULT_FAUCETS.slice();
-  }
 
   sections.forEach(function(sec) {
     var items = faucets.filter(sec.filter);
@@ -2169,303 +2155,8 @@ function setSort(sortType) {
   renderAll();
 }
 
-// Сделать функции глобальными
+// Сделать функцию глобальной
 window.setSort = setSort;
-window.forceRecreateTranslations = forceRecreateTranslations;
-
-// Проверка что функция существует перед вызовом
-window.safeForceRecreateTranslations = async function(lang) {
-  if (typeof window.forceRecreateTranslations === 'function') {
-    return await window.forceRecreateTranslations(lang);
-  } else {
-    console.error('forceRecreateTranslations function not available');
-  }
-};
-
-// Экспорт для других модулей
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    setSort,
-    forceRecreateTranslations,
-    loadTranslations,
-    translateText,
-    translateAllDescriptions
-  };
-}
-
-// Функция для принудительной очистки кэша и пересоздания переводов
-function forceRecreateTranslations(lang) {
-  console.log(`🔄 Force recreating translations for ${lang}...`);
-  
-  // Очищаем кэш
-  cachedTranslations = {};
-  localStorage.removeItem(`faucets_translations_${lang}`);
-  
-  // Создаем новые переводы
-  return translateAllDescriptions(lang).then(async translated => {
-    cachedTranslations[lang] = translated;
-    
-    // Сохраняем в Firestore
-    if (currentUser && isAdmin) {
-      try {
-        const translationsRef = doc(db, "translations", `faucets_${lang}`);
-        await setDoc(translationsRef, {
-          faucets: translated,
-          updatedAt: new Date().toISOString()
-        });
-        console.log(`✅ Force saved translations for ${lang}`);
-      } catch (e) {
-        console.error('Failed to save translations:', e);
-      }
-    }
-    
-    // Обновляем отображение
-    renderAll();
-    updateCounts();
-    
-    console.log(`✅ Translation recreation completed for ${lang}`);
-    return translated;
-  });
-}
-
-window.forceRecreateTranslations = forceRecreateTranslations;
-
-// Google Translate функция (базовые переводы)
-async function translateText(text, targetLang) {
-  if (!text || targetLang === 'ru') return text;
-  
-  // Используем только базовые переводы без внешних API
-  return getBasicTranslation(text, targetLang);
-}
-
-// Базовые переводы для всех полей
-function getBasicTranslation(text, targetLang) {
-  const basicTranslations = {
-    // Время и кулдауны
-    '24ч': targetLang === 'en' ? '24h' : text,
-    '8ч': targetLang === 'en' ? '8h' : text,
-    'при регистрации': targetLang === 'en' ? 'on registration' : text,
-    'нет': targetLang === 'en' ? 'none' : text,
-    'неограниченно': targetLang === 'en' ? 'unlimited' : text,
-    
-    // Награды
-    '0.5 sETH/день': targetLang === 'en' ? '0.5 sETH/day' : text,
-    '0.1 gETH/день': targetLang === 'en' ? '0.1 gETH/day' : text,
-    '0.5 ETH/день': targetLang === 'en' ? '0.5 ETH/day' : text,
-    '2 MATIC/день': targetLang === 'en' ? '2 MATIC/day' : text,
-    '0.3 BNB/день': targetLang === 'en' ? '0.3 BNB/day' : text,
-    '1 MON/день': targetLang === 'en' ? '1 MON/day' : text,
-    '0.01 ETH': targetLang === 'en' ? '0.01 ETH' : text,
-    '0.5 MNT': targetLang === 'en' ? '0.5 MNT' : text,
-    '2 AVAX/день': targetLang === 'en' ? '2 AVAX/day' : text,
-    '1 FTM': targetLang === 'en' ? '1 FTM' : text,
-    '0.5 BERA': targetLang === 'en' ? '0.5 BERA' : text,
-    '200 NEAR': targetLang === 'en' ? '200 NEAR' : text,
-    '1000 ADA': targetLang === 'en' ? '1000 ADA' : text,
-    '10 ALGO': targetLang === 'en' ? '10 ALGO' : text,
-    '5 CELO': targetLang === 'en' ? '5 CELO' : text,
-    '20 LINK': targetLang === 'en' ? '20 LINK' : text,
-    '10 FLOW': targetLang === 'en' ? '10 FLOW' : text,
-    '0.01 xDAI': targetLang === 'en' ? '0.01 xDAI' : text,
-    '1 APT': targetLang === 'en' ? '1 APT' : text,
-    '1 SUI': targetLang === 'en' ? '1 SUI' : text,
-    '2 SOL': targetLang === 'en' ? '2 SOL' : text,
-    '5 tTON': targetLang === 'en' ? '5 tTON' : text,
-    '1000 XRP': targetLang === 'en' ? '1000 XRP' : text,
-    '500 STX': targetLang === 'en' ? '500 STX' : text,
-    '5 KLAY': targetLang === 'en' ? '5 KLAY' : text,
-    
-    // Платные тарифы
-    '24ч free / нет paid': targetLang === 'en' ? '24h free / no paid' : text,
-    'до 1 ETH': targetLang === 'en' ? 'up to 1 ETH' : text,
-    'до 5 ETH/день': targetLang === 'en' ? 'up to 5 ETH/day' : text,
-    'неограниченно': targetLang === 'en' ? 'unlimited' : text,
-    
-    // Описания (ключевые слова)
-    'Краны': targetLang === 'en' ? 'Faucets' : text,
-    'тестнет': targetLang === 'en' ? 'testnet' : text,
-    'мейннет': targetLang === 'en' ? 'mainnet' : text,
-    'бесплатных': targetLang === 'en' ? 'free' : text,
-    'платных': targetLang === 'en' ? 'paid' : text,
-    'Для разработки': targetLang === 'en' ? 'For development' : text,
-    'Для тестирования': targetLang === 'en' ? 'For testing' : text,
-    'Официальный': targetLang === 'en' ? 'Official' : text,
-    'Активная экосистема': targetLang === 'en' ? 'Active ecosystem' : text,
-    'Требует': targetLang === 'en' ? 'Requires' : text,
-    'аккаунт': targetLang === 'en' ? 'account' : text,
-    'верификации': targetLang === 'en' ? 'verification' : text,
-    'Поддерживает': targetLang === 'en' ? 'Supports' : text,
-    'мультикран': targetLang === 'en' ? 'multi-faucet' : text,
-    'Discord-бот': targetLang === 'en' ? 'Discord bot' : text,
-    'ветке': targetLang === 'en' ? 'channel' : text,
-    'отправь': targetLang === 'en' ? 'send' : text,
-    'адрес': targetLang === 'en' ? 'address' : text,
-    'zkEVM L2': targetLang === 'en' ? 'zkEVM L2' : text,
-    'Нужен': targetLang === 'en' ? 'Needed for' : text,
-    'контрактов': targetLang === 'en' ? 'contracts' : text,
-    'Активная сеть': targetLang === 'en' ? 'Active network' : text,
-    'потенциальным аирдропом': targetLang === 'en' ? 'with potential airdrop' : text,
-    'Хорошо': targetLang === 'en' ? 'Good for' : text,
-    'on-chain активности': targetLang === 'en' ? 'on-chain activity' : text,
-    'от ConsenSys': targetLang === 'en' ? 'from ConsenSys' : text,
-    'MetaMask': targetLang === 'en' ? 'MetaMask' : text,
-    'ожидается аирдроп': targetLang === 'en' ? 'airdrop expected' : text,
-    'Высокопроизводительный': targetLang === 'en' ? 'High-performance' : text,
-    'один из самых ожидаемых': targetLang === 'en' ? 'one of the most anticipated' : text,
-    'Активность засчитывается': targetLang === 'en' ? 'Activity counts' : text,
-    'Активная экосистема': targetLang === 'en' ? 'Active ecosystem' : text,
-    'Взаимодействие': targetLang === 'en' ? 'Interaction' : text,
-    'учитываться': targetLang === 'en' ? 'may count' : text,
-    'будущих аирдропов': targetLang === 'en' ? 'for future airdrops' : text,
-    'от Matter Labs': targetLang === 'en' ? 'from Matter Labs' : text,
-    'Portal zkSync': targetLang === 'en' ? 'Portal zkSync' : text,
-    'официальный кран': targetLang === 'en' ? 'official faucet' : text,
-    'Активность в тестнете важна': targetLang === 'en' ? 'Testnet activity is important' : text,
-    'Выдаёт': targetLang === 'en' ? 'Issues' : text,
-    'тестовые': targetLang === 'en' ? 'test' : text,
-    'разработки': targetLang === 'en' ? 'development' : text,
-    'Несколько': targetLang === 'en' ? 'Several' : text,
-    'партнёрских': targetLang === 'en' ? 'partner' : text,
-    'мобильной блокчейн-платформы': targetLang === 'en' ? 'mobile blockchain platform' : text,
-    'с фокусом на': targetLang === 'en' ? 'focused on' : text,
-    'Tree-Graph консенсус': targetLang === 'en' ? 'Tree-Graph consensus' : text,
-    'Высокая пропускная способность': targetLang === 'en' ? 'High throughput' : text,
-    'блокчейн для IoT устройств': targetLang === 'en' ? 'Blockchain for IoT devices' : text,
-    'Децентрализованное архивирование': targetLang === 'en' ? 'Decentralized archiving' : text,
-    'через приложение': targetLang === 'en' ? 'via app' : text,
-    'Гейминг-фокусированный': targetLang === 'en' ? 'Gaming-focused' : text,
-    'через официальный Hub': targetLang === 'en' ? 'via official Hub' : text,
-    'NFT-фокусированный': targetLang === 'en' ? 'NFT-focused' : text,
-    'на базе Arbitrum': targetLang === 'en' ? 'based on Arbitrum' : text,
-    'Privacy-oriented': targetLang === 'en' ? 'Privacy-oriented' : text,
-    'Тестнет с': targetLang === 'en' ? 'Testnet with' : text,
-    'Разработан': targetLang === 'en' ? 'Developed by' : text,
-    'Шардированный блокчейн': targetLang === 'en' ? 'Sharded blockchain' : text,
-    'через официальный dev-кошелёк': targetLang === 'en' ? 'via official dev wallet' : text,
-    'Профессиональный провайдер': targetLang === 'en' ? 'Professional provider' : text,
-    'Бесплатный tier': targetLang === 'en' ? 'Free tier' : text,
-    'для новых пользователей': targetLang === 'en' ? 'for new users' : text,
-    'Платный доступ': targetLang === 'en' ? 'Paid access' : text,
-    'снимает лимиты': targetLang === 'en' ? 'removes limits' : text,
-    'Требует регистрацию': targetLang === 'en' ? 'Requires registration' : text,
-    'Инструмент для разработчиков': targetLang === 'en' ? 'Developer tool' : text,
-    'Виртуальные тестнеты': targetLang === 'en' ? 'Virtual testnets' : text,
-    'с неограниченными токенами': targetLang === 'en' ? 'with unlimited tokens' : text,
-    'Надёжный и стабильный провайдер': targetLang === 'en' ? 'Reliable and stable provider' : text,
-    'от Infura': targetLang === 'en' ? 'from Infura' : text,
-    'MetaMask': targetLang === 'en' ? 'MetaMask' : text
-  };
-  
-  return basicTranslations[text] || text;
-}
-
-// Функция для перевода всех описаний
-async function translateAllDescriptions(targetLang) {
-  if (targetLang === 'ru') return;
-  
-  console.log(`Starting translation for ${targetLang}...`);
-  const translatedFaucets = [];
-  
-  for (const faucet of DEFAULT_FAUCETS) {
-    console.log(`Translating faucet: ${faucet.name}`);
-    const translatedDesc = await translateText(faucet.desc, targetLang);
-    const translatedReward = await translateText(faucet.reward, targetLang);
-    const translatedCooldown = await translateText(faucet.cooldown, targetLang);
-    
-    translatedFaucets.push({
-      ...faucet,
-      desc: translatedDesc,
-      reward: translatedReward,
-      cooldown: translatedCooldown
-    });
-  }
-  
-  console.log(`Translation completed. Total faucets: ${translatedFaucets.length}`);
-  
-  // Сохранить переводы в Firestore
-  if (currentUser && isAdmin) {
-    try {
-      console.log('Attempting to save translations for', targetLang);
-      const translationsRef = doc(db, "translations", `faucets_${targetLang}`);
-      await setDoc(translationsRef, {
-        faucets: translatedFaucets,
-        updatedAt: new Date().toISOString()
-      });
-      console.log(`✅ Translations saved for ${targetLang}`);
-    } catch (e) {
-      console.error('Failed to save translations:', e);
-      console.warn('Error details:', e.code, e.message);
-    }
-  } else {
-    console.log('⚠️ Cannot save translations - not admin or not logged in');
-  }
-  
-  return translatedFaucets;
-}
-
-// Загрузка переводов из Firestore
-async function loadTranslations(lang) {
-  if (lang === 'ru') {
-    return DEFAULT_FAUCETS;
-  }
-  
-  // Сначала проверяем кэш
-  if (cachedTranslations[lang]) {
-    console.log(`✅ Using cached translations for ${lang}`);
-    return cachedTranslations[lang];
-  }
-  
-  try {
-    const translationsRef = doc(db, "translations", `faucets_${lang}`);
-    const translationsDoc = await getDoc(translationsRef);
-    
-    if (translationsDoc.exists()) {
-      const translatedData = translationsDoc.data().faucets;
-      // Сохраняем в кэш для будущих запросов
-      cachedTranslations[lang] = translatedData;
-      console.log(`✅ Loaded translations for ${lang} from Firestore`);
-      return translatedData;
-    } else {
-      console.log(`⚠️ No translations found for ${lang}, creating new ones...`);
-      // Если переводов нет, создать их
-      const translated = await translateAllDescriptions(lang);
-      cachedTranslations[lang] = translated;
-      return translated;
-    }
-  } catch (e) {
-    console.warn('Failed to load translations:', e);
-    return DEFAULT_FAUCETS;
-  }
-}
-
-// Функция для перезагрузки кранов при смене языка
-async function reloadFaucetsWithNewLanguage() {
-  const currentLang = window.currentLang || 'ru';
-  const translatedFaucets = await loadTranslations(currentLang);
-  
-  faucets = translatedFaucets.map((f) => ({
-    id: f.id,
-    name: f.name || '',
-    token: f.token || '',
-    type: f.type || 'free',
-    net: f.net || 'mainnet',
-    desc: f.desc || '',
-    links: f.links || [],
-    logoUrl: f.logoUrl || '',
-    reward: f.reward || '',
-    cooldown: f.cooldown || '',
-    tags: f.tags || [],
-    ratingAvg: 0,
-    ratingCount: 0,
-    clickCount: 0
-  }));
-  
-  renderAll();
-  updateCounts();
-}
-
-// Сделать функцией глобальной для вызова из languages.js
-window.reloadFaucetsWithNewLanguage = reloadFaucetsWithNewLanguage;
 
 // ═══════════════════════════════════════════
 // ADMIN ACTIONS
@@ -3173,10 +2864,7 @@ async function loadFaucetsFromFirestore() {
     }
     
     if (!faucets.length) {
-      const currentLang = window.currentLang || 'ru';
-      const translatedFaucets = await loadTranslations(currentLang);
-      
-      faucets = translatedFaucets.map((f) => ({
+      faucets = DEFAULT_FAUCETS.map((f) => ({
         id: f.id,
         name: f.name || '',
         token: f.token || '',
@@ -3192,16 +2880,11 @@ async function loadFaucetsFromFirestore() {
         ratingCount: 0,
         clickCount: 0
       }));
-      
       toast(isEn ? 'Database is empty — showing embedded defaults' : 'База пуста — показаны встроенные данные');
     }
   } catch (e) {
     console.error('Failed to load faucets from Firestore:', e);
-    
-    const currentLang = window.currentLang || 'ru';
-    const translatedFaucets = await loadTranslations(currentLang);
-    
-    faucets = translatedFaucets.map((f) => ({
+    faucets = DEFAULT_FAUCETS.map((f) => ({
       id: f.id,
       name: f.name || '',
       token: f.token || '',
