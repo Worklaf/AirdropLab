@@ -2032,6 +2032,11 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('Forcing syncAuth call...');
       syncAuth(currentUser);
     }
+    // ✅ Принудительно рендерим header если он не загрузился
+    if (typeof injectHeader === 'function') {
+      console.log('Forcing header injection...');
+      injectHeader();
+    }
   }, 1500);
   
   const richDescTextarea = document.getElementById('actRichDesc');
@@ -2103,6 +2108,12 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize language button
   if (typeof updateLanguageButton === 'function') {
     updateLanguageButton();
+  }
+  
+  // ✅ Принудительно рендерим header если он не загрузился
+  if (typeof injectHeader === 'function') {
+    console.log('Forcing header injection...');
+    injectHeader();
   }
 });
 
