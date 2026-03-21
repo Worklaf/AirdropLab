@@ -2193,9 +2193,11 @@ async function translateText(text, targetLang) {
 async function translateAllDescriptions(targetLang) {
   if (targetLang === 'ru') return;
   
+  console.log(`Starting translation for ${targetLang}...`);
   const translatedFaucets = [];
   
   for (const faucet of DEFAULT_FAUCETS) {
+    console.log(`Translating faucet: ${faucet.name}`);
     const translatedDesc = await translateText(faucet.desc, targetLang);
     const translatedReward = await translateText(faucet.reward, targetLang);
     const translatedCooldown = await translateText(faucet.cooldown, targetLang);
@@ -2207,6 +2209,8 @@ async function translateAllDescriptions(targetLang) {
       cooldown: translatedCooldown
     });
   }
+  
+  console.log(`Translation completed. Total faucets: ${translatedFaucets.length}`);
   
   // Сохранить переводы в Firestore
   if (currentUser && isAdmin) {
