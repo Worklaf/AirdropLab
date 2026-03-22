@@ -3351,94 +3351,126 @@ document.addEventListener('languageChanged', function() {
   renderAll();
 });
 
-// Init
-onAuthStateChanged(auth, async (user) => {
-  currentUser = user || null;
-  window.currentUser = currentUser;
-  isAdmin = !!(user && (user.uid === ADMIN_UID));
-  // Показываем фиксированную админ-панель
-  const adminPanel = document.getElementById('fixedAdminPanel');
-  if (adminPanel) {
-    adminPanel.style.display = isAdmin ? 'flex' : 'none';
-  }
-  
-  // Загружаем язык пользователя из профиля
-  if (user) {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        
-        // Загружаем язык пользователя из профиля
-        if (userData.language) {
-          window.currentLang = userData.language;
-          console.log('Loaded user language from profile:', userData.language);
+// Init - безопасный запуск с проверкой Firebase
+if (window.auth && typeof onAuthStateChanged === 'function') {
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user || null;
+    window.currentUser = currentUser;
+    isAdmin = !!(user && (user.uid === ADMIN_UID));
+    // Показываем фиксированную админ-панель
+    const adminPanel = document.getElementById('fixedAdminPanel');
+    if (adminPanel) {
+      adminPanel.style.display = isAdmin ? 'flex' : 'none';
+    }
+    
+    // Загружаем язык пользователя из профиля
+    if (user && window.db) {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
           
-          // Обновляем язык интерфейса
-          if (typeof window.setLanguage === 'function') {
-            window.setLanguage(userData.language);
-          }
-          
-          // Обновляем кнопку в футере
-          if (typeof window.updateFooterLanguageButton === 'function') {
-            window.updateFooterLanguageButton();
+          // Загружаем язык пользователя из профиля
+          if (userData.language) {
+            window.currentLang = userData.language;
+            console.log('Loaded user language from profile:', userData.language);
+            
+            // Обновляем язык интерфейса
+            if (typeof window.setLanguage === 'function') {
+              window.setLanguage(userData.language);
+            }
+            
+            // Обновляем кнопку в футере
+            if (typeof window.updateFooterLanguageButton === 'function') {
+              window.updateFooterLanguageButton();
+            }
           }
         }
+      } catch(e) {
+        console.warn('Failed to load user language:', e);
       }
-    } catch(e) {
-      console.warn('Failed to load user language:', e);
     }
+    
+    // Показываем/скрываем кнопки фильтров
+    const mySuggestionsBtn = document.getElementById('mySuggestionsFilter');
+    const suggestionsBtn = document.getElementById('suggestionsFilter');
+    const hiddenFilterBtn = document.getElementById('hiddenFilter');
+    
+    if (mySuggestionsBtn) {
+      mySuggestionsBtn.style.display = user ? 'inline-flex' : 'none';
+    }
+    if (suggestionsBtn) {
+      suggestionsBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+    }
+    if (hiddenFilterBtn) {
+      hiddenFilterBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+    }
+    
+    updateHeaderAuthUI(user);
+    await loadFavorites();
+    updateCounts(); // Обновляем счетчики после загрузки избранного
+    await loadFaucetsFromFirestore();
+    updateCounts(); // Обновляем счетчики после загрузки кранов
+    // Повторный вызов с задержкой для надежности
+    setTimeout(function() { updateCounts(); }, 500);
+    if (isAdmin) await loadPendingSuggestions();
+    if (user && window.db) await loadNotificationsFromFirestore();
+
+    // Hook profile/account modal (footer.js)
+    try {
+      const avaWrap = document.getElementById('userAvatarWrapper');
+      const nameWrap = document.getElementById('userNameWrapper');
+      const openAccount = () => {
+        if (typeof window.openPageModal === 'function') window.openPageModal('account');
+      };
+      if (avaWrap) avaWrap.onclick = openAccount;
+      if (nameWrap) nameWrap.onclick = openAccount;
+      
+      // Hook notifications button
+      const notifBtn = document.getElementById('notificationButton') || document.querySelector('[onclick*="openNotificationsModal"]') || document.querySelector('[onclick*="showNotifications"]');
+      if (notifBtn && !notifBtn.onclick) {
+        notifBtn.onclick = () => {
+          if (typeof window.showNotifications === 'function') {
+            window.showNotifications();
+          } else if (typeof window.openNotificationsModal === 'function') {
+            window.openNotificationsModal();
+          }
+        };
+        console.log('Notification button hooked');
+      }
+    } catch(_) {}
+  });
+} else {
+  // Firebase недоступен - запускаем без аутентификации
+  console.log('🔧 Firebase недоступен, запускаем без аутентификации');
+  currentUser = null;
+  window.currentUser = null;
+  isAdmin = false;
+  
+  // Скрываем админ-панель
+  const adminPanel = document.getElementById('fixedAdminPanel');
+  if (adminPanel) {
+    adminPanel.style.display = 'none';
   }
   
-  // Показываем/скрываем кнопки фильтров
+  // Скрываем кнопки фильтров
   const mySuggestionsBtn = document.getElementById('mySuggestionsFilter');
   const suggestionsBtn = document.getElementById('suggestionsFilter');
   const hiddenFilterBtn = document.getElementById('hiddenFilter');
   
   if (mySuggestionsBtn) {
-    mySuggestionsBtn.style.display = user ? 'inline-flex' : 'none';
+    mySuggestionsBtn.style.display = 'none';
   }
   if (suggestionsBtn) {
-    suggestionsBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+    suggestionsBtn.style.display = 'none';
   }
   if (hiddenFilterBtn) {
-    hiddenFilterBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+    hiddenFilterBtn.style.display = 'none';
   }
   
-  updateHeaderAuthUI(user);
-  await loadFavorites();
-  updateCounts(); // Обновляем счетчики после загрузки избранного
-  await loadFaucetsFromFirestore();
-  updateCounts(); // Обновляем счетчики после загрузки кранов
-  // Повторный вызов с задержкой для надежности
-  setTimeout(function() { updateCounts(); }, 500);
-  if (isAdmin) await loadPendingSuggestions();
-  if (user) await loadNotificationsFromFirestore();
-
-  // Hook profile/account modal (footer.js)
-  try {
-    const avaWrap = document.getElementById('userAvatarWrapper');
-    const nameWrap = document.getElementById('userNameWrapper');
-    const openAccount = () => {
-      if (typeof window.openPageModal === 'function') window.openPageModal('account');
-    };
-    if (avaWrap) avaWrap.onclick = openAccount;
-    if (nameWrap) nameWrap.onclick = openAccount;
-    
-    // Hook notifications button
-    const notifBtn = document.getElementById('notificationButton') || document.querySelector('[onclick*="openNotificationsModal"]') || document.querySelector('[onclick*="showNotifications"]');
-    if (notifBtn && !notifBtn.onclick) {
-      notifBtn.onclick = () => {
-        if (typeof window.showNotifications === 'function') {
-          window.showNotifications();
-        } else if (typeof window.openNotificationsModal === 'function') {
-          window.openNotificationsModal();
-        }
-      };
-      console.log('Notification button hooked');
-    }
-  } catch(_) {}
-});
+  // Загружаем краны без Firebase
+  loadFaucetsFromFirestore();
+}
 </script>
 
 <!-- Фиксированная админ-панель -->
