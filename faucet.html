@@ -299,7 +299,7 @@
         <div class="ae-label" data-translate="faucets_field_token">Токен *</div>
         <input class="ae-input" id="f_token" data-translate="faucets_ph_token" placeholder="Например: ETH, BTC, SOL">
       </div>
-      <div>
+      <div id="f_desc_container">
         <div class="ae-label" data-translate="faucets_field_desc">Описание</div>
         <textarea class="ae-input" id="f_desc" rows="2" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;" oninput="autoTranslateDescription('f_desc', 'f_desc_en', 'ru')"></textarea>
       </div>
@@ -332,7 +332,7 @@
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div>
+        <div id="f_reward_container">
           <div class="ae-label" data-translate="faucets_field_reward">Награда (необязательно)</div>
           <input class="ae-input" id="f_reward" data-translate="faucets_ph_reward" placeholder="0.5 ETH/день" oninput="autoTranslateDescription('f_reward', 'f_reward_en', 'ru')">
         </div>
@@ -342,7 +342,7 @@
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div>
+        <div id="f_cooldown_container">
           <div class="ae-label" data-translate="faucets_field_cooldown">Кулдаун</div>
           <input class="ae-input" id="f_cooldown" data-translate="faucets_ph_cooldown" placeholder="24ч" oninput="autoTranslateDescription('f_cooldown', 'f_cooldown_en', 'ru')">
         </div>
@@ -4128,6 +4128,9 @@ function updateEditFieldsVisibility() {
   // Английские поля для формы добавления кранов
   const englishFields = ['f_desc_en_container', 'f_reward_en_container', 'f_cooldown_en_container'];
   
+  // Русские поля для формы кранов (скрываем при английском)
+  const faucetRussianFields = ['f_desc_container', 'f_reward_container', 'f_cooldown_container'];
+  
   // Английские поля для формы предложений
   const suggestionEnglishFields = ['suggest_desc_en_container', 'suggest_reward_en_container', 'suggest_cooldown_en_container'];
   
@@ -4137,6 +4140,12 @@ function updateEditFieldsVisibility() {
   if (isAdmin) {
     // Администратор видит ВСЕ поля всегда - независимо от языка интерфейса
     [...englishFields, ...suggestionEnglishFields].forEach(fieldId => {
+      const element = document.getElementById(fieldId);
+      if (element) element.style.display = 'block';
+    });
+    
+    // Показываем русские поля формы кранов для админа
+    faucetRussianFields.forEach(fieldId => {
       const element = document.getElementById(fieldId);
       if (element) element.style.display = 'block';
     });
@@ -4185,6 +4194,14 @@ function updateEditFieldsVisibility() {
       const element = document.getElementById(fieldId);
       if (element) {
         element.style.display = isEn ? 'block' : 'none';
+      }
+    });
+    
+    // Скрываем русские поля в форме кранов при английском языке
+    faucetRussianFields.forEach(fieldId => {
+      const element = document.getElementById(fieldId);
+      if (element) {
+        element.style.display = isEn ? 'none' : 'block';
       }
     });
     
