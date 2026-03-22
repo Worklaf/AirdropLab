@@ -1638,7 +1638,16 @@ function loadFeedbackChat(feedbackId) {
 
     const html = messages.map(function(msg) {
       const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
-      const isCurrentUserSender = (isAdmin && msg.sender === 'admin') || (!isAdmin && msg.sender === 'user');
+      
+      // Определяем является ли сообщение от текущего пользователя
+      let isCurrentUserSender = false;
+      if (isAdmin) {
+        // Админ видит свои сообщения (admin) справа
+        isCurrentUserSender = msg.sender === 'admin';
+      } else {
+        // Пользователь видит свои сообщения (user) справа, но только если это его UID
+        isCurrentUserSender = msg.sender === 'user' && d.userId === window.currentUser.uid;
+      }
       
       const bubbleSide = isCurrentUserSender ? 'admin' : 'user';
       const senderName = isCurrentUserSender
@@ -1649,7 +1658,9 @@ function loadFeedbackChat(feedbackId) {
       
       const avatar = isCurrentUserSender
         ? `<div class="chat-avatar"><i class="fas fa-user-shield"></i></div>`
-        : `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`;
+        : (msg.sender === 'admin'
+            ? `<div class="chat-avatar"><i class="fas fa-headset"></i></div>`
+            : `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`);
       
       const msgTime = msg.timestamp
         ? formatTimeAgo(msg.timestamp.toDate ? msg.timestamp.toDate() : new Date(msg.timestamp))
