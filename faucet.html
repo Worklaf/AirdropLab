@@ -3633,8 +3633,12 @@ async function autoTranslateDescription(sourceId, targetId, sourceLang) {
       targetField.style.opacity = '0.6';
       targetField.placeholder = sourceLang === 'ru' ? 'Переводим...' : 'Translating...';
       
-      // Используем наш сервис перевода
-      const response = await fetch('http://localhost:3003/translate', {
+      // Используем CloudFlare Function или локальный сервис
+      const translationUrl = window.location.hostname === 'airdroplab.org' 
+        ? '/api/translate'  // CloudFlare Function
+        : 'http://localhost:3003/translate'; // Локальный сервис для разработки
+      
+      const response = await fetch(translationUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
