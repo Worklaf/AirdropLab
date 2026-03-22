@@ -619,6 +619,46 @@
         /* ── Coming Soon Modal ── */
         @keyframes csModalIn {
           from { opacity:0; transform:scale(0.88) translateY(20px); }
+
+function createFeedbackChatModal() {
+  const chatHTML = `
+    <div id="feedbackModal" class="modal">
+      <div class="modal-content modal-lg relative overflow-hidden">
+        <div class="modal-header">
+          <div class="flex justify-between items-center w-full">
+            <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments text-purple-400"></i><span id="feedbackModalTitle" data-translate="feedback">Обратная связь</span></h2>
+            <button onclick="closeFeedbackModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+          </div>
+        </div>
+        <div class="modal-body bg-[#151b2b]">
+          <input type="hidden" id="feedbackProjectId" />
+          <input type="hidden" id="feedbackDocId" />
+          <div class="mb-3 pb-3 border-b border-slate-700"><span class="text-sm text-slate-400" id="feedbackProjectLabel">Проект: </span><span id="feedbackProjectName" class="text-sm font-bold text-blue-400">...</span></div>
+          <div id="feedbackChatHistory" class="h-80 overflow-y-auto pr-3 custom-scrollbar bg-slate-900/30 rounded-xl p-4"><div class="flex flex-col items-center justify-center h-full text-slate-500"><i class="fas fa-comments text-4xl mb-3 opacity-50"></i><p class="text-sm" data-translate="loading_chat">Загрузка переписки...</p></div></div>
+          <div id="feedbackFormNew" class="space-y-4"></div>
+          <div id="feedbackFormReply" class="hidden">
+            <label class="block text-sm font-medium text-slate-300 mb-2" data-translate="your_answer">Ваш ответ</label>
+            <div class="flex gap-2">
+              <input type="text" id="feedbackUserReplyText" placeholder="Напишите ответ..." data-translate="reply_placeholder" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white" />
+              <button id="feedbackReplySendBtn" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-bold"><i class="fas fa-paper-plane"></i></button>
+              <button id="adminChatDeleteBtn" class="hidden text-red-400 hover:text-red-300" title="Удалить"><i class="fas fa-trash text-xl"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer bg-[#1e2538] border-t border-slate-700 p-4 shrink-0">
+          <div class="flex gap-3 w-full justify-end" id="feedbackModalFooter">
+            <button onclick="closeFeedbackModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-sm" data-translate="close">Закрыть</button>
+            <button id="feedbackSendBtn" onclick="window.sendUserFeedback && window.sendUserFeedback()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg text-sm font-bold" data-translate="send">Отправить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (!document.getElementById('feedbackModal')) {
+    document.body.insertAdjacentHTML('beforeend', chatHTML);
+  }
+}
           to   { opacity:1; transform:scale(1) translateY(0); }
         }
         @keyframes csBlink {
@@ -1254,32 +1294,86 @@ function renderFeedbackMessages(feedbacks, isAdmin) {
       projectLogo = (pr && (pr.image || pr.logoUrl)) || item.projectLogo || '';
     }
 
-    const openHandler = (typeof window.openFeedbackFromList === 'function')
-      ? `onclick="openFeedbackFromList('${String(item.id || '').replace(/'/g, "\\'")}', '${String(item.projectId || '').replace(/'/g, "\\'")}', '${String(projectName || '').replace(/'/g, "\\'")}')"`
-      : '';
+    const clickFn = isAdmin
+      ? `openAdminFeedbackChat('${String(item.id || '').replace(/'/g, "\\'")}')`
+      : `openFeedbackFromList('${String(item.id || '').replace(/'/g, "\\'")}', '${String(item.projectId || '').replace(/'/g, "\\'")}', '${String(projectName || '').replace(/'/g, "\\'")}')`;
+
+    let titleHtml = '';
+    if (isAdmin) {
+      titleHtml = `
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            ${isSupport
+              ? `<span style="background:linear-gradient(135deg,rgba(124,58,237,0.25),rgba(139,92,246,0.1));
+                            border:1px solid rgba(139,92,246,0.35);
+                            padding:2px 8px;border-radius:12px;
+                            color:#c084fc;font-size:11px;font-weight:700;letter-spacing:0.5px;">
+                  🛡️ SUPPORT
+                 </span>`
+              : `${projectLogo
+                  ? `<img src="${projectLogo}" class="w-5 h-5 rounded object-cover" onerror="this.style.display='none'">`
+                  : ''}
+                 <span class="text-blue-400 font-medium text-sm">${esc(projectName)}</span>`
+            }
+            ${categoryLabel
+              ? `<span class="text-xs px-2 py-0.5 rounded-full ${
+                  isSupport
+                    ? 'bg-purple-900/40 text-purple-300 border border-purple-700/40'
+                    : 'bg-slate-700/80 text-slate-300'
+                }">${esc(categoryLabel)}</span>`
+              : ''}
+          </div>
+          <div class="text-xs text-slate-400">
+            от <span class="text-white font-medium">${esc(item.userName || 'Пользователь')}</span>
+          </div>
+        </div>`;
+    } else {
+      titleHtml = `
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2">
+            ${isSupport
+              ? `<span style="background:linear-gradient(135deg,rgba(124,58,237,0.25),rgba(139,92,246,0.1));
+                            border:1px solid rgba(139,92,246,0.35);
+                            padding:2px 8px;border-radius:12px;
+                            color:#c084fc;font-size:11px;font-weight:700;letter-spacing:0.5px;">
+                  🛡️ SUPPORT
+                 </span>`
+              : `${projectLogo ? `<img src="${projectLogo}" class="w-6 h-6 rounded object-cover">` : ''}
+                 <span class="font-bold text-white">${esc(projectName)}</span>`
+            }
+          </div>
+          ${categoryLabel
+            ? `<span class="text-xs ${isSupport ? 'text-purple-400' : 'text-slate-400'}">${esc(categoryLabel)}</span>`
+            : ''}
+        </div>`;
+    }
 
     return `
-      <div class="p-4 bg-slate-800/50 rounded-xl border ${isUnread ? 'border-purple-500/40' : 'border-slate-700/40'} hover:border-purple-500/50 transition cursor-pointer" ${openHandler}>
-        <div class="flex items-start gap-3">
-          <div class="w-10 h-10 rounded-xl bg-slate-700/60 border border-slate-600/40 flex items-center justify-center flex-shrink-0 overflow-hidden">
-            ${projectLogo ? `<img src="${projectLogo}" class="w-full h-full object-cover" />` : `<i class="fas fa-comments text-purple-400"></i>`}
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between gap-3">
-              <div class="min-w-0">
-                <div class="text-sm font-bold text-slate-200 truncate">${projectName}</div>
-                ${categoryLabel ? `<div class="text-[11px] text-slate-400 mt-0.5">${categoryLabel}</div>` : ''}
-              </div>
-              <div class="flex items-center gap-2 flex-shrink-0">
-                <span class="text-xs text-slate-500">${formatTimeAgo(date)}</span>
-                ${isUnread ? `<span class="w-2 h-2 rounded-full bg-purple-400"></span>` : ''}
-              </div>
-            </div>
-            <div class="mt-2 text-sm text-slate-300 break-words">${esc(lastMsg.text)}</div>
+      <div onclick="${clickFn}"
+           class="cursor-pointer group relative rounded-xl p-4 transition-all"
+           style="${isSupport
+             ? 'background:rgba(88,28,135,0.08);border:1px solid rgba(139,92,246,0.25);'
+             : 'background:rgba(30,41,59,0.4);border:1px solid rgba(71,85,105,0.5);'}"
+           onmouseover="this.style.${isSupport
+             ? 'background=\'rgba(88,28,135,0.15)\';this.style.borderColor=\'rgba(139,92,246,0.5)\''
+             : 'background=\'rgba(30,41,59,0.8)\';this.style.borderColor=\'rgba(100,116,139,0.6)\''}"
+           onmouseout="this.style.${isSupport
+             ? 'background=\'rgba(88,28,135,0.08)\';this.style.borderColor=\'rgba(139,92,246,0.25)\''
+             : 'background=\'rgba(30,41,59,0.4)\';this.style.borderColor=\'rgba(71,85,105,0.5)\''}">
+        ${isUnread
+          ? '<div class="absolute top-3 right-3 w-2.5 h-2.5 bg-purple-500 rounded-full animate-pulse"></div>'
+          : ''}
+        <div class="flex justify-between items-start mb-2">
+          <div class="flex-1 min-w-0 pr-6">${titleHtml}</div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="text-xs text-slate-500">${formatTimeAgo(date)}</span>
+            ${isUnread
+              ? '<span class="bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">NEW</span>'
+              : ''}
           </div>
         </div>
-      </div>
-    `;
+        <div class="text-sm text-slate-400 line-clamp-2 mt-1 pl-0">${esc(lastMsg.text)}</div>
+      </div>`;
   }).join('');
   
   // Обновляем бейдж
@@ -1372,6 +1466,390 @@ if (document.readyState === 'loading') {
 } else {
   createFeedbackModal();
 }
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', createFeedbackChatModal);
+} else {
+  createFeedbackChatModal();
+}
+
+// Feedback chat API (ported from index.html)
+window.closeFeedbackModal = function() {
+  const modal = document.getElementById('feedbackModal');
+  if (modal) modal.classList.remove('active');
+};
+
+window.closeFeedbackChat = function() {
+  const modal = document.getElementById('feedbackModal');
+  if (modal) modal.classList.remove('active');
+  if (window.currentFeedbackUnsub) {
+    window.currentFeedbackUnsub();
+    window.currentFeedbackUnsub = null;
+  }
+  if (typeof window.openFeedbackListModal === 'function') window.openFeedbackListModal();
+};
+
+window.backToFeedbackList = function() {
+  const modal = document.getElementById('feedbackModal');
+  if (modal) modal.classList.remove('active');
+  if (window.currentFeedbackUnsub) {
+    window.currentFeedbackUnsub();
+    window.currentFeedbackUnsub = null;
+  }
+  if (typeof window.openFeedbackListModal === 'function') window.openFeedbackListModal();
+};
+
+function __getFx() {
+  const fx = window.__firestoreExports;
+  if (!fx || !window.db) return null;
+  return fx;
+}
+
+function __t(k) {
+  return (typeof t === 'function') ? t(k) : k;
+}
+
+window.openFeedbackFromList = function(docId, projectId, projectName) {
+  const isSupport = projectId === '__support__' || projectName === 'Support';
+
+  const listModal = document.getElementById('feedbackListModal');
+  if (listModal) listModal.classList.remove('active');
+
+  const modal = document.getElementById('feedbackModal');
+  if (!modal) return;
+
+  const pid = document.getElementById('feedbackProjectId');
+  const did = document.getElementById('feedbackDocId');
+  if (pid) pid.value = projectId;
+  if (did) did.value = docId;
+
+  const delBtn = document.getElementById('adminChatDeleteBtn');
+  if (delBtn) delBtn.classList.add('hidden');
+
+  const fb = (Array.isArray(window.adminFeedbacks) ? window.adminFeedbacks : []).find(f => f.id === docId);
+  const categoryLabels = {
+    suggestion: '💡 Предложение',
+    bug: '🐛 Ошибка',
+    question: '❓ Вопрос',
+    other: '💬 Другое',
+    technical: '🔧 Техническая проблема',
+    account: '👤 Проблема с аккаунтом',
+    partnership: '🤝 Партнёрство'
+  };
+  const categoryLabel = fb?.category ? (categoryLabels[fb.category] || fb.category) : '';
+
+  let projectDisplayHtml = `
+    <button onclick="closeFeedbackChat()"
+            class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700
+                   hover:bg-slate-600 text-white mr-2 transition-colors flex-shrink-0">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </button>`;
+
+  if (isSupport) {
+    projectDisplayHtml += `
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          <span style="background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(139,92,246,0.1));
+                       border:1px solid rgba(139,92,246,0.4);
+                       padding:3px 10px;border-radius:20px;
+                       color:#c084fc;font-size:12px;font-weight:700;letter-spacing:1px;">
+            🛡️ SUPPORT
+          </span>
+          ${categoryLabel
+            ? `<span style="background:rgba(88,28,135,0.3);border:1px solid rgba(139,92,246,0.3);
+                            padding:2px 8px;border-radius:10px;color:#a78bfa;font-size:11px;">
+                ${categoryLabel}
+               </span>`
+            : ''}
+        </div>
+      </div>`;
+  } else {
+    const project = (window.projects && Array.isArray(window.projects))
+      ? window.projects.find(p => p.id === projectId)
+      : null;
+    const logo = project?.image || '';
+    projectDisplayHtml += `
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          ${logo ? `<img src="${logo}" class="w-6 h-6 rounded object-cover" onerror="this.style.display='none'">` : ''}
+          <span class="font-bold text-white">${projectName}</span>
+          ${categoryLabel
+            ? `<span class="text-xs bg-slate-700 px-2 py-0.5 rounded-full text-slate-300">
+                ${categoryLabel}
+               </span>`
+            : ''}
+        </div>
+      </div>`;
+  }
+
+  const projectNameEl = document.getElementById('feedbackProjectName');
+  if (projectNameEl) projectNameEl.innerHTML = projectDisplayHtml;
+
+  const titleEl = document.getElementById('feedbackModalTitle');
+  if (titleEl) {
+    titleEl.innerHTML = isSupport
+      ? '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>Поддержка'
+      : '<button onclick="closeFeedbackChat()" class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-white mr-2 transition-colors"><i class="fas fa-arrow-left text-sm"></i></button>' + __t('chat_with_support');
+  }
+
+  const modalBody = document.querySelector('#feedbackModal .modal-body');
+  if (modalBody) {
+    modalBody.style.borderTop = isSupport ? '2px solid rgba(139,92,246,0.4)' : '';
+  }
+
+  const formNew = document.getElementById('feedbackFormNew');
+  const formReply = document.getElementById('feedbackFormReply');
+  const sendBtn = document.getElementById('feedbackSendBtn');
+  if (formNew) formNew.classList.add('hidden');
+  if (formReply) formReply.classList.remove('hidden');
+  if (sendBtn) sendBtn.classList.add('hidden');
+
+  loadFeedbackChat(docId);
+  modal.classList.add('active');
+};
+
+window.openAdminFeedbackChat = function(feedbackId) {
+  const fb = (Array.isArray(window.adminFeedbacks) ? window.adminFeedbacks : []).find(f => f.id === feedbackId);
+  if (!fb) return;
+
+  const isSupport = fb.projectId === '__support__' || fb.type === 'support';
+  const categoryLabels = {
+    suggestion: '💡 Предложение',
+    bug: '🐛 Ошибка',
+    question: '❓ Вопрос',
+    other: '💬 Другое',
+    technical: '🔧 Техническая проблема',
+    account: '👤 Проблема с аккаунтом',
+    partnership: '🤝 Партнёрство'
+  };
+  const categoryLabel = fb.category ? (categoryLabels[fb.category] || fb.category) : '';
+
+  let projectName = fb.projectName || fb.projectId || 'Неизвестный проект';
+  let projectLogo = fb.projectLogo || '';
+  if (!isSupport && window.projects && Array.isArray(window.projects)) {
+    const pr = window.projects.find(p => p.id === fb.projectId);
+    if (pr) {
+      projectName = pr.name || projectName;
+      projectLogo = pr.image || pr.logoUrl || projectLogo;
+    }
+  }
+
+  const listModal = document.getElementById('feedbackListModal');
+  if (listModal) listModal.classList.remove('active');
+  const chatModal = document.getElementById('feedbackModal');
+  if (!chatModal) return;
+
+  const pid = document.getElementById('feedbackProjectId');
+  const did = document.getElementById('feedbackDocId');
+  if (pid) pid.value = fb.projectId;
+  if (did) did.value = fb.id;
+
+  let projectDisplayHtml = '';
+  projectDisplayHtml += `
+    <button onclick="backToFeedbackList()"
+            class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600
+                   text-white mr-2 transition-colors flex-shrink-0">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </button>`;
+
+  if (isSupport) {
+    projectDisplayHtml += `
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          <span style="background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(139,92,246,0.1));
+                       border:1px solid rgba(139,92,246,0.4);
+                       padding:3px 10px;border-radius:20px;
+                       color:#c084fc;font-size:12px;font-weight:700;letter-spacing:1px;">
+            🛡️ SUPPORT
+          </span>
+          ${categoryLabel
+            ? `<span style="background:rgba(88,28,135,0.3);border:1px solid rgba(139,92,246,0.3);
+                            padding:2px 8px;border-radius:10px;
+                            color:#a78bfa;font-size:11px;">
+                ${categoryLabel}
+               </span>`
+            : ''}
+        </div>
+        <div class="text-xs text-slate-400">
+          от <span class="text-white font-medium">${fb.userName || 'Пользователь'}</span>
+        </div>
+      </div>`;
+  } else {
+    projectDisplayHtml += `
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          ${projectLogo
+            ? `<img src="${projectLogo}" class="w-6 h-6 rounded object-cover"
+                    alt="${projectName}" onerror="this.style.display='none'">`
+            : ''}
+          <span class="font-bold text-white">${projectName}</span>
+          ${categoryLabel
+            ? `<span class="text-xs bg-slate-700 px-2 py-0.5 rounded-full text-slate-300">
+                ${categoryLabel}
+               </span>`
+            : ''}
+        </div>
+        <div class="text-xs text-slate-400">
+          от <span class="text-white font-medium">${fb.userName || 'Пользователь'}</span>
+        </div>
+      </div>`;
+  }
+
+  const projectNameEl = document.getElementById('feedbackProjectName');
+  if (projectNameEl) projectNameEl.innerHTML = projectDisplayHtml;
+
+  const titleEl = document.getElementById('feedbackModalTitle');
+  if (titleEl) {
+    titleEl.innerHTML = isSupport
+      ? '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>Чат с пользователем (Support)'
+      : '<i class="fas fa-user-shield text-purple-400 mr-2"></i>' + __t('chat_with_user');
+  }
+
+  const modalBody = document.querySelector('#feedbackModal .modal-body');
+  if (modalBody) {
+    modalBody.style.borderTop = isSupport ? '2px solid rgba(139,92,246,0.4)' : '';
+  }
+
+  const formNew = document.getElementById('feedbackFormNew');
+  const formReply = document.getElementById('feedbackFormReply');
+  const sendBtn = document.getElementById('feedbackSendBtn');
+  if (formNew) formNew.classList.add('hidden');
+  if (formReply) formReply.classList.remove('hidden');
+  if (sendBtn) sendBtn.classList.add('hidden');
+
+  loadFeedbackChat(feedbackId);
+
+  const delBtn = document.getElementById('adminChatDeleteBtn');
+  if (delBtn) {
+    delBtn.classList.remove('hidden');
+    delBtn.onclick = function() {
+      if (confirm('Удалить переписку?')) deleteAdminFeedback(feedbackId);
+    };
+  }
+
+  chatModal.classList.add('active');
+  markFeedbackRead(feedbackId);
+};
+
+function loadFeedbackChat(feedbackId) {
+  const fx = __getFx();
+  if (!fx || typeof fx.onSnapshot !== 'function' || typeof fx.doc !== 'function') return;
+
+  if (window.currentFeedbackUnsub) {
+    window.currentFeedbackUnsub();
+    window.currentFeedbackUnsub = null;
+  }
+
+  const unsub = fx.onSnapshot(fx.doc(window.db, 'feedbacks', feedbackId), function(snap) {
+    if (!snap.exists()) return;
+    const d = snap.data();
+
+    const messages = (d.messages || []).slice().sort(function(a, b) {
+      const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp || 0);
+      const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp || 0);
+      return timeA - timeB;
+    });
+
+    const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+    const senderYou = __t('you') || 'Вы';
+    const senderUser = __t('user') || 'Пользователь';
+
+    const html = messages.map(function(msg) {
+      const bubbleSide = msg.sender;
+      const senderName = msg.sender === 'admin'
+        ? senderYou
+        : (d.userName || senderUser);
+      const avatar = msg.sender === 'admin'
+        ? `<div class="chat-avatar"><i class="fas fa-user-shield"></i></div>`
+        : `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`;
+      const msgTime = msg.timestamp
+        ? formatTimeAgo(msg.timestamp.toDate ? msg.timestamp.toDate() : new Date(msg.timestamp))
+        : '';
+
+      return `
+        <div class="chat-bubble ${bubbleSide}">
+          ${avatar}
+          <div class="chat-bubble-wrapper">
+            <span class="chat-sender">${senderName}</span>
+            <div class="chat-content">${msg.text}</div>
+            <span class="chat-time">${msgTime}</span>
+          </div>
+        </div>`;
+    }).join('');
+
+    const hist = document.getElementById('feedbackChatHistory');
+    if (hist) {
+      hist.innerHTML = html || `<p class="text-center text-slate-500 py-4">${__t('no_messages') || 'Нет сообщений'}</p>`;
+      setTimeout(function() { hist.scrollTop = hist.scrollHeight; }, 50);
+    }
+
+    const inp = document.getElementById('feedbackUserReplyText');
+    const replyBtn = document.getElementById('feedbackReplySendBtn');
+    if (inp) {
+      inp.value = '';
+      inp.placeholder = __t('reply_placeholder') || 'Напишите ответ...';
+      inp.onkeypress = function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          if (isAdmin) sendAdminReply(feedbackId);
+        }
+      };
+    }
+    if (replyBtn) {
+      replyBtn.onclick = function() {
+        if (isAdmin) sendAdminReply(feedbackId);
+      };
+    }
+  });
+
+  window.currentFeedbackUnsub = unsub;
+}
+
+function sendAdminReply(feedbackId) {
+  const fx = __getFx();
+  if (!fx || typeof fx.updateDoc !== 'function' || typeof fx.doc !== 'function') return;
+  if (typeof fx.arrayUnion !== 'function') {
+    if (typeof showToast === 'function') showToast('arrayUnion недоступен');
+    return;
+  }
+
+  const inp = document.getElementById('feedbackUserReplyText');
+  if (!inp) return;
+  const text = inp.value.trim();
+  if (!text) return;
+
+  fx.updateDoc(fx.doc(window.db, 'feedbacks', feedbackId), {
+    messages: fx.arrayUnion({ sender: 'admin', text: text, timestamp: new Date() }),
+    read: true,
+    userRead: false
+  }).then(function() {
+    inp.value = '';
+    if (typeof showToast === 'function') showToast('Ответ отправлен!');
+  }).catch(function(e) {
+    console.error(e);
+    if (typeof showToast === 'function') showToast('Ошибка: ' + e.message);
+  });
+}
+
+window.markFeedbackRead = function(id) {
+  const fx = __getFx();
+  if (!fx || typeof fx.updateDoc !== 'function' || typeof fx.doc !== 'function') return;
+  const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  const payload = isAdmin ? { read: true } : { userRead: true };
+  fx.updateDoc(fx.doc(window.db, 'feedbacks', id), payload).catch(function(e) { console.error(e); });
+};
+
+window.deleteAdminFeedback = function(id) {
+  const fx = __getFx();
+  if (!fx || typeof fx.deleteDoc !== 'function' || typeof fx.doc !== 'function') return;
+  fx.deleteDoc(fx.doc(window.db, 'feedbacks', id)).then(function() {
+    if (typeof showToast === 'function') showToast('Удалено');
+    if (typeof window.renderFeedbackList === 'function') window.renderFeedbackList();
+  }).catch(function(e) {
+    console.error(e);
+    if (typeof showToast === 'function') showToast('Ошибка');
+  });
+};
 
 // Escape закрывает модал
 document.addEventListener('keydown', function(e) {
