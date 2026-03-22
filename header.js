@@ -1639,50 +1639,46 @@ function loadFeedbackChat(feedbackId) {
     const html = messages.map(function(msg) {
       const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
       
-      // Простая логика как в index.html, но с правильным позиционированием
-      // admin сообщения слева, user сообщения справа
-      const bubbleSide = msg.sender === 'admin' ? 'user' : 'admin';
+      // Определяем сторону сообщения на основе senderId
+      const isCurrentUserSender = msg.senderId && msg.senderId === window.currentUser.uid;
+      const bubbleSide = isCurrentUserSender ? 'admin' : 'user';
       
       // Определяем имя отправителя
       let senderName;
-      if (msg.sender === 'admin') {
-        // Если это сообщение админа
-        if (isAdmin) {
-          // Админ видит свои сообщения как "Вы"
-          senderName = (typeof t === 'function') ? t('you') : 'Вы';
-        } else {
-          // Пользователь видит сообщения админа как "Support" или "Admin"
+      if (isCurrentUserSender) {
+        // Свои сообщения всегда показываем как "Вы"
+        senderName = (typeof t === 'function') ? t('you') : 'Вы';
+      } else {
+        // Чужие сообщения
+        if (msg.sender === 'admin') {
+          // Сообщения других админов показываем как "Support" или "Admin"
           const isSupport = d.projectId === '__support__' || d.type === 'support';
           senderName = isSupport ? 'Support' : 'Admin';
-        }
-      } else {
-        // Если это сообщение пользователя
-        if (isAdmin) {
-          // Админ видит сообщения пользователя с их именем
-          senderName = d.userName || ((typeof t === 'function') ? t('user') : 'Пользователь');
         } else {
-          // Пользователь видит свои сообщения как "Вы"
-          senderName = (typeof t === 'function') ? t('you') : 'Вы';
+          // Сообщения пользователей показываем с их именем
+          senderName = d.userName || ((typeof t === 'function') ? t('user') : 'Пользователь');
         }
       }
       
       // Определяем аватар
       let avatar;
-      if (msg.sender === 'admin') {
+      if (isCurrentUserSender) {
+        // Свои сообщения
         if (isAdmin) {
           // Админ видит свои сообщения со щитом
           avatar = `<div class="chat-avatar"><i class="fas fa-user-shield"></i></div>`;
         } else {
-          // Пользователь видит сообщения админа с наушниками
-          avatar = `<div class="chat-avatar"><i class="fas fa-headset"></i></div>`;
-        }
-      } else {
-        if (isAdmin) {
-          // Админ видит сообщения пользователей с их аватаром
-          avatar = `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`;
-        } else {
           // Пользователь видит свои сообщения со своим аватаром
           avatar = `<img src="${window.currentUser?.photoURL || d.userPhoto || 'https://ui-avatars.com/api/?name=U'}" class="chat-avatar" alt="">`;
+        }
+      } else {
+        // Чужие сообщения
+        if (msg.sender === 'admin') {
+          // Сообщения админов с наушниками
+          avatar = `<div class="chat-avatar"><i class="fas fa-headset"></i></div>`;
+        } else {
+          // Сообщения пользователей с их аватаром
+          avatar = `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`;
         }
       }
       
@@ -1878,7 +1874,12 @@ window.sendAdminReply = async function(feedbackId) {
   
   try {
     await fx.updateDoc(fx.doc(window.db, "feedbacks", feedbackId), {
-      messages: fx.arrayUnion({ sender: 'admin', text, timestamp: new Date() }),
+      messages: fx.arrayUnion({ 
+        sender: 'admin', 
+        senderId: window.currentUser.uid,
+        text, 
+        timestamp: new Date() 
+      }),
       read: true, userRead: false
     });
     inp.value = '';
@@ -1910,7 +1911,12 @@ window.sendUserFeedbackReply = async function() {
   
   try {
     await fx.updateDoc(fx.doc(window.db, "feedbacks", docId), {
-      messages: fx.arrayUnion({ sender: 'user', text, timestamp: new Date() }),
+      messages: fx.arrayUnion({ 
+        sender: 'user', 
+        senderId: window.currentUser.uid,
+        text, 
+        timestamp: new Date() 
+      }),
       userRead: true, read: false
     });
     document.getElementById('feedbackUserReplyText').value = '';
