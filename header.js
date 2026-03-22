@@ -1654,7 +1654,7 @@ function loadFeedbackChat(feedbackId) {
           isCurrentUserSender = isAdmin;
         }
       }
-      const bubbleSide = isCurrentUserSender ? 'admin' : 'user';
+      const bubbleSide = isCurrentUserSender ? 'user' : 'admin';
       
       // Отладка только для новых сообщений
       if (msg.senderId) {
