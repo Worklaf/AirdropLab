@@ -1160,6 +1160,42 @@ window.closeFeedbackListModal = function() {
   if (modal) modal.classList.remove('active'); 
 };
 
+// Создаем модальное окно для сообщений (доступно на всех страницах)
+(function() {
+  const modalHTML = `
+    <div id="feedbackListModal" class="modal">
+      <div class="modal-content modal-large">
+        <div class="modal-header">
+          <div class="flex justify-between items-center w-full">
+            <h2 class="text-xl font-bold flex items-center gap-2">
+              <i class="fas fa-comments text-purple-400"></i>
+              <span data-translate="feedbacks_list">Отзывы и предложения</span>
+            </h2>
+            <button onclick="closeFeedbackListModal()" class="text-slate-400 hover:text-white">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div id="feedbacksContainer" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+            <p class="text-slate-500 text-center py-8" data-translate="loading_feedbacks">Загрузка отзывов...</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="flex justify-center w-full">
+            <button onclick="closeFeedbackListModal()" class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-lg text-sm" data-translate="close">Закрыть</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Добавляем модальное окно в body если его еще нет
+  if (!document.getElementById('feedbackListModal')) {
+    document.insertAdjacentHTML('beforeend', modalHTML);
+  }
+})();
+
 // Escape закрывает модал
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeComingSoon();
