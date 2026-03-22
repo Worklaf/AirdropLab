@@ -1639,45 +1639,49 @@ function loadFeedbackChat(feedbackId) {
     const html = messages.map(function(msg) {
       const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
       
-      // Определяем является ли сообщение от текущего пользователя
-      const isCurrentUserSender = isAdmin 
-        ? msg.sender === 'admin'  // Админ видит свои сообщения admin справа
-        : msg.sender === 'user'; // Пользователь видит свои сообщения user справа
-      
-      const bubbleSide = isCurrentUserSender ? 'admin' : 'user';
+      // Простая логика как в index.html, но с учетом текущего пользователя
+      const bubbleSide = msg.sender; // 'admin' или 'user'
       
       // Определяем имя отправителя
       let senderName;
-      if (isCurrentUserSender) {
-        senderName = (typeof t === 'function') ? t('you') : 'Вы';
-      } else {
+      if (msg.sender === 'admin') {
+        // Если это сообщение админа
         if (isAdmin) {
-          // Админ видит сообщения пользователей с их именем
-          senderName = d.userName || (typeof t === 'function') ? t('user') : 'Пользователь';
+          // Админ видит свои сообщения как "Вы"
+          senderName = (typeof t === 'function') ? t('you') : 'Вы';
         } else {
-          // Пользователь видит сообщения админа как Support/Admin
+          // Пользователь видит сообщения админа как "Support" или "Admin"
           const isSupport = d.projectId === '__support__' || d.type === 'support';
           senderName = isSupport ? 'Support' : 'Admin';
+        }
+      } else {
+        // Если это сообщение пользователя
+        if (isAdmin) {
+          // Админ видит сообщения пользователя с их именем
+          senderName = d.userName || ((typeof t === 'function') ? t('user') : 'Пользователь');
+        } else {
+          // Пользователь видит свои сообщения как "Вы"
+          senderName = (typeof t === 'function') ? t('you') : 'Вы';
         }
       }
       
       // Определяем аватар
       let avatar;
-      if (isCurrentUserSender) {
+      if (msg.sender === 'admin') {
         if (isAdmin) {
           // Админ видит свои сообщения со щитом
           avatar = `<div class="chat-avatar"><i class="fas fa-user-shield"></i></div>`;
         } else {
-          // Пользователь видит свои сообщения со своим аватаром
-          avatar = `<img src="${window.currentUser?.photoURL || d.userPhoto || 'https://ui-avatars.com/api/?name=U'}" class="chat-avatar" alt="">`;
+          // Пользователь видит сообщения админа с наушниками
+          avatar = `<div class="chat-avatar"><i class="fas fa-headset"></i></div>`;
         }
       } else {
         if (isAdmin) {
           // Админ видит сообщения пользователей с их аватаром
           avatar = `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`;
         } else {
-          // Пользователь видит сообщения админа с наушниками
-          avatar = `<div class="chat-avatar"><i class="fas fa-headset"></i></div>`;
+          // Пользователь видит свои сообщения со своим аватаром
+          avatar = `<img src="${window.currentUser?.photoURL || d.userPhoto || 'https://ui-avatars.com/api/?name=U'}" class="chat-avatar" alt="">`;
         }
       }
       
