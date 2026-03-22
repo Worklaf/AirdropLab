@@ -2934,9 +2934,7 @@ async function loadFavorites() {
       });
     } catch(e) { console.warn('Failed to load link favorites', e); }
     
-    // Footer stats will be updated by footer.js automatically
-    
-    // Initialize footer stats with correct data
+    // Initialize footer stats with correct data FIRST
     if (typeof window.updateFooterStats === 'function') {
       // Set projects count from faucets data
       window.projects = faucets.filter(f => !f.deleted).map(f => ({
@@ -2944,10 +2942,9 @@ async function loadFavorites() {
         name: f.name,
         deleted: false
       }));
-      
-      // Trigger footer stats update
-      window.updateFooterStats();
     }
+    
+    // Footer stats will be updated by footer.js automatically
   } else {
     try {
       const raw = localStorage.getItem('al_faucet_favorites') || '[]';
