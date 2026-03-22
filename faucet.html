@@ -4122,22 +4122,36 @@ function updateEditFieldsVisibility() {
   const suggestionRussianFields = ['suggest_desc', 'suggest_reward', 'suggest_cooldown'];
   
   if (isAdmin) {
-    // Администратор видит все поля
+    // Администратор видит все поля - компактный layout
     [...englishFields, ...suggestionEnglishFields].forEach(fieldId => {
       const element = document.getElementById(fieldId);
       if (element) element.style.display = 'block';
     });
     
-    // Для админа меняем grid на 1fr 1fr для всех полей
-    const grids = [
-      document.querySelector('#f_reward').parentElement.parentElement,
-      document.querySelector('#f_cooldown').parentElement.parentElement,
-      document.querySelector('#suggest_reward').parentElement.parentElement,
-      document.querySelector('#suggest_cooldown').parentElement.parentElement
-    ];
-    grids.forEach(grid => {
-      if (grid) grid.style.gridTemplateColumns = '1fr 1fr';
-    });
+    // Компактный layout для админа - 2 ряда вместо 4
+    // Ряд 1: Награда + Кулдаун (в одной строке)
+    const rewardRow = document.querySelector('#f_reward').parentElement.parentElement;
+    const cooldownRow = document.querySelector('#f_cooldown').parentElement.parentElement;
+    const suggestRewardRow = document.querySelector('#suggest_reward').parentElement.parentElement;
+    const suggestCooldownRow = document.querySelector('#suggest_cooldown').parentElement.parentElement;
+    
+    // Создаем компактные ряды для админа
+    if (rewardRow) {
+      rewardRow.style.gridTemplateColumns = '1fr 1fr';
+      rewardRow.style.gap = '12px';
+    }
+    if (cooldownRow) {
+      cooldownRow.style.gridTemplateColumns = '1fr 1fr';
+      cooldownRow.style.gap = '12px';
+    }
+    if (suggestRewardRow) {
+      suggestRewardRow.style.gridTemplateColumns = '1fr 1fr';
+      suggestRewardRow.style.gap = '12px';
+    }
+    if (suggestCooldownRow) {
+      suggestCooldownRow.style.gridTemplateColumns = '1fr 1fr';
+      suggestCooldownRow.style.gap = '12px';
+    }
     
   } else {
     // Обычный пользователь - РАЗДЕЛЬНАЯ ЛОГИКА ДЛЯ ФОРМ
