@@ -2743,13 +2743,14 @@ window.updateUserLanguage = async function(language) {
 
 // Функция показа уведомлений (из index.html)
 window.showNotifications = function() {
-  if (!currentUser) { 
-    toast('Войдите в аккаунт'); 
-    return; 
-  }
-  
-  // Всегда используем нашу функцию, игнорируя footer.js
-  console.log('Using custom showNotifications function');
+  try {
+    if (!currentUser) { 
+      toast('Войдите в аккаунт'); 
+      return; 
+    }
+    
+    // Всегда используем нашу функцию, игнорируя footer.js
+    console.log('Using custom showNotifications function');
   
   // Создаем модальное окно поверх всего с высоким z-index
   const modal = document.createElement('div');
@@ -2832,6 +2833,10 @@ window.showNotifications = function() {
     }
   }
   document.addEventListener('keydown', onKeyDown);
+  } catch(e) {
+    console.error('Error in showNotifications:', e);
+    toast('Ошибка при открытии уведомлений');
+  }
 };
 
 // Отметить уведомление как прочитанное
