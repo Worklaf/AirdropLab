@@ -1420,7 +1420,10 @@ function initFeedbacksListener(uid) {
 // Инициализация при загрузке
 if (typeof currentUser !== 'undefined' && currentUser) {
   console.log('🔧 Initializing feedbacks listener for user:', currentUser.uid);
-  initFeedbacksListener(currentUser.uid);
+  // Ждем полной загрузки Firebase
+  setTimeout(() => {
+    initFeedbacksListener(currentUser.uid);
+  }, 1000);
 }
 
 // Также принудительно инициализируем при изменении currentUser
@@ -1432,7 +1435,10 @@ if (typeof window !== 'undefined') {
       window._currentUser = value;
       if (value && typeof initFeedbacksListener === 'function') {
         console.log('🔧 User changed, initializing feedbacks listener');
-        initFeedbacksListener(value.uid);
+        // Ждем полной загрузки Firebase
+        setTimeout(() => {
+          initFeedbacksListener(value.uid);
+        }, 1000);
       }
     }
   });
