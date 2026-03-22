@@ -12,10 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="languages.js"></script>
-    <script src="/languages.js"></script>
-    <script src="/header.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script src="/assets/reagents.js"></script>
     <style>
         .resource-item {
     /* ... существующие стили ... */
@@ -399,105 +396,8 @@ body.edit-mode [data-section-id="nfts"] .resource-header:active {
     background: var(--accent) !important;
 }
     </style>
-    <!-- Fix for modal display issues -->
-    <style>
-    /* Максимально специфичные стили для модальных окон */
-    html body div#feedbackListModal.modal,
-    html body div#feedbackModal.modal,
-    body div.modal,
-    div.modal {
-        display: none !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        z-index: 99999 !important;
-        background: rgba(0,0,0,0.8) !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 20px !important;
-        box-sizing: border-box !important;
-    }
-    
-    html body div#feedbackListModal.modal.active,
-    html body div#feedbackModal.modal.active,
-    body div.modal.active,
-    div.modal.active {
-        display: flex !important;
-    }
-    
-    html body div#feedbackListModal.modal .modal-content,
-    html body div#feedbackModal.modal .modal-content,
-    body div.modal .modal-content,
-    div.modal .modal-content {
-        background: #1e293b !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        border-radius: 16px !important;
-        padding: 24px !important;
-        max-width: 90vw !important;
-        max-height: 90vh !important;
-        overflow-y: auto !important;
-        position: relative !important;
-        box-sizing: border-box !important;
-    }
-    
-    html body div#feedbackListModal.modal .modal-lg,
-    html body div#feedbackModal.modal .modal-lg,
-    body div.modal .modal-lg,
-    div.modal .modal-lg {
-        max-width: 800px !important;
-        width: 100% !important;
-    }
-    
-    html body div#feedbackListModal.modal .modal-header,
-    html body div#feedbackModal.modal .modal-header,
-    body div.modal .modal-header,
-    div.modal .modal-header {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        margin-bottom: 20px !important;
-    }
-    
-    html body div#feedbackListModal.modal .modal-header h2,
-    html body div#feedbackModal.modal .modal-header h2,
-    body div.modal .modal-header h2,
-    div.modal .modal-header h2 {
-        margin: 0 !important;
-        color: #f1f5f9 !important;
-    }
-    
-    html body div#feedbackListModal.modal .modal-body,
-    html body div#feedbackModal.modal .modal-body,
-    body div.modal .modal-body,
-    div.modal .modal-body {
-        color: #e2e8f0 !important;
-    }
-    
-    /* Force button visibility */
-    html body div#feedbackListModal.modal button,
-    html body div#feedbackModal.modal button,
-    body div.modal button,
-    div.modal button {
-        cursor: pointer !important;
-    }
-    
-    /* Fix for any overlay issues */
-    html body div#feedbackListModal.modal *,
-    html body div#feedbackModal.modal *,
-    body div.modal *,
-    div.modal * {
-        box-sizing: border-box !important;
-    }
-    </style>
 </head>
 <body>
-<!-- Контейнер для header.js -->
-<div id="site-header"></div>
-
 <div class="edit-mode-banner" id="arcEditModeBanner"><i class="fas fa-pen"></i> <span data-i18n="edit_mode_banner">Edit Mode</span></div>
 
 <!-- LIGHTBOX -->
@@ -3411,7 +3311,7 @@ function applyArcNFTSortOrder() {
     console.log('✅ Arc NFT grid reordered to:', arcNftCollectionsOrder.slice(0, 3), '...');
 }
 </script>
- <script src="/footer.js"></script>
+
 <!-- LOGIN MODAL -->
 <div id="arcLoginModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:10001;align-items:center;justify-content:center;padding:20px;">
   <div style="background:#1e2538;border:1px solid rgba(255,255,255,.1);border-radius:16px;max-width:400px;width:100%;padding:24px;position:relative;">
