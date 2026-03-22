@@ -3566,7 +3566,21 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
             
             setTimeout(() => {
               console.log('🔍 DEBUG: Calling updateFooterStats with real projects');
+              console.log('🔍 DEBUG: Final projects count:', window.projects.length);
               window.updateFooterStats();
+              
+              // Дополнительная проверка через 2 секунды
+              setTimeout(() => {
+                console.log('🔍 DEBUG: Double-check footer stats');
+                console.log('🔍 DEBUG: Projects in window:', window.projects.length);
+                const projectEl = document.getElementById('footerProjectCount');
+                const userEl = document.getElementById('footerUserCount');
+                console.log('🔍 DEBUG: Footer elements:', {
+                  projectCount: projectEl?.textContent,
+                  userCount: userEl?.textContent
+                });
+                window.updateFooterStats();
+              }, 2000);
             }, 500);
           }).catch(err => {
             console.error('🔍 DEBUG: Failed to load real projects:', err);
