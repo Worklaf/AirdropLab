@@ -1643,6 +1643,17 @@ function loadFeedbackChat(feedbackId) {
       const isCurrentUserSender = msg.senderId && msg.senderId === window.currentUser.uid;
       const bubbleSide = isCurrentUserSender ? 'admin' : 'user';
       
+      // Отладка
+      console.log('🔍 Message debug:', {
+        sender: msg.sender,
+        senderId: msg.senderId,
+        currentUserId: window.currentUser?.uid,
+        isAdmin: isAdmin,
+        isCurrentUserSender: isCurrentUserSender,
+        bubbleSide: bubbleSide,
+        senderName: msg.sender === 'admin' ? 'Admin' : (d.userName || 'User')
+      });
+      
       // Определяем имя отправителя
       let senderName;
       if (isCurrentUserSender) {
