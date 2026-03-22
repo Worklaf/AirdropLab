@@ -3830,18 +3830,18 @@ async function autoTranslateDescription(sourceId, targetId, sourceLang) {
           .replace(/платный/g, 'paid')
           .replace(/награда/g, 'reward')
           .replace(/кулдаун/g, 'cooldown')
-          // Перевод для reward/cooldown
-          .replace(/\/день/g, '/day')
-          .replace(/ч/g, 'h')
-          .replace(/час/g, 'h')
-          .replace(/часа/g, 'h')
-          .replace(/часов/g, 'h')
-          .replace(/минут/g, 'min')
-          .replace(/минуты/g, 'min')
-          .replace(/мин/g, 'min')
-          .replace(/секунд/g, 'sec')
-          .replace(/секунды/g, 'sec')
-          .replace(/сек/g, 'sec')
+          // Точный перевод для reward/cooldown - короткий формат
+          .replace(/(\d+)\s*ч/g, '$1h')           // "24ч" → "24h"
+          .replace(/(\d+)\s*час/g, '$1h')        // "24 час" → "24h"  
+          .replace(/(\d+)\s*часа/g, '$1h')       // "2 часа" → "2h"
+          .replace(/(\d+)\s*часов/g, '$1h')      // "24 часов" → "24h"
+          .replace(/\/день/g, '/day')              // "/день" → "/day"
+          .replace(/(\d+)\s*минут/g, '$1min')    // "30 минут" → "30min"
+          .replace(/(\d+)\s*мин/g, '$1min')       // "30 мин" → "30min"
+          .replace(/(\d+)\s*секунд/g, '$1sec')   // "30 секунд" → "30sec"
+          .replace(/(\d+)\s*сек/g, '$1sec')        // "30 сек" → "30sec"
+          // Токены - убираем $ для криптовалют
+          .replace(/\$(ETH|BTC|SOL|ADA|DOT|AVAX|FTM|ROSE|CELO|FLOW|GNO|APT|MNT|LINK|USDT|USDC|DAI|BUSD|UST|LUNA|ATOM|NEAR|ALGO|ONE|HBAR|ICP|SUI|ARB|OP|BASE|POLYGON|MATIC|BNB|BSC|TRON|TRX|TSLA|AMZN|PLTR|NTFX|AMD)/g, '$1')
           .replace(/без лимита/g, 'no limit')
           .replace(/неограничено/g, 'unlimited')
           .replace(/лимит/g, 'limit');
@@ -4048,18 +4048,18 @@ async function autoTranslateDescription(sourceId, targetId, sourceLang) {
           .replace(/платный/g, 'paid')
           .replace(/награда/g, 'reward')
           .replace(/кулдаун/g, 'cooldown')
-          // Перевод для reward/cooldown
-          .replace(/\/день/g, '/day')
-          .replace(/ч/g, 'h')
-          .replace(/час/g, 'h')
-          .replace(/часа/g, 'h')
-          .replace(/часов/g, 'h')
-          .replace(/минут/g, 'min')
-          .replace(/минуты/g, 'min')
-          .replace(/мин/g, 'min')
-          .replace(/секунд/g, 'sec')
-          .replace(/секунды/g, 'sec')
-          .replace(/сек/g, 'sec')
+          // Точный перевод для reward/cooldown - короткий формат
+          .replace(/(\d+)\s*ч/g, '$1h')           // "24ч" → "24h"
+          .replace(/(\d+)\s*час/g, '$1h')        // "24 час" → "24h"  
+          .replace(/(\d+)\s*часа/g, '$1h')       // "2 часа" → "2h"
+          .replace(/(\d+)\s*часов/g, '$1h')      // "24 часов" → "24h"
+          .replace(/\/день/g, '/day')              // "/день" → "/day"
+          .replace(/(\d+)\s*минут/g, '$1min')    // "30 минут" → "30min"
+          .replace(/(\d+)\s*мин/g, '$1min')       // "30 мин" → "30min"
+          .replace(/(\d+)\s*секунд/g, '$1sec')   // "30 секунд" → "30sec"
+          .replace(/(\d+)\s*сек/g, '$1sec')        // "30 сек" → "30sec"
+          // Токены - убираем $ для криптовалют
+          .replace(/\$(ETH|BTC|SOL|ADA|DOT|AVAX|FTM|ROSE|CELO|FLOW|GNO|APT|MNT|LINK|USDT|USDC|DAI|BUSD|UST|LUNA|ATOM|NEAR|ALGO|ONE|HBAR|ICP|SUI|ARB|OP|BASE|POLYGON|MATIC|BNB|BSC|TRON|TRX|TSLA|AMZN|PLTR|NTFX|AMD)/g, '$1')
           .replace(/без лимита/g, 'no limit')
           .replace(/неограничено/g, 'unlimited')
           .replace(/лимит/g, 'limit');
