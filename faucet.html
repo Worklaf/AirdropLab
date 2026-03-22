@@ -2457,7 +2457,52 @@ async function saveSuggestion() {
 
 window.saveSuggestion = saveSuggestion;
 
-function editFaucet(id) { openAddModal(id); }
+function editFaucet(id) { 
+  // Определяем тип операции и заголовок
+  let operationType = 'faucet';
+  let titleText = isEn ? 'Edit Faucet' : 'Редактировать кран';
+  
+  const f = faucets.find(function(x){ return x.id === id; });
+  if (f) {
+    // Проверяем, это предложение пользователя
+    if (f.status === 'pending' && f.submittedBy === currentUser?.uid) {
+      operationType = 'suggestion';
+      titleText = isEn ? 'Edit Suggestion' : 'Редактировать предложение';
+    }
+    
+    // Загружаем данные в форму
+    document.getElementById('f_name').value = f.name || '';
+    document.getElementById('f_token').value = f.token || '';
+    document.getElementById('f_desc').value = f.desc || '';
+    document.getElementById('f_desc_en').value = f.desc_en || ''; // Загружаем английское описание
+    document.getElementById('f_links').value = (f.links||[]).join('\n');
+    document.getElementById('f_logo').value = f.logoUrl || '';
+    document.getElementById('f_type').value = f.type || 'free';
+    document.getElementById('f_net').value = f.net || 'testnet';
+    document.getElementById('f_reward').value = f.reward || '';
+    document.getElementById('f_cooldown').value = f.cooldown || '';
+    document.getElementById('f_tags').value = (f.tags||[]).join(', ');
+    
+    // Обновляем видимость полей в зависимости от типа операции
+    updateEditFieldsVisibility();
+    
+    // Изменяем кнопку сохранения в зависимости от типа операции
+    const saveBtn = document.querySelector('#addFaucetModal button[onclick*="save"]');
+    if (saveBtn) {
+      if (operationType === 'suggestion') {
+        saveBtn.setAttribute('onclick', 'saveSuggestion()');
+        saveBtn.innerHTML = '<i class="fas fa-save" style="margin-right:6px;"></i><span data-translate="save">Сохранить</span>';
+      } else {
+        saveBtn.setAttribute('onclick', 'saveFaucet()');
+        saveBtn.innerHTML = '<i class="fas fa-save" style="margin-right:6px;"></i><span data-translate="save">Сохранить</span>';
+      }
+    }
+  }
+  
+  document.getElementById('modalTitle').textContent = titleText;
+  document.getElementById('editId').value = id;
+  document.getElementById('addFaucetModal').classList.add('open');
+}
 window.editFaucet = editFaucet;
 
 async function deleteFaucet(id) {
