@@ -4112,6 +4112,9 @@ function updateEditFieldsVisibility() {
   const isEn = (window.currentLang === 'en');
   const isAdmin = window.currentUser && window.isAdmin;
   
+  // Проверяем, это редактирование предложения
+  const isSuggestionEdit = window.operationType === 'suggestion';
+  
   // Английские поля для формы добавления кранов
   const englishFields = ['f_desc_en_container', 'f_reward_en_container', 'f_cooldown_en_container'];
   
@@ -4167,22 +4170,40 @@ function updateEditFieldsVisibility() {
     });
     
     // Форма предложений:
-    // Русский язык: только русские поля
-    // Английский язык: только английские поля (русские скрываем)
-    suggestionEnglishFields.forEach(fieldId => {
-      const element = document.getElementById(fieldId);
-      if (element) {
-        element.style.display = isEn ? 'block' : 'none';
-      }
-    });
-    
-    // Скрываем русские поля в предложениях при английском языке
-    suggestionRussianFields.forEach(fieldId => {
-      const element = document.getElementById(fieldId);
-      if (element) {
-        element.style.display = isEn ? 'none' : 'block';
-      }
-    });
+    // Если редактирование предложения - скрываем поля не используемого языка
+    if (isSuggestionEdit) {
+      // Русские поля: только при русском языке
+      suggestionRussianFields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+          element.style.display = isEn ? 'none' : 'block';
+        }
+      });
+      
+      // Английские поля: только при английском языке
+      suggestionEnglishFields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+          element.style.display = isEn ? 'block' : 'none';
+        }
+      });
+    } else {
+      // Обычное создание предложения - только поля текущего языка
+      suggestionEnglishFields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+          element.style.display = isEn ? 'block' : 'none';
+        }
+      });
+      
+      // Скрываем русские поля в предложениях при английском языке
+      suggestionRussianFields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+          element.style.display = isEn ? 'none' : 'block';
+        }
+      });
+    }
     
     // Grid для формы добавления кранов
     const faucetGrids = [
