@@ -1166,7 +1166,7 @@ window.closeFeedbackListModal = function() {
 };
 
 // Создаем модальное окно для сообщений (доступно на всех страницах)
-(function() {
+function createFeedbackModal() {
   console.log('🔧 Creating feedback modal...');
   const modalHTML = `
     <div id="feedbackListModal" class="modal">
@@ -1204,7 +1204,14 @@ window.closeFeedbackListModal = function() {
   } else {
     console.log('🔧 Feedback modal already exists');
   }
-})();
+}
+
+// Создаем модальное окно после загрузки DOM
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', createFeedbackModal);
+} else {
+  createFeedbackModal();
+}
 
 // Escape закрывает модал
 document.addEventListener('keydown', function(e) {
