@@ -335,11 +335,21 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
           <div class="ae-label" data-translate="faucets_field_reward">Награда (необязательно)</div>
-          <input class="ae-input" id="f_reward" data-translate="faucets_ph_reward" placeholder="0.5 ETH/день">
+          <input class="ae-input" id="f_reward" data-translate="faucets_ph_reward" placeholder="0.5 ETH/день" oninput="autoTranslateDescription('f_reward', 'f_reward_en', 'ru')">
         </div>
         <div>
+          <div class="ae-label">English Reward</div>
+          <input class="ae-input" id="f_reward_en" placeholder="0.5 ETH/day" oninput="autoTranslateDescription('f_reward_en', 'f_reward', 'en')">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
           <div class="ae-label" data-translate="faucets_field_cooldown">Кулдаун</div>
-          <input class="ae-input" id="f_cooldown" data-translate="faucets_ph_cooldown" placeholder="24ч">
+          <input class="ae-input" id="f_cooldown" data-translate="faucets_ph_cooldown" placeholder="24ч" oninput="autoTranslateDescription('f_cooldown', 'f_cooldown_en', 'ru')">
+        </div>
+        <div>
+          <div class="ae-label">English Cooldown</div>
+          <input class="ae-input" id="f_cooldown_en" placeholder="24h" oninput="autoTranslateDescription('f_cooldown_en', 'f_cooldown', 'en')">
         </div>
       </div>
       <div>
@@ -410,11 +420,21 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
           <div class="ae-label" data-translate="faucets_field_reward">Награда (необязательно)</div>
-          <input class="ae-input" id="suggest_reward" data-translate="faucets_ph_reward" placeholder="0.5 ETH/день">
+          <input class="ae-input" id="suggest_reward" data-translate="faucets_ph_reward" placeholder="0.5 ETH/день" oninput="autoTranslateDescription('suggest_reward', 'suggest_reward_en', 'ru')">
         </div>
         <div>
+          <div class="ae-label">English Reward</div>
+          <input class="ae-input" id="suggest_reward_en" placeholder="0.5 ETH/day" oninput="autoTranslateDescription('suggest_reward_en', 'suggest_reward', 'en')">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
           <div class="ae-label" data-translate="faucets_field_cooldown">Кулдаун</div>
-          <input class="ae-input" id="suggest_cooldown" data-translate="faucets_ph_cooldown" placeholder="24ч">
+          <input class="ae-input" id="suggest_cooldown" data-translate="faucets_ph_cooldown" placeholder="24ч" oninput="autoTranslateDescription('suggest_cooldown', 'suggest_cooldown_en', 'ru')">
+        </div>
+        <div>
+          <div class="ae-label">English Cooldown</div>
+          <input class="ae-input" id="suggest_cooldown_en" placeholder="24h" oninput="autoTranslateDescription('suggest_cooldown_en', 'suggest_cooldown', 'en')">
         </div>
       </div>
       <div>
@@ -973,9 +993,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import {
   getAuth,
   onAuthStateChanged,
-  GoogleAuthProvider,
-  TwitterAuthProvider,
-  signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut
@@ -983,18 +1000,15 @@ import {
 import {
   getFirestore,
   initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
   collection,
   doc,
-  setDoc,
-  getDoc,
   getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
   query,
   where,
+  limit,
   orderBy,
   serverTimestamp,
   increment,
@@ -1002,15 +1016,42 @@ import {
   limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-let db;
-try {
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-  });
-} catch (e) {
-  db = getFirestore(app);
+// Проверяем доступность Firebase
+if (!firebaseConfig || firebaseConfig.apiKey === "test" || firebaseConfig.apiKey === "disabled") {
+  console.log('⚠️ Firebase не настроен, используем локальный режим');
+  window.auth = null;
+  window.db = null;
+  window.currentUser = null;
+  window.loadFaucetsFromFirestore = async function() {
+    console.log('📦 Firebase недоступен, используем DEFAULT_FAUCETS');
+    return [];
+  };
+} else {
+  console.log('✅ Firebase настроен, подключаемся...');
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  let db;
+  try {
+    db = initializeFirestore(app, {
+      cacheSizeBytes: 10000000 // 10MB
+    });
+    console.log('✅ Firestore initialized with persistent cache');
+  } catch (e) {
+    console.warn('⚠️ Firestore initialization failed:', e);
+    db = getFirestore(app);
+  }
+
+  // Глобальные переменные Firebase
+  window.auth = auth;
+  window.db = db;
+  window.currentUser = null;
+
+  // Provide globals for other modules
+  window.__firestoreExports = {
+    collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+    query, where, orderBy, serverTimestamp, increment, runTransaction
+  };
+  window.__authExports = { onAuthStateChanged, signOut };
 }
 
 // Provide globals for other modules (reagents.js expects these)
@@ -2907,6 +2948,7 @@ async function loadFaucetsFromFirestore() {
         type: f.type || 'free',
         net: f.net || 'mainnet',
         desc: f.desc || '',
+        desc_en: f.desc_en || '', // Добавляем английское описание
         links: f.links || [],
         logoUrl: f.logoUrl || '',
         reward: f.reward || '',
@@ -2927,6 +2969,7 @@ async function loadFaucetsFromFirestore() {
       type: f.type || 'free',
       net: f.net || 'mainnet',
       desc: f.desc || '',
+      desc_en: f.desc_en || '', // Добавляем английское описание
       links: f.links || [],
       logoUrl: f.logoUrl || '',
       reward: f.reward || '',
@@ -3672,13 +3715,22 @@ async function autoTranslateDescription(sourceId, targetId, sourceLang) {
           .replace(/Кран/g, 'Faucet')
           .replace(/через официальный/g, 'through official')
           .replace(/dev-кошелёк/g, 'dev wallet')
-          .replace(/dev-кошелька/g, 'dev wallet')
           .replace(/тестнет/g, 'testnet')
           .replace(/мейннет/g, 'mainnet')
           .replace(/бесплатный/g, 'free')
           .replace(/платный/g, 'paid')
           .replace(/награда/g, 'reward')
-          .replace(/кулдаун/g, 'cooldown');
+          .replace(/кулдаун/g, 'cooldown')
+          // Перевод для reward/cooldown
+          .replace(/\/день/g, '/day')
+          .replace(/ч/g, 'h')
+          .replace(/час/g, 'hour')
+          .replace(/часов/g, 'hours')
+          .replace(/минут/g, 'minutes')
+          .replace(/секунд/g, 'seconds')
+          .replace(/без лимита/g, 'no limit')
+          .replace(/неограничено/g, 'unlimited')
+          .replace(/лимит/g, 'limit');
       } else if (sourceLang === 'en' && targetLang === 'ru') {
         fallbackTranslation = sourceText
           .replace(/Sharded blockchain/g, 'Шардированный блокчейн')
@@ -3691,7 +3743,17 @@ async function autoTranslateDescription(sourceId, targetId, sourceLang) {
           .replace(/free/g, 'бесплатный')
           .replace(/paid/g, 'платный')
           .replace(/reward/g, 'награда')
-          .replace(/cooldown/g, 'кулдаун');
+          .replace(/cooldown/g, 'кулдаун')
+          // Перевод для reward/cooldown
+          .replace(/\/day/g, '/день')
+          .replace(/h/g, 'ч')
+          .replace(/hour/g, 'час')
+          .replace(/hours/g, 'часов')
+          .replace(/minutes/g, 'минут')
+          .replace(/seconds/g, 'секунд')
+          .replace(/no limit/g, 'без лимита')
+          .replace(/unlimited/g, 'неограничено')
+          .replace(/limit/g, 'лимит');
       }
       
       targetField.value = fallbackTranslation;
