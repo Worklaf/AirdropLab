@@ -1382,8 +1382,9 @@ function initFeedbacksListener(uid) {
     console.log('🔧 Creating Firestore query...');
     console.log('🔧 isAdmin:', isAdmin);
     
-    // ВСЕГДА загружаем сообщения пользователя
-    q = query(collection(db, "feedbacks"), where("userId", "==", uid));
+    // Админ видит ВСЕ сообщения, пользователь только СВОИ
+    if (isAdmin) q = query(collection(db, "feedbacks"));
+    else q = query(collection(db, "feedbacks"), where("userId", "==", uid));
     
     console.log('🔧 Query created, subscribing...');
     adminFeedbacksUnsubscribe = onSnapshot(q, (snapshot) => {
@@ -1394,8 +1395,8 @@ function initFeedbacksListener(uid) {
       snapshot.forEach((doc) => {
         const data = doc.data();
         console.log('🔧 Processing feedback:', data.id);
-        // Считаем непрочитанные для пользователя
-        if (!data.userRead) unreadCount++;
+        // Для админа: !data.read, для пользователя: !data.userRead
+        if (isAdmin ? !data.read : !data.userRead) unreadCount++;
         adminFeedbacks.push(data);
       });
       
