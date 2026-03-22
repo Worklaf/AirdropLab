@@ -2879,8 +2879,19 @@ function updateHeaderAuthUI(user) {
   const out = document.getElementById('loggedOutView');
   const inn = document.getElementById('loggedInView');
   if (out && inn) {
-    if (user) { out.classList.add('hidden'); inn.classList.remove('hidden'); }
-    else { out.classList.remove('hidden'); inn.classList.add('hidden'); }
+    if (user) {
+      out.style.display = 'none';
+      inn.style.display = 'flex';
+      // Показываем кнопку сообщений при входе
+      const feedbackPanel = document.getElementById('generalFeedbackPanel');
+      if (feedbackPanel) feedbackPanel.classList.remove('hidden');
+    } else {
+      out.style.display = 'flex';
+      inn.style.display = 'none';
+      // Скрываем кнопку сообщений при выходе
+      const feedbackPanel = document.getElementById('generalFeedbackPanel');
+      if (feedbackPanel) feedbackPanel.classList.add('hidden');
+    }
   }
   const ava = document.getElementById('userAvatar');
   const name = document.getElementById('userName');
