@@ -1274,8 +1274,8 @@ function renderCard(f) {
   }).join('');
 
   var chips = '';
-  if (f.reward)   chips += '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(0,0,0,0.3);color:#cbd5e1;margin-right:4px;"><i class="fas fa-coins" style="color:#fbbf24;font-size:9px;"></i>'+f.reward+'</span>';
-  if (f.cooldown) chips += '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;background:rgba(0,0,0,0.2);color:#94a3b8;"><i class="fas fa-clock" style="font-size:9px;"></i>'+f.cooldown+'</span>';
+  if (f.reward)   chips += '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(0,0,0,0.3);color:#cbd5e1;margin-right:4px;"><i class="fas fa-coins" style="color:#fbbf24;font-size:9px;"></i>'+safeText(isEn ? (f.reward_en || f.reward) : f.reward)+'</span>';
+  if (f.cooldown) chips += '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;background:rgba(0,0,0,0.2);color:#94a3b8;"><i class="fas fa-clock" style="font-size:9px;"></i>'+safeText(isEn ? (f.cooldown_en || f.cooldown) : f.cooldown)+'</span>';
 
   const ratingAvg = Number(f.ratingAvg || 0);
   const ratingCount = Number(f.ratingCount || 0);
@@ -1354,7 +1354,7 @@ function renderCard(f) {
     + '<div class="rating-circle '+ratingClass(ratingAvg)+'" title="'+(isEn?'Rate (0-10)':'Оценить (0-10)')+'" onclick="window.openRating(\''+safeText(f.id)+'\')">'+ratingText+'</div>'
     + '</div>'
     + '</div>'
-    + (f.desc ? '<p style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;margin-top:6px;">'+safeText(f.desc)+'</p>' : '')
+    + (f.desc ? '<p style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;margin-top:6px;">'+safeText(isEn ? (f.desc_en || f.desc) : f.desc)+'</p>' : '')
     + userInfoHtml // Добавляем информацию о пользователе
     + (chips ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">'+chips+'</div>' : '')
     + '<div class="faucet-links-list">'+linksHtml+'</div>'
@@ -3833,10 +3833,15 @@ async function autoTranslateDescription(sourceId, targetId, sourceLang) {
           // Перевод для reward/cooldown
           .replace(/\/день/g, '/day')
           .replace(/ч/g, 'h')
-          .replace(/час/g, 'hour')
-          .replace(/часов/g, 'hours')
-          .replace(/минут/g, 'minutes')
-          .replace(/секунд/g, 'seconds')
+          .replace(/час/g, 'h')
+          .replace(/часа/g, 'h')
+          .replace(/часов/g, 'h')
+          .replace(/минут/g, 'min')
+          .replace(/минуты/g, 'min')
+          .replace(/мин/g, 'min')
+          .replace(/секунд/g, 'sec')
+          .replace(/секунды/g, 'sec')
+          .replace(/сек/g, 'sec')
           .replace(/без лимита/g, 'no limit')
           .replace(/неограничено/g, 'unlimited')
           .replace(/лимит/g, 'limit');
@@ -4046,10 +4051,15 @@ async function autoTranslateDescription(sourceId, targetId, sourceLang) {
           // Перевод для reward/cooldown
           .replace(/\/день/g, '/day')
           .replace(/ч/g, 'h')
-          .replace(/час/g, 'hour')
-          .replace(/часов/g, 'hours')
-          .replace(/минут/g, 'minutes')
-          .replace(/секунд/g, 'seconds')
+          .replace(/час/g, 'h')
+          .replace(/часа/g, 'h')
+          .replace(/часов/g, 'h')
+          .replace(/минут/g, 'min')
+          .replace(/минуты/g, 'min')
+          .replace(/мин/g, 'min')
+          .replace(/секунд/g, 'sec')
+          .replace(/секунды/g, 'sec')
+          .replace(/сек/g, 'sec')
           .replace(/без лимита/g, 'no limit')
           .replace(/неограничено/g, 'unlimited')
           .replace(/лимит/g, 'limit');
