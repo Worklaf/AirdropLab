@@ -1671,13 +1671,13 @@ function loadFeedbackChat(feedbackId) {
         // Свои сообщения всегда показываем как "Вы"
         senderName = (typeof t === 'function') ? t('you') : 'Вы';
       } else {
-        // Чужие сообщения
+        // Чужие сообщения - строго по типу отправителя
         if (msg.sender === 'admin') {
-          // Сообщения других админов показываем как "Support" или "Admin"
+          // Сообщения админов всегда как "Support" или "Admin"
           const isSupport = d.projectId === '__support__' || d.type === 'support';
           senderName = isSupport ? 'Support' : 'Admin';
         } else {
-          // Сообщения пользователей показываем с их именем
+          // Сообщения пользователей всегда с их именем
           senderName = d.userName || ((typeof t === 'function') ? t('user') : 'Пользователь');
         }
       }
@@ -1696,7 +1696,7 @@ function loadFeedbackChat(feedbackId) {
       } else {
         // Чужие сообщения - строго по типу отправителя
         if (msg.sender === 'admin') {
-          // Сообщения админов всегда с наушниками, независимо от кто смотрит
+          // Сообщения админов всегда с наушниками
           avatar = `<div class="chat-avatar"><i class="fas fa-headset"></i></div>`;
         } else {
           // Сообщения пользователей всегда с их аватаром
