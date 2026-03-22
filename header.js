@@ -1121,7 +1121,12 @@ window.closeAlNav = function(el) {
 
 // Функции для работы с сообщениями (доступны на всех страницах)
 window.openFeedbackListModal = function() {
+  console.log('🔧 openFeedbackListModal called');
+  console.log('🔧 currentUser:', currentUser);
+  console.log('🔧 modal exists:', !!document.getElementById('feedbackListModal'));
+  
   if (!currentUser) { 
+    console.log('🔧 No user - showing login');
     if (typeof showToast === 'function') {
       showToast('Войдите');
     } else if (typeof toast === 'function') {
@@ -1162,6 +1167,7 @@ window.closeFeedbackListModal = function() {
 
 // Создаем модальное окно для сообщений (доступно на всех страницах)
 (function() {
+  console.log('🔧 Creating feedback modal...');
   const modalHTML = `
     <div id="feedbackListModal" class="modal">
       <div class="modal-content modal-large">
@@ -1192,7 +1198,11 @@ window.closeFeedbackListModal = function() {
   
   // Добавляем модальное окно в body если его еще нет
   if (!document.getElementById('feedbackListModal')) {
+    console.log('🔧 Adding feedback modal to DOM...');
     document.insertAdjacentHTML('beforeend', modalHTML);
+    console.log('🔧 Feedback modal added successfully');
+  } else {
+    console.log('🔧 Feedback modal already exists');
   }
 })();
 
