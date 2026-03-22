@@ -1466,7 +1466,7 @@ function createFeedbackChatModal() {
             <label class="block text-sm font-medium text-slate-300 mb-2" data-translate="your_answer">Ваш ответ</label>
             <div class="flex gap-2">
               <input type="text" id="feedbackUserReplyText" placeholder="Напишите ответ..." data-translate="reply_placeholder" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white">
-              <button id="feedbackReplySendBtn" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-bold"><i class="fas fa-paper-plane"></i></button>
+              <button onclick="sendUserFeedbackReply()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-bold"><i class="fas fa-paper-plane"></i></button>
               <button id="adminChatDeleteBtn" class="hidden text-red-400 hover:text-red-300" title="Удалить"><i class="fas fa-trash text-xl"></i></button>
             </div>
           </div>
@@ -1670,22 +1670,14 @@ function loadFeedbackChat(feedbackId) {
     }
 
     const inp = document.getElementById('feedbackUserReplyText');
-    const replyBtn = document.getElementById('feedbackReplySendBtn');
     if (inp) {
       inp.value = '';
       inp.placeholder = (typeof t === 'function') ? t('reply_placeholder') : 'Напишите ответ...';
       inp.onkeypress = function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
-          if (isAdmin) sendAdminReply(feedbackId);
+          sendUserFeedbackReply();
         }
-      };
-    }
-    if (replyBtn) {
-      replyBtn.setAttribute('data-feedback-id', feedbackId);
-      replyBtn.onclick = function() { 
-        const id = this.getAttribute('data-feedback-id');
-        if (isAdmin) sendAdminReply(id); 
       };
     }
   });
@@ -1848,6 +1840,30 @@ window.sendAdminReply = async function(feedbackId) {
   } catch (e) { 
     console.error(e); 
     if (typeof showToast === 'function') showToast('Ошибка: ' + e.message); 
+  }
+};
+
+window.sendUserFeedbackReply = async function() {
+  const fx = window.__firestoreExports;
+  if (!fx || !fx.updateDoc || !fx.doc || !fx.arrayUnion) {
+    console.error('Firestore functions not available');
+    return;
+  }
+  
+  const docId = document.getElementById('feedbackDocId').value;
+  const text = document.getElementById('feedbackUserReplyText').value.trim();
+  if (!text || !docId) return;
+  
+  try {
+    await fx.updateDoc(fx.doc(window.db, "feedbacks", docId), {
+      messages: fx.arrayUnion({ sender: 'user', text, timestamp: new Date() }),
+      userRead: true, read: false
+    });
+    document.getElementById('feedbackUserReplyText').value = '';
+    if (typeof showToast === 'function') showToast('Отправлено!');
+  } catch (e) { 
+    console.error(e); 
+    if (typeof showToast === 'function') showToast('Ошибка'); 
   }
 };
 
