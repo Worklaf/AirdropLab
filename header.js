@@ -1638,9 +1638,11 @@ window.openAdminFeedbackChat = function(feedbackId) {
     projectName = 'Support';
     projectLogo = '';
   } else {
-    const project = projects.find(p => p.id === fb.projectId);
+    const project = window.projects && Array.isArray(window.projects)
+      ? window.projects.find(p => p.id === fb.projectId)
+      : null;
     projectName = project?.name || fb.projectName || fb.projectId || 'Неизвестный проект';
-    projectLogo = project?.image || fb.projectLogo || '';
+    projectLogo = project?.image || project?.logoUrl || fb.projectLogo || '';
   }
 
   // Закрываем список, открываем чат
@@ -1735,7 +1737,13 @@ window.openAdminFeedbackChat = function(feedbackId) {
     window.currentFeedbackUnsub = null;
   }
 
-  const unsub = onSnapshot(doc(db, "feedbacks", feedbackId), (snap) => {
+  const fx = window.__firestoreExports;
+  if (!fx || !fx.onSnapshot || !fx.doc) {
+    console.error('Firestore functions not available');
+    return;
+  }
+
+  const unsub = fx.onSnapshot(fx.doc(window.db, "feedbacks", feedbackId), (snap) => {
     if (!snap.exists()) return;
     const d = snap.data();
 
@@ -1807,21 +1815,54 @@ window.openAdminFeedbackChat = function(feedbackId) {
 };
   
 window.sendAdminReply = async function(feedbackId) {
+  const fx = window.__firestoreExports;
+  if (!fx || !fx.updateDoc || !fx.doc || !fx.arrayUnion) {
+    console.error('Firestore functions not available');
+    return;
+  }
+  
   const inp = document.getElementById('feedbackUserReplyText');
   const text = inp.value.trim();
-  if (!text) return showToast('Введите ответ');
+  if (!text) {
+    if (typeof showToast === 'function') showToast('Введите ответ');
+    return;
+  }
+  
   try {
-    await updateDoc(doc(db, "feedbacks", feedbackId), {
-      messages: arrayUnion({ sender: 'admin', text, timestamp: new Date() }),
+    await fx.updateDoc(fx.doc(window.db, "feedbacks", feedbackId), {
+      messages: fx.arrayUnion({ sender: 'admin', text, timestamp: new Date() }),
       read: true, userRead: false
     });
     inp.value = '';
-    showToast('Ответ отправлен!');
-  } catch (e) { console.error(e); showToast('Ошибка: ' + e.message); }
+    if (typeof showToast === 'function') showToast('Ответ отправлен!');
+  } catch (e) { 
+    console.error(e); 
+    if (typeof showToast === 'function') showToast('Ошибка: ' + e.message); 
+  }
 };
 
-window.markFeedbackRead = async function(id) { try { await updateDoc(doc(db, "feedbacks", id), { read: true }); } catch (e) { console.error(e); } };
-window.deleteAdminFeedback = async function(id) { if (!confirm('Удалить?')) return; try { await deleteDoc(doc(db, "feedbacks", id)); showToast('Удалено'); renderFeedbackList(); } catch (e) { showToast('Ошибка'); } };
+window.markFeedbackRead = async function(id) { 
+  const fx = window.__firestoreExports;
+  if (!fx || !fx.updateDoc || !fx.doc) return;
+  try { 
+    await fx.updateDoc(fx.doc(window.db, "feedbacks", id), { read: true }); 
+  } catch (e) { 
+    console.error(e); 
+  } 
+};
+
+window.deleteAdminFeedback = async function(id) { 
+  const fx = window.__firestoreExports;
+  if (!fx || !fx.deleteDoc || !fx.doc) return;
+  if (!confirm('Удалить?')) return; 
+  try { 
+    await fx.deleteDoc(fx.doc(window.db, "feedbacks", id)); 
+    if (typeof showToast === 'function') showToast('Удалено'); 
+    if (typeof window.renderFeedbackList === 'function') window.renderFeedbackList(); 
+  } catch (e) { 
+    if (typeof showToast === 'function') showToast('Ошибка'); 
+  } 
+};
 
 // Загрузка сообщений для всех страниц
 window.adminFeedbacks = [];
