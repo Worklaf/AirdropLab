@@ -3569,6 +3569,37 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
               console.log('🔍 DEBUG: Final projects count:', window.projects.length);
               window.updateFooterStats();
               
+              // Принудительное обновление элементов футера
+              setTimeout(() => {
+                console.log('🔍 DEBUG: Force updating footer elements');
+                const projectEl = document.getElementById('footerProjectCount');
+                const userEl = document.getElementById('footerUserCount');
+                
+                if (projectEl) {
+                  projectEl.textContent = window.projects.length;
+                  projectEl.classList.add('text-cyan-400');
+                  console.log('🔍 DEBUG: Force updated projects to:', window.projects.length);
+                }
+                
+                if (userEl) {
+                  // Принудительно получаем количество пользователей
+                  if (window.db && window.__firestoreExports) {
+                    window.__firestoreExports.getDocs(
+                      window.__firestoreExports.collection(window.db, 'users')
+                    ).then(usersSnap => {
+                      const realUsersCount = usersSnap.size;
+                      const totalCount = 12321 + realUsersCount;
+                      userEl.textContent = totalCount;
+                      userEl.classList.add('text-emerald-400');
+                      console.log('🔍 DEBUG: Force updated users to:', totalCount);
+                    }).catch(err => {
+                      userEl.textContent = '12321';
+                      console.log('🔍 DEBUG: Using base user count');
+                    });
+                  }
+                }
+              }, 1000);
+              
               // Дополнительная проверка через 2 секунды
               setTimeout(() => {
                 console.log('🔍 DEBUG: Double-check footer stats');
