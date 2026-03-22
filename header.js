@@ -1639,8 +1639,19 @@ function loadFeedbackChat(feedbackId) {
     const html = messages.map(function(msg) {
       const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
       
-      // Определяем сторону сообщения на основе senderId
-      const isCurrentUserSender = msg.senderId && msg.senderId === window.currentUser.uid;
+      // Определяем сторону сообщения на основе senderId или sender для старых сообщений
+      let isCurrentUserSender = false;
+      if (msg.senderId) {
+        // Новые сообщения с senderId
+        isCurrentUserSender = msg.senderId === window.currentUser.uid;
+      } else {
+        // Старые сообщения без senderId - определяем по sender и роли
+        if (isAdmin) {
+          isCurrentUserSender = msg.sender === 'admin';
+        } else {
+          isCurrentUserSender = msg.sender === 'user';
+        }
+      }
       const bubbleSide = isCurrentUserSender ? 'admin' : 'user';
       
       // Отладка
