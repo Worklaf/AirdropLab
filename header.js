@@ -1179,7 +1179,15 @@ window.renderFeedbackList = function() {
   
   const isAdmin = currentUser && currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
   
-  // Показываем простое сообщение для faucet.html
+  // Если есть загруженные сообщения - показываем их
+  if (window.adminFeedbacks && window.adminFeedbacks.length > 0) {
+    console.log('🔧 Using loaded adminFeedbacks');
+    renderFeedbackMessages(window.adminFeedbacks, isAdmin);
+    return;
+  }
+  
+  // Если сообщений нет - показываем заглушку
+  console.log('🔧 No feedbacks loaded, showing placeholder');
   container.innerHTML = `
     <div class="text-center py-12 text-slate-500">
       <div class="bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1189,9 +1197,115 @@ window.renderFeedbackList = function() {
       <p class="text-sm text-slate-400">Все ваши отзывы и предложения будут доступны на главной странице</p>
     </div>
   `;
-  
-  console.log('🔧 Basic renderFeedbackList executed for non-main page');
 };
+
+// Функция для отображения сообщений
+function renderFeedbackMessages(feedbacks, isAdmin) {
+  const container = document.getElementById('feedbacksContainer');
+  if (!container) return;
+  
+  if (feedbacks.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-12 text-slate-500">
+        <div class="bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-inbox text-2xl text-slate-600"></i>
+        </div>
+        <p class="text-lg font-medium mb-2">У вас пока нет сообщений</p>
+        <p class="text-sm text-slate-400">Все ваши отзывы и предложения будут доступны на главной странице</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Словарь тем
+  const categoryLabels = {
+    suggestion: '💡 Предложение',
+    bug: '🐛 Ошибка',
+    question: '❓ Вопрос',
+    other: '💬 Другое',
+    technical: '🔧 Тех. проблема',
+    account: '👤 Аккаунт',
+    partnership: '🤝 Партнёрство'
+  };
+
+  container.innerHTML = feedbacks.map((item) => {
+    const messages = item.messages || [];
+    const lastMsg = messages[messages.length - 1] || { text: '...', sender: 'unknown' };
+    const date = item.createdAt?.toDate() || new Date(item.createdAt || 0);
+    const isUnread = isAdmin ? !item.read : !item.userRead;
+    const isSupport = item.projectId === '__support__' || item.type === 'support';
+    const categoryLabel = item.category ? (categoryLabels[item.category] || item.category) : null;
+
+    let projectName, projectLogo;
+    if (isSupport) {
+      projectName = 'Support';
+      projectLogo = '';
+    } else {
+      projectName = item.projectName || item.projectId || 'Неизвестный проект';
+      projectLogo = item.projectLogo || '';
+    }
+
+    return `
+      <div class="feedback-item p-4 bg-slate-800/50 rounded-lg ${isUnread ? 'unread' : ''}" data-id="${item.id}">
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-comments text-purple-400"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-purple-400">${projectName}</span>
+              <span class="text-xs text-slate-500">${formatTimeAgo(date)}</span>
+            </div>
+            <div class="text-sm text-slate-300">${lastMsg.text}</div>
+            ${isUnread ? '<button onclick="markFeedbackRead(\'' + item.id + '\')" class="text-xs text-blue-400 mt-2">Отметить</button>' : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // Обновляем бейдж
+  updateFeedbackBadge();
+}
+
+// Функция форматирования времени
+function formatTimeAgo(date) {
+  if (!date) return '';
+  const now = new Date();
+  const diff = now - date;
+  if (diff < 60000) return 'только что';
+  if (diff < 3600000) return Math.floor(diff/60000) + ' мин';
+  if (diff < 86400000) return Math.floor(diff/3600000) + ' ч';
+  if (diff < 604800000) return Math.floor(diff/86400000) + ' дн';
+  return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+// Функция обновления бейджа
+function updateFeedbackBadge() {
+  if (!window.adminFeedbacks) return;
+  
+  const unreadCount = window.adminFeedbacks.filter(f => !f.read).length;
+  const badge = document.getElementById('feedbackBadge');
+  const mobBadge = document.getElementById('mobFeedbackBadge');
+  
+  if (badge) {
+    if (unreadCount > 0) {
+      badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+  
+  if (mobBadge) {
+    if (unreadCount > 0) {
+      mobBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+      mobBadge.style.display = 'block';
+    } else {
+      mobBadge.style.display = 'none';
+    }
+  }
+}
 
 // Создаем модальное окно для сообщений (доступно на всех страницах)
 function createFeedbackModal() {
