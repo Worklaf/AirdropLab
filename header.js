@@ -1354,6 +1354,8 @@ document.addEventListener('keydown', function(e) {
 // Загрузка сообщений для всех страниц
 window.adminFeedbacks = [];
 let adminFeedbacksUnsubscribe = null;
+let __feedbackInitRetryTimer = null;
+let __feedbackInitRetryUid = null;
 
 function initFeedbacksListener(uid) {
   if (adminFeedbacksUnsubscribe) { 
@@ -1362,7 +1364,16 @@ function initFeedbacksListener(uid) {
   }
 
   const fx = window.__firestoreExports;
-  if (!fx || !window.db) return;
+  if (!fx || !window.db || typeof fx.onSnapshot !== 'function') {
+    __feedbackInitRetryUid = uid;
+    if (!__feedbackInitRetryTimer) {
+      __feedbackInitRetryTimer = setTimeout(function() {
+        __feedbackInitRetryTimer = null;
+        if (__feedbackInitRetryUid) initFeedbacksListener(__feedbackInitRetryUid);
+      }, 350);
+    }
+    return;
+  }
 
   const isAdmin = uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
 
@@ -1397,18 +1408,41 @@ function initFeedbacksListener(uid) {
 }
 
 // Инициализация: стартуем слушатель только когда auth реально отдал user
-(function initFeedbacksAuthBridge() {
-  const ax = window.__authExports;
-  if (!ax || !window.auth || typeof ax.onAuthStateChanged !== 'function') return;
+(function initFeedbacksAuthBridgeWithRetry() {
+  if (window.__feedbackAuthBridgeInited) return;
 
-  ax.onAuthStateChanged(window.auth, function(user) {
-    window.currentUser = user || null;
-    if (!user) {
-      window.adminFeedbacks = [];
-      updateFeedbackBadge();
-      if (adminFeedbacksUnsubscribe) { adminFeedbacksUnsubscribe(); adminFeedbacksUnsubscribe = null; }
-      return;
-    }
-    initFeedbacksListener(user.uid);
-  });
+  function tryInit() {
+    if (window.__feedbackAuthBridgeInited) return true;
+    const ax = window.__authExports;
+    if (!ax || !window.auth || typeof ax.onAuthStateChanged !== 'function') return false;
+
+    window.__feedbackAuthBridgeInited = true;
+    ax.onAuthStateChanged(window.auth, function(user) {
+      window.currentUser = user || null;
+
+      var deskFP = document.getElementById('generalFeedbackPanel');
+      if (!user) {
+        if (deskFP) deskFP.classList.add('hidden');
+        window.adminFeedbacks = [];
+        updateFeedbackBadge();
+        if (adminFeedbacksUnsubscribe) { adminFeedbacksUnsubscribe(); adminFeedbacksUnsubscribe = null; }
+        return;
+      }
+
+      if (deskFP) deskFP.classList.remove('hidden');
+      initFeedbacksListener(user.uid);
+    });
+
+    return true;
+  }
+
+  if (tryInit()) return;
+
+  // На некоторых страницах (например faucet.html) Firebase globals появляются после загрузки header.js
+  let tries = 0;
+  const maxTries = 60; // ~15s
+  const t = setInterval(function() {
+    tries++;
+    if (tryInit() || tries >= maxTries) clearInterval(t);
+  }, 250);
 })();
