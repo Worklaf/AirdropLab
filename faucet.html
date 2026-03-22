@@ -4134,8 +4134,14 @@ function updateEditFieldsVisibility() {
   const suggestionRussianFields = ['suggest_desc', 'suggest_reward', 'suggest_cooldown'];
   
   if (isAdmin) {
-    // Администратор видит все поля - компактный layout
+    // Администратор видит ВСЕ поля всегда - независимо от языка интерфейса
     [...englishFields, ...suggestionEnglishFields].forEach(fieldId => {
+      const element = document.getElementById(fieldId);
+      if (element) element.style.display = 'block';
+    });
+    
+    // Также показываем русские поля формы предложений для админа
+    suggestionRussianFields.forEach(fieldId => {
       const element = document.getElementById(fieldId);
       if (element) element.style.display = 'block';
     });
