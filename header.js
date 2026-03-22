@@ -1206,7 +1206,7 @@ function createFeedbackModal() {
   // Добавляем модальное окно в body если его еще нет
   if (!document.getElementById('feedbackListModal')) {
     console.log('🔧 Adding feedback modal to DOM...');
-    document.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
     console.log('🔧 Feedback modal added successfully');
   } else {
     console.log('🔧 Feedback modal already exists');
