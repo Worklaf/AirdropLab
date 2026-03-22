@@ -4225,11 +4225,19 @@ function updateEditFieldsVisibility() {
     
     // Grid для формы добавления кранов
     const faucetGrids = [
-      document.querySelector('#f_reward').parentElement.parentElement,
-      document.querySelector('#f_cooldown').parentElement.parentElement
+      document.querySelector('#f_reward_container').parentElement,
+      document.querySelector('#f_cooldown_container').parentElement
     ];
     faucetGrids.forEach(grid => {
-      if (grid) grid.style.gridTemplateColumns = isEn ? '1fr 1fr' : '1fr';
+      if (grid) {
+        if (isAdmin) {
+          // Для админа всегда 2 поля в ряду
+          grid.style.gridTemplateColumns = '1fr 1fr';
+        } else {
+          // Для обычных пользователей - всегда 2 поля в ряду (компактно)
+          grid.style.gridTemplateColumns = '1fr 1fr';
+        }
+      }
     });
     
     // Grid для формы предложений - зависит от языка и роли
@@ -4243,8 +4251,8 @@ function updateEditFieldsVisibility() {
           // Для админа всегда 2 поля в ряду
           grid.style.gridTemplateColumns = '1fr 1fr';
         } else {
-          // Для обычных пользователей - зависит от языка
-          grid.style.gridTemplateColumns = isEn ? '1fr 1fr' : '1fr';
+          // Для обычных пользователей - всегда 2 поля в ряду (компактно)
+          grid.style.gridTemplateColumns = '1fr 1fr';
         }
       }
     });
