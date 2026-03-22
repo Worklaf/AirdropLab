@@ -1723,12 +1723,30 @@ function loadFeedbackChat(feedbackId) {
     }
 
     const inp = document.getElementById('feedbackUserReplyText');
+    const sendBtn = inp?.nextElementSibling; // Кнопка отправки
+    const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+    
     if (inp) {
       inp.value = '';
       inp.placeholder = (typeof t === 'function') ? t('reply_placeholder') : 'Напишите ответ...';
       inp.onkeypress = function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
+          if (isAdmin) {
+            sendAdminReply(feedbackId);
+          } else {
+            sendUserFeedbackReply();
+          }
+        }
+      };
+    }
+    
+    // Настраиваем кнопку отправки
+    if (sendBtn) {
+      sendBtn.onclick = function() {
+        if (isAdmin) {
+          sendAdminReply(feedbackId);
+        } else {
           sendUserFeedbackReply();
         }
       };
