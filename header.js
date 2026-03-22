@@ -1177,6 +1177,10 @@ window.renderFeedbackList = function() {
   const container = document.getElementById('feedbacksContainer');
   if (!container) return;
   
+  console.log('🔧 renderFeedbackList called');
+  console.log('🔧 adminFeedbacks:', window.adminFeedbacks);
+  console.log('🔧 adminFeedbacks.length:', window.adminFeedbacks?.length);
+  
   const isAdmin = currentUser && currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
   
   // Если есть загруженные сообщения - показываем их
@@ -1406,5 +1410,26 @@ function initFeedbacksListener(uid) {
 
 // Инициализация при загрузке
 if (typeof currentUser !== 'undefined' && currentUser) {
+  console.log('🔧 Initializing feedbacks listener for user:', currentUser.uid);
   initFeedbacksListener(currentUser.uid);
+}
+
+// Также принудительно инициализируем при изменении currentUser
+if (typeof window !== 'undefined') {
+  // Следим за изменениями currentUser
+  Object.defineProperty(window, 'currentUser', {
+    get: function() { return window._currentUser; },
+    set: function(value) {
+      window._currentUser = value;
+      if (value && typeof initFeedbacksListener === 'function') {
+        console.log('🔧 User changed, initializing feedbacks listener');
+        initFeedbacksListener(value.uid);
+      }
+    }
+  });
+  
+  // Копируем текущее значение
+  if (typeof currentUser !== 'undefined') {
+    window._currentUser = currentUser;
+  }
 }
