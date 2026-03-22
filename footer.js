@@ -2253,10 +2253,22 @@ function initAccountPage() {
                     exp.doc(db, 'config', 'stats'),
                     function(snap) {
                         if (snap.exists()) {
-                            const count = snap.data().userCount || 0;
-                            userEl.textContent = count;
-                            userEl.classList.toggle('text-emerald-400', count > 0);
-                            userEl.classList.toggle('text-slate-400',   count <= 0);
+                            // Базовое значение из Firebase config
+                            const baseCount = snap.data().userCount || 12321;
+                            
+                            // Получаем реальное количество пользователей
+                            exp.getDocs(exp.collection(db, 'users')).then(usersSnap => {
+                                const realUsersCount = usersSnap.size;
+                                const totalCount = baseCount + realUsersCount;
+                                
+                                userEl.textContent = totalCount;
+                                userEl.classList.toggle('text-emerald-400', totalCount > 0);
+                                userEl.classList.toggle('text-slate-400',   totalCount <= 0);
+                            }).catch(err => {
+                                // Если не удалось получить реальных пользователей, показываем базовое значение
+                                userEl.textContent = baseCount;
+                                console.warn('Failed to get real users count:', err);
+                            });
                         }
                     }
                 );
