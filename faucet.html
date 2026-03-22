@@ -970,6 +970,7 @@ const DEFAULT_FAUCETS = [
 // ═══════════════════════════════════════════
 let editMode = false;
 let currentFilter = 'all';
+// Глобальные переменные
 let currentSort = 'name';
 let faucets = [];
 let currentUser = null;
@@ -984,6 +985,9 @@ const ADMIN_UID = globalThis.ADMIN_UID || "SAkz4mdW9reDaIsvqigCNZhEKJR2";
 // Firestore collections
 const COL_FAUCETS = 'faucets';
 const COL_SUGGESTIONS = 'faucet_suggestions';
+
+// Язык по умолчанию
+let isEn = (window.currentLang === 'en');
 
 // Firebase init - используем глобальную конфигурацию
 const firebaseConfig = window.firebaseConfig;
@@ -2323,19 +2327,21 @@ async function saveFaucet() {
     type: document.getElementById('f_type').value,
     net: document.getElementById('f_net').value,
     desc: document.getElementById('f_desc').value.trim(),
-    desc_en: document.getElementById('f_desc_en').value.trim(), // Добавляем английское описание
+    desc_en: document.getElementById('f_desc_en')?.value.trim() || '', // Добавляем английское описание
     links,
     logoUrl: normalizeUrl(document.getElementById('f_logo').value.trim()),
     reward: document.getElementById('f_reward').value.trim(),
+    reward_en: document.getElementById('f_reward_en')?.value.trim() || '', // Добавляем английскую награду
     cooldown: document.getElementById('f_cooldown').value.trim(),
+    cooldown_en: document.getElementById('f_cooldown_en')?.value.trim() || '', // Добавляем английский кулдаун
     tags,
     updatedAt: serverTimestamp()
   };
 
   if (id) {
-    await updateDoc(doc(db, COL_FAUCETS, id), payload);
+    await updateDoc(doc(window.db, COL_FAUCETS, id), payload);
   } else {
-    const ref = await addDoc(collection(db, COL_FAUCETS), {
+    const ref = await addDoc(collection(window.db, COL_FAUCETS), {
       ...payload,
       createdAt: serverTimestamp(),
       ratingAvg: 0,
@@ -2908,18 +2914,50 @@ async function loadFavorites() {
 }
 
 async function loadFaucetsFromFirestore() {
+  if (!window.db) {
+    console.log('📦 Firestore недоступен, используем DEFAULT_FAUCETS');
+    const isEn = (window.currentLang === 'en');
+    faucets = DEFAULT_FAUCETS.map((f) => ({
+      id: f.id,
+      name: f.name || '',
+      token: f.token || '',
+      type: f.type || 'free',
+      net: f.net || 'mainnet',
+      desc: f.desc || '',
+      desc_en: f.desc_en || '', // Добавляем английское описание
+      links: f.links || [],
+      logoUrl: f.logoUrl || '',
+      reward: f.reward || '',
+      cooldown: f.cooldown || '',
+      tags: f.tags || [],
+      ratingAvg: 0,
+      ratingCount: 0,
+      clickCount: 0
+    }));
+    renderAll();
+    if (typeof window.updateAllTranslations === 'function') window.updateAllTranslations();
+    return [];
+  }
+  
+  const isEn = (window.currentLang === 'en');
+  console.log(`🔥 Загружаем краны из Firestore для языка: ${isEn ? 'en' : 'ru'}`);
+  
   try {
-    const snap = await getDocs(query(collection(db, COL_FAUCETS), orderBy('name')));
+    const snap = await getDocs(query(collection(window.db, COL_FAUCETS), orderBy('name')));
     faucets = [];
     
     for (const d of snap.docs) {
       const data = d.data();
-      let faucetData = { id: d.id, ...data };
+      let faucetData = { 
+        id: d.id, 
+        ...data,
+        desc_en: data.desc_en || '' // Добавляем английское описание
+      };
       
       // Если кран со статусом pending, загружаем информацию о пользователе
       if (data.status === 'pending' && data.submittedBy) {
         try {
-          const userSnap = await getDoc(doc(db, 'users', data.submittedBy));
+          const userSnap = await getDoc(doc(window.db, 'users', data.submittedBy));
           if (userSnap.exists()) {
             const userData = userSnap.data();
             faucetData.userName = userData.displayName || userData.email?.split('@')[0] || 'Anonymous';
@@ -2993,13 +3031,20 @@ async function loadFaucetsFromFirestore() {
     const mySuggestionsBadgeEl = document.getElementById('mySuggestionsBadge');
     if (mySuggestionsBadgeEl) mySuggestionsBadgeEl.textContent = mySuggestionsCount;
   }
+  
+  return faucets;
 }
 
 async function loadPendingSuggestions() {
   if (!isAdmin && !currentUser) return;
+  if (!window.db) {
+    console.log('📦 Firestore недоступен, пропускаем загрузку предложений');
+    return;
+  }
+  
   try {
     // Загружаем pending краны из основной коллекции
-    const snap = await getDocs(query(collection(db, COL_FAUCETS), where('status', '==', 'pending')));
+    const snap = await getDocs(query(collection(window.db, COL_FAUCETS), where('status', '==', 'pending')));
     pendingSuggestions = [];
     
     for (const doc of snap.docs) {
@@ -3012,7 +3057,7 @@ async function loadPendingSuggestions() {
       
       // Try to get user info from users collection
       try {
-        const userSnap = await getDoc(doc(db, 'users', data.submittedBy));
+        const userSnap = await getDoc(doc(window.db, 'users', data.submittedBy));
         if (userSnap.exists()) {
           const userData = userSnap.data();
           userInfo.userName = userData.displayName || userData.email?.split('@')[0] || 'Anonymous';
