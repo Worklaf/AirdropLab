@@ -4221,6 +4221,21 @@ function updateEditFieldsVisibility() {
 window.updateEditFieldsVisibility = updateEditFieldsVisibility;
 </script>
 
+<style>
+/* Скрываем счетчики футера только на faucet странице */
+#footerUserCount,
+#footerProjectCount,
+.footer-user-stats,
+.footer-project-stats {
+  display: none !important;
+}
+
+/* Скрываем всю статистическую секцию футера */
+.footer-stats {
+  display: none !important;
+}
+</style>
+
 <script src="footer.js"></script>
 
 </body>
