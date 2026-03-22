@@ -3507,6 +3507,22 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
     updateCounts(); // Обновляем счетчики после загрузки кранов
     // Повторный вызов с задержкой для надежности
     setTimeout(function() { updateCounts(); }, 500);
+    
+    // Initialize footer stats AFTER faucets are loaded
+    if (typeof window.updateFooterStats === 'function') {
+      // Set projects count from faucets data
+      window.projects = faucets.filter(f => !f.deleted).map(f => ({
+        id: f.id,
+        name: f.name,
+        deleted: false
+      }));
+      
+      // Trigger footer stats update with delay
+      setTimeout(() => {
+        window.updateFooterStats();
+      }, 1000);
+    }
+    
     if (isAdmin) await loadPendingSuggestions();
     if (user && window.db) await loadNotificationsFromFirestore();
 
