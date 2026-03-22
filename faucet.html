@@ -4112,9 +4112,6 @@ function updateEditFieldsVisibility() {
   const isEn = (window.currentLang === 'en');
   const isAdmin = window.currentUser && window.isAdmin;
   
-  // Русские поля (всегда видны)
-  const russianFields = ['f_desc', 'f_reward', 'f_cooldown'];
-  
   // Английские поля для формы добавления кранов
   const englishFields = ['f_desc_en_container', 'f_reward_en_container', 'f_cooldown_en_container'];
   
@@ -4140,21 +4137,44 @@ function updateEditFieldsVisibility() {
     });
     
   } else {
-    // Обычный пользователь видит поля только для своего языка
-    [...englishFields, ...suggestionEnglishFields].forEach(fieldId => {
+    // Обычный пользователь - РАЗДЕЛЬНАЯ ЛОГИКА ДЛЯ ФОРМ
+    
+    // Форма добавления кранов:
+    // Русский язык: только русские поля
+    // Английский язык: русские + английские поля
+    englishFields.forEach(fieldId => {
       const element = document.getElementById(fieldId);
-      if (element) element.style.display = isEn ? 'block' : 'none';
+      if (element) {
+        element.style.display = isEn ? 'block' : 'none';
+      }
     });
     
-    // Для обычного пользователя меняем grid на 1fr если английские поля скрыты
-    const grids = [
+    // Форма предложений:
+    // Русский язык: только русские поля 
+    // Английский язык: только английские поля
+    suggestionEnglishFields.forEach(fieldId => {
+      const element = document.getElementById(fieldId);
+      if (element) {
+        element.style.display = isEn ? 'block' : 'none';
+      }
+    });
+    
+    // Grid для формы добавления кранов
+    const faucetGrids = [
       document.querySelector('#f_reward').parentElement.parentElement,
-      document.querySelector('#f_cooldown').parentElement.parentElement,
+      document.querySelector('#f_cooldown').parentElement.parentElement
+    ];
+    faucetGrids.forEach(grid => {
+      if (grid) grid.style.gridTemplateColumns = isEn ? '1fr 1fr' : '1fr';
+    });
+    
+    // Grid для формы предложений - всегда 1fr (без дублирования)
+    const suggestionGrids = [
       document.querySelector('#suggest_reward').parentElement.parentElement,
       document.querySelector('#suggest_cooldown').parentElement.parentElement
     ];
-    grids.forEach(grid => {
-      if (grid) grid.style.gridTemplateColumns = isEn ? '1fr 1fr' : '1fr';
+    suggestionGrids.forEach(grid => {
+      if (grid) grid.style.gridTemplateColumns = '1fr';
     });
   }
   
