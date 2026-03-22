@@ -1819,7 +1819,15 @@ window.openAdminFeedbackChat = function(feedbackId) {
 window.sendAdminReply = async function(feedbackId) {
   const fx = window.__firestoreExports;
   if (!fx || !fx.updateDoc || !fx.doc || !fx.arrayUnion) {
-    console.error('Firestore functions not available');
+    // Если Firestore еще не готов, пробуем через 100мс еще раз
+    setTimeout(() => {
+      if (window.__firestoreExports && window.__firestoreExports.updateDoc) {
+        sendAdminReply(feedbackId);
+      } else {
+        console.error('Firestore functions still not available');
+        if (typeof showToast === 'function') showToast('Сервис временно недоступен');
+      }
+    }, 100);
     return;
   }
   
@@ -1846,7 +1854,15 @@ window.sendAdminReply = async function(feedbackId) {
 window.sendUserFeedbackReply = async function() {
   const fx = window.__firestoreExports;
   if (!fx || !fx.updateDoc || !fx.doc || !fx.arrayUnion) {
-    console.error('Firestore functions not available');
+    // Если Firestore еще не готов, пробуем через 100мс еще раз
+    setTimeout(() => {
+      if (window.__firestoreExports && window.__firestoreExports.updateDoc) {
+        sendUserFeedbackReply();
+      } else {
+        console.error('Firestore functions still not available');
+        if (typeof showToast === 'function') showToast('Сервис временно недоступен');
+      }
+    }, 100);
     return;
   }
   
@@ -1869,7 +1885,14 @@ window.sendUserFeedbackReply = async function() {
 
 window.markFeedbackRead = async function(id) { 
   const fx = window.__firestoreExports;
-  if (!fx || !fx.updateDoc || !fx.doc) return;
+  if (!fx || !fx.updateDoc || !fx.doc) {
+    setTimeout(() => {
+      if (window.__firestoreExports && window.__firestoreExports.updateDoc) {
+        markFeedbackRead(id);
+      }
+    }, 100);
+    return;
+  }
   try { 
     await fx.updateDoc(fx.doc(window.db, "feedbacks", id), { read: true }); 
   } catch (e) { 
@@ -1879,7 +1902,14 @@ window.markFeedbackRead = async function(id) {
 
 window.deleteAdminFeedback = async function(id) { 
   const fx = window.__firestoreExports;
-  if (!fx || !fx.deleteDoc || !fx.doc) return;
+  if (!fx || !fx.deleteDoc || !fx.doc) {
+    setTimeout(() => {
+      if (window.__firestoreExports && window.__firestoreExports.deleteDoc) {
+        deleteAdminFeedback(id);
+      }
+    }, 100);
+    return;
+  }
   if (!confirm('Удалить?')) return; 
   try { 
     await fx.deleteDoc(fx.doc(window.db, "feedbacks", id)); 
