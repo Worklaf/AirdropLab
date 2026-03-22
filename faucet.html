@@ -3535,17 +3535,52 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
       script.src = 'footer.js';
       script.onload = function() {
         console.log('🔍 DEBUG: footer.js loaded manually');
-        setTimeout(() => {
-          if (typeof window.updateFooterStats === 'function') {
+        
+        // Загружаем реальные проекты из главной страницы
+        if (window.db && window.__firestoreExports) {
+          console.log('🔍 DEBUG: Loading real projects from main page');
+          window.__firestoreExports.getDocs(
+            window.__firestoreExports.collection(window.db, 'projects')
+          ).then(projectsSnap => {
+            const realProjects = [];
+            projectsSnap.forEach(doc => {
+              const data = doc.data();
+              if (!data.deleted) {
+                realProjects.push({
+                  id: doc.id,
+                  name: data.name || '',
+                  deleted: false
+                });
+              }
+            });
+            
+            window.projects = realProjects;
+            console.log('🔍 DEBUG: Real projects loaded:', window.projects.length);
+            
+            setTimeout(() => {
+              console.log('🔍 DEBUG: Calling updateFooterStats with real projects');
+              window.updateFooterStats();
+            }, 500);
+          }).catch(err => {
+            console.error('🔍 DEBUG: Failed to load real projects:', err);
+            // Fallback - используем faucets как проекты
             window.projects = faucets.filter(f => !f.deleted).map(f => ({
               id: f.id,
               name: f.name,
               deleted: false
             }));
-            console.log('🔍 DEBUG: Calling updateFooterStats after manual load');
+            console.log('🔍 DEBUG: Using faucets as fallback:', window.projects.length);
             window.updateFooterStats();
-          }
-        }, 500);
+          });
+        } else {
+          console.log('🔍 DEBUG: Firebase not available, using faucets as projects');
+          window.projects = faucets.filter(f => !f.deleted).map(f => ({
+            id: f.id,
+            name: f.name,
+            deleted: false
+          }));
+          window.updateFooterStats();
+        }
       };
       script.onerror = function() {
         console.error('🔍 DEBUG: Failed to load footer.js manually');
