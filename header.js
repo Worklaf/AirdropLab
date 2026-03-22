@@ -619,46 +619,6 @@
         /* ── Coming Soon Modal ── */
         @keyframes csModalIn {
           from { opacity:0; transform:scale(0.88) translateY(20px); }
-
-function createFeedbackChatModal() {
-  const chatHTML = `
-    <div id="feedbackModal" class="modal">
-      <div class="modal-content modal-lg relative overflow-hidden">
-        <div class="modal-header">
-          <div class="flex justify-between items-center w-full">
-            <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments text-purple-400"></i><span id="feedbackModalTitle" data-translate="feedback">Обратная связь</span></h2>
-            <button onclick="closeFeedbackModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-          </div>
-        </div>
-        <div class="modal-body bg-[#151b2b]">
-          <input type="hidden" id="feedbackProjectId" />
-          <input type="hidden" id="feedbackDocId" />
-          <div class="mb-3 pb-3 border-b border-slate-700"><span class="text-sm text-slate-400" id="feedbackProjectLabel">Проект: </span><span id="feedbackProjectName" class="text-sm font-bold text-blue-400">...</span></div>
-          <div id="feedbackChatHistory" class="h-80 overflow-y-auto pr-3 custom-scrollbar bg-slate-900/30 rounded-xl p-4"><div class="flex flex-col items-center justify-center h-full text-slate-500"><i class="fas fa-comments text-4xl mb-3 opacity-50"></i><p class="text-sm" data-translate="loading_chat">Загрузка переписки...</p></div></div>
-          <div id="feedbackFormNew" class="space-y-4"></div>
-          <div id="feedbackFormReply" class="hidden">
-            <label class="block text-sm font-medium text-slate-300 mb-2" data-translate="your_answer">Ваш ответ</label>
-            <div class="flex gap-2">
-              <input type="text" id="feedbackUserReplyText" placeholder="Напишите ответ..." data-translate="reply_placeholder" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white" />
-              <button id="feedbackReplySendBtn" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-bold"><i class="fas fa-paper-plane"></i></button>
-              <button id="adminChatDeleteBtn" class="hidden text-red-400 hover:text-red-300" title="Удалить"><i class="fas fa-trash text-xl"></i></button>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer bg-[#1e2538] border-t border-slate-700 p-4 shrink-0">
-          <div class="flex gap-3 w-full justify-end" id="feedbackModalFooter">
-            <button onclick="closeFeedbackModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-sm" data-translate="close">Закрыть</button>
-            <button id="feedbackSendBtn" onclick="window.sendUserFeedback && window.sendUserFeedback()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg text-sm font-bold" data-translate="send">Отправить</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  if (!document.getElementById('feedbackModal')) {
-    document.body.insertAdjacentHTML('beforeend', chatHTML);
-  }
-}
           to   { opacity:1; transform:scale(1) translateY(0); }
         }
         @keyframes csBlink {
@@ -1258,8 +1218,7 @@ function renderFeedbackMessages(feedbacks, isAdmin) {
     account: '👤 Аккаунт',
     partnership: '🤝 Партнёрство'
   };
-
-  const list = Array.isArray(window.adminFeedbacks) ? window.adminFeedbacks : [];
+  
   const esc = (typeof window.safeText === 'function')
     ? window.safeText
     : function(s) {
@@ -1267,32 +1226,51 @@ function renderFeedbackMessages(feedbacks, isAdmin) {
           return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
         });
       };
-  const tr = (typeof t === 'function') ? t : (k) => {
-    const dict = {
-      support: 'Support'
-    };
-    return dict[k] || k;
-  };
 
-  container.innerHTML = list.map((item) => {
-    const messages = item.messages || [];
-    const lastMsg = messages[messages.length - 1] || { text: '...', sender: 'unknown' };
-    const date = item.createdAt?.toDate() || new Date(item.createdAt || 0);
-    const isUnread = isAdmin ? !item.read : !item.userRead;
+  const list = Array.isArray(window.adminFeedbacks) ? window.adminFeedbacks : [];
+  const filtered = isAdmin
+    ? adminFeedbacks
+    : adminFeedbacks.filter(item => item.userId === currentUser.uid);
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="text-center py-8 text-slate-400">
+      <i class="fas fa-inbox text-4xl mb-3 opacity-50"></i>
+      <p class="text-sm">${isAdmin ? 'Нет сообщений' : 'У вас пока нет сообщений'}</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(item => {
     const isSupport = item.projectId === '__support__' || item.type === 'support';
-    const categoryLabel = item.category ? (categoryLabels[item.category] || item.category) : null;
-
-    let projectName, projectLogo;
-    if (isSupport) {
-      projectName = tr('support');
-      projectLogo = '';
-    } else {
-      const pr = (window.projects && Array.isArray(window.projects))
-        ? window.projects.find(p => p.id === item.projectId)
+    const isUnread = isAdmin ? !item.read : !item.userRead;
+    const date = item.createdAt?.toDate ? item.createdAt.toDate() : new Date(item.createdAt || 0);
+    const lastMsg = (item.messages && item.messages.length > 0)
+      ? item.messages[item.messages.length - 1]
+      : { text: 'Без текста', timestamp: date };
+    
+    let projectName = isSupport ? 'Support' : item.projectName;
+    let projectLogo = '';
+    if (!isSupport) {
+      const project = typeof projects !== 'undefined' && Array.isArray(projects)
+        ? projects.find(p => p.id === item.projectId)
         : null;
-      projectName = (pr && pr.name) || item.projectName || item.projectId || 'Неизвестный проект';
-      projectLogo = (pr && (pr.image || pr.logoUrl)) || item.projectLogo || '';
+      if (project) {
+        projectName = project.name || projectName;
+        projectLogo = project.image || project.logoUrl || '';
+      }
+      projectLogo = projectLogo || item.projectLogo || '';
     }
+
+    const categoryLabels = {
+      suggestion: '💡 Предложение',
+      bug: '🐛 Ошибка',
+      question: '❓ Вопрос',
+      other: '💬 Другое',
+      technical: '🔧 Техническая проблема',
+      account: '👤 Проблема с аккаунтом',
+      partnership: '🤝 Партнёрство'
+    };
+    const categoryLabel = item.category ? (categoryLabels[item.category] || item.category) : '';
 
     const clickFn = isAdmin
       ? `openAdminFeedbackChat('${String(item.id || '').replace(/'/g, "\\'")}')`
@@ -1467,6 +1445,47 @@ if (document.readyState === 'loading') {
   createFeedbackModal();
 }
 
+// Создаем модальное окно чата после загрузки DOM
+function createFeedbackChatModal() {
+  const chatHTML = `
+    <div id="feedbackModal" class="modal">
+      <div class="modal-content modal-lg relative overflow-hidden">
+        <div class="modal-header">
+          <div class="flex justify-between items-center w-full">
+            <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments text-purple-400"></i><span id="feedbackModalTitle" data-translate="feedback">Обратная связь</span></h2>
+            <button onclick="closeFeedbackModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+          </div>
+        </div>
+        <div class="modal-body bg-[#151b2b]">
+          <input type="hidden" id="feedbackProjectId">
+          <input type="hidden" id="feedbackDocId">
+          <div class="mb-3 pb-3 border-b border-slate-700"><span class="text-sm text-slate-400" id="feedbackProjectLabel">Проект: </span><span id="feedbackProjectName" class="text-sm font-bold text-blue-400">...</span></div>
+          <div id="feedbackChatHistory" class="h-80 overflow-y-auto pr-3 custom-scrollbar bg-slate-900/30 rounded-xl p-4"><div class="flex flex-col items-center justify-center h-full text-slate-500"><i class="fas fa-comments text-4xl mb-3 opacity-50"></i><p class="text-sm" data-translate="loading_chat">Загрузка переписки...</p></div></div>
+          <div id="feedbackFormNew" class="space-y-4"></div>
+          <div id="feedbackFormReply" class="hidden">
+            <label class="block text-sm font-medium text-slate-300 mb-2" data-translate="your_answer">Ваш ответ</label>
+            <div class="flex gap-2">
+              <input type="text" id="feedbackUserReplyText" placeholder="Напишите ответ..." data-translate="reply_placeholder" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white">
+              <button id="feedbackReplySendBtn" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-bold"><i class="fas fa-paper-plane"></i></button>
+              <button id="adminChatDeleteBtn" class="hidden text-red-400 hover:text-red-300" title="Удалить"><i class="fas fa-trash text-xl"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer bg-[#1e2538] border-t border-slate-700 p-4 shrink-0">
+          <div class="flex gap-3 w-full justify-end" id="feedbackModalFooter">
+            <button onclick="closeFeedbackModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-sm" data-translate="close">Закрыть</button>
+            <button id="feedbackSendBtn" onclick="window.sendUserFeedback && window.sendUserFeedback()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg text-sm font-bold" data-translate="send">Отправить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (!document.getElementById('feedbackModal')) {
+    document.body.insertAdjacentHTML('beforeend', chatHTML);
+  }
+}
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', createFeedbackChatModal);
 } else {
@@ -1499,34 +1518,21 @@ window.backToFeedbackList = function() {
   if (typeof window.openFeedbackListModal === 'function') window.openFeedbackListModal();
 };
 
-function __getFx() {
-  const fx = window.__firestoreExports;
-  if (!fx || !window.db) return null;
-  return fx;
-}
-
-function __t(k) {
-  return (typeof t === 'function') ? t(k) : k;
-}
-
 window.openFeedbackFromList = function(docId, projectId, projectName) {
   const isSupport = projectId === '__support__' || projectName === 'Support';
 
+  // Закрываем список
   const listModal = document.getElementById('feedbackListModal');
   if (listModal) listModal.classList.remove('active');
 
   const modal = document.getElementById('feedbackModal');
   if (!modal) return;
+  document.getElementById('feedbackProjectId').value = projectId;
+  document.getElementById('feedbackDocId').value = docId;
+  document.getElementById('adminChatDeleteBtn').classList.add('hidden');
 
-  const pid = document.getElementById('feedbackProjectId');
-  const did = document.getElementById('feedbackDocId');
-  if (pid) pid.value = projectId;
-  if (did) did.value = docId;
-
-  const delBtn = document.getElementById('adminChatDeleteBtn');
-  if (delBtn) delBtn.classList.add('hidden');
-
-  const fb = (Array.isArray(window.adminFeedbacks) ? window.adminFeedbacks : []).find(f => f.id === docId);
+  // Находим данные фидбека для темы
+  const fb = adminFeedbacks.find(f => f.id === docId);
   const categoryLabels = {
     suggestion: '💡 Предложение',
     bug: '🐛 Ошибка',
@@ -1538,6 +1544,7 @@ window.openFeedbackFromList = function(docId, projectId, projectName) {
   };
   const categoryLabel = fb?.category ? (categoryLabels[fb.category] || fb.category) : '';
 
+  // ---- Метка проекта ----
   let projectDisplayHtml = `
     <button onclick="closeFeedbackChat()"
             class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700
@@ -1564,8 +1571,8 @@ window.openFeedbackFromList = function(docId, projectId, projectName) {
         </div>
       </div>`;
   } else {
-    const project = (window.projects && Array.isArray(window.projects))
-      ? window.projects.find(p => p.id === projectId)
+    const project = typeof projects !== 'undefined'
+      ? projects.find(p => p.id === projectId)
       : null;
     const logo = project?.image || '';
     projectDisplayHtml += `
@@ -1582,37 +1589,39 @@ window.openFeedbackFromList = function(docId, projectId, projectName) {
       </div>`;
   }
 
-  const projectNameEl = document.getElementById('feedbackProjectName');
-  if (projectNameEl) projectNameEl.innerHTML = projectDisplayHtml;
+  document.getElementById('feedbackProjectName').innerHTML = projectDisplayHtml;
 
-  const titleEl = document.getElementById('feedbackModalTitle');
-  if (titleEl) {
-    titleEl.innerHTML = isSupport
-      ? '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>Поддержка'
-      : '<button onclick="closeFeedbackChat()" class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-white mr-2 transition-colors"><i class="fas fa-arrow-left text-sm"></i></button>' + __t('chat_with_support');
-  }
+  // ---- Заголовок модалки ----
+  document.getElementById('feedbackModalTitle').innerHTML = isSupport
+    ? '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>Поддержка'
+    : '<button onclick="closeFeedbackChat()" class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-white mr-2 transition-colors"><i class="fas fa-arrow-left text-sm"></i></button>' + t('chat_with_support');
 
+  // ---- Визуальный акцент ----
   const modalBody = document.querySelector('#feedbackModal .modal-body');
   if (modalBody) {
-    modalBody.style.borderTop = isSupport ? '2px solid rgba(139,92,246,0.4)' : '';
+    modalBody.style.borderTop = isSupport
+      ? '2px solid rgba(139,92,246,0.4)'
+      : '';
   }
 
-  const formNew = document.getElementById('feedbackFormNew');
-  const formReply = document.getElementById('feedbackFormReply');
-  const sendBtn = document.getElementById('feedbackSendBtn');
-  if (formNew) formNew.classList.add('hidden');
-  if (formReply) formReply.classList.remove('hidden');
-  if (sendBtn) sendBtn.classList.add('hidden');
+  // Показываем форму ответа
+  document.getElementById('feedbackFormNew').classList.add('hidden');
+  document.getElementById('feedbackFormReply').classList.remove('hidden');
+  document.getElementById('feedbackSendBtn').classList.add('hidden');
 
+  // Загружаем чат
   loadFeedbackChat(docId);
   modal.classList.add('active');
 };
 
 window.openAdminFeedbackChat = function(feedbackId) {
-  const fb = (Array.isArray(window.adminFeedbacks) ? window.adminFeedbacks : []).find(f => f.id === feedbackId);
+  const fb = adminFeedbacks.find(f => f.id === feedbackId);
   if (!fb) return;
 
+  // Определяем тип: support или project
   const isSupport = fb.projectId === '__support__' || fb.type === 'support';
+
+  // Словарь тем
   const categoryLabels = {
     suggestion: '💡 Предложение',
     bug: '🐛 Ошибка',
@@ -1624,27 +1633,29 @@ window.openAdminFeedbackChat = function(feedbackId) {
   };
   const categoryLabel = fb.category ? (categoryLabels[fb.category] || fb.category) : '';
 
-  let projectName = fb.projectName || fb.projectId || 'Неизвестный проект';
-  let projectLogo = fb.projectLogo || '';
-  if (!isSupport && window.projects && Array.isArray(window.projects)) {
-    const pr = window.projects.find(p => p.id === fb.projectId);
-    if (pr) {
-      projectName = pr.name || projectName;
-      projectLogo = pr.image || pr.logoUrl || projectLogo;
-    }
+  let projectName, projectLogo;
+  if (isSupport) {
+    projectName = 'Support';
+    projectLogo = '';
+  } else {
+    const project = projects.find(p => p.id === fb.projectId);
+    projectName = project?.name || fb.projectName || fb.projectId || 'Неизвестный проект';
+    projectLogo = project?.image || fb.projectLogo || '';
   }
 
+  // Закрываем список, открываем чат
   const listModal = document.getElementById('feedbackListModal');
   if (listModal) listModal.classList.remove('active');
   const chatModal = document.getElementById('feedbackModal');
-  if (!chatModal) return;
 
-  const pid = document.getElementById('feedbackProjectId');
-  const did = document.getElementById('feedbackDocId');
-  if (pid) pid.value = fb.projectId;
-  if (did) did.value = fb.id;
+  // Устанавливаем projectId
+  document.getElementById('feedbackProjectId').value = fb.projectId;
+  document.getElementById('feedbackDocId').value = fb.id;
 
+  // ---- Строим HTML метки проекта над чатом ----
   let projectDisplayHtml = '';
+
+  // Кнопка "назад"
   projectDisplayHtml += `
     <button onclick="backToFeedbackList()"
             class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600
@@ -1653,6 +1664,7 @@ window.openAdminFeedbackChat = function(feedbackId) {
     </button>`;
 
   if (isSupport) {
+    // Фиолетовый бейдж Support + тема
     projectDisplayHtml += `
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-2">
@@ -1675,6 +1687,7 @@ window.openAdminFeedbackChat = function(feedbackId) {
         </div>
       </div>`;
   } else {
+    // Стандартный вид для проекта
     projectDisplayHtml += `
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-2 flex-wrap">
@@ -1695,73 +1708,52 @@ window.openAdminFeedbackChat = function(feedbackId) {
       </div>`;
   }
 
-  const projectNameEl = document.getElementById('feedbackProjectName');
-  if (projectNameEl) projectNameEl.innerHTML = projectDisplayHtml;
+  // Вставляем в элемент метки
+  document.getElementById('feedbackProjectName').innerHTML = projectDisplayHtml;
 
-  const titleEl = document.getElementById('feedbackModalTitle');
-  if (titleEl) {
-    titleEl.innerHTML = isSupport
-      ? '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>Чат с пользователем (Support)'
-      : '<i class="fas fa-user-shield text-purple-400 mr-2"></i>' + __t('chat_with_user');
-  }
+  // ---- Заголовок модалки ----
+  document.getElementById('feedbackModalTitle').innerHTML = isSupport
+    ? '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>Чат с пользователем (Support)'
+    : '<i class="fas fa-user-shield text-purple-400 mr-2"></i>' + t('chat_with_user');
 
+  // ---- Визуальный акцент для Support ----
   const modalBody = document.querySelector('#feedbackModal .modal-body');
   if (modalBody) {
-    modalBody.style.borderTop = isSupport ? '2px solid rgba(139,92,246,0.4)' : '';
+    modalBody.style.borderTop = isSupport
+      ? '2px solid rgba(139,92,246,0.4)'
+      : '';
   }
 
-  const formNew = document.getElementById('feedbackFormNew');
-  const formReply = document.getElementById('feedbackFormReply');
-  const sendBtn = document.getElementById('feedbackSendBtn');
-  if (formNew) formNew.classList.add('hidden');
-  if (formReply) formReply.classList.remove('hidden');
-  if (sendBtn) sendBtn.classList.add('hidden');
+  // Скрываем форму нового сообщения, показываем форму ответа
+  document.getElementById('feedbackFormNew').classList.add('hidden');
+  document.getElementById('feedbackFormReply').classList.remove('hidden');
+  document.getElementById('feedbackSendBtn').classList.add('hidden');
 
-  loadFeedbackChat(feedbackId);
-
-  const delBtn = document.getElementById('adminChatDeleteBtn');
-  if (delBtn) {
-    delBtn.classList.remove('hidden');
-    delBtn.onclick = function() {
-      if (confirm('Удалить переписку?')) deleteAdminFeedback(feedbackId);
-    };
-  }
-
-  chatModal.classList.add('active');
-  markFeedbackRead(feedbackId);
-};
-
-function loadFeedbackChat(feedbackId) {
-  const fx = __getFx();
-  if (!fx || typeof fx.onSnapshot !== 'function' || typeof fx.doc !== 'function') return;
-
+  // ---- Подписка на сообщения чата ----
   if (window.currentFeedbackUnsub) {
     window.currentFeedbackUnsub();
     window.currentFeedbackUnsub = null;
   }
 
-  const unsub = fx.onSnapshot(fx.doc(window.db, 'feedbacks', feedbackId), function(snap) {
+  const unsub = onSnapshot(doc(db, "feedbacks", feedbackId), (snap) => {
     if (!snap.exists()) return;
     const d = snap.data();
 
-    const messages = (d.messages || []).slice().sort(function(a, b) {
+    const messages = (d.messages || []).sort((a, b) => {
       const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp || 0);
       const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp || 0);
       return timeA - timeB;
     });
 
-    const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
-    const senderYou = __t('you') || 'Вы';
-    const senderUser = __t('user') || 'Пользователь';
-
-    const html = messages.map(function(msg) {
-      const bubbleSide = msg.sender;
+    const html = messages.map(msg => {
+      const bubbleSide = msg.sender; // 'admin' или 'user'
       const senderName = msg.sender === 'admin'
-        ? senderYou
-        : (d.userName || senderUser);
+        ? t('you')
+        : (d.userName || t('user'));
       const avatar = msg.sender === 'admin'
         ? `<div class="chat-avatar"><i class="fas fa-user-shield"></i></div>`
-        : `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`;
+        : `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}"
+                class="chat-avatar" alt="">`;
       const msgTime = msg.timestamp
         ? formatTimeAgo(msg.timestamp.toDate ? msg.timestamp.toDate() : new Date(msg.timestamp))
         : '';
@@ -1778,83 +1770,58 @@ function loadFeedbackChat(feedbackId) {
     }).join('');
 
     const hist = document.getElementById('feedbackChatHistory');
-    if (hist) {
-      hist.innerHTML = html || `<p class="text-center text-slate-500 py-4">${__t('no_messages') || 'Нет сообщений'}</p>`;
-      setTimeout(function() { hist.scrollTop = hist.scrollHeight; }, 50);
-    }
-
-    const inp = document.getElementById('feedbackUserReplyText');
-    const replyBtn = document.getElementById('feedbackReplySendBtn');
-    if (inp) {
-      inp.value = '';
-      inp.placeholder = __t('reply_placeholder') || 'Напишите ответ...';
-      inp.onkeypress = function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          if (isAdmin) sendAdminReply(feedbackId);
-        }
-      };
-    }
-    if (replyBtn) {
-      replyBtn.onclick = function() {
-        if (isAdmin) sendAdminReply(feedbackId);
-      };
-    }
+    hist.innerHTML = html || `<p class="text-center py-8"><i class="fas fa-comments text-4xl mb-3 opacity-50"></i><p class="text-sm">${t('no_messages')}</p></p>`;
+    setTimeout(() => { hist.scrollTop = hist.scrollHeight; }, 50);
   });
 
   window.currentFeedbackUnsub = unsub;
-}
 
-function sendAdminReply(feedbackId) {
-  const fx = __getFx();
-  if (!fx || typeof fx.updateDoc !== 'function' || typeof fx.doc !== 'function') return;
-  if (typeof fx.arrayUnion !== 'function') {
-    if (typeof showToast === 'function') showToast('arrayUnion недоступен');
-    return;
+  // ---- Настраиваем поле ввода ответа ----
+  const inp = document.getElementById('feedbackUserReplyText');
+  inp.value = '';
+  inp.placeholder = t('reply_placeholder');
+
+  // Отправка по кнопке
+  const replyBtn = document.querySelector('#feedbackFormReply button[onclick]');
+  if (replyBtn) {
+    replyBtn.onclick = function() { sendAdminReply(feedbackId); };
   }
 
+  // Отправка по Enter
+  inp.onkeypress = e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendAdminReply(feedbackId);
+    }
+  };
+
+  // Кнопка удаления — только для админа
+  document.getElementById('adminChatDeleteBtn').classList.remove('hidden');
+  document.getElementById('adminChatDeleteBtn').onclick = function() {
+    if (confirm('Удалить переписку?')) deleteAdminFeedback(feedbackId);
+  };
+
+  // Открываем модалку и помечаем как прочитанное
+  chatModal.classList.add('active');
+  markFeedbackRead(feedbackId);
+};
+  
+window.sendAdminReply = async function(feedbackId) {
   const inp = document.getElementById('feedbackUserReplyText');
-  if (!inp) return;
   const text = inp.value.trim();
-  if (!text) return;
-
-  fx.updateDoc(fx.doc(window.db, 'feedbacks', feedbackId), {
-    messages: fx.arrayUnion({ sender: 'admin', text: text, timestamp: new Date() }),
-    read: true,
-    userRead: false
-  }).then(function() {
+  if (!text) return showToast('Введите ответ');
+  try {
+    await updateDoc(doc(db, "feedbacks", feedbackId), {
+      messages: arrayUnion({ sender: 'admin', text, timestamp: new Date() }),
+      read: true, userRead: false
+    });
     inp.value = '';
-    if (typeof showToast === 'function') showToast('Ответ отправлен!');
-  }).catch(function(e) {
-    console.error(e);
-    if (typeof showToast === 'function') showToast('Ошибка: ' + e.message);
-  });
-}
-
-window.markFeedbackRead = function(id) {
-  const fx = __getFx();
-  if (!fx || typeof fx.updateDoc !== 'function' || typeof fx.doc !== 'function') return;
-  const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
-  const payload = isAdmin ? { read: true } : { userRead: true };
-  fx.updateDoc(fx.doc(window.db, 'feedbacks', id), payload).catch(function(e) { console.error(e); });
+    showToast('Ответ отправлен!');
+  } catch (e) { console.error(e); showToast('Ошибка: ' + e.message); }
 };
 
-window.deleteAdminFeedback = function(id) {
-  const fx = __getFx();
-  if (!fx || typeof fx.deleteDoc !== 'function' || typeof fx.doc !== 'function') return;
-  fx.deleteDoc(fx.doc(window.db, 'feedbacks', id)).then(function() {
-    if (typeof showToast === 'function') showToast('Удалено');
-    if (typeof window.renderFeedbackList === 'function') window.renderFeedbackList();
-  }).catch(function(e) {
-    console.error(e);
-    if (typeof showToast === 'function') showToast('Ошибка');
-  });
-};
-
-// Escape закрывает модал
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeComingSoon();
-});
+window.markFeedbackRead = async function(id) { try { await updateDoc(doc(db, "feedbacks", id), { read: true }); } catch (e) { console.error(e); } };
+window.deleteAdminFeedback = async function(id) { if (!confirm('Удалить?')) return; try { await deleteDoc(doc(db, "feedbacks", id)); showToast('Удалено'); renderFeedbackList(); } catch (e) { showToast('Ошибка'); } };
 
 // Загрузка сообщений для всех страниц
 window.adminFeedbacks = [];
