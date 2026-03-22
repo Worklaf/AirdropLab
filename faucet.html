@@ -1895,7 +1895,25 @@ window.showUserInfo = async function(userId) {
     }
 
     closeBtn.onclick = closeOverlay;
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) closeOverlay(); });
+    let mouseDownOnOverlay = false;
+    
+    overlay.addEventListener('mousedown', function(e) { 
+      if (e.target === overlay) {
+        mouseDownOnOverlay = true;
+      }
+    });
+    
+    overlay.addEventListener('mouseup', function(e) { 
+      if (e.target === overlay && mouseDownOnOverlay) {
+        closeOverlay();
+      }
+      mouseDownOnOverlay = false;
+    });
+    
+    // Сбрасываем флаг при уходе мыши с оверлея
+    overlay.addEventListener('mouseleave', function(e) { 
+      mouseDownOnOverlay = false;
+    });
 
     function onKeyDown(e) {
         if (e.key === 'Escape') { closeOverlay(); document.removeEventListener('keydown', onKeyDown); }
