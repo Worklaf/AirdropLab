@@ -4146,14 +4146,17 @@ function updateEditFieldsVisibility() {
       if (element) element.style.display = 'block';
     });
     
-    // Компактный layout для админа - 2 ряда вместо 4
-    // Ряд 1: Награда + Кулдаун (в одной строке)
+    // Компактный layout для админа - 2 поля в каждом ряду
+    // Ряд 1: Reward (русский) + Reward (английский)
     const rewardRow = document.querySelector('#f_reward').parentElement.parentElement;
+    // Ряд 2: Cooldown (русский) + Cooldown (английский)
     const cooldownRow = document.querySelector('#f_cooldown').parentElement.parentElement;
+    
+    // Для формы предложений - аналогично
     const suggestRewardRow = document.querySelector('#suggest_reward').parentElement.parentElement;
     const suggestCooldownRow = document.querySelector('#suggest_cooldown').parentElement.parentElement;
     
-    // Создаем компактные ряды для админа
+    // Создаем компактные ряды для админа (2 поля в каждом ряду)
     if (rewardRow) {
       rewardRow.style.gridTemplateColumns = '1fr 1fr';
       rewardRow.style.gap = '12px';
