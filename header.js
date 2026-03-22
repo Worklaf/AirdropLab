@@ -1359,3 +1359,52 @@ if (document.readyState === 'loading') {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeComingSoon();
 });
+
+// Загрузка сообщений для всех страниц
+window.adminFeedbacks = [];
+let adminFeedbacksUnsubscribe = null;
+
+function initFeedbacksListener(uid) {
+  if (adminFeedbacksUnsubscribe) { 
+    adminFeedbacksUnsubscribe(); 
+    adminFeedbacksUnsubscribe = null; 
+  }
+  
+  let q;
+  const isAdmin = uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  try {
+    if (isAdmin) q = query(collection(db, "feedbacks"));
+    else q = query(collection(db, "feedbacks"), where("userId", "==", uid));
+    
+    adminFeedbacksUnsubscribe = onSnapshot(q, (snapshot) => {
+      adminFeedbacks = [];
+      let unreadCount = 0;
+      
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        if (isAdmin ? !data.read : !data.userRead) unreadCount++;
+        adminFeedbacks.push(data);
+      });
+      
+      adminFeedbacks.sort((a, b) => (b.createdAt?.toDate() || new Date(b.createdAt || 0)) - (a.createdAt?.toDate() || new Date(a.createdAt || 0)));
+      
+      // Обновляем бейдж если функция доступна
+      if (typeof updateFeedbackBadge === 'function') {
+        updateFeedbackBadge(unreadCount);
+      }
+      
+      // Обновляем список если модальное окно открыто
+      const listModal = document.getElementById('feedbackListModal');
+      if (listModal && listModal.classList.contains('active') && typeof renderFeedbackList === 'function') {
+        renderFeedbackList();
+      }
+    });
+  } catch(e) {
+    console.error("Error init feedback listener:", e);
+  }
+}
+
+// Инициализация при загрузке
+if (typeof currentUser !== 'undefined' && currentUser) {
+  initFeedbacksListener(currentUser.uid);
+}
