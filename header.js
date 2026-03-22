@@ -1650,12 +1650,15 @@ function loadFeedbackChat(feedbackId) {
       let senderName;
       if (isCurrentUserSender) {
         senderName = (typeof t === 'function') ? t('you') : 'Вы';
-      } else if (msg.sender === 'admin') {
-        // Для сообщений админа проверяем тип обращения
-        const isSupport = d.projectId === '__support__' || d.type === 'support';
-        senderName = isSupport ? 'Support' : 'Admin';
       } else {
-        senderName = d.userName || (typeof t === 'function') ? t('user') : 'Пользователь';
+        if (isAdmin) {
+          // Админ видит сообщения пользователей с их именем
+          senderName = d.userName || (typeof t === 'function') ? t('user') : 'Пользователь';
+        } else {
+          // Пользователь видит сообщения админа как Support/Admin
+          const isSupport = d.projectId === '__support__' || d.type === 'support';
+          senderName = isSupport ? 'Support' : 'Admin';
+        }
       }
       
       // Определяем аватар
@@ -1668,10 +1671,14 @@ function loadFeedbackChat(feedbackId) {
           // Пользователь видит свои сообщения со своим аватаром
           avatar = `<img src="${window.currentUser?.photoURL || d.userPhoto || 'https://ui-avatars.com/api/?name=U'}" class="chat-avatar" alt="">`;
         }
-      } else if (msg.sender === 'admin') {
-        avatar = `<div class="chat-avatar"><i class="fas fa-headset"></i></div>`;
       } else {
-        avatar = `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`;
+        if (isAdmin) {
+          // Админ видит сообщения пользователей с их аватаром
+          avatar = `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`;
+        } else {
+          // Пользователь видит сообщения админа с наушниками
+          avatar = `<div class="chat-avatar"><i class="fas fa-headset"></i></div>`;
+        }
       }
       
       const msgTime = msg.timestamp
