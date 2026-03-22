@@ -599,29 +599,19 @@ window.updateRatingDisplay = updateRatingDisplay;
 
 <script src="config.cloudflare.js"></script>
 
+<!-- Проверка конфигурации после загрузки -->
+<script>
+console.log('📋 After config.cloudflare.js:', {
+  config: window.firebaseConfig,
+  apiKey: window.firebaseConfig?.apiKey?.substring(0, 20) + '...',
+  projectId: window.firebaseConfig?.projectId
+});
+</script>
+
 <!-- Firebase и приложение -->
 <script type="module">
 // ═══════════════════════════════════════════
 // DATA — полный список кранов
-// ВРЕМЕННО ОТКЛЮЧАЕМ FIREBASE ДЛЯ ТЕСТА ПЕРЕВОДА
-console.log('🔧 Firebase временно отключен для теста перевода');
-
-// Заглушка для Firebase конфигурации
-window.firebaseConfig = {
-  apiKey: "test",
-  authDomain: "test.firebaseapp.com",
-  projectId: "test",
-  storageBucket: "test.appspot.com",
-  messagingSenderId: "test",
-  appId: "test"
-};
-
-// Заглушки для Firebase функций
-window.auth = null;
-window.db = null;
-window.currentUser = null;
-
-// Пропускаем Firebase инициализацию
 
 // ═══════════════════════════════════════════
 const DEFAULT_FAUCETS = [
