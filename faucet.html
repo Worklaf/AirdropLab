@@ -3528,6 +3528,29 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
       }, 1000);
     } else {
       console.log('🔍 DEBUG: updateFooterStats not available yet');
+      
+      // Пробуем загрузить footer.js вручную
+      console.log('🔍 DEBUG: Attempting to load footer.js manually');
+      const script = document.createElement('script');
+      script.src = 'footer.js';
+      script.onload = function() {
+        console.log('🔍 DEBUG: footer.js loaded manually');
+        setTimeout(() => {
+          if (typeof window.updateFooterStats === 'function') {
+            window.projects = faucets.filter(f => !f.deleted).map(f => ({
+              id: f.id,
+              name: f.name,
+              deleted: false
+            }));
+            console.log('🔍 DEBUG: Calling updateFooterStats after manual load');
+            window.updateFooterStats();
+          }
+        }, 500);
+      };
+      script.onerror = function() {
+        console.error('🔍 DEBUG: Failed to load footer.js manually');
+      };
+      document.head.appendChild(script);
     }
     
     if (isAdmin) await loadPendingSuggestions();
