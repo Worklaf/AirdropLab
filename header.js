@@ -1172,6 +1172,27 @@ window.closeFeedbackListModal = function() {
   if (modal) modal.classList.remove('active'); 
 };
 
+// Базовая функция renderFeedbackList для всех страниц
+window.renderFeedbackList = function() {
+  const container = document.getElementById('feedbacksContainer');
+  if (!container) return;
+  
+  const isAdmin = currentUser && currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  
+  // Показываем простое сообщение для faucet.html
+  container.innerHTML = `
+    <div class="text-center py-12 text-slate-500">
+      <div class="bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-inbox text-2xl text-slate-600"></i>
+      </div>
+      <p class="text-lg font-medium mb-2">У вас пока нет сообщений</p>
+      <p class="text-sm text-slate-400">Все ваши отзывы и предложения будут доступны на главной странице</p>
+    </div>
+  `;
+  
+  console.log('🔧 Basic renderFeedbackList executed for non-main page');
+};
+
 // Создаем модальное окно для сообщений (доступно на всех страницах)
 function createFeedbackModal() {
   console.log('🔧 Creating feedback modal...');
