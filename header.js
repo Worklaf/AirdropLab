@@ -1121,19 +1121,12 @@ window.closeAlNav = function(el) {
 
 // Функции для работы с сообщениями (доступны на всех страницах)
 window.openFeedbackListModal = function() {
-  console.log('🔧 openFeedbackListModal called');
-  console.log('🔧 currentUser:', currentUser);
-  
   // Проверяем и создаем модальное окно если нужно
   if (!document.getElementById('feedbackListModal')) {
-    console.log('🔧 Modal not found, creating...');
     createFeedbackModal();
   }
   
-  console.log('🔧 modal exists:', !!document.getElementById('feedbackListModal'));
-  
-  if (!currentUser) { 
-    console.log('🔧 No user - showing login');
+  if (!window.currentUser) { 
     if (typeof showToast === 'function') {
       showToast('Войдите');
     } else if (typeof toast === 'function') {
@@ -1143,7 +1136,7 @@ window.openFeedbackListModal = function() {
     return; 
   }
   
-  const isAdmin = currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  const isAdmin = window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
   const titleContainer = document.querySelector('#feedbackListModal h2');
   if (titleContainer) {
     const titleText = isAdmin ? 
@@ -1176,22 +1169,16 @@ window.closeFeedbackListModal = function() {
 window.renderFeedbackList = function() {
   const container = document.getElementById('feedbacksContainer');
   if (!container) return;
-  
-  console.log('🔧 renderFeedbackList called');
-  console.log('🔧 adminFeedbacks:', window.adminFeedbacks);
-  console.log('🔧 adminFeedbacks.length:', window.adminFeedbacks?.length);
-  
-  const isAdmin = currentUser && currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+
+  const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
   
   // Если есть загруженные сообщения - показываем их
   if (window.adminFeedbacks && window.adminFeedbacks.length > 0) {
-    console.log('🔧 Using loaded adminFeedbacks');
     renderFeedbackMessages(window.adminFeedbacks, isAdmin);
     return;
   }
   
   // Если сообщений нет - показываем заглушку
-  console.log('🔧 No feedbacks loaded, showing placeholder');
   container.innerHTML = `
     <div class="text-center py-12 text-slate-500">
       <div class="bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1287,8 +1274,8 @@ function formatTimeAgo(date) {
 // Функция обновления бейджа
 function updateFeedbackBadge() {
   if (!window.adminFeedbacks) return;
-  
-  const unreadCount = window.adminFeedbacks.filter(f => !f.read).length;
+  const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  const unreadCount = window.adminFeedbacks.filter(f => (isAdmin ? !f.read : !f.userRead)).length;
   const badge = document.getElementById('feedbackBadge');
   const mobBadge = document.getElementById('mobFeedbackBadge');
   
@@ -1369,86 +1356,59 @@ window.adminFeedbacks = [];
 let adminFeedbacksUnsubscribe = null;
 
 function initFeedbacksListener(uid) {
-  console.log('🔧 initFeedbacksListener called with uid:', uid);
   if (adminFeedbacksUnsubscribe) { 
     adminFeedbacksUnsubscribe(); 
     adminFeedbacksUnsubscribe = null; 
   }
-  
-  let q;
+
+  const fx = window.__firestoreExports;
+  if (!fx || !window.db) return;
+
   const isAdmin = uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
-  
+
   try {
-    console.log('🔧 Creating Firestore query...');
-    console.log('🔧 isAdmin:', isAdmin);
-    
-    // Админ видит ВСЕ сообщения, пользователь только СВОИ
-    if (isAdmin) q = query(collection(db, "feedbacks"));
-    else q = query(collection(db, "feedbacks"), where("userId", "==", uid));
-    
-    console.log('🔧 Query created, subscribing...');
-    adminFeedbacksUnsubscribe = onSnapshot(q, (snapshot) => {
-      console.log('🔧 Firestore snapshot received, size:', snapshot.size);
-      adminFeedbacks = [];
-      let unreadCount = 0;
-      
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        console.log('🔧 Processing feedback:', data.id);
-        // Для админа: !data.read, для пользователя: !data.userRead
-        if (isAdmin ? !data.read : !data.userRead) unreadCount++;
-        adminFeedbacks.push(data);
+    let q;
+    if (isAdmin) q = fx.query(fx.collection(window.db, "feedbacks"));
+    else q = fx.query(fx.collection(window.db, "feedbacks"), fx.where("userId", "==", uid));
+
+    adminFeedbacksUnsubscribe = fx.onSnapshot(q, (snapshot) => {
+      const items = [];
+      snapshot.forEach((d) => {
+        items.push({ id: d.id, ...d.data() });
       });
-      
-      console.log('🔧 Total feedbacks loaded:', adminFeedbacks.length);
-      console.log('🔧 Unread count:', unreadCount);
-      
-      adminFeedbacks.sort((a, b) => (b.createdAt?.toDate() || new Date(b.createdAt || 0)) - (a.createdAt?.toDate() || new Date(a.createdAt || 0)));
-      
-      // Обновляем бейдж если функция доступна
-      if (typeof updateFeedbackBadge === 'function') {
-        updateFeedbackBadge(unreadCount);
-      }
-      
-      // Обновляем список если модальное окно открыто
+
+      items.sort((a, b) => (b.createdAt?.toDate() || new Date(b.createdAt || 0)) - (a.createdAt?.toDate() || new Date(a.createdAt || 0)));
+      window.adminFeedbacks = items;
+
+      updateFeedbackBadge();
+
       const listModal = document.getElementById('feedbackListModal');
       if (listModal && listModal.classList.contains('active') && typeof renderFeedbackList === 'function') {
         renderFeedbackList();
       }
+    }, (err) => {
+      console.error('Feedbacks listener error:', err);
+      window.adminFeedbacks = [];
+      updateFeedbackBadge();
     });
   } catch(e) {
-    console.error("Error init feedback listener:", e);
+    console.error('Error init feedback listener:', e);
   }
 }
 
-// Инициализация при загрузке
-if (typeof currentUser !== 'undefined' && currentUser) {
-  console.log('🔧 Initializing feedbacks listener for user:', currentUser.uid);
-  // Ждем полной загрузки Firebase
-  setTimeout(() => {
-    initFeedbacksListener(currentUser.uid);
-  }, 1000);
-}
+// Инициализация: стартуем слушатель только когда auth реально отдал user
+(function initFeedbacksAuthBridge() {
+  const ax = window.__authExports;
+  if (!ax || !window.auth || typeof ax.onAuthStateChanged !== 'function') return;
 
-// Также принудительно инициализируем при изменении currentUser
-if (typeof window !== 'undefined') {
-  // Следим за изменениями currentUser
-  Object.defineProperty(window, 'currentUser', {
-    get: function() { return window._currentUser; },
-    set: function(value) {
-      window._currentUser = value;
-      if (value && typeof initFeedbacksListener === 'function') {
-        console.log('🔧 User changed, initializing feedbacks listener');
-        // Ждем полной загрузки Firebase
-        setTimeout(() => {
-          initFeedbacksListener(value.uid);
-        }, 1000);
-      }
+  ax.onAuthStateChanged(window.auth, function(user) {
+    window.currentUser = user || null;
+    if (!user) {
+      window.adminFeedbacks = [];
+      updateFeedbackBadge();
+      if (adminFeedbacksUnsubscribe) { adminFeedbacksUnsubscribe(); adminFeedbacksUnsubscribe = null; }
+      return;
     }
+    initFeedbacksListener(user.uid);
   });
-  
-  // Копируем текущее значение
-  if (typeof currentUser !== 'undefined') {
-    window._currentUser = currentUser;
-  }
-}
+})();
