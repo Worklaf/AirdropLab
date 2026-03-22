@@ -1325,9 +1325,17 @@ function setLanguage(lang) {
     // Обновляем глобальную переменную
     window.currentLang = currentLang;
 
-    // Обновляем переводы модального окна обратной связи
-    updateFeedbackModalTranslations();
-document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: lang } }));
+    // Вызываем перезагрузку кранов с новыми переводами
+    if (typeof window.reloadFaucetsWithNewLanguage === 'function') {
+      window.reloadFaucetsWithNewLanguage();
+    }
+    
+    // Обновляем видимость полей редактирования
+    if (typeof window.updateEditFieldsVisibility === 'function') {
+      window.updateEditFieldsVisibility();
+    }
+    
+    document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: lang } }));
     return true;
   }
   return false;
