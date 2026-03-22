@@ -1138,26 +1138,25 @@ window.openFeedbackListModal = function() {
   
   const isAdmin = window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
   const titleContainer = document.querySelector('#feedbackListModal h2');
+  const tr = (typeof t === 'function') ? t : (k) => {
+    const dict = {
+      all_requests: 'Все запросы',
+      my_messages: 'Мои сообщения'
+    };
+    return dict[k] || k;
+  };
   if (titleContainer) {
-    const titleText = isAdmin ? 
-      '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>Все запросы' : 
-      '<i class="fas fa-comments text-purple-400 mr-2"></i>Мои сообщения';
-    titleContainer.innerHTML = titleText;
+    titleContainer.innerHTML = isAdmin
+      ? '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>' + tr('all_requests')
+      : '<i class="fas fa-comments text-purple-400 mr-2"></i>' + tr('my_messages');
   }
-  
+
   const modal = document.getElementById('feedbackListModal');
-  if (modal) {
-    modal.classList.add('active');
-    if (typeof renderFeedbackList === 'function') {
-      setTimeout(() => renderFeedbackList(), 100);
-    } else {
-      // Если функции нет, показываем простое сообщение
-      const container = document.getElementById('feedbacksContainer');
-      if (container) {
-        container.innerHTML = '<div class="text-center py-12 text-slate-500"><p>Функция сообщений доступна на главной странице</p></div>';
-      }
-    }
-  }
+  if (!modal) return;
+  modal.classList.add('active');
+  setTimeout(function() {
+    if (typeof window.renderFeedbackList === 'function') window.renderFeedbackList();
+  }, 100);
 };
 
 window.closeFeedbackListModal = function() { 
@@ -1172,22 +1171,23 @@ window.renderFeedbackList = function() {
 
   const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
   
-  // Если есть загруженные сообщения - показываем их
-  if (window.adminFeedbacks && window.adminFeedbacks.length > 0) {
-    renderFeedbackMessages(window.adminFeedbacks, isAdmin);
+  const items = Array.isArray(window.adminFeedbacks) ? window.adminFeedbacks : [];
+  if (!items.length) {
+    const tr = (typeof t === 'function') ? t : (k) => {
+      const dict = { no_messages: 'Нет сообщений' };
+      return dict[k] || k;
+    };
+    container.innerHTML = `
+      <div class="text-center py-12 text-slate-500">
+        <div class="bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-inbox text-2xl text-slate-600"></i>
+        </div>
+        <p>${tr('no_messages')}</p>
+      </div>`;
     return;
   }
-  
-  // Если сообщений нет - показываем заглушку
-  container.innerHTML = `
-    <div class="text-center py-12 text-slate-500">
-      <div class="bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-        <i class="fas fa-inbox text-2xl text-slate-600"></i>
-      </div>
-      <p class="text-lg font-medium mb-2">У вас пока нет сообщений</p>
-      <p class="text-sm text-slate-400">Все ваши отзывы и предложения будут доступны на главной странице</p>
-    </div>
-  `;
+
+  renderFeedbackMessages(items, isAdmin);
 };
 
 // Функция для отображения сообщений
@@ -1219,7 +1219,22 @@ function renderFeedbackMessages(feedbacks, isAdmin) {
     partnership: '🤝 Партнёрство'
   };
 
-  container.innerHTML = feedbacks.map((item) => {
+  const list = Array.isArray(window.adminFeedbacks) ? window.adminFeedbacks : [];
+  const esc = (typeof window.safeText === 'function')
+    ? window.safeText
+    : function(s) {
+        return String(s || '').replace(/[&<>"']/g, function(ch) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+        });
+      };
+  const tr = (typeof t === 'function') ? t : (k) => {
+    const dict = {
+      support: 'Support'
+    };
+    return dict[k] || k;
+  };
+
+  container.innerHTML = list.map((item) => {
     const messages = item.messages || [];
     const lastMsg = messages[messages.length - 1] || { text: '...', sender: 'unknown' };
     const date = item.createdAt?.toDate() || new Date(item.createdAt || 0);
@@ -1229,26 +1244,38 @@ function renderFeedbackMessages(feedbacks, isAdmin) {
 
     let projectName, projectLogo;
     if (isSupport) {
-      projectName = 'Support';
+      projectName = tr('support');
       projectLogo = '';
     } else {
-      projectName = item.projectName || item.projectId || 'Неизвестный проект';
-      projectLogo = item.projectLogo || '';
+      const pr = (window.projects && Array.isArray(window.projects))
+        ? window.projects.find(p => p.id === item.projectId)
+        : null;
+      projectName = (pr && pr.name) || item.projectName || item.projectId || 'Неизвестный проект';
+      projectLogo = (pr && (pr.image || pr.logoUrl)) || item.projectLogo || '';
     }
 
+    const openHandler = (typeof window.openFeedbackFromList === 'function')
+      ? `onclick="openFeedbackFromList('${String(item.id || '').replace(/'/g, "\\'")}', '${String(item.projectId || '').replace(/'/g, "\\'")}', '${String(projectName || '').replace(/'/g, "\\'")}')"`
+      : '';
+
     return `
-      <div class="feedback-item p-4 bg-slate-800/50 rounded-lg ${isUnread ? 'unread' : ''}" data-id="${item.id}">
+      <div class="p-4 bg-slate-800/50 rounded-xl border ${isUnread ? 'border-purple-500/40' : 'border-slate-700/40'} hover:border-purple-500/50 transition cursor-pointer" ${openHandler}>
         <div class="flex items-start gap-3">
-          <div class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-comments text-purple-400"></i>
+          <div class="w-10 h-10 rounded-xl bg-slate-700/60 border border-slate-600/40 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            ${projectLogo ? `<img src="${projectLogo}" class="w-full h-full object-cover" />` : `<i class="fas fa-comments text-purple-400"></i>`}
           </div>
           <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-medium text-purple-400">${projectName}</span>
-              <span class="text-xs text-slate-500">${formatTimeAgo(date)}</span>
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="text-sm font-bold text-slate-200 truncate">${projectName}</div>
+                ${categoryLabel ? `<div class="text-[11px] text-slate-400 mt-0.5">${categoryLabel}</div>` : ''}
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="text-xs text-slate-500">${formatTimeAgo(date)}</span>
+                ${isUnread ? `<span class="w-2 h-2 rounded-full bg-purple-400"></span>` : ''}
+              </div>
             </div>
-            <div class="text-sm text-slate-300">${lastMsg.text}</div>
-            ${isUnread ? '<button onclick="markFeedbackRead(\'' + item.id + '\')" class="text-xs text-blue-400 mt-2">Отметить</button>' : ''}
+            <div class="mt-2 text-sm text-slate-300 break-words">${esc(lastMsg.text)}</div>
           </div>
         </div>
       </div>
