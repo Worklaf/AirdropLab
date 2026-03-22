@@ -1119,6 +1119,47 @@ window.closeAlNav = function(el) {
   if (btn) btn.classList.remove('al-nav-open');
 };
 
+// Функции для работы с сообщениями (доступны на всех страницах)
+window.openFeedbackListModal = function() {
+  if (!currentUser) { 
+    if (typeof showToast === 'function') {
+      showToast('Войдите');
+    } else if (typeof toast === 'function') {
+      toast('Войдите');
+    }
+    if (typeof openLoginModal === 'function') openLoginModal(); 
+    return; 
+  }
+  
+  const isAdmin = currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  const titleContainer = document.querySelector('#feedbackListModal h2');
+  if (titleContainer) {
+    const titleText = isAdmin ? 
+      '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>Все запросы' : 
+      '<i class="fas fa-comments text-purple-400 mr-2"></i>Мои сообщения';
+    titleContainer.innerHTML = titleText;
+  }
+  
+  const modal = document.getElementById('feedbackListModal');
+  if (modal) {
+    modal.classList.add('active');
+    if (typeof renderFeedbackList === 'function') {
+      setTimeout(() => renderFeedbackList(), 100);
+    } else {
+      // Если функции нет, показываем простое сообщение
+      const container = document.getElementById('feedbacksContainer');
+      if (container) {
+        container.innerHTML = '<div class="text-center py-12 text-slate-500"><p>Функция сообщений доступна на главной странице</p></div>';
+      }
+    }
+  }
+};
+
+window.closeFeedbackListModal = function() { 
+  const modal = document.getElementById('feedbackListModal');
+  if (modal) modal.classList.remove('active'); 
+};
+
 // Escape закрывает модал
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeComingSoon();
