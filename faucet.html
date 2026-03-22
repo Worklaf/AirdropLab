@@ -3508,6 +3508,9 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
     setTimeout(function() { updateCounts(); }, 500);
     
     // Initialize footer stats AFTER faucets are loaded
+    console.log('🔍 DEBUG: Checking footer.js availability:', typeof window.updateFooterStats);
+    console.log('🔍 DEBUG: Current faucets count:', faucets ? faucets.length : 'undefined');
+    
     if (typeof window.updateFooterStats === 'function') {
       // Set projects count from faucets data
       window.projects = faucets.filter(f => !f.deleted).map(f => ({
@@ -3516,10 +3519,15 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
         deleted: false
       }));
       
+      console.log('🔍 DEBUG: window.projects created:', window.projects.length);
+      
       // Trigger footer stats update with delay
       setTimeout(() => {
+        console.log('🔍 DEBUG: Calling updateFooterStats()');
         window.updateFooterStats();
       }, 1000);
+    } else {
+      console.log('🔍 DEBUG: updateFooterStats not available yet');
     }
     
     if (isAdmin) await loadPendingSuggestions();
