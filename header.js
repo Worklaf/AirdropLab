@@ -1698,8 +1698,13 @@ function loadFeedbackChat(feedbackId) {
       } else {
         // Чужие сообщения - строго по типу отправителя
         if (msg.sender === 'admin') {
-          // Сообщения админов всегда со щитом
-          avatar = `<div class="chat-avatar"><i class="fas fa-user-shield"></i></div>`;
+          // Сообщения админов - наушники для support, щит для admin
+          const isSupport = d.projectId === '__support__' || d.type === 'support';
+          if (isSupport) {
+            avatar = `<div class="chat-avatar"><i class="fas fa-headset"></i></div>`;
+          } else {
+            avatar = `<div class="chat-avatar"><i class="fas fa-user-shield"></i></div>`;
+          }
         } else {
           // Сообщения пользователей всегда с их аватаром
           avatar = `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`;
