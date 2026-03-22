@@ -2298,6 +2298,7 @@ function openAddModal(id) {
         titleText = isEn ? 'Edit Suggestion' : 'Редактировать предложение';
       }
     }
+    updateEditFieldsVisibility();
   }
   
   document.getElementById('modalTitle').textContent = titleText;
@@ -3439,6 +3440,11 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
       adminPanel.style.display = isAdmin ? 'flex' : 'none';
     }
     
+    // Обновляем видимость полей редактирования
+    if (typeof window.updateEditFieldsVisibility === 'function') {
+      window.updateEditFieldsVisibility();
+    }
+    
     // Загружаем язык пользователя из профиля
     if (user && window.db) {
       try {
@@ -4101,6 +4107,48 @@ async function autoTranslateDescription(sourceId, targetId, sourceLang) {
 
 // Сделать функцией глобальной
 window.autoTranslateDescription = autoTranslateDescription;
+// Функция для управления видимостью полей в зависимости от языка и прав администратора
+function updateEditFieldsVisibility() {
+  const isEn = (window.currentLang === 'en');
+  const isAdmin = window.currentUser && window.isAdmin;
+  
+  // Русские поля (всегда видны)
+  const russianFields = ['f_desc', 'f_reward', 'f_cooldown'];
+  
+  // Английские поля
+  const englishFields = ['f_desc_en_container', 'f_reward_en_container', 'f_cooldown_en_container'];
+  
+  if (isAdmin) {
+    // Администратор видит все поля
+    englishFields.forEach(fieldId => {
+      const element = document.getElementById(fieldId);
+      if (element) element.style.display = 'block';
+    });
+    
+    // Для админа меняем grid на 1fr 1fr для всех полей
+    const rewardGrid = document.querySelector('#f_reward').parentElement.parentElement;
+    const cooldownGrid = document.querySelector('#f_cooldown').parentElement.parentElement;
+    if (rewardGrid) rewardGrid.style.gridTemplateColumns = '1fr 1fr';
+    if (cooldownGrid) cooldownGrid.style.gridTemplateColumns = '1fr 1fr';
+    
+  } else {
+    // Обычный пользователь видит поля только для своего языка
+    englishFields.forEach(fieldId => {
+      const element = document.getElementById(fieldId);
+      if (element) element.style.display = isEn ? 'block' : 'none';
+    });
+    
+    // Для обычного пользователя меняем grid на 1fr если английские поля скрыты
+    const rewardGrid = document.querySelector('#f_reward').parentElement.parentElement;
+    const cooldownGrid = document.querySelector('#f_cooldown').parentElement.parentElement;
+    if (rewardGrid) rewardGrid.style.gridTemplateColumns = isEn ? '1fr 1fr' : '1fr';
+    if (cooldownGrid) cooldownGrid.style.gridTemplateColumns = isEn ? '1fr 1fr' : '1fr';
+  }
+  
+  console.log(`🔧 Edit fields visibility updated: isEn=${isEn}, isAdmin=${isAdmin}`);
+}
+
+window.updateEditFieldsVisibility = updateEditFieldsVisibility;
 </script>
 
 </body>
