@@ -3539,12 +3539,18 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
         // Загружаем реальные проекты из главной страницы
         if (window.db && window.__firestoreExports) {
           console.log('🔍 DEBUG: Loading real projects from main page');
+          console.log('🔍 DEBUG: Firebase available:', !!window.db);
+          console.log('🔍 DEBUG: Firestore exports available:', !!window.__firestoreExports);
+          
           window.__firestoreExports.getDocs(
             window.__firestoreExports.collection(window.db, 'projects')
           ).then(projectsSnap => {
+            console.log('🔍 DEBUG: Projects snapshot received, size:', projectsSnap.size);
+            
             const realProjects = [];
             projectsSnap.forEach(doc => {
               const data = doc.data();
+              console.log('🔍 DEBUG: Project data:', { id: doc.id, name: data.name, deleted: data.deleted });
               if (!data.deleted) {
                 realProjects.push({
                   id: doc.id,
@@ -3556,6 +3562,7 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
             
             window.projects = realProjects;
             console.log('🔍 DEBUG: Real projects loaded:', window.projects.length);
+            console.log('🔍 DEBUG: Projects list:', window.projects.map(p => p.name));
             
             setTimeout(() => {
               console.log('🔍 DEBUG: Calling updateFooterStats with real projects');
@@ -3563,6 +3570,7 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
             }, 500);
           }).catch(err => {
             console.error('🔍 DEBUG: Failed to load real projects:', err);
+            console.error('🔍 DEBUG: Error details:', err.message, err.code);
             // Fallback - используем faucets как проекты
             window.projects = faucets.filter(f => !f.deleted).map(f => ({
               id: f.id,
