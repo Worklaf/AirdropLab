@@ -2289,7 +2289,9 @@ function openAddModal(id) {
       document.getElementById('f_type').value = f.type || 'free';
       document.getElementById('f_net').value = f.net || 'testnet';
       document.getElementById('f_reward').value = f.reward || '';
+      document.getElementById('f_reward_en').value = f.reward_en || ''; // Загружаем английскую награду
       document.getElementById('f_cooldown').value = f.cooldown || '';
+      document.getElementById('f_cooldown_en').value = f.cooldown_en || ''; // Загружаем английский кулдаун
       document.getElementById('f_tags').value = (f.tags||[]).join(', ');
       
       // Если это предложение пользователя, меняем тип операции
