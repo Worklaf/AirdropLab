@@ -1645,27 +1645,22 @@ function loadFeedbackChat(feedbackId) {
         // Новые сообщения с senderId
         isCurrentUserSender = msg.senderId === window.currentUser.uid;
       } else {
-        // Старые сообщения без senderId - считаем что это не текущий пользователь
-        // Если это сообщение от пользователя, то только его создатель видит как "своё"
-        if (msg.sender === 'user') {
-          isCurrentUserSender = d.userId === window.currentUser.uid;
-        } else {
-          // Старые сообщения от админов - только админы видят как "свои"
-          isCurrentUserSender = isAdmin;
-        }
+        // Старые сообщения без senderId - всегда считаем чужими для корректного отображения
+        // Это нужно чтобы старые сообщения показывались правильно для всех пользователей
+        isCurrentUserSender = false;
       }
       const bubbleSide = isCurrentUserSender ? 'admin' : 'user';
       
-      // Отладка
-      console.log('🔍 Message debug:', {
-        sender: msg.sender,
-        senderId: msg.senderId,
-        currentUserId: window.currentUser?.uid,
-        isAdmin: isAdmin,
-        isCurrentUserSender: isCurrentUserSender,
-        bubbleSide: bubbleSide,
-        senderName: msg.sender === 'admin' ? 'Admin' : (d.userName || 'User')
-      });
+      // Отладка только для новых сообщений
+      if (msg.senderId) {
+        console.log('🔍 New message debug:', {
+          sender: msg.sender,
+          senderId: msg.senderId,
+          currentUserId: window.currentUser?.uid,
+          isCurrentUserSender: isCurrentUserSender,
+          bubbleSide: bubbleSide
+        });
+      }
       
       // Определяем имя отправителя
       let senderName;
