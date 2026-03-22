@@ -2395,13 +2395,11 @@ async function saveSuggestion() {
     type: document.getElementById('f_type').value,
     net: document.getElementById('f_net').value,
     desc: document.getElementById('f_desc').value.trim(),
-    desc_en: document.getElementById('f_desc_en').value.trim() || '', // Добавляем английское описание
+    desc_en: document.getElementById('f_desc_en').value.trim(), // Добавляем английское описание
     links,
     logoUrl: normalizeUrl(document.getElementById('f_logo').value.trim()),
     reward: document.getElementById('f_reward').value.trim(),
-    reward_en: document.getElementById('f_reward_en').value.trim() || '', // Добавляем английскую награду
     cooldown: document.getElementById('f_cooldown').value.trim(),
-    cooldown_en: document.getElementById('f_cooldown_en').value.trim() || '', // Добавляем английский кулдаун
     tags,
     updatedAt: serverTimestamp()
   };
@@ -2457,52 +2455,7 @@ async function saveSuggestion() {
 
 window.saveSuggestion = saveSuggestion;
 
-function editFaucet(id) { 
-  // Определяем тип операции и заголовок
-  let operationType = 'faucet';
-  let titleText = isEn ? 'Edit Faucet' : 'Редактировать кран';
-  
-  const f = faucets.find(function(x){ return x.id === id; });
-  if (f) {
-    // Проверяем, это предложение пользователя
-    if (f.status === 'pending' && f.submittedBy === currentUser?.uid) {
-      operationType = 'suggestion';
-      titleText = isEn ? 'Edit Suggestion' : 'Редактировать предложение';
-    }
-    
-    // Загружаем данные в форму
-    document.getElementById('f_name').value = f.name || '';
-    document.getElementById('f_token').value = f.token || '';
-    document.getElementById('f_desc').value = f.desc || '';
-    document.getElementById('f_desc_en').value = f.desc_en || ''; // Загружаем английское описание
-    document.getElementById('f_links').value = (f.links||[]).join('\n');
-    document.getElementById('f_logo').value = f.logoUrl || '';
-    document.getElementById('f_type').value = f.type || 'free';
-    document.getElementById('f_net').value = f.net || 'testnet';
-    document.getElementById('f_reward').value = f.reward || '';
-    document.getElementById('f_cooldown').value = f.cooldown || '';
-    document.getElementById('f_tags').value = (f.tags||[]).join(', ');
-    
-    // Обновляем видимость полей в зависимости от типа операции
-    updateEditFieldsVisibility();
-    
-    // Изменяем кнопку сохранения в зависимости от типа операции
-    const saveBtn = document.querySelector('#addFaucetModal button[onclick*="save"]');
-    if (saveBtn) {
-      if (operationType === 'suggestion') {
-        saveBtn.setAttribute('onclick', 'saveSuggestion()');
-        saveBtn.innerHTML = '<i class="fas fa-save" style="margin-right:6px;"></i><span data-translate="save">Сохранить</span>';
-      } else {
-        saveBtn.setAttribute('onclick', 'saveFaucet()');
-        saveBtn.innerHTML = '<i class="fas fa-save" style="margin-right:6px;"></i><span data-translate="save">Сохранить</span>';
-      }
-    }
-  }
-  
-  document.getElementById('modalTitle').textContent = titleText;
-  document.getElementById('editId').value = id;
-  document.getElementById('addFaucetModal').classList.add('open');
-}
+function editFaucet(id) { openAddModal(id); }
 window.editFaucet = editFaucet;
 
 async function deleteFaucet(id) {
@@ -4240,28 +4193,14 @@ function updateEditFieldsVisibility() {
       if (grid) grid.style.gridTemplateColumns = isEn ? '1fr 1fr' : '1fr';
     });
     
-    // Grid для формы предложений - компактный layout в 2 ряда
+    // Grid для формы предложений - всегда 1fr (без дублирования)
     const suggestionGrids = [
       document.querySelector('#suggest_reward').parentElement.parentElement,
       document.querySelector('#suggest_cooldown').parentElement.parentElement
     ];
     suggestionGrids.forEach(grid => {
-      if (grid) grid.style.gridTemplateColumns = isEn ? '1fr 1fr' : '1fr';
+      if (grid) grid.style.gridTemplateColumns = '1fr';
     });
-    
-    // Дополнительно: для админа тоже компактный layout для предложений
-    if (isAdmin) {
-      const suggestRewardRow = document.querySelector('#suggest_reward').parentElement.parentElement;
-      const suggestCooldownRow = document.querySelector('#suggest_cooldown').parentElement.parentElement;
-      if (suggestRewardRow) {
-        suggestRewardRow.style.gridTemplateColumns = '1fr 1fr';
-        suggestRewardRow.style.gap = '12px';
-      }
-      if (suggestCooldownRow) {
-        suggestCooldownRow.style.gridTemplateColumns = '1fr 1fr';
-        suggestCooldownRow.style.gap = '12px';
-      }
-    }
   }
   
   console.log(`🔧 Edit fields visibility updated: isEn=${isEn}, isAdmin=${isAdmin}`);
