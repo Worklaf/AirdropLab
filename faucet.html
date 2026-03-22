@@ -1020,7 +1020,8 @@ import {
   serverTimestamp,
   increment,
   runTransaction,
-  onSnapshot
+  onSnapshot,
+  arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Проверяем доступность Firebase
@@ -1067,7 +1068,7 @@ if (!firebaseConfig || firebaseConfig.apiKey === "test" || firebaseConfig.apiKey
   // Provide globals for other modules
   window.__firestoreExports = {
     collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-    query, where, orderBy, onSnapshot, serverTimestamp, increment, runTransaction
+    query, where, orderBy, onSnapshot, serverTimestamp, increment, runTransaction, arrayUnion
   };
   window.__authExports = { onAuthStateChanged, signOut };
 }
@@ -1077,7 +1078,7 @@ window.db = db;
 window.auth = auth;
 window.__firestoreExports = {
   collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, onSnapshot, serverTimestamp, increment, runTransaction
+  query, where, orderBy, onSnapshot, serverTimestamp, increment, runTransaction, arrayUnion
 };
 window.__authExports = { onAuthStateChanged, signOut };
 
