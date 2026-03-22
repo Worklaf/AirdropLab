@@ -1672,12 +1672,12 @@ function loadFeedbackChat(feedbackId) {
           avatar = `<img src="${window.currentUser?.photoURL || d.userPhoto || 'https://ui-avatars.com/api/?name=U'}" class="chat-avatar" alt="">`;
         }
       } else {
-        // Чужие сообщения
+        // Чужие сообщения - строго по типу отправителя
         if (msg.sender === 'admin') {
-          // Сообщения админов с наушниками
+          // Сообщения админов всегда с наушниками, независимо от кто смотрит
           avatar = `<div class="chat-avatar"><i class="fas fa-headset"></i></div>`;
         } else {
-          // Сообщения пользователей с их аватаром
+          // Сообщения пользователей всегда с их аватаром
           avatar = `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`;
         }
       }
