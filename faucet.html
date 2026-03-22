@@ -12,7 +12,6 @@
   <script src="languages.js"></script>
   <script src="header.js"></script>
   <script src="assets/reagents.js"></script>
-  <script src="footer.js"></script>
   <style>
     /* z-index fix — nav dropdown поверх всего */
     #site-nav { position: relative; z-index: 999 !important; }
@@ -3446,6 +3445,7 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
     currentUser = user || null;
     window.currentUser = currentUser;
     isAdmin = !!(user && (user.uid === ADMIN_UID));
+    window.isAdmin = isAdmin; // Добавляем эту строку!
     // Показываем фиксированную админ-панель
     const adminPanel = document.getElementById('fixedAdminPanel');
     if (adminPanel) {
@@ -4245,6 +4245,8 @@ window.updateEditFieldsVisibility = updateEditFieldsVisibility;
   display: none !important;
 }
 </style>
+
+<script src="footer.js"></script>
 
 </body>
 </html>
