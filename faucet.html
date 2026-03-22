@@ -2486,9 +2486,25 @@ async function deleteFaucet(id) {
 }
 window.deleteFaucet = deleteFaucet;
 
-// Close modal on backdrop click
-document.getElementById('addFaucetModal').addEventListener('click', function(e) {
-  if (e.target === this) closeAddModal();
+// Close modal on backdrop click - умная логика
+let mouseDownOnAddModal = false;
+const addFaucetModal = document.getElementById('addFaucetModal');
+
+addFaucetModal.addEventListener('mousedown', function(e) { 
+  if (e.target === this) {
+    mouseDownOnAddModal = true;
+  }
+});
+
+addFaucetModal.addEventListener('mouseup', function(e) { 
+  if (e.target === this && mouseDownOnAddModal) {
+    closeAddModal();
+  }
+  mouseDownOnAddModal = false;
+});
+
+addFaucetModal.addEventListener('mouseleave', function(e) { 
+  mouseDownOnAddModal = false;
 });
 
 // Suggest modal
@@ -2514,8 +2530,25 @@ function closeSuggestModal() { document.getElementById('suggestModal').classList
 window.openSuggestModal = openSuggestModal;
 window.closeSuggestModal = closeSuggestModal;
 
-document.getElementById('suggestModal').addEventListener('click', function(e) {
-  if (e.target === this) closeSuggestModal();
+// Close suggest modal on backdrop click - умная логика
+let mouseDownOnSuggestModal = false;
+const suggestModal = document.getElementById('suggestModal');
+
+suggestModal.addEventListener('mousedown', function(e) { 
+  if (e.target === this) {
+    mouseDownOnSuggestModal = true;
+  }
+});
+
+suggestModal.addEventListener('mouseup', function(e) { 
+  if (e.target === this && mouseDownOnSuggestModal) {
+    closeSuggestModal();
+  }
+  mouseDownOnSuggestModal = false;
+});
+
+suggestModal.addEventListener('mouseleave', function(e) { 
+  mouseDownOnSuggestModal = false;
 });
 
 async function submitSuggestion() {
