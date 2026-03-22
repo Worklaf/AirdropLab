@@ -1123,6 +1123,13 @@ window.closeAlNav = function(el) {
 window.openFeedbackListModal = function() {
   console.log('🔧 openFeedbackListModal called');
   console.log('🔧 currentUser:', currentUser);
+  
+  // Проверяем и создаем модальное окно если нужно
+  if (!document.getElementById('feedbackListModal')) {
+    console.log('🔧 Modal not found, creating...');
+    createFeedbackModal();
+  }
+  
   console.log('🔧 modal exists:', !!document.getElementById('feedbackListModal'));
   
   if (!currentUser) { 
