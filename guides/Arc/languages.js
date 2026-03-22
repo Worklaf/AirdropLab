@@ -210,3 +210,9 @@ window.i18nData = {
         search_placeholder: "Пошук..."
     }
 };
+
+// Функция перевода для использования в header.js
+window.t = function(key) {
+    const currentLang = localStorage.getItem('language') || 'en';
+    return window.i18nData[currentLang]?.[key] || key;
+};
