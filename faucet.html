@@ -4215,13 +4215,21 @@ function updateEditFieldsVisibility() {
       if (grid) grid.style.gridTemplateColumns = isEn ? '1fr 1fr' : '1fr';
     });
     
-    // Grid для формы предложений - всегда 1fr (без дублирования)
+    // Grid для формы предложений - зависит от языка и роли
     const suggestionGrids = [
-      document.querySelector('#suggest_reward').parentElement.parentElement,
-      document.querySelector('#suggest_cooldown').parentElement.parentElement
+      document.querySelector('#suggest_reward_container').parentElement,
+      document.querySelector('#suggest_cooldown_container').parentElement
     ];
     suggestionGrids.forEach(grid => {
-      if (grid) grid.style.gridTemplateColumns = '1fr';
+      if (grid) {
+        if (isAdmin) {
+          // Для админа всегда 2 поля в ряду
+          grid.style.gridTemplateColumns = '1fr 1fr';
+        } else {
+          // Для обычных пользователей - зависит от языка
+          grid.style.gridTemplateColumns = isEn ? '1fr 1fr' : '1fr';
+        }
+      }
     });
   }
   
