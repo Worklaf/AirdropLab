@@ -384,7 +384,7 @@
         <div class="ae-label" data-translate="faucets_field_token">Токен *</div>
         <input class="ae-input" id="suggest_token" data-translate="faucets_ph_token" placeholder="Например: ETH, BTC, SOL">
       </div>
-      <div>
+      <div id="suggest_desc_container">
         <div class="ae-label" data-translate="faucets_field_desc">Описание</div>
         <textarea class="ae-input" id="suggest_desc" rows="2" data-translate="faucets_ph_desc" placeholder="Краткое описание крана" style="resize:vertical;" oninput="autoTranslateDescription('suggest_desc', 'suggest_desc_en', 'ru')"></textarea>
       </div>
@@ -417,7 +417,7 @@
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div>
+        <div id="suggest_reward_container">
           <div class="ae-label" data-translate="faucets_field_reward">Награда (необязательно)</div>
           <input class="ae-input" id="suggest_reward" data-translate="faucets_ph_reward" placeholder="0.5 ETH/день" oninput="autoTranslateDescription('suggest_reward', 'suggest_reward_en', 'ru')">
         </div>
@@ -427,7 +427,7 @@
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div>
+        <div id="suggest_cooldown_container">
           <div class="ae-label" data-translate="faucets_field_cooldown">Кулдаун</div>
           <input class="ae-input" id="suggest_cooldown" data-translate="faucets_ph_cooldown" placeholder="24ч" oninput="autoTranslateDescription('suggest_cooldown', 'suggest_cooldown_en', 'ru')">
         </div>
@@ -4132,7 +4132,7 @@ function updateEditFieldsVisibility() {
   const suggestionEnglishFields = ['suggest_desc_en_container', 'suggest_reward_en_container', 'suggest_cooldown_en_container'];
   
   // Русские поля для формы предложений (скрываем при английском)
-  const suggestionRussianFields = ['suggest_desc', 'suggest_reward', 'suggest_cooldown'];
+  const suggestionRussianFields = ['suggest_desc_container', 'suggest_reward_container', 'suggest_cooldown_container'];
   
   if (isAdmin) {
     // Администратор видит ВСЕ поля всегда - независимо от языка интерфейса
