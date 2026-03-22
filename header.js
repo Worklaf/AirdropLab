@@ -1645,9 +1645,14 @@ function loadFeedbackChat(feedbackId) {
         // Новые сообщения с senderId
         isCurrentUserSender = msg.senderId === window.currentUser.uid;
       } else {
-        // Старые сообщения без senderId - всегда считаем чужими для корректного отображения
-        // Это нужно чтобы старые сообщения показывались правильно для всех пользователей
-        isCurrentUserSender = false;
+        // Старые сообщения без senderId
+        if (msg.sender === 'user') {
+          // Сообщения от пользователя - проверяем по userId документа
+          isCurrentUserSender = d.userId === window.currentUser.uid;
+        } else {
+          // Сообщения от админа - только админы видят как свои
+          isCurrentUserSender = isAdmin;
+        }
       }
       const bubbleSide = isCurrentUserSender ? 'admin' : 'user';
       
@@ -1693,8 +1698,8 @@ function loadFeedbackChat(feedbackId) {
       } else {
         // Чужие сообщения - строго по типу отправителя
         if (msg.sender === 'admin') {
-          // Сообщения админов всегда с наушниками
-          avatar = `<div class="chat-avatar"><i class="fas fa-headset"></i></div>`;
+          // Сообщения админов всегда со щитом
+          avatar = `<div class="chat-avatar"><i class="fas fa-user-shield"></i></div>`;
         } else {
           // Сообщения пользователей всегда с их аватаром
           avatar = `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`;
