@@ -1369,6 +1369,7 @@ window.adminFeedbacks = [];
 let adminFeedbacksUnsubscribe = null;
 
 function initFeedbacksListener(uid) {
+  console.log('🔧 initFeedbacksListener called with uid:', uid);
   if (adminFeedbacksUnsubscribe) { 
     adminFeedbacksUnsubscribe(); 
     adminFeedbacksUnsubscribe = null; 
@@ -1376,19 +1377,27 @@ function initFeedbacksListener(uid) {
   
   let q;
   const isAdmin = uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  
   try {
+    console.log('🔧 Creating Firestore query...');
     if (isAdmin) q = query(collection(db, "feedbacks"));
     else q = query(collection(db, "feedbacks"), where("userId", "==", uid));
     
+    console.log('🔧 Query created, subscribing...');
     adminFeedbacksUnsubscribe = onSnapshot(q, (snapshot) => {
+      console.log('🔧 Firestore snapshot received, size:', snapshot.size);
       adminFeedbacks = [];
       let unreadCount = 0;
       
       snapshot.forEach((doc) => {
         const data = doc.data();
+        console.log('🔧 Processing feedback:', data.id);
         if (isAdmin ? !data.read : !data.userRead) unreadCount++;
         adminFeedbacks.push(data);
       });
+      
+      console.log('🔧 Total feedbacks loaded:', adminFeedbacks.length);
+      console.log('🔧 Unread count:', unreadCount);
       
       adminFeedbacks.sort((a, b) => (b.createdAt?.toDate() || new Date(b.createdAt || 0)) - (a.createdAt?.toDate() || new Date(a.createdAt || 0)));
       
