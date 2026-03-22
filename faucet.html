@@ -3941,5 +3941,126 @@ window.reloadFaucetsWithNewLanguage = reloadFaucetsWithNewLanguage;
 }
 </style>
 
+<!-- ========== АВТОМАТИЧЕСКИЙ ПЕРЕВОД ОПИСАНИЙ ========== -->
+<script>
+// Функция автоматического перевода между полями описаний
+async function autoTranslateDescription(sourceId, targetId, sourceLang) {
+  const sourceField = document.getElementById(sourceId);
+  const targetField = document.getElementById(targetId);
+  
+  if (!sourceField || !targetField) return;
+  
+  const sourceText = sourceField.value.trim();
+  if (!sourceText) {
+    targetField.value = '';
+    return;
+  }
+  
+  const targetLang = sourceLang === 'ru' ? 'en' : 'ru';
+  
+  if (translationTimeout) {
+    clearTimeout(translationTimeout);
+  }
+  
+  translationTimeout = setTimeout(async () => {
+    try {
+      targetField.style.opacity = '0.6';
+      targetField.placeholder = sourceLang === 'ru' ? 'Переводим...' : 'Translating...';
+      
+      // Используем CloudFlare Function или локальный сервис
+      const translationUrl = window.location.hostname === 'airdroplab.org' 
+        ? '/api/translate'  // CloudFlare Function
+        : 'http://localhost:3003/translate'; // Локальный сервис для разработки
+      
+      const response = await fetch(translationUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: sourceText,
+          sourceLang: sourceLang,
+          targetLang: targetLang
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.translated) {
+          targetField.value = data.translated;
+          console.log(`✅ Auto-translated: "${sourceText}" → "${data.translated}"`);
+        }
+      } else {
+        throw new Error('Translation service error');
+      }
+    } catch (error) {
+      console.warn('Auto-translation failed, using fallback:', error);
+      
+      // Fallback - базовый перевод если сервис недоступен
+      let fallbackTranslation = sourceText;
+      
+      if (sourceLang === 'ru' && targetLang === 'en') {
+        fallbackTranslation = sourceText
+          .replace(/Шардированный блокчейн/g, 'Sharded blockchain')
+          .replace(/кран/g, 'faucet')
+          .replace(/Кран/g, 'Faucet')
+          .replace(/через официальный/g, 'through official')
+          .replace(/dev-кошелёк/g, 'dev wallet')
+          .replace(/тестнет/g, 'testnet')
+          .replace(/мейннет/g, 'mainnet')
+          .replace(/бесплатный/g, 'free')
+          .replace(/платный/g, 'paid')
+          .replace(/награда/g, 'reward')
+          .replace(/кулдаун/g, 'cooldown')
+          // Перевод для reward/cooldown
+          .replace(/\/день/g, '/day')
+          .replace(/ч/g, 'h')
+          .replace(/час/g, 'hour')
+          .replace(/часов/g, 'hours')
+          .replace(/минут/g, 'minutes')
+          .replace(/секунд/g, 'seconds')
+          .replace(/без лимита/g, 'no limit')
+          .replace(/неограничено/g, 'unlimited')
+          .replace(/лимит/g, 'limit');
+      } else if (sourceLang === 'en' && targetLang === 'ru') {
+        fallbackTranslation = sourceText
+          .replace(/Sharded blockchain/g, 'Шардированный блокчейн')
+          .replace(/faucet/g, 'кран')
+          .replace(/Faucet/g, 'Кран')
+          .replace(/through official/g, 'через официальный')
+          .replace(/dev wallet/g, 'dev-кошелек')
+          .replace(/testnet/g, 'тестнет')
+          .replace(/mainnet/g, 'мейннет')
+          .replace(/free/g, 'бесплатный')
+          .replace(/paid/g, 'платный')
+          .replace(/reward/g, 'награда')
+          .replace(/cooldown/g, 'кулдаун')
+          // Перевод для reward/cooldown
+          .replace(/\/day/g, '/день')
+          .replace(/h/g, 'ч')
+          .replace(/hour/g, 'час')
+          .replace(/hours/g, 'часов')
+          .replace(/minutes/g, 'минут')
+          .replace(/seconds/g, 'секунд')
+          .replace(/no limit/g, 'без лимита')
+          .replace(/unlimited/g, 'неограничено')
+          .replace(/limit/g, 'лимит');
+      }
+      
+      targetField.value = fallbackTranslation;
+      console.log(`🔄 Fallback translation: "${sourceText}" → "${fallbackTranslation}"`);
+    } finally {
+      targetField.style.opacity = '1';
+      targetField.placeholder = sourceLang === 'ru' ? 
+        'English faucet description' : 
+        'Краткое описание крана';
+    }
+  }, 800); // Задержка 800мс после окончания ввода
+}
+
+// Сделать функцией глобальной
+window.autoTranslateDescription = autoTranslateDescription;
+</script>
+
 </body>
 </html>
