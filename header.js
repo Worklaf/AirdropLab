@@ -1645,11 +1645,13 @@ function loadFeedbackChat(feedbackId) {
         // Новые сообщения с senderId
         isCurrentUserSender = msg.senderId === window.currentUser.uid;
       } else {
-        // Старые сообщения без senderId - определяем по sender и роли
-        if (isAdmin) {
-          isCurrentUserSender = msg.sender === 'admin';
+        // Старые сообщения без senderId - считаем что это не текущий пользователь
+        // Если это сообщение от пользователя, то только его создатель видит как "своё"
+        if (msg.sender === 'user') {
+          isCurrentUserSender = d.userId === window.currentUser.uid;
         } else {
-          isCurrentUserSender = msg.sender === 'user';
+          // Старые сообщения от админов - только админы видят как "свои"
+          isCurrentUserSender = isAdmin;
         }
       }
       const bubbleSide = isCurrentUserSender ? 'admin' : 'user';
