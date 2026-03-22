@@ -1636,18 +1636,21 @@ function loadFeedbackChat(feedbackId) {
       return timeA - timeB;
     });
 
-    const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
-    const senderYou = (typeof t === 'function') ? t('you') : 'Вы';
-    const senderUser = (typeof t === 'function') ? t('user') : 'Пользователь';
-
     const html = messages.map(function(msg) {
-      const bubbleSide = msg.sender;
-      const senderName = msg.sender === 'admin'
-        ? senderYou
-        : (d.userName || senderUser);
-      const avatar = msg.sender === 'admin'
+      const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+      const isCurrentUserSender = (isAdmin && msg.sender === 'admin') || (!isAdmin && msg.sender === 'user');
+      
+      const bubbleSide = isCurrentUserSender ? 'admin' : 'user';
+      const senderName = isCurrentUserSender
+        ? ((typeof t === 'function') ? t('you') : 'Вы')
+        : (msg.sender === 'admin' 
+            ? ((typeof t === 'function') ? t('support') : 'Поддержка')
+            : (d.userName || ((typeof t === 'function') ? t('user') : 'Пользователь')));
+      
+      const avatar = isCurrentUserSender
         ? `<div class="chat-avatar"><i class="fas fa-user-shield"></i></div>`
         : `<img src="${d.userPhoto || 'https://ui-avatars.com/api/?name=P'}" class="chat-avatar" alt="">`;
+      
       const msgTime = msg.timestamp
         ? formatTimeAgo(msg.timestamp.toDate ? msg.timestamp.toDate() : new Date(msg.timestamp))
         : '';
