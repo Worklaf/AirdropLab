@@ -4118,6 +4118,9 @@ function updateEditFieldsVisibility() {
   // Английские поля для формы предложений
   const suggestionEnglishFields = ['suggest_desc_en_container', 'suggest_reward_en_container', 'suggest_cooldown_en_container'];
   
+  // Русские поля для формы предложений (скрываем при английском)
+  const suggestionRussianFields = ['suggest_desc', 'suggest_reward', 'suggest_cooldown'];
+  
   if (isAdmin) {
     // Администратор видит все поля
     [...englishFields, ...suggestionEnglishFields].forEach(fieldId => {
@@ -4150,12 +4153,20 @@ function updateEditFieldsVisibility() {
     });
     
     // Форма предложений:
-    // Русский язык: только русские поля 
-    // Английский язык: только английские поля
+    // Русский язык: только русские поля
+    // Английский язык: только английские поля (русские скрываем)
     suggestionEnglishFields.forEach(fieldId => {
       const element = document.getElementById(fieldId);
       if (element) {
         element.style.display = isEn ? 'block' : 'none';
+      }
+    });
+    
+    // Скрываем русские поля в предложениях при английском языке
+    suggestionRussianFields.forEach(fieldId => {
+      const element = document.getElementById(fieldId);
+      if (element) {
+        element.style.display = isEn ? 'none' : 'block';
       }
     });
     
