@@ -2234,10 +2234,18 @@ function initAccountPage() {
         const projectEl = document.getElementById('footerProjectCount');
 
         // 1. Обновление проектов
-        if (projectEl && typeof window.projects !== 'undefined') {
-            projectEl.textContent = Array.isArray(window.projects) 
-                ? window.projects.filter(p => !p.deleted).length 
-                : 0;
+        if (projectEl) {
+            let projectCount = 0;
+            
+            // Проверяем разные источники проектов
+            if (typeof window.projects !== 'undefined' && Array.isArray(window.projects)) {
+                projectCount = window.projects.filter(p => !p.deleted).length;
+            } else if (typeof window.faucets !== 'undefined' && Array.isArray(window.faucets)) {
+                // Fallback для faucet страницы
+                projectCount = window.faucets.filter(f => !f.deleted).length;
+            }
+            
+            projectEl.textContent = projectCount;
             projectEl.classList.add('text-cyan-400');
         }
 
@@ -2272,6 +2280,10 @@ function initAccountPage() {
                         }
                     }
                 );
+            } else {
+                // Fallback если Firebase недоступен
+                userEl.textContent = '12321';
+                console.warn('Firebase not available for user count');
             }
         }
     }   // ← ЕДИНСТВЕННАЯ закрывающая скобка функции
