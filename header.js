@@ -1639,8 +1639,9 @@ function loadFeedbackChat(feedbackId) {
     const html = messages.map(function(msg) {
       const isAdmin = window.currentUser && window.currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
       
-      // Простая логика как в index.html, но с учетом текущего пользователя
-      const bubbleSide = msg.sender; // 'admin' или 'user'
+      // Простая логика как в index.html, но с правильным позиционированием
+      // admin сообщения слева, user сообщения справа
+      const bubbleSide = msg.sender === 'admin' ? 'user' : 'admin';
       
       // Определяем имя отправителя
       let senderName;
