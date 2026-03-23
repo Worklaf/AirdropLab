@@ -732,7 +732,7 @@
           + 'padding:12px;border-radius:12px;background:rgba(52,211,153,0.08);'
           + 'border:1px solid rgba(52,211,153,0.2);">'
           + '<i class="fas fa-check-circle" style="color:#34d399;font-size:16px;"></i>'
-          + '<span style="color:#34d399;font-size:13px;font-weight:600;">Вы подписаны — уведомим при запуске!</span>'
+          + '<span data-translate="coming_soon_subscribed">Вы подписаны — уведомим при запуске!</span>'
           + '</div>';
       } else {
         area.innerHTML = '<button id="csNotifyBtn" onclick="window.csRequestNotify()"'
@@ -754,7 +754,7 @@
     window.csRequestNotify = function() {
       var btn = document.getElementById('csNotifyBtn');
       if (btn) {
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#22d3ee;"></i><span>Подключаемся...</span>';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#22d3ee;"></i><span data-translate="coming_soon_connecting">Подключаемся...</span>';
         btn.disabled = true;
       }
       function markSubscribed() {
@@ -764,8 +764,8 @@
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission().then(function(p) {
           if (p === 'granted') {
-            new Notification('AirdropLab', {
-              body: 'Вы подписаны! Уведомим при запуске раздела 🚀',
+            new Notification(window.t('coming_soon_notification_title'), {
+              body: window.t('coming_soon_notification_body'),
               icon: '/favicon.ico'
             });
           }
@@ -1118,6 +1118,24 @@ window.updateComingSoonTranslations = function() {
     var span = btn.querySelector('span[data-translate="coming_soon_notify_btn"]');
     if (span && window.t) {
       span.textContent = window.t('coming_soon_notify_btn');
+    }
+  }
+  
+  // Update connecting state button if it exists
+  var connectingBtn = document.getElementById('csNotifyBtn');
+  if (connectingBtn && connectingBtn.disabled) {
+    var span = connectingBtn.querySelector('span[data-translate="coming_soon_connecting"]');
+    if (span && window.t) {
+      span.textContent = window.t('coming_soon_connecting');
+    }
+  }
+  
+  // Update subscribed message if it exists
+  var subscribedArea = document.getElementById('csNotifyArea');
+  if (subscribedArea) {
+    var span = subscribedArea.querySelector('span[data-translate="coming_soon_subscribed"]');
+    if (span && window.t) {
+      span.textContent = window.t('coming_soon_subscribed');
     }
   }
 };
