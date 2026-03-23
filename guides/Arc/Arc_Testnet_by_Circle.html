@@ -859,6 +859,13 @@ async function loadArcData() {
     favoritesOrder = JSON.parse(localStorage.getItem(FAV_ORDER_KEY)||'[]');
     const localTs = parseInt(localStorage.getItem(FAV_TS_KEY)||'0');
 
+    console.log(' Arc Favorites Debug:', {
+        favoritesCount: Object.keys(favoritesState).length,
+        favoritesOrder: favoritesOrder,
+        localTs: localTs,
+        hasUser: !!currentUser
+    });
+
     if (currentUser) {
         try {
             const snap = await getDoc(doc(db,"users",currentUser.uid));
@@ -1208,6 +1215,7 @@ function renderAll() {
     injectSectionAddButtons();
     bindTrackingHandlersToAll();
     attachFavoriteControls();
+    refreshAllVisuals(); // Обновляем избранные
     initializeTooltips();
     initLightbox();
     updateUI();
@@ -2110,13 +2118,24 @@ function refreshAllVisuals() {
 }
 
 function renderFavoritesList() {
+    console.log('🎯 Rendering favorites list...');
     const listEl=document.getElementById('favoritesList');
     const emptyEl=document.getElementById('favoritesEmpty');
     const countEl=document.getElementById('favoritesCount');
-    if(!listEl||!emptyEl||!countEl) return;
+    if(!listEl||!emptyEl||!countEl) {
+        console.log('❌ Missing elements:', {listEl: !!listEl, emptyEl: !!emptyEl, countEl: !!countEl});
+        return;
+    }
     listEl.innerHTML='';
     favoritesOrder=favoritesOrder.filter(id=>favoritesState[id]);
     Object.keys(favoritesState).forEach(id=>{ if(!favoritesOrder.includes(id)) favoritesOrder.push(id); });
+    
+    console.log('📊 Favorites data:', {
+        favoritesStateKeys: Object.keys(favoritesState),
+        favoritesOrder: favoritesOrder,
+        finalCount: favoritesOrder.length
+    });
+    
     if(!favoritesOrder.length){ emptyEl.style.display='block'; listEl.style.display='none'; countEl.textContent='0'; return; }
     emptyEl.style.display='none'; listEl.style.display='flex';
     favoritesOrder.forEach(id=>{
@@ -2138,6 +2157,7 @@ function renderFavoritesList() {
         bindTrackingHandler(anchor);
     });
     countEl.textContent=String(favoritesOrder.length);
+    console.log('✅ Favorites list rendered, count set to:', favoritesOrder.length);
     initSortable(); initializeTooltips(); updateNewIndicators();
 }
 
