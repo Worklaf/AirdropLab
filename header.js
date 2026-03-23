@@ -534,20 +534,20 @@
                           border:1px solid rgba(34,211,238,0.2);">
                 <span style="width:6px;height:6px;border-radius:50%;background:#22d3ee;
                              box-shadow:0 0 8px #22d3ee;animation:csBlink 1.4s infinite;display:inline-block;"></span>
-                <span style="font-size:11px;font-weight:700;color:#22d3ee;letter-spacing:0.08em;text-transform:uppercase;">В разработке</span>
+                <span style="font-size:11px;font-weight:700;color:#22d3ee;letter-spacing:0.08em;text-transform:uppercase;" data-translate="coming_soon_status">В разработке</span>
               </div>
             </div>
 
             <!-- Заголовок -->
             <h2 style="text-align:center;font-size:26px;font-weight:800;
                        color:#f1f5f9;margin:0 0 10px;line-height:1.2;
-                       text-shadow:0 2px 16px rgba(34,211,238,0.2);" data-translate="menu_in_development">
+                       text-shadow:0 2px 16px rgba(34,211,238,0.2);" data-translate="coming_soon_title">
               Раздел скоро откроется
             </h2>
 
             <!-- Подзаголовок -->
             <p style="text-align:center;color:#64748b;font-size:14px;
-                      margin:0 0 28px;line-height:1.6;" data-translate="menu_coming_soon">
+                      margin:0 0 28px;line-height:1.6;" data-translate="coming_soon_subtitle">
               Мы уже работаем над этим разделом.<br>Подпишитесь — мы уведомим вас в момент запуска.
             </p>
 
@@ -563,7 +563,7 @@
                             background:rgba(34,211,238,0.12);display:flex;align-items:center;justify-content:center;">
                   <i class="fas fa-bolt" style="color:#22d3ee;font-size:11px;"></i>
                 </div>
-                <span style="color:#94a3b8;font-size:12px;line-height:1.3;">Актуальная информация</span>
+                <span style="color:#94a3b8;font-size:12px;line-height:1.3;" data-translate="coming_soon_feature_1">Актуальная информация</span>
               </div>
               <div style="padding:12px 14px;border-radius:12px;
                           background:rgba(139,92,246,0.04);border:1px solid rgba(139,92,246,0.1);
@@ -572,7 +572,7 @@
                             background:rgba(139,92,246,0.12);display:flex;align-items:center;justify-content:center;">
                   <i class="fas fa-tools" style="color:#a78bfa;font-size:11px;"></i>
                 </div>
-                <span style="color:#94a3b8;font-size:12px;line-height:1.3;">Интерактивные инструменты</span>
+                <span style="color:#94a3b8;font-size:12px;line-height:1.3;" data-translate="coming_soon_feature_2">Интерактивные инструменты</span>
               </div>
               <div style="padding:12px 14px;border-radius:12px;
                           background:rgba(236,72,153,0.04);border:1px solid rgba(236,72,153,0.1);
@@ -581,7 +581,7 @@
                             background:rgba(236,72,153,0.12);display:flex;align-items:center;justify-content:center;">
                   <i class="fas fa-users" style="color:#ec4899;font-size:11px;"></i>
                 </div>
-                <span style="color:#94a3b8;font-size:12px;line-height:1.3;">Сообщество и чаты</span>
+                <span style="color:#94a3b8;font-size:12px;line-height:1.3;" data-translate="coming_soon_feature_3">Сообщество и чаты</span>
               </div>
               <div style="padding:12px 14px;border-radius:12px;
                           background:rgba(251,191,36,0.04);border:1px solid rgba(251,191,36,0.1);
@@ -590,7 +590,7 @@
                             background:rgba(251,191,36,0.12);display:flex;align-items:center;justify-content:center;">
                   <i class="fas fa-star" style="color:#fbbf24;font-size:11px;"></i>
                 </div>
-                <span style="color:#94a3b8;font-size:12px;line-height:1.3;">Ранний доступ</span>
+                <span style="color:#94a3b8;font-size:12px;line-height:1.3;" data-translate="coming_soon_feature_4">Ранний доступ</span>
               </div>
             </div>
 
@@ -607,7 +607,7 @@
                      transition:all 0.2s;"
               onmouseover="this.style.borderColor='rgba(34,211,238,0.3)';this.style.color='#94a3b8';"
               onmouseout="this.style.borderColor='rgba(71,85,105,0.3)';this.style.color='#64748b';"
-              data-translate="close">
+              data-translate="coming_soon_close">
               Закрыть
             </button>
 
