@@ -1420,11 +1420,16 @@ if (projectLabel) {
 if (typeof window.updateFooterTranslations === 'function') {
     window.updateFooterTranslations();
 }
+// Обновляем динамические элементы в модальном окне Coming Soon
+if (typeof window.updateComingSoonTranslations === 'function') {
+    window.updateComingSoonTranslations();
+}
   // Обновляем динамические модальные окна
   updateFeedbackModalTranslations();
   updateDateFilterMonths();
 }
 
+// Обновляем переводы в модальных окнах feedback
 // Обновление переводов в модальных окнах feedback
 function updateFeedbackModalTranslations() {
   // Обновляем форму нового обращения
