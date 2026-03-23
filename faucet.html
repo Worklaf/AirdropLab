@@ -596,16 +596,8 @@ window.updateRatingDisplay = updateRatingDisplay;
   </div>
 </div>
 
-<script src="config.cloudflare.js"></script>
-
-<!-- Проверка конфигурации после загрузки -->
-<script>
-console.log('📋 After config.cloudflare.js:', {
-  config: window.firebaseConfig,
-  apiKey: window.firebaseConfig?.apiKey?.substring(0, 20) + '...',
-  projectId: window.firebaseConfig?.projectId
-});
-</script>
+<!-- Firebase Configuration -->
+<script src="config/firebase-config.js"></script>
 
 <!-- Firebase и приложение -->
 <script type="module">
