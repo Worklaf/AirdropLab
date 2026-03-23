@@ -964,13 +964,77 @@ window.getImagesFromInputs = getImagesFromInputs;
 window.clearImageInputs = clearImageInputs;
 window.populateImageInputs = populateImageInputs;
 window.updateImageCounter = updateImageCounter;
+// ===== LANGUAGE FUNCTIONS MOVED TO MAIN SCRIPT BLOCK =====
+
+function toggleLanguage() {
+    // Переключаемся между 'en' и 'ua'
+    currentLanguage = currentLanguage === 'en' ? 'ua' : 'en';
+    localStorage.setItem(LANGUAGE_KEY, currentLanguage);
+    
+    if (currentUser) {
+        saveToCloud({ robinLanguage: currentLanguage, robinLanguageTimestamp: Date.now() });
+    }
+    
+    updateAllTranslations();
+    showToast(currentLanguage === 'en' ? 'Language: English' : 'Мова: Українська', 'info');
+}
+</script>
+
+<!-- Firebase Configuration -->
+<script src="../../config/firebase-config.js"></script>
+
+<script type="module">
+// ===== MAIN CODE =====
+let newLinksSet = new Set();
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// Ждем загрузки конфигурации
+while (!window.firebaseConfig) {
+  await new Promise(resolve => setTimeout(resolve, 10));
+}
+
+const app = initializeApp(window.firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
 // ===== LANGUAGE SYSTEM =====
 let currentLanguage = 'en';
 const LANGUAGE_KEY = 'robin_language_v1';
 
 function getTranslation(key) {
-    const data = window.i18nData[currentLanguage] || window.i18nData.en;
+    const data = window.i18nData?.[currentLanguage] || window.i18nData?.en || {};
     return data[key] || key;
+}
+
+async function loadLanguagePreference() {
+    // Загружаем из localStorage
+    let localLang = localStorage.getItem(LANGUAGE_KEY);
+    if (localLang) {
+        currentLanguage = localLang;
+    }
+    
+    // Если пользователь авторизован, загружаем из Firebase
+    if (currentUser) {
+        try {
+            const snap = await getDoc(doc(db, "users", currentUser.uid));
+            if (snap.exists() && snap.data().robinLanguage) {
+                const cloudLang = snap.data().robinLanguage;
+                const cloudTs = snap.data().robinLanguageTimestamp || 0;
+                const localTs = parseInt(localStorage.getItem(LANGUAGE_KEY + '_ts') || '0');
+                if (cloudTs > localTs) {
+                    currentLanguage = cloudLang;
+                    localStorage.setItem(LANGUAGE_KEY, cloudLang);
+                    localStorage.setItem(LANGUAGE_KEY + '_ts', String(cloudTs));
+                }
+            }
+        } catch (e) {
+            console.error('Error loading language preference:', e);
+        }
+    }
+    
+    updateAllTranslations();
 }
 
 function updateAllTranslations() {
@@ -995,14 +1059,7 @@ function updateAllTranslations() {
         tooltipEl.classList.remove('visible');
     }
     activeTooltipTarget = null;
-
-    // Update language toggle button text
-    // Обновление языковой кнопки
-const toggleText = document.getElementById('languageToggleText');
-if (toggleText) {
-    toggleText.textContent = currentLanguage === 'en' ? '🇺🇦 Українська' : '🇬🇧 English';
-}
-
+    
     // Update theme button
     const themeBtn = document.getElementById('themeToggleBtn');
     if (themeBtn) {
@@ -1035,89 +1092,16 @@ if (toggleText) {
     }
     document.querySelectorAll('.dapp-table tbody tr[data-zone]').forEach(tr => {
         const zone = tr.dataset.zone;
-        if (!zone.startsWith('u_')) return; // Только пользовательские
-        
-        const cat = userItemsData.dappCategories?.find(c => c.id === zone);
-        if (!cat) return;
-        
-        const tdDesc = tr.querySelector('td:last-child');
-        if (!tdDesc) return;
-        
-        const lang = (currentLanguage === 'ru') ? 'ua' : currentLanguage;
-        const displayDesc = lang === 'ua' 
-            ? (cat.descUa || cat.description || '') 
-            : (cat.descEn || cat.description || '');
-        
-        tdDesc.textContent = displayDesc;
+        const zoneConfig = getZoneConfig(zone);
+        if (zoneConfig && zoneConfig.title) {
+            const titleCell = tr.querySelector('td:first-child');
+            if (titleCell) {
+                const key = zoneConfig.titleKey || zone;
+                titleCell.innerHTML = `<strong>${getTranslation(key)}</strong>`;
+            }
+        }
     });
 }
-
-function toggleLanguage() {
-    // Переключаемся между 'en' и 'ua'
-    currentLanguage = currentLanguage === 'en' ? 'ua' : 'en';
-    localStorage.setItem(LANGUAGE_KEY, currentLanguage);
-    
-    if (currentUser) {
-        saveToCloud({ robinLanguage: currentLanguage, robinLanguageTimestamp: Date.now() });
-    }
-    
-    updateAllTranslations();
-    showToast(currentLanguage === 'en' ? 'Language: English' : 'Мова: Українська', 'info');
-}
-
-async function loadLanguagePreference() {
-    // Загружаем из localStorage
-    let localLang = localStorage.getItem(LANGUAGE_KEY);
-    if (localLang) {
-        // Нормализация: uk → ua (если вдруг есть старые данные)
-        currentLanguage = (localLang === 'uk') ? 'ua' : localLang;
-    }
-    
-    if (currentUser) {
-        try {
-            const docRef = doc(db, "users", currentUser.uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists() && docSnap.data().robinLanguage) {
-                let cloudLang = docSnap.data().robinLanguage;
-                // Нормализация: uk → ua
-                cloudLang = (cloudLang === 'uk') ? 'ua' : cloudLang;
-                
-                const cloudTs = docSnap.data().robinLanguageTimestamp || 0;
-                const localTs = parseInt(localStorage.getItem(LANGUAGE_KEY + '_ts') || '0', 10);
-                
-                if (cloudTs > localTs) {
-                    currentLanguage = cloudLang;
-                    localStorage.setItem(LANGUAGE_KEY, currentLanguage);
-                    localStorage.setItem(LANGUAGE_KEY + '_ts', String(cloudTs));
-                }
-            }
-        } catch (e) {
-            console.error("Error loading language from Firebase:", e);
-        }
-    }
-    
-    updateAllTranslations();
-}
-</script>
-
-<!-- Firebase Configuration -->
-<script src="../../config/firebase-config.js"></script>
-
-<script type="module">
-// ===== MAIN CODE =====
-let newLinksSet = new Set();
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-// Ждем загрузки конфигурации
-while (!window.firebaseConfig) {
-  await new Promise(resolve => setTimeout(resolve, 10));
-}
-
-const app = initializeApp(window.firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
 
 const ADMIN_UID = 'SAkz4mdW9reDaIsvqigCNZhEKJR2';
 let isAdmin = false;
