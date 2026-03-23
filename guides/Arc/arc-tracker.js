@@ -3,6 +3,9 @@
 // Multilingual (EN/UA) with auto-translation & Firebase sync
 // ============================================================
 
+// Load Firebase configuration first
+await import('../config/firebase-config.js');
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getAuth, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider,
@@ -14,16 +17,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ===== FIREBASE CONFIG =====
-const firebaseConfig = {
-    apiKey: "AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk",
-    authDomain: "testnet-hub.firebaseapp.com",
-    projectId: "testnet-hub",
-    storageBucket: "testnet-hub.firebasestorage.app",
-    messagingSenderId: "497813176653",
-    appId: "1:497813176653:web:089188fdd1555d76cd7704"
-};
+// Ждем загрузки конфигурации
+while (!window.firebaseConfig) {
+  await new Promise(resolve => setTimeout(resolve, 10));
+}
 
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(window.firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
