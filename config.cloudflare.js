@@ -1,7 +1,7 @@
 // Firebase Configuration - Production с Environment Variables
 // Работает на Cloudflare Pages как обычный скрипт
 const firebaseConfig = {
-    apiKey: globalThis.CF_API_KEY || "AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk",
+    apiKey: globalThis.CF_API_KEY || null, 
     authDomain: globalThis.CF_AUTH_DOMAIN || "testnet-hub.firebaseapp.com",
     projectId: globalThis.CF_PROJECT_ID || "testnet-hub",
     storageBucket: globalThis.CF_STORAGE_BUCKET || "testnet-hub.firebasestorage.app",
