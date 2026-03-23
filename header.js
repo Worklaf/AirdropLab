@@ -723,18 +723,26 @@
     }, 0);
 
     // Рендер кнопки уведомлений в модале
-    function renderNotifyBtn() {
+    window.renderNotifyBtn = function() {
       var area = document.getElementById('csNotifyArea');
       if (!area) return;
       var subscribed = localStorage.getItem('al_cs_notify') === '1';
+      var currentLang = localStorage.getItem('airdropLabLang') || 'ru';
+      
       if (subscribed) {
+        var subscribedText = currentLang === 'en' 
+          ? 'You are subscribed — we will notify you at launch!'
+          : 'Вы подписаны — уведомим при запуске!';
         area.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;'
           + 'padding:12px;border-radius:12px;background:rgba(52,211,153,0.08);'
           + 'border:1px solid rgba(52,211,153,0.2);">'
           + '<i class="fas fa-check-circle" style="color:#34d399;font-size:16px;"></i>'
-          + '<span data-translate="coming_soon_subscribed">Вы подписаны — уведомим при запуске!</span>'
+          + '<span style="color:#34d399;font-size:13px;font-weight:600;">' + subscribedText + '</span>'
           + '</div>';
       } else {
+        var notifyText = currentLang === 'en' 
+          ? 'Notify me on launch'
+          : 'Уведомить меня о запуске';
         area.innerHTML = '<button id="csNotifyBtn" onclick="window.csRequestNotify()"'
           + ' style="width:100%;padding:13px;border-radius:12px;cursor:pointer;'
           + 'background:linear-gradient(135deg,rgba(34,211,238,0.15),rgba(139,92,246,0.15));'
@@ -746,7 +754,7 @@
           + ' onmouseout="this.style.background=\'linear-gradient(135deg,rgba(34,211,238,0.15),rgba(139,92,246,0.15))\';'
           + 'this.style.borderColor=\'rgba(34,211,238,0.3)\';">'
           + '<i class="fas fa-satellite-dish" style="color:#22d3ee;"></i>'
-          + '<span data-translate="coming_soon_notify_btn">Уведомить меня о запуске</span>'
+          + '<span>' + notifyText + '</span>'
           + '</button>';
       }
     }
@@ -754,18 +762,25 @@
     window.csRequestNotify = function() {
       var btn = document.getElementById('csNotifyBtn');
       if (btn) {
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#22d3ee;"></i><span data-translate="coming_soon_connecting">Подключаемся...</span>';
+        var currentLang = localStorage.getItem('airdropLabLang') || 'ru';
+        var connectingText = currentLang === 'en' ? 'Connecting...' : 'Подключаемся...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#22d3ee;"></i><span>' + connectingText + '</span>';
         btn.disabled = true;
       }
       function markSubscribed() {
         localStorage.setItem('al_cs_notify', '1');
-        setTimeout(renderNotifyBtn, 400);
+        setTimeout(window.renderNotifyBtn, 400);
       }
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission().then(function(p) {
           if (p === 'granted') {
-            new Notification(window.t('coming_soon_notification_title'), {
-              body: window.t('coming_soon_notification_body'),
+            var currentLang = localStorage.getItem('airdropLabLang') || 'ru';
+            var notificationTitle = 'AirdropLab';
+            var notificationBody = currentLang === 'en' 
+              ? 'You are subscribed! We will notify you when the section launches 🚀'
+              : 'Вы подписаны! Уведомим при запуске раздела 🚀';
+            new Notification(notificationTitle, {
+              body: notificationBody,
               icon: '/favicon.ico'
             });
           }
@@ -907,7 +922,7 @@
       syncClaimBtn();
 
       // Рендер кнопки уведомлений после установки всех наблюдателей
-      renderNotifyBtn();
+      window.renderNotifyBtn();
     }
 
     setTimeout(setupObservers, 200);
@@ -1089,17 +1104,9 @@ window.addEventListener('resize', function() {
 window.showComingSoon = function() {
   var modal = document.getElementById('comingSoonModal');
   if (!modal) return;
-  // Сброс кнопки уведомления при каждом открытии
-  var area = document.getElementById('csNotifyArea');
-  if (area) {
-    var subscribed = localStorage.getItem('al_cs_notify') === '1';
-    if (!subscribed) {
-      var btn = document.getElementById('csNotifyBtn');
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-satellite-dish" style="color:#22d3ee;"></i><span data-translate="coming_soon_notify_btn">Уведомить меня о запуске</span>';
-      }
-    }
+  // Перерисовываем кнопку уведомлений при каждом открытии
+  if (typeof window.renderNotifyBtn === 'function') {
+    window.renderNotifyBtn();
   }
   modal.style.display = 'flex';
 };
@@ -1112,31 +1119,9 @@ window.closeComingSoon = function(event) {
 
 // Update dynamic elements when language changes
 window.updateComingSoonTranslations = function() {
-  // Update notification button if it exists
-  var btn = document.getElementById('csNotifyBtn');
-  if (btn && !btn.disabled) {
-    var span = btn.querySelector('span[data-translate="coming_soon_notify_btn"]');
-    if (span && window.t) {
-      span.textContent = window.t('coming_soon_notify_btn');
-    }
-  }
-  
-  // Update connecting state button if it exists
-  var connectingBtn = document.getElementById('csNotifyBtn');
-  if (connectingBtn && connectingBtn.disabled) {
-    var span = connectingBtn.querySelector('span[data-translate="coming_soon_connecting"]');
-    if (span && window.t) {
-      span.textContent = window.t('coming_soon_connecting');
-    }
-  }
-  
-  // Update subscribed message if it exists
-  var subscribedArea = document.getElementById('csNotifyArea');
-  if (subscribedArea) {
-    var span = subscribedArea.querySelector('span[data-translate="coming_soon_subscribed"]');
-    if (span && window.t) {
-      span.textContent = window.t('coming_soon_subscribed');
-    }
+  // Просто перерисовываем кнопку уведомлений с новым языком
+  if (typeof window.renderNotifyBtn === 'function') {
+    window.renderNotifyBtn();
   }
 };
 
