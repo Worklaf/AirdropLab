@@ -746,7 +746,7 @@
           + ' onmouseout="this.style.background=\'linear-gradient(135deg,rgba(34,211,238,0.15),rgba(139,92,246,0.15))\';'
           + 'this.style.borderColor=\'rgba(34,211,238,0.3)\';">'
           + '<i class="fas fa-satellite-dish" style="color:#22d3ee;"></i>'
-          + '<span>Уведомить меня о запуске</span>'
+          + '<span data-translate="coming_soon_notify_btn">Уведомить меня о запуске</span>'
           + '</button>';
       }
     }
@@ -1097,7 +1097,7 @@ window.showComingSoon = function() {
       var btn = document.getElementById('csNotifyBtn');
       if (btn) {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-satellite-dish" style="color:#22d3ee;"></i><span>Уведомить меня о запуске</span>';
+        btn.innerHTML = '<i class="fas fa-satellite-dish" style="color:#22d3ee;"></i><span data-translate="coming_soon_notify_btn">Уведомить меня о запуске</span>';
       }
     }
   }
@@ -1108,6 +1108,18 @@ window.closeComingSoon = function(event) {
   if (event && event.target !== event.currentTarget) return;
   var modal = document.getElementById('comingSoonModal');
   if (modal) modal.style.display = 'none';
+};
+
+// Update dynamic elements when language changes
+window.updateComingSoonTranslations = function() {
+  // Update notification button if it exists
+  var btn = document.getElementById('csNotifyBtn');
+  if (btn && !btn.disabled) {
+    var span = btn.querySelector('span[data-translate="coming_soon_notify_btn"]');
+    if (span && window.t) {
+      span.textContent = window.t('coming_soon_notify_btn');
+    }
+  }
 };
 
 // Закрытие дропдауна по клику на ссылку внутри него
