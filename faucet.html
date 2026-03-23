@@ -599,6 +599,30 @@ window.updateRatingDisplay = updateRatingDisplay;
 <!-- Firebase Configuration -->
 <script src="config/firebase-config.js"></script>
 
+<!-- Локальная разработка: загрузка .env если доступно -->
+<script>
+// Загружаем .env переменные для локальной разработки
+if (typeof fetch !== 'undefined' && !globalThis.CF_API_KEY) {
+  fetch('.env')
+    .then(response => response.text())
+    .then(data => {
+      data.split('\n').forEach(line => {
+        const [key, value] = line.split('=');
+        if (key && value && key.startsWith('CF_')) {
+          globalThis[key] = value.trim();
+        }
+      });
+      // Перезагружаем конфигурацию после загрузки .env
+      if (window.loadFirebaseConfig) {
+        window.loadFirebaseConfig();
+      }
+    })
+    .catch(() => {
+      console.log('📝 .env файл не найден, используем production режим');
+    });
+}
+</script>
+
 <!-- Firebase и приложение -->
 <script type="module">
 // ═══════════════════════════════════════════
