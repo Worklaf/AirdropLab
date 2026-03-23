@@ -20,33 +20,34 @@ async function loadFirebaseConfig() {
     }
     
     const config = await response.json();
+    console.log('📦 Получена конфигурация:', {
+      hasApiKey: !!config.CF_API_KEY,
+      apiKeyLength: config.CF_API_KEY ? config.CF_API_KEY.length : 0,
+      debug: config.debug
+    });
     
-    // Если API ключ доступен через API, используем его
-    if (config.hasApiKey) {
-      // Для API ключа нужно делать отдельный запрос или передавать через заголовки
-      console.log('� API ключ доступен через сервер');
-      firebaseConfig = {
-        apiKey: await getApiKeyFromServer(), // Получаем ключ безопасно
-        authDomain: config.CF_AUTH_DOMAIN,
-        projectId: config.CF_PROJECT_ID,
-        storageBucket: config.CF_STORAGE_BUCKET,
-        messagingSenderId: config.CF_MESSAGING_SENDER_ID,
-        appId: config.CF_APP_ID
-      };
-    } else {
-      console.log('⚠️ API ключ недоступен, используем fallback');
-      firebaseConfig = {
-        apiKey: "AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk",
-        authDomain: config.CF_AUTH_DOMAIN,
-        projectId: config.CF_PROJECT_ID,
-        storageBucket: config.CF_STORAGE_BUCKET,
-        messagingSenderId: config.CF_MESSAGING_SENDER_ID,
-        appId: config.CF_APP_ID
-      };
+    // Используем настоящий API ключ если доступен
+    firebaseConfig = {
+      apiKey: config.CF_API_KEY || "AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk",
+      authDomain: config.CF_AUTH_DOMAIN,
+      projectId: config.CF_PROJECT_ID,
+      storageBucket: config.CF_STORAGE_BUCKET,
+      messagingSenderId: config.CF_MESSAGING_SENDER_ID,
+      appId: config.CF_APP_ID
+    };
+    
+    // Устанавливаем ADMIN_UID глобально
+    if (config.ADMIN_UID) {
+      globalThis.ADMIN_UID = config.ADMIN_UID;
     }
     
     configLoaded = true;
-    console.log('✅ Конфигурация Firebase загружена');
+    
+    if (config.CF_API_KEY) {
+      console.log('✅ Используем настоящий Firebase API ключ из Environment Variables');
+    } else {
+      console.log('⚠️ API ключ недоступен, используем fallback');
+    }
     
   } catch (error) {
     console.error('❌ Ошибка загрузки конфигурации:', error);
@@ -64,12 +65,6 @@ async function loadFirebaseConfig() {
     
     configLoaded = true;
   }
-}
-
-// Функция получения API ключа (можно реализовать через серверный endpoint)
-async function getApiKeyFromServer() {
-  // Временно возвращаем fallback, потом можно реализовать через сервер
-  return "AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk";
 }
 
 // Загружаем конфигурацию асинхронно
