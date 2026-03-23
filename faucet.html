@@ -1021,13 +1021,15 @@ console.log('🔧 Firebase Availability Check:', {
   hasConfig: !!firebaseConfig,
   apiKeyTest: firebaseConfig?.apiKey === "test",
   apiKeyDisabled: firebaseConfig?.apiKey === "disabled",
-  apiKeyValue: firebaseConfig?.apiKey?.substring(0, 20) + '...',
+  apiKeyNull: firebaseConfig?.apiKey === null,
+  apiKeyValue: firebaseConfig?.apiKey ? firebaseConfig.apiKey.substring(0, 20) + '...' : 'null',
   projectId: firebaseConfig?.projectId
 });
 
-if (!firebaseConfig || firebaseConfig.apiKey === "test" || firebaseConfig.apiKey === "disabled") {
+if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === "test" || firebaseConfig.apiKey === "disabled") {
   console.log('⚠️ Firebase не настроен, используем локальный режим');
   console.log('📋 Причина:', !firebaseConfig ? 'Нет конфигурации' : 
+               !firebaseConfig.apiKey ? 'API ключ = null' :
                firebaseConfig.apiKey === "test" ? 'API ключ = test' : 
                firebaseConfig.apiKey === "disabled" ? 'API ключ = disabled' : 'Неизвестно');
   window.auth = null;
