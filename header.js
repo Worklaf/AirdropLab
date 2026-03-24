@@ -172,16 +172,18 @@
           <!-- MOBILE (<md): строка 1 — Лого + Авторизация -->
           <div class="flex md:hidden items-center justify-between gap-2">
             <div class="flex items-center gap-2 flex-shrink-0">
-              <div class="relative w-9 h-9 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-cyan-400/50 flex items-center justify-center">
+              <a href="index.html" class="relative w-9 h-9 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-cyan-400/50 flex items-center justify-center block">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M9 3h6M12 3v5M8 8l-2 8c-.5 2 1 4 3 4h6c2 0 3.5-2 3-4l-2-8" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   <circle cx="10" cy="14" r="1" fill="#22d3ee" opacity="0.6"><animate attributeName="cy" values="14;12;14" dur="2s" repeatCount="indefinite"/></circle>
                   <circle cx="14" cy="16" r="1" fill="#06b6d4" opacity="0.8"><animate attributeName="cy" values="16;13;16" dur="2.5s" repeatCount="indefinite"/></circle>
                 </svg>
-              </div>
-              <h1 style="font-size:17px;font-weight:900;line-height:1;margin:0;">
-                <span style="background:linear-gradient(to right,#22d3ee,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Airdrop</span><span style="color:white;">Lab</span>
-              </h1>
+              </a>
+              <a href="index.html" class="block">
+                <h1 style="font-size:17px;font-weight:900;line-height:1;margin:0;">
+                  <span style="background:linear-gradient(to right,#22d3ee,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Airdrop</span><span style="color:white;">Lab</span>
+                </h1>
+              </a>
             </div>
             <div class="flex items-center gap-1.5" id="mobAuthWrap">
               <div id="mobLoggedOutView">
@@ -213,19 +215,19 @@
 
           <!-- MOBILE: строка 2 — Статистика -->
           <div class="flex md:hidden mob-stats-row overflow-x-auto">
-            <div class="mob-stat-item" onclick="typeof filterProjects==='function'&&filterProjects('active')">
+            <div class="mob-stat-item" onclick="window.location.href='index.html?filter=active'">
               <span class="mob-stat-num" style="color:#34d399;" id="mobStatActive">0</span>
               <span class="mob-stat-lbl" data-translate="active">Акт.</span>
             </div>
-            <div class="mob-stat-item" onclick="typeof filterProjects==='function'&&filterProjects('today')">
+            <div class="mob-stat-item" onclick="window.location.href='index.html?filter=today'">
               <span class="mob-stat-num" style="color:#22d3ee;" id="mobStatToday">0</span>
               <span class="mob-stat-lbl" data-translate="new">Нов.</span>
             </div>
-            <div class="mob-stat-item" onclick="typeof filterProjects==='function'&&filterProjects('favorites')">
+            <div class="mob-stat-item" onclick="window.location.href='index.html?filter=favorites'">
               <span class="mob-stat-num" style="color:#fb923c;" id="mobStatFavorites">0</span>
               <span class="mob-stat-lbl" data-translate="in_work">Раб.</span>
             </div>
-            <div class="mob-stat-item" onclick="typeof filterProjects==='function'&&filterProjects('completed')">
+            <div class="mob-stat-item" onclick="window.location.href='index.html?filter=completed'">
               <span class="mob-stat-num" style="color:#60a5fa;" id="mobStatCompleted">0</span>
               <span class="mob-stat-lbl" data-translate="done">Гот.</span>
             </div>
