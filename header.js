@@ -121,16 +121,16 @@
                 <span class="lang-text">ENG</span>
               </button>
 
-              <div id="adminPanel" class="flex gap-2 items-center border-l border-slate-700/50 pl-3 ml-1" style="display:none;">
-                <button onclick="typeof openAddModal==='function'&&openAddModal()"
-                  class="px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg text-xs font-bold transition-all hover:scale-105 shadow-lg shadow-cyan-500/30">
+              <button id="deskAddBtn" onclick="typeof openAddModal==='function'&&openAddModal()"
+                  class="px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg text-xs font-bold transition-all hover:scale-105 shadow-lg shadow-cyan-500/30" style="display:none;">
                   <i class="fas fa-flask mr-1"></i>
-                                    <span class="hidden sm:inline" data-translate="new_test">Новый тест</span>
+                  <span class="hidden sm:inline" data-translate="new_test">Новый тест</span>
                 </button>
-                <button onclick="typeof openStats==='function'&&openStats()" class="admin-action-btn admin-btn-orange" data-translate-title="view_stats"><i class="fas fa-chart-pie text-base"></i></button>
-                <button onclick="typeof migrateToFirestore==='function'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" data-translate-title="upload_firebase"><i class="fas fa-cloud-upload-alt text-base"></i></button>
-                <button onclick="typeof exportAllData==='function'&&exportAllData()" class="admin-action-btn admin-btn-emerald" data-translate-title="export_json"><i class="fas fa-file-export text-base"></i></button>
-                <button onclick="typeof openDeletedProjects==='function'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" data-translate-title="view_deleted"><i class="fas fa-trash-restore text-base"></i></button>
+
+              <div id="adminPanel" class="flex gap-2 items-center border-l border-slate-700/50 pl-3 ml-1" style="display:none;">
+                <div id="deskAdminBtns" class="flex gap-2 items-center">
+                  <!-- Кнопки будут добавлены динамически в зависимости от страницы -->
+                </div>
                 <span class="px-2.5 py-1 bg-gradient-to-r from-cyan-600 to-cyan-500 rounded-md text-[10px] font-black text-white uppercase">
                   <i class="fas fa-user-shield mr-1"></i>Admin
                 </span>
@@ -213,8 +213,8 @@
             </div>
           </div>
 
-          <!-- MOBILE: строка 2 — Статистика -->
-          <div class="flex md:hidden mob-stats-row overflow-x-auto">
+          <!-- MOBILE: строка 2 — Статистика (только на главной) -->
+          <div class="flex md:hidden mob-stats-row overflow-x-auto" id="mobStatsRow" style="display:none;">
             <div class="mob-stat-item" onclick="window.location.href='index.html?filter=active'">
               <span class="mob-stat-num" style="color:#34d399;" id="mobStatActive">0</span>
               <span class="mob-stat-lbl" data-translate="active">Акт.</span>
@@ -801,8 +801,9 @@
         var to   = document.getElementById(p[1]);
         if (!from || !to) return;
         to.textContent = from.textContent;
-        new MutationObserver(function() { to.textContent = from.textContent; })
-          .observe(from, { childList:true, characterData:true, subtree:true });
+        new MutationObserver(function() { 
+          to.textContent = from.textContent;
+        }).observe(from, { childList:true, characterData:true, subtree:true });
       });
 
       // 2. Auth state — ИСПРАВЛЕНО: убраны setTimeout и setInterval внутри syncAuth
@@ -854,6 +855,20 @@
       
       // Обновляем мобильные админские кнопки в зависимости от страницы
       updateMobileAdminButtons();
+
+      // Обновляем статистику если мы на главной странице и функция доступна
+      if (typeof window.updateStats === 'function' && 
+          (window.location.pathname.endsWith('/') || 
+           window.location.pathname.endsWith('index.html') ||
+           window.location.pathname === '' ||
+           window.location.pathname === '/')) {
+        // Небольшая задержка чтобы гарантировать что DOM готов
+        setTimeout(function() {
+          if (typeof window.currentFilteredList !== 'undefined') {
+            window.updateStats(window.currentFilteredList);
+          }
+        }, 100);
+      }
 
       // 3. Feedback panel
       var deskFP     = document.getElementById('generalFeedbackPanel');
@@ -1088,8 +1103,34 @@ window.exportFaucetData = function() {
       }
     };
     
-    // Сначала пробуем получить данные из Firebase
-    if (window.db && typeof window.__firestoreExports !== 'undefined') {
+    // Проверяем доступны ли данные из глобальной переменной (для faucet.html)
+    if (typeof window.faucets !== 'undefined' && window.faucets.length > 0) {
+      exportData(window.faucets);
+      return;
+    }
+    
+    // Пробуем получить данные из Firebase
+    if (window.db && typeof collection === 'function' && typeof getDocs === 'function') {
+      getDocs(query(collection(window.db, 'faucets'), orderBy('name')))
+        .then(snap => {
+          const faucetsData = [];
+          for (const d of snap.docs) {
+            faucetsData.push({ id: d.id, ...d.data() });
+          }
+          exportData(faucetsData);
+        })
+        .catch(error => {
+          console.error('Ошибка загрузки из Firebase:', error);
+          // Fallback на localStorage
+          const storedData = localStorage.getItem('faucets_backup') || localStorage.getItem('faucets');
+          if (storedData) {
+            exportData(JSON.parse(storedData));
+          } else {
+            throw error;
+          }
+        });
+    } else if (typeof window.__firestoreExports !== 'undefined') {
+      // Старый метод для совместимости
       const { collection, getDocs, query, orderBy } = window.__firestoreExports;
       if (collection && getDocs && query && orderBy) {
         getDocs(query(collection(window.db, 'faucets'), orderBy('name')))
@@ -1112,34 +1153,21 @@ window.exportFaucetData = function() {
           });
         return;
       }
-    }
-    
-    // Fallback: получаем данные из localStorage или глобальной переменной
-    let faucetsData = [];
-    if (typeof localStorage !== 'undefined') {
+    } else {
+      // Fallback на localStorage
       const storedData = localStorage.getItem('faucets_backup') || localStorage.getItem('faucets');
       if (storedData) {
-        faucetsData = JSON.parse(storedData);
+        exportData(JSON.parse(storedData));
+      } else {
+        throw new Error('Нет данных для экспорта');
       }
     }
-    
-    // Если данных нет, пробуем получить из глобальной переменной
-    if (faucetsData.length === 0 && typeof window.faucets !== 'undefined') {
-      faucetsData = window.faucets;
-    }
-    
-    if (faucetsData.length === 0) {
-      throw new Error('Нет данных для экспорта');
-    }
-    
-    exportData(faucetsData);
-    
   } catch (error) {
     console.error('Ошибка экспорта:', error);
     if (typeof showToast === 'function') {
-      showToast('Ошибка экспорта: ' + error.message);
+      showToast('Ошибка экспорта данных');
     } else {
-      alert('Ошибка экспорта: ' + error.message);
+      alert('Ошибка экспорта данных');
     }
   }
 };
@@ -1150,61 +1178,69 @@ window.importFaucetData = function() {
     return;
   }
   
-  // Создаем файловый инпут
+  // Создаем input для выбора файла
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.json,application/json';
+  input.accept = '.json';
   input.onchange = function(e) {
     const file = e.target.files[0];
     if (!file) return;
     
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function(event) {
       try {
-        const faucetsData = JSON.parse(e.target.result);
+        const faucetsData = JSON.parse(event.target.result);
         
-        // Сохраняем в localStorage
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('faucets_backup', JSON.stringify(faucetsData));
+        if (!Array.isArray(faucetsData)) {
+          throw new Error('Неверный формат данных');
         }
         
-        // Обновляем глобальную переменную если есть
-        if (typeof window !== 'undefined') {
+        // Сохраняем данные в localStorage как бэкап
+        localStorage.setItem('faucets_backup', JSON.stringify(faucetsData));
+        
+        // Если находимся на faucet.html, обновляем глобальную переменную
+        if (typeof window.faucets !== 'undefined') {
           window.faucets = faucetsData;
+          // Обновляем отображение
+          if (typeof window.renderFaucets === 'function') {
+            window.renderFaucets();
+          }
         }
         
-        // Сохраняем в Firebase если доступно
-        if (window.db && faucetsData.length > 0) {
-          saveFaucetsToFirebase(faucetsData).then(() => {
-            setTimeout(() => {
-              if (typeof showToast === 'function') {
-                showToast('Данные кранов импортированы в Firebase! Перезагрузка...');
-              } else {
-                alert('Данные кранов импортированы в Firebase! Перезагрузка...');
-              }
-              location.reload();
-            }, 1000);
-          }).catch(error => {
-            console.error('Ошибка сохранения в Firebase:', error);
-            setTimeout(() => {
-              if (typeof showToast === 'function') {
-                showToast('Данные импортированы локально! Перезагрузка...');
-              } else {
-                alert('Данные импортированы локально! Перезагрузка...');
-              }
-              location.reload();
-            }, 1000);
-          });
-        } else {
-          // Перезагружаем страницу для применения изменений
-          setTimeout(() => {
-            if (typeof showToast === 'function') {
-              showToast('Данные кранов импортированы! Перезагрузка...');
-            } else {
-              alert('Данные кранов импортированы! Перезагрузка...');
+        // Если есть доступ к Firebase, сохраняем туда
+        if (window.db && typeof collection === 'function' && typeof writeBatch === 'function') {
+          const batch = writeBatch(window.db);
+          const faucetsCollection = collection(window.db, 'faucets');
+          
+          faucetsData.forEach(faucet => {
+            if (faucet.id) {
+              const docRef = doc(faucetsCollection, faucet.id);
+              batch.set(docRef, faucet);
             }
-            location.reload();
-          }, 1000);
+          });
+          
+          batch.commit()
+            .then(() => {
+              if (typeof showToast === 'function') {
+                showToast('Данные кранов импортированы и сохранены в Firebase!');
+              } else {
+                alert('Данные кранов импортированы и сохранены в Firebase!');
+              }
+            })
+            .catch(error => {
+              console.error('Ошибка сохранения в Firebase:', error);
+              if (typeof showToast === 'function') {
+                showToast('Данные импортированы локально. Ошибка сохранения в Firebase.');
+              } else {
+                alert('Данные импортированы локально. Ошибка сохранения в Firebase.');
+              }
+            });
+        } else {
+          if (typeof showToast === 'function') {
+            showToast('Данные кранов импортированы!');
+          } else {
+            alert('Данные кранов импортированы!');
+          }
         }
         
       } catch (error) {
@@ -1216,51 +1252,29 @@ window.importFaucetData = function() {
         }
       }
     };
+    
     reader.readAsText(file);
   };
   
-  // Запускаем выбор файла
   input.click();
 };
 
 // Функция для сохранения кранов в Firebase
 async function saveFaucetsToFirebase(faucetsData) {
-  if (!window.db) {
-    throw new Error('Firebase недоступен');
-  }
+  if (!window.db || !faucetsData || faucetsData.length === 0) return;
   
-  const { collection, doc, setDoc, serverTimestamp } = window.__firestoreExports || {};
-  if (!collection || !doc || !setDoc) {
-    throw new Error('Firebase функции недоступны');
-  }
+  const batch = writeBatch(window.db);
+  const faucetsCollection = collection(window.db, 'faucets');
   
-  const COL_FAUCETS = 'faucets';
-  const batch = [];
-  
-  for (const faucet of faucetsData) {
-    const faucetData = {
-      ...faucet,
-      updatedAt: serverTimestamp(),
-      updatedBy: currentUser.uid
-    };
-    
+  faucetsData.forEach(faucet => {
     if (faucet.id) {
-      // Обновляем существующий
-      batch.push(setDoc(doc(window.db, COL_FAUCETS, faucet.id), faucetData, { merge: true }));
-    } else {
-      // Создаем новый с ID
-      const newId = 'faucet_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      batch.push(setDoc(doc(window.db, COL_FAUCETS, newId), {
-        ...faucetData,
-        id: newId,
-        createdAt: serverTimestamp(),
-        createdby: currentUser.uid
-      }));
+      const docRef = doc(faucetsCollection, faucet.id);
+      batch.set(docRef, faucet);
     }
-  }
+  });
   
-  await Promise.all(batch);
-  console.log(`✅ Сохранено ${batch.length} кранов в Firebase`);
+  await batch.commit();
+  console.log(`✅ Сохранено ${faucetsData.length} кранов в Firebase`);
 }
 
 window.exportGuidesData = function() {
