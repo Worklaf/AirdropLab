@@ -55,32 +55,32 @@
             </div>
 
             <!-- Статистика -->
-            <div class="flex gap-5 text-sm" id="deskStatsRow">
+            <div class="flex gap-5 text-sm">
               <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=active'">
                 <div class="absolute inset-0 bg-emerald-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
-                  <div class="text-2xl font-black bg-gradient-to-br from-emerald-400 to-emerald-600 bg-clip-text text-transparent" id="headerStatActive">0</div>
+                  <div class="text-2xl font-black bg-gradient-to-br from-emerald-400 to-emerald-600 bg-clip-text text-transparent" id="statActive">0</div>
                   <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-emerald-400 transition-colors" data-translate="active">Активных</div>
                 </div>
               </div>
               <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=today'">
                 <div class="absolute inset-0 bg-cyan-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
-                  <div class="text-2xl font-black bg-gradient-to-br from-cyan-400 to-cyan-600 bg-clip-text text-transparent" id="headerStatToday">0</div>
+                  <div class="text-2xl font-black bg-gradient-to-br from-cyan-400 to-cyan-600 bg-clip-text text-transparent" id="statToday">0</div>
                   <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-cyan-400 transition-colors" data-translate="new">Новых</div>
                 </div>
               </div>
               <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=favorites'">
                 <div class="absolute inset-0 bg-orange-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
-                  <div class="text-2xl font-black bg-gradient-to-br from-orange-400 to-orange-600 bg-clip-text text-transparent" id="headerStatFavorites">0</div>
+                  <div class="text-2xl font-black bg-gradient-to-br from-orange-400 to-orange-600 bg-clip-text text-transparent" id="statFavorites">0</div>
                   <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-orange-400 transition-colors" data-translate="in_work">В работе</div>
                 </div>
               </div>
               <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=completed'">
                 <div class="absolute inset-0 bg-blue-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
-                  <div class="text-2xl font-black bg-gradient-to-br from-blue-400 to-blue-600 bg-clip-text text-transparent" id="headerStatCompleted">0</div>
+                  <div class="text-2xl font-black bg-gradient-to-br from-blue-400 to-blue-600 bg-clip-text text-transparent" id="statCompleted">0</div>
                   <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-blue-400 transition-colors" data-translate="done">Готово</div>
                 </div>
               </div>
@@ -794,8 +794,8 @@
     function setupObservers() {
 
       // 1. Статистика
-      [['headerStatActive','mobStatActive'],['headerStatToday','mobStatToday'],
-       ['headerStatFavorites','mobStatFavorites'],['headerStatCompleted','mobStatCompleted']
+      [['statActive','mobStatActive'],['statToday','mobStatToday'],
+       ['statFavorites','mobStatFavorites'],['statCompleted','mobStatCompleted']
       ].forEach(function(p) {
         var from = document.getElementById(p[0]);
         var to   = document.getElementById(p[1]);
@@ -841,23 +841,12 @@
       
       // Показываем мобильную статистику только на главной странице
       var mobStatsRow = document.getElementById('mobStatsRow');
-      var deskStatsRow = document.getElementById('deskStatsRow');
-      if (mobStatsRow || deskStatsRow) {
+      if (mobStatsRow) {
         var isMainPage = window.location.pathname.endsWith('/') || 
                          window.location.pathname.endsWith('index.html') ||
                          window.location.pathname === '' ||
                          window.location.pathname === '/';
-        
-        // На главной странице скрываем статистику в хедере (там есть своя большая статистика)
-        // На других страницах показываем статистику в хедере (для навигации)
-        if (deskStatsRow) {
-          deskStatsRow.style.display = isMainPage ? 'none' : 'flex';
-        }
-        
-        // Мобильная статистика - только на главной странице
-        if (mobStatsRow) {
-          mobStatsRow.style.display = isMainPage ? 'flex' : 'none';
-        }
+        mobStatsRow.style.display = isMainPage ? 'flex' : 'none';
       }
       
       // Дополнительная проверка каждые 1000мс для надежной синхронизации мобильной авторизации
@@ -1075,83 +1064,11 @@ window.exportFaucetData = function() {
     if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
     return;
   }
-  
-  try {
-    // Функция для экспорта данных
-    const exportData = (faucetsData) => {
-      // Создаем JSON файл для скачивания
-      const dataStr = JSON.stringify(faucetsData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `faucets_backup_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      if (typeof showToast === 'function') {
-        showToast('Данные кранов экспортированы!');
-      } else {
-        alert('Данные кранов экспортированы!');
-      }
-    };
-    
-    // Сначала пробуем получить данные из Firebase
-    if (window.db && typeof window.__firestoreExports !== 'undefined') {
-      const { collection, getDocs, query, orderBy } = window.__firestoreExports;
-      if (collection && getDocs && query && orderBy) {
-        getDocs(query(collection(window.db, 'faucets'), orderBy('name')))
-          .then(snap => {
-            const faucetsData = [];
-            for (const d of snap.docs) {
-              faucetsData.push({ id: d.id, ...d.data() });
-            }
-            exportData(faucetsData);
-          })
-          .catch(error => {
-            console.error('Ошибка загрузки из Firebase:', error);
-            // Fallback на localStorage
-            const storedData = localStorage.getItem('faucets_backup') || localStorage.getItem('faucets');
-            if (storedData) {
-              exportData(JSON.parse(storedData));
-            } else {
-              throw error;
-            }
-          });
-        return;
-      }
-    }
-    
-    // Fallback: получаем данные из localStorage или глобальной переменной
-    let faucetsData = [];
-    if (typeof localStorage !== 'undefined') {
-      const storedData = localStorage.getItem('faucets_backup') || localStorage.getItem('faucets');
-      if (storedData) {
-        faucetsData = JSON.parse(storedData);
-      }
-    }
-    
-    // Если данных нет, пробуем получить из глобальной переменной
-    if (faucetsData.length === 0 && typeof window.faucets !== 'undefined') {
-      faucetsData = window.faucets;
-    }
-    
-    if (faucetsData.length === 0) {
-      throw new Error('Нет данных для экспорта');
-    }
-    
-    exportData(faucetsData);
-    
-  } catch (error) {
-    console.error('Ошибка экспорта:', error);
-    if (typeof showToast === 'function') {
-      showToast('Ошибка экспорта: ' + error.message);
-    } else {
-      alert('Ошибка экспорта: ' + error.message);
-    }
+  // Здесь будет логика экспорта данных по кранам
+  if (typeof showToast === 'function') {
+    showToast('Экспорт данных кранов...');
+  } else {
+    alert('Экспорт данных кранов...');
   }
 };
 
@@ -1160,119 +1077,13 @@ window.importFaucetData = function() {
     if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
     return;
   }
-  
-  // Создаем файловый инпут
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json,application/json';
-  input.onchange = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      try {
-        const faucetsData = JSON.parse(e.target.result);
-        
-        // Сохраняем в localStorage
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('faucets_backup', JSON.stringify(faucetsData));
-        }
-        
-        // Обновляем глобальную переменную если есть
-        if (typeof window !== 'undefined') {
-          window.faucets = faucetsData;
-        }
-        
-        // Сохраняем в Firebase если доступно
-        if (window.db && faucetsData.length > 0) {
-          saveFaucetsToFirebase(faucetsData).then(() => {
-            setTimeout(() => {
-              if (typeof showToast === 'function') {
-                showToast('Данные кранов импортированы в Firebase! Перезагрузка...');
-              } else {
-                alert('Данные кранов импортированы в Firebase! Перезагрузка...');
-              }
-              location.reload();
-            }, 1000);
-          }).catch(error => {
-            console.error('Ошибка сохранения в Firebase:', error);
-            setTimeout(() => {
-              if (typeof showToast === 'function') {
-                showToast('Данные импортированы локально! Перезагрузка...');
-              } else {
-                alert('Данные импортированы локально! Перезагрузка...');
-              }
-              location.reload();
-            }, 1000);
-          });
-        } else {
-          // Перезагружаем страницу для применения изменений
-          setTimeout(() => {
-            if (typeof showToast === 'function') {
-              showToast('Данные кранов импортированы! Перезагрузка...');
-            } else {
-              alert('Данные кранов импортированы! Перезагрузка...');
-            }
-            location.reload();
-          }, 1000);
-        }
-        
-      } catch (error) {
-        console.error('Ошибка импорта:', error);
-        if (typeof showToast === 'function') {
-          showToast('Ошибка импорта: ' + error.message);
-        } else {
-          alert('Ошибка импорта: ' + error.message);
-        }
-      }
-    };
-    reader.readAsText(file);
-  };
-  
-  // Запускаем выбор файла
-  input.click();
+  // Здесь будет логика импорта данных по кранам
+  if (typeof showToast === 'function') {
+    showToast('Импорт данных кранов...');
+  } else {
+    alert('Импорт данных кранов...');
+  }
 };
-
-// Функция для сохранения кранов в Firebase
-async function saveFaucetsToFirebase(faucetsData) {
-  if (!window.db) {
-    throw new Error('Firebase недоступен');
-  }
-  
-  const { collection, doc, setDoc, serverTimestamp } = window.__firestoreExports || {};
-  if (!collection || !doc || !setDoc) {
-    throw new Error('Firebase функции недоступны');
-  }
-  
-  const COL_FAUCETS = 'faucets';
-  const batch = [];
-  
-  for (const faucet of faucetsData) {
-    const faucetData = {
-      ...faucet,
-      updatedAt: serverTimestamp(),
-      updatedBy: currentUser.uid
-    };
-    
-    if (faucet.id) {
-      // Обновляем существующий
-      batch.push(setDoc(doc(window.db, COL_FAUCETS, faucet.id), faucetData, { merge: true }));
-    } else {
-      // Создаем новый с ID
-      const newId = 'faucet_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      batch.push(setDoc(doc(window.db, COL_FAUCETS, newId), {
-        ...faucetData,
-        id: newId,
-        createdAt: serverTimestamp(),
-        createdby: currentUser.uid
-      }));
-    }
-  }
-  
-  await Promise.all(batch);
-  console.log(`✅ Сохранено ${batch.length} кранов в Firebase`);
-}
 
 window.exportGuidesData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
