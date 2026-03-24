@@ -56,28 +56,28 @@
 
             <!-- Статистика -->
             <div class="flex gap-5 text-sm">
-              <div class="text-center group cursor-pointer relative" onclick="typeof filterProjects==='function'&&filterProjects('active')">
+              <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=active'">
                 <div class="absolute inset-0 bg-emerald-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
                   <div class="text-2xl font-black bg-gradient-to-br from-emerald-400 to-emerald-600 bg-clip-text text-transparent" id="statActive">0</div>
                   <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-emerald-400 transition-colors" data-translate="active">Активных</div>
                 </div>
               </div>
-              <div class="text-center group cursor-pointer relative" onclick="typeof filterProjects==='function'&&filterProjects('today')">
+              <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=today'">
                 <div class="absolute inset-0 bg-cyan-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
                   <div class="text-2xl font-black bg-gradient-to-br from-cyan-400 to-cyan-600 bg-clip-text text-transparent" id="statToday">0</div>
                   <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-cyan-400 transition-colors" data-translate="new">Новых</div>
                 </div>
               </div>
-              <div class="text-center group cursor-pointer relative" onclick="typeof filterProjects==='function'&&filterProjects('favorites')">
+              <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=favorites'">
                 <div class="absolute inset-0 bg-orange-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
                   <div class="text-2xl font-black bg-gradient-to-br from-orange-400 to-orange-600 bg-clip-text text-transparent" id="statFavorites">0</div>
                   <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-orange-400 transition-colors" data-translate="in_work">В работе</div>
                 </div>
               </div>
-              <div class="text-center group cursor-pointer relative" onclick="typeof filterProjects==='function'&&filterProjects('completed')">
+              <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=completed'">
                 <div class="absolute inset-0 bg-blue-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
                   <div class="text-2xl font-black bg-gradient-to-br from-blue-400 to-blue-600 bg-clip-text text-transparent" id="statCompleted">0</div>
@@ -815,19 +815,35 @@
       var deskAva = document.getElementById('userAvatar');
       var mobAva  = document.getElementById('mobUserAvatar');
 
-      function syncAuth() {
-        var isIn = deskIn && !deskIn.classList.contains('hidden');
-        if (mobIn)  mobIn.style.display  = isIn ? 'flex' : 'none';
-        if (mobOut) mobOut.style.display = isIn ? 'none' : 'block';
+      window.syncAuth = function() {
+        // Проверяем состояние авторизации через глобальные переменные или localStorage
+        var isLoggedIn = false;
+        
+        // Способ 1: проверить через глобальную переменную currentUser
+        if (typeof window.currentUser !== 'undefined' && window.currentUser) {
+          isLoggedIn = true;
+        }
+        // Способ 2: проверить через localStorage
+        else if (localStorage.getItem('firebaseUser') || localStorage.getItem('authToken')) {
+          isLoggedIn = true;
+        }
+        // Способ 3: проверить через десктопный элемент (если есть)
+        else if (deskIn && !deskIn.classList.contains('hidden')) {
+          isLoggedIn = true;
+        }
+        
+        // Применяем состояние к мобильным элементам
+        if (mobIn)  mobIn.style.display  = isLoggedIn ? 'flex' : 'none';
+        if (mobOut) mobOut.style.display = isLoggedIn ? 'none' : 'block';
         if (deskAva && mobAva && deskAva.src) mobAva.src = deskAva.src;
       }
-      if (deskIn)  new MutationObserver(syncAuth).observe(deskIn,  { attributes:true, attributeFilter:['class','style'] });
+      if (deskIn)  new MutationObserver(window.syncAuth).observe(deskIn,  { attributes:true, attributeFilter:['class','style'] });
       if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
                      .observe(deskAva, { attributes:true, attributeFilter:['src'] });
-      syncAuth();
+      window.syncAuth();
       
-      // Дополнительная проверка каждые 500мс на случай проблем с синхронизацией
-      // setInterval(syncAuth, 500); // ЗАКОММЕНТИРОВАНО - вызывает бесконечный цикл
+      // Дополнительная проверка каждые 1000мс для надежной синхронизации мобильной авторизации
+      setInterval(window.syncAuth, 1000);
 
       // 3. Feedback panel
       var deskFP     = document.getElementById('generalFeedbackPanel');
@@ -953,6 +969,117 @@
   }
 
 })();
+
+// ════════════════════════════════════════════════════
+// Глобальные переменные
+// ════════════════════════════════════════════════════
+const ADMIN_UID = globalThis.ADMIN_UID || "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+let isAdminMode = false;
+
+// Проверяем режим админа при доступности currentUser
+function checkAdminMode() {
+  isAdminMode = currentUser && currentUser.uid === ADMIN_UID;
+}
+
+// Обновляем режим при изменении авторизации
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'currentUser', {
+    get: function() { return window._currentUser; },
+    set: function(value) { 
+      window._currentUser = value; 
+      checkAdminMode();
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════
+// Глобальные функции для работы на всех страницах
+// ════════════════════════════════════════════════════
+window.openStats = function() { 
+  if (!currentUser) { 
+    if (typeof showToast === 'function') {
+      showToast('Войдите'); 
+    } else {
+      alert('Войдите');
+    }
+    return; 
+  } 
+  if (currentUser.uid !== ADMIN_UID) { 
+    if (typeof showToast === 'function') {
+      showToast('Нет доступа'); 
+    } else {
+      alert('Нет доступа');
+    }
+    return; 
+  } 
+  window.open('admin/stats.html', '_blank'); 
+};
+
+window.openDeletedProjects = function() { 
+  if (!isAdminMode) { 
+    if (typeof showToast === 'function') {
+      showToast('Только для админа'); 
+    } else {
+      alert('Только для админа');
+    }
+    return; 
+  }
+  if (typeof loadDeletedProjects === 'function') {
+    loadDeletedProjects(); 
+    var modal = document.getElementById('deletedProjectsModal');
+    if (modal) modal.classList.add('active');
+  } else {
+    window.open('index.html#deleted-projects', '_blank');
+  }
+};
+
+window.migrateToFirestore = function() { 
+  if (!currentUser) { 
+    if (typeof showToast === 'function') {
+      showToast('Войдите'); 
+    } else {
+      alert('Войдите');
+    }
+    return; 
+  }
+  if (currentUser.uid !== ADMIN_UID) { 
+    if (typeof showToast === 'function') {
+      showToast('Нет доступа'); 
+    } else {
+      alert('Нет доступа');
+    }
+    return; 
+  }
+  if (typeof migrateToFirestore === 'function') {
+    migrateToFirestore();
+  } else {
+    window.open('index.html#migrate-firestore', '_blank');
+  }
+};
+
+window.exportAllData = function() { 
+  if (!currentUser) { 
+    if (typeof showToast === 'function') {
+      showToast('Войдите'); 
+    } else {
+      alert('Войдите');
+    }
+    return; 
+  }
+  if (currentUser.uid !== ADMIN_UID) { 
+    if (typeof showToast === 'function') {
+      showToast('Нет доступа'); 
+    } else {
+      alert('Нет доступа');
+    }
+    return; 
+  }
+  if (typeof exportAllData === 'function') {
+    exportAllData();
+  } else {
+    window.open('index.html#export-data', '_blank');
+  }
+};
 
 // ════════════════════════════════════════════════════
 // Очистка проблемных данных Firebase
@@ -2103,11 +2230,15 @@ function initFeedbacksListener(uid) {
         window.adminFeedbacks = [];
         updateFeedbackBadge();
         if (adminFeedbacksUnsubscribe) { adminFeedbacksUnsubscribe(); adminFeedbacksUnsubscribe = null; }
-        return;
+      } else {
+        if (deskFP) deskFP.classList.remove('hidden');
+        initFeedbacksListener(user.uid);
       }
-
-      if (deskFP) deskFP.classList.remove('hidden');
-      initFeedbacksListener(user.uid);
+      
+      // Обновляем мобильную авторизацию при изменении состояния
+      if (typeof window.syncAuth === 'function') {
+        window.syncAuth();
+      }
     });
 
     return true;
