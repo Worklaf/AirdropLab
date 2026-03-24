@@ -121,16 +121,16 @@
                 <span class="lang-text">ENG</span>
               </button>
 
-              <div id="adminPanel" class="flex gap-2 items-center border-l border-slate-700/50 pl-3 ml-1" style="display:none;">
-                <button onclick="typeof openAddModal==='function'&&openAddModal()"
-                  class="px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg text-xs font-bold transition-all hover:scale-105 shadow-lg shadow-cyan-500/30">
+              <button id="deskAddBtn" onclick="typeof openAddModal==='function'&&openAddModal()"
+                  class="px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg text-xs font-bold transition-all hover:scale-105 shadow-lg shadow-cyan-500/30" style="display:none;">
                   <i class="fas fa-flask mr-1"></i>
-                                    <span class="hidden sm:inline" data-translate="new_test">Новый тест</span>
+                  <span class="hidden sm:inline" data-translate="new_test">Новый тест</span>
                 </button>
-                <button onclick="typeof openStats==='function'&&openStats()" class="admin-action-btn admin-btn-orange" data-translate-title="view_stats"><i class="fas fa-chart-pie text-base"></i></button>
-                <button onclick="typeof migrateToFirestore==='function'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" data-translate-title="upload_firebase"><i class="fas fa-cloud-upload-alt text-base"></i></button>
-                <button onclick="typeof exportAllData==='function'&&exportAllData()" class="admin-action-btn admin-btn-emerald" data-translate-title="export_json"><i class="fas fa-file-export text-base"></i></button>
-                <button onclick="typeof openDeletedProjects==='function'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" data-translate-title="view_deleted"><i class="fas fa-trash-restore text-base"></i></button>
+
+              <div id="adminPanel" class="flex gap-2 items-center border-l border-slate-700/50 pl-3 ml-1" style="display:none;">
+                <div id="deskAdminBtns" class="flex gap-2 items-center">
+                  <!-- Кнопки будут добавлены динамически в зависимости от страницы -->
+                </div>
                 <span class="px-2.5 py-1 bg-gradient-to-r from-cyan-600 to-cyan-500 rounded-md text-[10px] font-black text-white uppercase">
                   <i class="fas fa-user-shield mr-1"></i>Admin
                 </span>
@@ -213,8 +213,8 @@
             </div>
           </div>
 
-          <!-- MOBILE: строка 2 — Статистика -->
-          <div class="flex md:hidden mob-stats-row overflow-x-auto">
+          <!-- MOBILE: строка 2 — Статистика (только на главной) -->
+          <div class="flex md:hidden mob-stats-row overflow-x-auto" id="mobStatsRow" style="display:none;">
             <div class="mob-stat-item" onclick="window.location.href='index.html?filter=active'">
               <span class="mob-stat-num" style="color:#34d399;" id="mobStatActive">0</span>
               <span class="mob-stat-lbl" data-translate="active">Акт.</span>
@@ -854,6 +854,20 @@
       
       // Обновляем мобильные админские кнопки в зависимости от страницы
       updateMobileAdminButtons();
+
+      // Обновляем статистику если мы на главной странице и функция доступна
+      if (typeof window.updateStats === 'function' && 
+          (window.location.pathname.endsWith('/') || 
+           window.location.pathname.endsWith('index.html') ||
+           window.location.pathname === '' ||
+           window.location.pathname === '/')) {
+        // Небольшая задержка чтобы гарантировать что DOM готов
+        setTimeout(function() {
+          if (typeof window.currentFilteredList !== 'undefined') {
+            window.updateStats(window.currentFilteredList);
+          }
+        }, 100);
+      }
 
       // 3. Feedback panel
       var deskFP     = document.getElementById('generalFeedbackPanel');
