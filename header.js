@@ -54,38 +54,6 @@
               </a>
             </div>
 
-            <!-- Статистика -->
-            <div class="flex gap-5 text-sm">
-              <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=active'">
-                <div class="absolute inset-0 bg-emerald-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="relative px-3 py-1">
-                  <div class="text-2xl font-black bg-gradient-to-br from-emerald-400 to-emerald-600 bg-clip-text text-transparent" id="statActive">0</div>
-                  <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-emerald-400 transition-colors" data-translate="active">Активных</div>
-                </div>
-              </div>
-              <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=today'">
-                <div class="absolute inset-0 bg-cyan-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="relative px-3 py-1">
-                  <div class="text-2xl font-black bg-gradient-to-br from-cyan-400 to-cyan-600 bg-clip-text text-transparent" id="statToday">0</div>
-                  <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-cyan-400 transition-colors" data-translate="new">Новых</div>
-                </div>
-              </div>
-              <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=favorites'">
-                <div class="absolute inset-0 bg-orange-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="relative px-3 py-1">
-                  <div class="text-2xl font-black bg-gradient-to-br from-orange-400 to-orange-600 bg-clip-text text-transparent" id="statFavorites">0</div>
-                  <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-orange-400 transition-colors" data-translate="in_work">В работе</div>
-                </div>
-              </div>
-              <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=completed'">
-                <div class="absolute inset-0 bg-blue-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="relative px-3 py-1">
-                  <div class="text-2xl font-black bg-gradient-to-br from-blue-400 to-blue-600 bg-clip-text text-transparent" id="statCompleted">0</div>
-                  <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-blue-400 transition-colors" data-translate="done">Готово</div>
-                </div>
-              </div>
-            </div>
-
             <!-- Кнопки справа -->
             <div class="flex gap-2 items-center">
               <button onclick="window.openClaimModal&&window.openClaimModal()" id="headerClaimBtn"
@@ -213,21 +181,21 @@
             </div>
           </div>
 
-          <!-- MOBILE: строка 2 — Статистика (только на главной) -->
-          <div class="flex md:hidden mob-stats-row overflow-x-auto" id="mobStatsRow" style="display:none;">
-            <div class="mob-stat-item" onclick="window.location.href='index.html?filter=active'">
+          <!-- MOBILE: строка 2 — Статистика -->
+          <div class="flex md:hidden mob-stats-row overflow-x-auto">
+            <div class="mob-stat-item" onclick="typeof filterProjects==='function'&&filterProjects('active')">
               <span class="mob-stat-num" style="color:#34d399;" id="mobStatActive">0</span>
               <span class="mob-stat-lbl" data-translate="active">Акт.</span>
             </div>
-            <div class="mob-stat-item" onclick="window.location.href='index.html?filter=today'">
+            <div class="mob-stat-item" onclick="typeof filterProjects==='function'&&filterProjects('today')">
               <span class="mob-stat-num" style="color:#22d3ee;" id="mobStatToday">0</span>
               <span class="mob-stat-lbl" data-translate="new">Нов.</span>
             </div>
-            <div class="mob-stat-item" onclick="window.location.href='index.html?filter=favorites'">
+            <div class="mob-stat-item" onclick="typeof filterProjects==='function'&&filterProjects('favorites')">
               <span class="mob-stat-num" style="color:#fb923c;" id="mobStatFavorites">0</span>
               <span class="mob-stat-lbl" data-translate="in_work">Раб.</span>
             </div>
-            <div class="mob-stat-item" onclick="window.location.href='index.html?filter=completed'">
+            <div class="mob-stat-item" onclick="typeof filterProjects==='function'&&filterProjects('completed')">
               <span class="mob-stat-num" style="color:#60a5fa;" id="mobStatCompleted">0</span>
               <span class="mob-stat-lbl" data-translate="done">Гот.</span>
             </div>
@@ -793,19 +761,6 @@
     // ── MutationObserver синхронизации ──
     function setupObservers() {
 
-      // 1. Статистика
-      [['statActive','mobStatActive'],['statToday','mobStatToday'],
-       ['statFavorites','mobStatFavorites'],['statCompleted','mobStatCompleted']
-      ].forEach(function(p) {
-        var from = document.getElementById(p[0]);
-        var to   = document.getElementById(p[1]);
-        if (!from || !to) return;
-        to.textContent = from.textContent;
-        new MutationObserver(function() { 
-          to.textContent = from.textContent;
-        }).observe(from, { childList:true, characterData:true, subtree:true });
-      });
-
       // 2. Auth state — ИСПРАВЛЕНО: убраны setTimeout и setInterval внутри syncAuth
       var deskIn  = document.getElementById('loggedInView');
       var mobIn   = document.getElementById('mobLoggedInView');
@@ -855,20 +810,6 @@
       
       // Обновляем мобильные админские кнопки в зависимости от страницы
       updateMobileAdminButtons();
-
-      // Обновляем статистику если мы на главной странице и функция доступна
-      if (typeof window.updateStats === 'function' && 
-          (window.location.pathname.endsWith('/') || 
-           window.location.pathname.endsWith('index.html') ||
-           window.location.pathname === '' ||
-           window.location.pathname === '/')) {
-        // Небольшая задержка чтобы гарантировать что DOM готов
-        setTimeout(function() {
-          if (typeof window.currentFilteredList !== 'undefined') {
-            window.updateStats(window.currentFilteredList);
-          }
-        }, 100);
-      }
 
       // 3. Feedback panel
       var deskFP     = document.getElementById('generalFeedbackPanel');
