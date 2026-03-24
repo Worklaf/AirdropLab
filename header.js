@@ -54,6 +54,38 @@
               </a>
             </div>
 
+            <!-- Статистика -->
+            <div class="flex gap-5 text-sm">
+              <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=active'">
+                <div class="absolute inset-0 bg-emerald-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative px-3 py-1">
+                  <div class="text-2xl font-black bg-gradient-to-br from-emerald-400 to-emerald-600 bg-clip-text text-transparent" id="statActive">0</div>
+                  <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-emerald-400 transition-colors" data-translate="active">Активных</div>
+                </div>
+              </div>
+              <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=today'">
+                <div class="absolute inset-0 bg-cyan-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative px-3 py-1">
+                  <div class="text-2xl font-black bg-gradient-to-br from-cyan-400 to-cyan-600 bg-clip-text text-transparent" id="statToday">0</div>
+                  <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-cyan-400 transition-colors" data-translate="new">Новых</div>
+                </div>
+              </div>
+              <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=favorites'">
+                <div class="absolute inset-0 bg-orange-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative px-3 py-1">
+                  <div class="text-2xl font-black bg-gradient-to-br from-orange-400 to-orange-600 bg-clip-text text-transparent" id="statFavorites">0</div>
+                  <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-orange-400 transition-colors" data-translate="in_work">В работе</div>
+                </div>
+              </div>
+              <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=completed'">
+                <div class="absolute inset-0 bg-blue-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative px-3 py-1">
+                  <div class="text-2xl font-black bg-gradient-to-br from-blue-400 to-blue-600 bg-clip-text text-transparent" id="statCompleted">0</div>
+                  <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-blue-400 transition-colors" data-translate="done">Готово</div>
+                </div>
+              </div>
+            </div>
+
             <!-- Кнопки справа -->
             <div class="flex gap-2 items-center">
               <button onclick="window.openClaimModal&&window.openClaimModal()" id="headerClaimBtn"
@@ -89,16 +121,16 @@
                 <span class="lang-text">ENG</span>
               </button>
 
-              <button id="deskAddBtn" onclick="typeof openAddModal==='function'&&openAddModal()"
-                  class="px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg text-xs font-bold transition-all hover:scale-105 shadow-lg shadow-cyan-500/30" style="display:none;">
-                  <i class="fas fa-flask mr-1"></i>
-                  <span class="hidden sm:inline" data-translate="new_test">Новый тест</span>
-                </button>
-
               <div id="adminPanel" class="flex gap-2 items-center border-l border-slate-700/50 pl-3 ml-1" style="display:none;">
-                <div id="deskAdminBtns" class="flex gap-2 items-center">
-                  <!-- Кнопки будут добавлены динамически в зависимости от страницы -->
-                </div>
+                <button onclick="typeof openAddModal==='function'&&openAddModal()"
+                  class="px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg text-xs font-bold transition-all hover:scale-105 shadow-lg shadow-cyan-500/30">
+                  <i class="fas fa-flask mr-1"></i>
+                                    <span class="hidden sm:inline" data-translate="new_test">Новый тест</span>
+                </button>
+                <button onclick="typeof openStats==='function'&&openStats()" class="admin-action-btn admin-btn-orange" data-translate-title="view_stats"><i class="fas fa-chart-pie text-base"></i></button>
+                <button onclick="typeof migrateToFirestore==='function'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" data-translate-title="upload_firebase"><i class="fas fa-cloud-upload-alt text-base"></i></button>
+                <button onclick="typeof exportAllData==='function'&&exportAllData()" class="admin-action-btn admin-btn-emerald" data-translate-title="export_json"><i class="fas fa-file-export text-base"></i></button>
+                <button onclick="typeof openDeletedProjects==='function'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" data-translate-title="view_deleted"><i class="fas fa-trash-restore text-base"></i></button>
                 <span class="px-2.5 py-1 bg-gradient-to-r from-cyan-600 to-cyan-500 rounded-md text-[10px] font-black text-white uppercase">
                   <i class="fas fa-user-shield mr-1"></i>Admin
                 </span>
@@ -181,8 +213,8 @@
             </div>
           </div>
 
-          <!-- MOBILE: строка 2 — Статистика (только на главной) -->
-          <div class="flex md:hidden mob-stats-row overflow-x-auto" id="mobStatsRow" style="display:none;">
+          <!-- MOBILE: строка 2 — Статистика -->
+          <div class="flex md:hidden mob-stats-row overflow-x-auto">
             <div class="mob-stat-item" onclick="window.location.href='index.html?filter=active'">
               <span class="mob-stat-num" style="color:#34d399;" id="mobStatActive">0</span>
               <span class="mob-stat-lbl" data-translate="active">Акт.</span>
@@ -760,6 +792,18 @@
 
     // ── MutationObserver синхронизации ──
     function setupObservers() {
+
+      // 1. Статистика
+      [['statActive','mobStatActive'],['statToday','mobStatToday'],
+       ['statFavorites','mobStatFavorites'],['statCompleted','mobStatCompleted']
+      ].forEach(function(p) {
+        var from = document.getElementById(p[0]);
+        var to   = document.getElementById(p[1]);
+        if (!from || !to) return;
+        to.textContent = from.textContent;
+        new MutationObserver(function() { to.textContent = from.textContent; })
+          .observe(from, { childList:true, characterData:true, subtree:true });
+      });
 
       // 2. Auth state — ИСПРАВЛЕНО: убраны setTimeout и setInterval внутри syncAuth
       var deskIn  = document.getElementById('loggedInView');
