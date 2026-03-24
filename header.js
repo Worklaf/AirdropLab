@@ -59,28 +59,28 @@
               <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=active'">
                 <div class="absolute inset-0 bg-emerald-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
-                  <div class="text-2xl font-black bg-gradient-to-br from-emerald-400 to-emerald-600 bg-clip-text text-transparent" id="statActive">0</div>
+                  <div class="text-2xl font-black bg-gradient-to-br from-emerald-400 to-emerald-600 bg-clip-text text-transparent" id="headerStatActive">0</div>
                   <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-emerald-400 transition-colors" data-translate="active">Активных</div>
                 </div>
               </div>
               <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=today'">
                 <div class="absolute inset-0 bg-cyan-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
-                  <div class="text-2xl font-black bg-gradient-to-br from-cyan-400 to-cyan-600 bg-clip-text text-transparent" id="statToday">0</div>
+                  <div class="text-2xl font-black bg-gradient-to-br from-cyan-400 to-cyan-600 bg-clip-text text-transparent" id="headerStatToday">0</div>
                   <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-cyan-400 transition-colors" data-translate="new">Новых</div>
                 </div>
               </div>
               <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=favorites'">
                 <div class="absolute inset-0 bg-orange-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
-                  <div class="text-2xl font-black bg-gradient-to-br from-orange-400 to-orange-600 bg-clip-text text-transparent" id="statFavorites">0</div>
+                  <div class="text-2xl font-black bg-gradient-to-br from-orange-400 to-orange-600 bg-clip-text text-transparent" id="headerStatFavorites">0</div>
                   <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-orange-400 transition-colors" data-translate="in_work">В работе</div>
                 </div>
               </div>
               <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=completed'">
                 <div class="absolute inset-0 bg-blue-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
-                  <div class="text-2xl font-black bg-gradient-to-br from-blue-400 to-blue-600 bg-clip-text text-transparent" id="statCompleted">0</div>
+                  <div class="text-2xl font-black bg-gradient-to-br from-blue-400 to-blue-600 bg-clip-text text-transparent" id="headerStatCompleted">0</div>
                   <div class="text-slate-400 text-[10px] uppercase tracking-wider font-bold group-hover:text-blue-400 transition-colors" data-translate="done">Готово</div>
                 </div>
               </div>
@@ -794,8 +794,8 @@
     function setupObservers() {
 
       // 1. Статистика
-      [['statActive','mobStatActive'],['statToday','mobStatToday'],
-       ['statFavorites','mobStatFavorites'],['statCompleted','mobStatCompleted']
+      [['headerStatActive','mobStatActive'],['headerStatToday','mobStatToday'],
+       ['headerStatFavorites','mobStatFavorites'],['headerStatCompleted','mobStatCompleted']
       ].forEach(function(p) {
         var from = document.getElementById(p[0]);
         var to   = document.getElementById(p[1]);
@@ -848,14 +848,15 @@
                          window.location.pathname === '' ||
                          window.location.pathname === '/';
         
-        // Мобильная статистика - только на главной
-        if (mobStatsRow) {
-          mobStatsRow.style.display = isMainPage ? 'flex' : 'none';
-        }
-        
-        // Десктопная статистика - скрываем на главной (там есть своя статистика)
+        // На главной странице скрываем статистику в хедере (там есть своя большая статистика)
+        // На других страницах показываем статистику в хедере (для навигации)
         if (deskStatsRow) {
           deskStatsRow.style.display = isMainPage ? 'none' : 'flex';
+        }
+        
+        // Мобильная статистика - только на главной странице
+        if (mobStatsRow) {
+          mobStatsRow.style.display = isMainPage ? 'flex' : 'none';
         }
       }
       
