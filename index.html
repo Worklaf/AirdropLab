@@ -1689,16 +1689,6 @@ document.addEventListener('DOMContentLoaded', function() {
   loadData(); 
   setupSearchListener();
   
-  // Обработка URL параметров для фильтров
-  const urlParams = new URLSearchParams(window.location.search);
-  const filterParam = urlParams.get('filter');
-  if (filterParam && typeof filterProjects === 'function') {
-    // Применяем фильтр после небольшой задержки, чтобы данные загрузились
-    setTimeout(() => {
-      filterProjects(filterParam);
-    }, 500);
-  }
-  
   const richDescTextarea = document.getElementById('actRichDesc');
   if (richDescTextarea) {
     richDescTextarea.addEventListener('scroll', function() {
@@ -2775,10 +2765,10 @@ function updateCounts(filtered) {
 }
 
 function updateStats(filtered) {
-  document.getElementById('countActive').textContent = filtered.filter(function(p) { const projectCompleted = userCompleted.includes(p.id + '_project'); const hasActivities = p.activities && p.activities.length > 0; const allActivitiesCompleted = hasActivities && p.activities.every(a => userCompleted.includes(p.id + '_' + a.id)); return !(projectCompleted || allActivitiesCompleted); }).length;
-  document.getElementById('countToday').textContent = filtered.filter(function(p) { return isProjectOrActivityToday(p); }).length;
-  document.getElementById('countFavoritesSidebar').textContent = filtered.filter(function(p) { return userFavorites.includes(p.id); }).length;
-  document.getElementById('countCompletedSidebar').textContent = filtered.filter(function(p) { const projectCompleted = userCompleted.includes(p.id + '_project'); const hasActivities = p.activities && p.activities.length > 0; const allActivitiesCompleted = hasActivities && p.activities.every(a => userCompleted.includes(p.id + '_' + a.id)); return projectCompleted || allActivitiesCompleted; }).length;
+  document.getElementById('statActive').textContent = filtered.filter(function(p) { const projectCompleted = userCompleted.includes(p.id + '_project'); const hasActivities = p.activities && p.activities.length > 0; const allActivitiesCompleted = hasActivities && p.activities.every(a => userCompleted.includes(p.id + '_' + a.id)); return !(projectCompleted || allActivitiesCompleted); }).length;
+  document.getElementById('statToday').textContent = filtered.filter(function(p) { return isProjectOrActivityToday(p); }).length;
+  document.getElementById('statFavorites').textContent = filtered.filter(function(p) { return userFavorites.includes(p.id); }).length;
+  document.getElementById('statCompleted').textContent = filtered.filter(function(p) { const projectCompleted = userCompleted.includes(p.id + '_project'); const hasActivities = p.activities && p.activities.length > 0; const allActivitiesCompleted = hasActivities && p.activities.every(a => userCompleted.includes(p.id + '_' + a.id)); return projectCompleted || allActivitiesCompleted; }).length;
 }
 
 function isToday(dateString) { if (!dateString) return false; return new Date(dateString).toDateString() === new Date().toDateString(); }
