@@ -55,7 +55,7 @@
             </div>
 
             <!-- Статистика -->
-            <div class="flex gap-5 text-sm">
+            <div class="flex gap-5 text-sm" id="deskStatsRow">
               <div class="text-center group cursor-pointer relative" onclick="window.location.href='index.html?filter=active'">
                 <div class="absolute inset-0 bg-emerald-500/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative px-3 py-1">
@@ -841,12 +841,22 @@
       
       // Показываем мобильную статистику только на главной странице
       var mobStatsRow = document.getElementById('mobStatsRow');
-      if (mobStatsRow) {
+      var deskStatsRow = document.getElementById('deskStatsRow');
+      if (mobStatsRow || deskStatsRow) {
         var isMainPage = window.location.pathname.endsWith('/') || 
                          window.location.pathname.endsWith('index.html') ||
                          window.location.pathname === '' ||
                          window.location.pathname === '/';
-        mobStatsRow.style.display = isMainPage ? 'flex' : 'none';
+        
+        // Мобильная статистика - только на главной
+        if (mobStatsRow) {
+          mobStatsRow.style.display = isMainPage ? 'flex' : 'none';
+        }
+        
+        // Десктопная статистика - скрываем на главной (там есть своя статистика)
+        if (deskStatsRow) {
+          deskStatsRow.style.display = isMainPage ? 'none' : 'flex';
+        }
       }
       
       // Дополнительная проверка каждые 1000мс для надежной синхронизации мобильной авторизации
