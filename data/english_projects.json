@@ -566,61 +566,73 @@
     },
     {
       "id": "forte_802428",
+      "guideUrl": "",
+      "hasDaily": false,
+      "twitterUrl": "https://x.com/ForteProtocol?hzet=dszqupsbol",
       "createdAt": "2026-03-21T16:16:42.428Z",
+      "image": "https://images.cryptorank.io/coins/forte1758020545404.png",
+      "lastUpdated": "2026-03-24",
+      "status": "active",
+      "deleted": false,
       "activities": [
         {
-          "id": "act_1774109610232",
+          "status": "active",
+          "createdAt": "2026-03-21T16:13:30.232Z",
+          "description": "Forte [launched](https://x.com/ForteProtocol/status/1968396618371133455) their second quest on Galxe! We can complete it to earn 25 points.\n\n \n\n1. Go to [Galxe](https://app.galxe.com/quest/ForteProtocol/GC5mTt8px6?referral_code=GRFr2I2lYumsU7D-ptpB4SXs_ixKWfWpHAprYHg5qV_B_kE) and connect your wallet (or social media account).\n\n2. Complete tasks and earn points:\n\n![image](https://img.cryptorank.io/image-hub/ppsdo1758849882562.png)",
           "endDate": "",
+          "title": "Quest 2: Spread the Word",
+          "date": "2025-09-17",
           "categories": [
             "Bounty Platform"
           ],
-          "description": "Forte [launched](https://x.com/ForteProtocol/status/1968396618371133455) their second quest on Galxe! We can complete it to earn 25 points.\n\n \n\n1. Go to [Galxe](https://app.galxe.com/quest/ForteProtocol/GC5mTt8px6?referral_code=GRFr2I2lYumsU7D-ptpB4SXs_ixKWfWpHAprYHg5qV_B_kE) and connect your wallet (or social media account).\n\n2. Complete tasks and earn points:\n\n![image](https://img.cryptorank.io/image-hub/ppsdo1758849882562.png)",
-          "createdAt": "2026-03-21T16:13:30.232Z",
-          "date": "2025-09-17",
-          "status": "active",
-          "title": "Quest 2: Spread the Word"
+          "id": "act_1774109610232"
         },
         {
-          "status": "active",
-          "date": "2025-09-25",
-          "createdAt": "2026-03-21T16:14:52.641Z",
-          "title": "Quest 3: Test Your Ground",
           "endDate": "",
-          "id": "act_1774109692641",
+          "createdAt": "2026-03-21T16:14:52.641Z",
           "description": "Forte [launched](https://x.com/ForteProtocol/status/1971287264438173720) their third quest on Galxe! We can complete it to earn 25 points.\n\n \n\n1. Go to [Galxe](https://app.galxe.com/quest/ForteProtocol/GCoUVt8dHz?referral_code=GRFr2JsrYmmsVrztptpB4SXs7ehV9vrkPLyALN8-0fbwRRI) and connect your wallet (or social media account).\n\n2. Complete tasks and earn points:\n\n![image](https://img.cryptorank.io/image-hub/pdoasd1758848863753.png)",
+          "status": "active",
+          "id": "act_1774109692641",
           "categories": [
             "Bounty Platform"
-          ]
+          ],
+          "title": "Quest 3: Test Your Ground",
+          "date": "2025-09-25"
         },
         {
-          "title": "Pioneer Stone Placement",
-          "date": "2026-03-18",
-          "createdAt": "2026-03-21T16:15:59.373Z",
-          "status": "ended",
           "categories": [
             "Social Activity"
           ],
-          "description": "The updated Quest 1: Spread the Word is now available on the Galxe platform. You can complete simple social tasks to earn 25 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/ForteProtocol/GCpict6X7N?referral_code=GRFr2Jzkbymv2aMgptpB4SXs1QeKN3tluAPky_LZPxIBkV6) and connect your wallet. Complete tasks and invite other users to earn additional points ![image](https://images.cryptorank.io/image-hub/dsada_121773834632106.jpg)",
+          "date": "2026-03-18",
+          "title": "Pioneer Stone Placement",
           "id": "act_1774109759373",
-          "endDate": ""
+          "endDate": "",
+          "createdAt": "2026-03-21T16:15:59.373Z",
+          "description": "The updated Quest 1: Spread the Word is now available on the Galxe platform. You can complete simple social tasks to earn 25 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/ForteProtocol/GCpict6X7N?referral_code=GRFr2Jzkbymv2aMgptpB4SXs1QeKN3tluAPky_LZPxIBkV6) and connect your wallet. Complete tasks and invite other users to earn additional points ![image](https://images.cryptorank.io/image-hub/dsada_121773834632106.jpg)",
+          "status": "ended"
+        },
+        {
+          "categories": [
+            "Social Activity"
+          ],
+          "date": "2026-03-24",
+          "title": "Forte Community Join",
+          "id": "act_1774354126531",
+          "description": "The updated Quest 2: Join The Forte Community is now available on the Galxe platform. You can complete simple social tasks and earn 30 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/ForteProtocol/GCLHFtYfPg?referral_code=GRFr2JPsJmm0Fjrq5tpB4SXsxljPWAhx3vqkVXVOZMUIySK) and connect your wallet. Complete the task of joining the [Discord](https://discord.com/invite/jzz5Z2HtQ3).\n![image](https://images.cryptorank.io/image-hub/cxzczxbvzzz1774338278155.jpg)",
+          "endDate": "",
+          "createdAt": "2026-03-24T12:08:46.531Z",
+          "status": "active"
         }
       ],
-      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/forte-activity938",
-      "description": "Forte is an innovative blockchain rules system designed to simplify working with web3 projects and gaming ecosystems. This platform enables developers to flexibly configure parameters for issuing, transferring, and burning digital assets while ensuring full transparency and compliance with regulatory requirements. By leveraging customizable control mechanisms, companies can significantly accelerate the go-to-market process for their products. Currently, the technology operates on the Ethereum and Polygon networks, offering reliable tools for managing token economies. Implementing such solutions helps effectively regulate community activity and protect virtual property using automated algorithms.",
-      "referralLink": "https://app.galxe.com/quest/ForteProtocol/GCoUVt8dHz?referral_code=GRFr2JsrYmmsVrztptpB4SXs7ehV9vrkPLyALN8-0fbwRRI",
-      "hasDaily": false,
-      "guideUrl": "",
-      "deleted": false,
-      "twitterUrl": "https://x.com/ForteProtocol?hzet=dszqupsbol",
       "priority": "normal",
-      "status": "active",
-      "name": "Forte",
-      "lastUpdated": "2026-03-18",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/forte-activity938",
+      "referralLink": "https://app.galxe.com/quest/ForteProtocol/GCoUVt8dHz?referral_code=GRFr2JsrYmmsVrztptpB4SXs7ehV9vrkPLyALN8-0fbwRRI",
+      "description": "Forte is an innovative blockchain rules system designed to simplify working with web3 projects and gaming ecosystems. This platform enables developers to flexibly configure parameters for issuing, transferring, and burning digital assets while ensuring full transparency and compliance with regulatory requirements. By leveraging customizable control mechanisms, companies can significantly accelerate the go-to-market process for their products. Currently, the technology operates on the Ethereum and Polygon networks, offering reliable tools for managing token economies. Implementing such solutions helps effectively regulate community activity and protect virtual property using automated algorithms.",
       "categories": [
         "Bounty Platform",
         "Social Activity"
       ],
-      "image": "https://images.cryptorank.io/coins/forte1758020545404.png"
+      "name": "Forte"
     },
     {
       "id": "godark_542181",
@@ -689,148 +701,148 @@
     },
     {
       "id": "kaio_345183",
-      "deleted": false,
-      "status": "active",
-      "lastUpdated": "2026-03-20",
+      "guideUrl": "https://app.galxe.com/quest/KAIO",
+      "priority": "normal",
+      "name": "KAIO",
       "image": "https://img.cryptorank.io/coins/kaio1753891825163.png",
-      "twitterUrl": "https://x.com/KAIO_xyz?hzet=dszqupsbol",
+      "description": "KAIO is a protocol specifically designed for tokenized real-world assets (RWA), providing seamless transfer, regulatory compliance, and liquidity in DeFi through its own AppChain. The platform serves as a foundation for issuing, redeeming, and transferring tokenized funds, allowing accredited investors to subscribe to assets in fiat currencies or stablecoins and freely move their positions between blockchains.",
+      "status": "active",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/kaio-activity1108",
+      "deleted": false,
+      "lastUpdated": "2026-03-20",
       "createdAt": "2026-02-19T16:25:45.183Z",
       "hasDaily": false,
-      "guideUrl": "https://app.galxe.com/quest/KAIO",
-      "name": "KAIO",
       "categories": [
         "Form Filling",
         "Social Activity"
       ],
-      "description": "KAIO is a protocol specifically designed for tokenized real-world assets (RWA), providing seamless transfer, regulatory compliance, and liquidity in DeFi through its own AppChain. The platform serves as a foundation for issuing, redeeming, and transferring tokenized funds, allowing accredited investors to subscribe to assets in fiat currencies or stablecoins and freely move their positions between blockchains.",
-      "referralLink": "https://app.galxe.com/quest/KAIO",
-      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/kaio-activity1108",
-      "priority": "normal",
       "activities": [
         {
           "date": "2026-02-05",
           "title": "Waitlist",
-          "categories": [
-            "Form Filling"
-          ],
+          "description": "KAIO [announced](https://x.com/KAIO_xyz/status/2019404419519877525) the opening of their waitlist. You can submit a request to join the waitlist to gain access to the product and become an early user.\n\n1. Go to the [website](https://waitlist.kaio.xyz/) and connect your wallet. Fill out the form.\nDon't forget to confirm your application via email\n![](https://img.cryptorank.io/image-hub/1_%D1%83%D0%B2_11771430571048.jpg)",
           "id": "act_1771518296231",
           "status": "active",
-          "description": "KAIO [announced](https://x.com/KAIO_xyz/status/2019404419519877525) the opening of their waitlist. You can submit a request to join the waitlist to gain access to the product and become an early user.\n\n1. Go to the [website](https://waitlist.kaio.xyz/) and connect your wallet. Fill out the form.\nDon't forget to confirm your application via email\n![](https://img.cryptorank.io/image-hub/1_%D1%83%D0%B2_11771430571048.jpg)"
+          "categories": [
+            "Form Filling"
+          ]
         },
         {
-          "status": "active",
-          "description": "On the Galxe platform, various social campaigns are available. Complete them to earn points, which can later influence access to KAIO products and potential rewards.\n\n1. Go to the [site](https://app.galxe.com/quest/KAIO) and connect your wallet. Start completing the available campaigns\n![](https://img.cryptorank.io/image-hub/%D0%B2%D1%8B%D1%84_11771430575092.jpg)",
           "id": "act_1771518331480",
-          "date": "2026-02-18",
+          "description": "On the Galxe platform, various social campaigns are available. Complete them to earn points, which can later influence access to KAIO products and potential rewards.\n\n1. Go to the [site](https://app.galxe.com/quest/KAIO) and connect your wallet. Start completing the available campaigns\n![](https://img.cryptorank.io/image-hub/%D0%B2%D1%8B%D1%84_11771430575092.jpg)",
           "title": "Galxe",
+          "date": "2026-02-18",
+          "categories": [
+            "Social Activity"
+          ],
+          "status": "active"
+        },
+        {
+          "categories": [
+            "Social Activity"
+          ],
+          "status": "ended",
+          "description": "A new quest, Meet the CEO, is now available on the Galxe platform. Complete simple social tasks to earn 100 loyalty points.\n\n1. Go to the [site](https://app.galxe.com/quest/KAIO/GC4vatYALt?refer=explore_all) and connect your wallet. Start completing tasks\n\n![](https://img.cryptorank.io/image-hub/%D0%B2%D1%8B%D1%84%D0%B2_121772125221096.jpg)",
+          "id": "act_1772288106814",
+          "date": "2026-02-24",
+          "endDate": "2026-03-14",
+          "title": "Galxe: Meet the CEO"
+        },
+        {
+          "categories": [
+            "Social Activity"
+          ],
+          "status": "ended",
+          "description": "A new Infrastructure Layer quest is available on the Galxe platform. Complete simple social tasks to earn 80 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/KAIO/GCo3atYXDV?refer=explore_all) and connect your wallet. Start completing tasks\n![](https://img.cryptorank.io/image-hub/dsa_123_d1772200514029.jpg)",
+          "id": "act_1772288136888",
+          "date": "2026-02-24",
+          "endDate": "2026-03-13",
+          "title": "Galxe: Infrastructure Layer"
+        },
+        {
+          "id": "act_1772288165491",
+          "description": "A new quest, Tokenization 1.0, is available on the Galxe platform. Complete simple social tasks to earn 80 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/KAIO/GCqustYxEZ?refer=explore_all) and connect your wallet. Start completing tasks\n![](https://img.cryptorank.io/image-hub/4321_da1772200148224.jpg)",
+          "endDate": "2026-03-14",
+          "title": "Galxe: Tokenization 1.0",
+          "date": "2026-02-24",
+          "categories": [
+            "Social Activity"
+          ],
+          "status": "ended"
+        },
+        {
+          "date": "2026-03-01",
+          "endDate": "2026-03-19",
+          "title": "Galxe: Meet the Chief Operating Officer - Oliver Dang",
+          "description": "On the Galxe platform, a new quest is available: Meet the COO - Oliver Dang. You can complete simple social tasks and earn 80 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/KAIO/GCku9tYBuz?refer=explore_all) and connect your wallet. Complete the social tasks\n![image](https://img.cryptorank.io/image-hub/%D0%B2%D1%8B%D1%84_124311772538293831.jpg)",
+          "id": "act_1772553743619",
+          "status": "ended",
           "categories": [
             "Social Activity"
           ]
         },
         {
-          "id": "act_1772288106814",
-          "categories": [
-            "Social Activity"
-          ],
-          "title": "Galxe: Meet the CEO",
-          "date": "2026-02-24",
-          "description": "A new quest, Meet the CEO, is now available on the Galxe platform. Complete simple social tasks to earn 100 loyalty points.\n\n1. Go to the [site](https://app.galxe.com/quest/KAIO/GC4vatYALt?refer=explore_all) and connect your wallet. Start completing tasks\n\n![](https://img.cryptorank.io/image-hub/%D0%B2%D1%8B%D1%84%D0%B2_121772125221096.jpg)",
-          "endDate": "2026-03-14",
-          "status": "ended"
-        },
-        {
-          "description": "A new Infrastructure Layer quest is available on the Galxe platform. Complete simple social tasks to earn 80 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/KAIO/GCo3atYXDV?refer=explore_all) and connect your wallet. Start completing tasks\n![](https://img.cryptorank.io/image-hub/dsa_123_d1772200514029.jpg)",
-          "endDate": "2026-03-13",
-          "status": "ended",
-          "id": "act_1772288136888",
-          "categories": [
-            "Social Activity"
-          ],
-          "title": "Galxe: Infrastructure Layer",
-          "date": "2026-02-24"
-        },
-        {
-          "id": "act_1772288165491",
-          "categories": [
-            "Social Activity"
-          ],
-          "date": "2026-02-24",
-          "title": "Galxe: Tokenization 1.0",
-          "endDate": "2026-03-14",
-          "description": "A new quest, Tokenization 1.0, is available on the Galxe platform. Complete simple social tasks to earn 80 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/KAIO/GCqustYxEZ?refer=explore_all) and connect your wallet. Start completing tasks\n![](https://img.cryptorank.io/image-hub/4321_da1772200148224.jpg)",
-          "status": "ended"
-        },
-        {
-          "endDate": "2026-03-19",
-          "description": "On the Galxe platform, a new quest is available: Meet the COO - Oliver Dang. You can complete simple social tasks and earn 80 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/KAIO/GCku9tYBuz?refer=explore_all) and connect your wallet. Complete the social tasks\n![image](https://img.cryptorank.io/image-hub/%D0%B2%D1%8B%D1%84_124311772538293831.jpg)",
-          "status": "ended",
-          "categories": [
-            "Social Activity"
-          ],
-          "date": "2026-03-01",
-          "title": "Galxe: Meet the Chief Operating Officer - Oliver Dang",
-          "id": "act_1772553743619"
-        },
-        {
           "id": "act_1772553779705",
+          "description": "On the Galxe platform, a new quest is available: Every asset will be tokenized. You can complete simple social tasks and earn 80 loyalty points.\n\n \n\n1. Go to the [website](https://app.galxe.com/quest/KAIO/GCFZFtYXS6?refer=explore_all) and connect your wallet. Complete the tasks\n![image](https://img.cryptorank.io/image-hub/%D0%B2%D1%84%D1%8B_132311772552792405.jpg)",
+          "title": "Galxe: Every Asset Will Be Tokenized",
+          "endDate": "2026-03-14",
+          "date": "2026-03-02",
           "categories": [
             "Social Activity"
           ],
-          "title": "Galxe: Every Asset Will Be Tokenized",
-          "date": "2026-03-02",
-          "endDate": "2026-03-14",
-          "description": "On the Galxe platform, a new quest is available: Every asset will be tokenized. You can complete simple social tasks and earn 80 loyalty points.\n\n \n\n1. Go to the [website](https://app.galxe.com/quest/KAIO/GCFZFtYXS6?refer=explore_all) and connect your wallet. Complete the tasks\n![image](https://img.cryptorank.io/image-hub/%D0%B2%D1%84%D1%8B_132311772552792405.jpg)",
           "status": "ended"
         },
         {
-          "endDate": "2026-03-16",
-          "description": "A new quest, KAIOs approach, is available on Galxe. Complete simple social tasks to earn 80 loyalty points\n\n \n\n1. Go to the [site](https://app.galxe.com/quest/KAIO/GCSFLtYdR3?refer=explore_all) and connect your wallet. Complete the tasks ![image](https://images.cryptorank.io/image-hub/das_213411773159349097.jpg)",
-          "createdAt": "2026-03-14T18:24:41.671Z",
           "status": "ended",
-          "id": "act_1773512681671",
           "categories": [
             "Social Activity"
           ],
+          "endDate": "2026-03-16",
           "title": "Galxe: KAIO's Approach",
-          "date": "2026-03-09"
+          "date": "2026-03-09",
+          "id": "act_1773512681671",
+          "description": "A new quest, KAIOs approach, is available on Galxe. Complete simple social tasks to earn 80 loyalty points\n\n \n\n1. Go to the [site](https://app.galxe.com/quest/KAIO/GCSFLtYdR3?refer=explore_all) and connect your wallet. Complete the tasks ![image](https://images.cryptorank.io/image-hub/das_213411773159349097.jpg)",
+          "createdAt": "2026-03-14T18:24:41.671Z"
         },
         {
+          "date": "2026-03-12",
+          "endDate": "2026-03-20",
+          "title": "Galxe: Join and Follow KAIO",
           "description": "A new quest, Join and follow KAIO, is available on the Galxe platform. Complete a simple social task to earn 400 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/KAIO/GCRFctYJm5?refer=explore_all) and connect your wallet. Complete the task.\n![image](https://images.cryptorank.io/image-hub/qwrfq_11773411579946.jpg)",
           "createdAt": "2026-03-14T18:25:06.451Z",
-          "endDate": "2026-03-20",
+          "id": "act_1773512706451",
           "status": "ended",
           "categories": [
             "Social Activity"
-          ],
-          "title": "Galxe: Join and Follow KAIO",
-          "date": "2026-03-12",
-          "id": "act_1773512706451"
+          ]
         },
         {
+          "categories": [
+            "Social Activity"
+          ],
+          "status": "ended",
+          "description": "On the Galxe platform, a new quest \"We're early. Very early\" is available. You can complete simple social tasks and earn 100 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/KAIO/GCP4CtY9AR?refer=explore_all) and connect your wallet. Complete the tasks.\n![image](https://images.cryptorank.io/image-hub/ddczxczx1774019408927.jpg)",
+          "createdAt": "2026-03-21T20:47:35.442Z",
+          "id": "act_1774126055442",
           "date": "2026-03-18",
           "title": "Galxe: We are early, very early.",
-          "categories": [
-            "Social Activity"
-          ],
-          "id": "act_1774126055442",
-          "status": "active",
-          "createdAt": "2026-03-21T20:47:35.442Z",
-          "endDate": "2026-03-23",
-          "description": "On the Galxe platform, a new quest \"We're early. Very early\" is available. You can complete simple social tasks and earn 100 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/KAIO/GCP4CtY9AR?refer=explore_all) and connect your wallet. Complete the tasks.\n![image](https://images.cryptorank.io/image-hub/ddczxczx1774019408927.jpg)"
+          "endDate": "2026-03-23"
         },
         {
-          "id": "act_1774126087029",
-          "categories": [
-            "Social Activity"
-          ],
-          "date": "2026-03-20",
           "title": "Galxe: Bridging the Trillion Dollar Capital Divide",
           "endDate": "2026-03-27",
+          "date": "2026-03-20",
+          "id": "act_1774126087029",
           "description": "A new quest, Bridging the Trillion Dollar Capital Divide, is now available on the Galxe platform. Complete simple social tasks to earn 100 loyalty points.\n\n1. Go to the [website](https://app.galxe.com/quest/KAIO/GCXrGtYZD4?refer=explore_all) and connect your wallet. Complete the tasks.\n\n![image](https://images.cryptorank.io/image-hub/czxczxczxxz1774023476760.jpg)",
           "createdAt": "2026-03-21T20:48:07.029Z",
-          "status": "active"
+          "status": "active",
+          "categories": [
+            "Social Activity"
+          ]
         }
-      ]
+      ],
+      "twitterUrl": "https://x.com/KAIO_xyz?hzet=dszqupsbol",
+      "referralLink": "https://app.galxe.com/quest/KAIO"
     },
     {
       "id": "kash_452328",
@@ -1337,51 +1349,51 @@
     },
     {
       "id": "proj_1770059021988",
-      "categories": [
-        "NFT Minting",
-        "Blockchain",
-        "Social Activity"
-      ],
-      "image": "https://img.cryptorank.io/coins/konnex1768553731421.png",
-      "status": "active",
-      "deleted": false,
-      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/konnex-activity1071",
-      "isFavorite": false,
-      "twitterUrl": "https://x.com/konnex_world",
-      "hasDaily": true,
       "referralLink": "https://hub.konnex.world/points?referral_code=N4GX1CJG",
-      "priority": "normal",
-      "lastUpdated": "2026-03-16",
-      "createdAt": "2026-02-02T19:03:41.988Z",
+      "twitterUrl": "https://x.com/konnex_world",
       "activities": [
         {
-          "description": "Konnex [announced](https://x.com/konnex_world/status/2013612963706675370) a hub with quests. We can complete simple tasks, earn points, and get a confirmed airdrop from the project.\n\n> Update as of January 28, 2026: daily testnet tasks have been added.\n\n1. Go to the [website](https://hub.konnex.world/points?referral_code=N4GX1CJG) and connect your wallet.\n\n2. Complete the introductory quests to unlock the main ones. Then, complete the main quests and do daily check-ins:\n![](https://img.cryptorank.io/image-hub/jonfsd1769004031989.png)",
-          "date": "2026-01-20",
           "id": "act_1770562539786",
-          "status": "active",
+          "description": "Konnex [announced](https://x.com/konnex_world/status/2013612963706675370) a hub with quests. We can complete simple tasks, earn points, and get a confirmed airdrop from the project.\n\n> Update as of January 28, 2026: daily testnet tasks have been added.\n\n1. Go to the [website](https://hub.konnex.world/points?referral_code=N4GX1CJG) and connect your wallet.\n\n2. Complete the introductory quests to unlock the main ones. Then, complete the main quests and do daily check-ins:\n![](https://img.cryptorank.io/image-hub/jonfsd1769004031989.png)",
+          "title": "Airdrop Campaign",
+          "date": "2026-01-20",
           "categories": [
             "Social Activity"
           ],
-          "title": "Airdrop Campaign"
+          "status": "active"
         },
         {
-          "description": "Konnex [announced](https://x.com/konnex_world/status/2033543847461134672) the launch of the Autonomous Units collection. You can mint up to 3 SBT, each providing a 25% boost to points\n\n \n\n1. Go to the [website](https://opensea.io/collection/konnex-autonomous-units/overview) and connect your wallet. Click the button and claim the desired number of SBT\n\n\n\n![image](https://images.cryptorank.io/image-hub/zxczzdsa1774024140226.jpg)",
-          "endDate": "2026-03-23",
-          "createdAt": "2026-03-21T20:49:16.269Z",
-          "title": "Autonomous Units",
           "categories": [
             "NFT Minting",
             "Blockchain",
             "Social Activity"
           ],
-          "status": "active",
+          "status": "ended",
           "id": "act_1774126156269",
+          "createdAt": "2026-03-21T20:49:16.269Z",
+          "description": "Konnex [announced](https://x.com/konnex_world/status/2033543847461134672) the launch of the Autonomous Units collection. You can mint up to 3 SBT, each providing a 25% boost to points\n\n \n\n1. Go to the [website](https://opensea.io/collection/konnex-autonomous-units/overview) and connect your wallet. Click the button and claim the desired number of SBT\n\n\n\n![image](https://images.cryptorank.io/image-hub/zxczzdsa1774024140226.jpg)",
+          "title": "Autonomous Units",
+          "endDate": "2026-03-23",
           "date": "2026-03-16"
         }
       ],
-      "guideUrl": "",
+      "categories": [
+        "NFT Minting",
+        "Blockchain",
+        "Social Activity"
+      ],
+      "lastUpdated": "2026-03-16",
+      "deleted": false,
+      "isFavorite": false,
+      "hasDaily": true,
+      "createdAt": "2026-02-02T19:03:41.988Z",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/konnex-activity1071",
+      "status": "active",
       "description": "Konnex is a technology platform designed to organize a market for autonomous systems. It enables robots to enter into digital contracts with each other, leverage artificial intelligence, exchange verified information about task completion, and receive payments in a stable currency (USD-stablecoins). The system offers a common protocol for communication between robots and intelligent agents, methods for verifying the results of physical work, and a mechanism for automatic payment after task confirmation. The core idea is to eliminate the isolation of autonomous devices and provide a means for collaborative execution of complex actions through standardized agreements.",
-      "name": "Konnex"
+      "image": "https://img.cryptorank.io/coins/konnex1768553731421.png",
+      "name": "Konnex",
+      "priority": "normal",
+      "guideUrl": ""
     },
     {
       "id": "proj_1770059246487",
@@ -1618,67 +1630,67 @@
     },
     {
       "id": "proj_1770229086684",
+      "image": "https://img.cryptorank.io/coins/rax_finance1769012391368.png",
       "name": "RAX Finance",
       "priority": "normal",
-      "createdAt": "2026-02-04T18:18:06.684Z",
+      "guideUrl": "",
+      "status": "active",
+      "description": "RAX Finance is a Real-World Asset (RWA) platform focused on creating a financial layer for the global computational economy, particularly for AI infrastructure. It tokenizes GPU capacities, data center power, and energy resources into verifiable, insured, and yield-generating assets on the blockchain, converting idle computational power and energy into investable digital instruments with usage tracking, transparent blockchain-based revenue monitoring, and open market access for participants - from suppliers to distributors.",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/rax-finance-activity1073",
+      "referralLink": "https://rax.finance/waitlist/?ref=am9k4fdj",
       "activities": [
         {
+          "date": "2026-02-04",
+          "title": "Ambassador Program",
           "description": "RAX [announced](https://x.com/RaxFinance/status/2019046522969899359) the launch of their ambassador program, which gives you the opportunity to earn points that will later influence the airdrop allocation.\n\n1. Fill out the [form](https://docs.google.com/forms/d/e/1FAIpQLSfSvC2q8mlpzGlG8Azus9CMHGiqSoBFS_F-xR6MQqeGAf--4g/viewform) and submit your application.",
+          "id": "act_1770513679015",
+          "status": "active",
           "categories": [
             "Social Activity"
-          ],
-          "id": "act_1770513679015",
-          "title": "Ambassador Program",
-          "date": "2026-02-04",
-          "status": "active"
+          ]
         },
         {
-          "id": "act_1770513821439",
           "categories": [
             "Social Activity"
           ],
+          "status": "active",
+          "id": "act_1770513821439",
           "description": "Rax Finance [announced](https://x.com/RaxFinance/status/2008153143423782938) their Waitlist! We can join it, invite friends, and complete tasks. By doing so, we'll level up (with a maximum level of 4). The higher the level you achieve, the more rewards you'll receive when the project launches its app.\n\n1. Go to the [website](https://rax.finance/waitlist/?ref=am9k4fdj), connect your wallet, and then your email:\n![](https://img.cryptorank.io/image-hub/fnjsdf1769028724017.png)\n2. Complete tasks and invite friends to level up:\n![](https://img.cryptorank.io/image-hub/radkmsa1769028768680.png)",
           "title": "Rax Finance Waitlist",
-          "date": "2026-01-05",
-          "status": "active"
+          "date": "2026-01-05"
         },
         {
-          "id": "act_1772553917307",
           "description": "Rax Finance has launched a new campaign, [Batch 2] RAX SPARK FINAL NFT — Complete & Forge, on the Galxe platform. You can participate if you previously collected all four required fragments A, B, C, and D in the [quest](https://cryptorank.io/drophunting/rax-finance-activity1073?id=2948) RAX Spark: Ignite the AI Awakening!\n\n1. Go to the [website](https://app.galxe.com/quest/YSoX3gGBykdEddPDTLSgpc/GCTw9tYciK?refer=explore_all), connect your wallet, and complete the tasks\n![image](https://img.cryptorank.io/image-hub/eqe_1311772552451596.jpg)",
+          "id": "act_1772553917307",
+          "date": "2026-03-02",
+          "title": "Galxe: RAX SPARK Final NFT — Complete and Forge",
+          "endDate": "2026-03-13",
           "categories": [
             "Social Activity"
           ],
-          "title": "Galxe: RAX SPARK Final NFT — Complete and Forge",
-          "endDate": "2026-03-13",
-          "date": "2026-03-02",
           "status": "ended"
         },
         {
-          "id": "act_1773512036292",
-          "description": "Rax Finance has announced a partnership and the launch of a joint campaign with the Phoenix Finance protocol. You can complete a social task to be eligible for future rewards.\n\n1. Follow [Rax](https://x.com/RaxFinance) and [Phoenix](https://x.com/Phnx_fi) on X, then join the [Rax](https://t.me/raxfinance) and [Phoenix](https://t.me/phnx_fi) groups on Telegram.\n\n2. Sign up for the [waitlist](https://rax.finance/waitlist/?ref=am9k4fdj) on Rax and complete the 4 tasks.\n\n![image](https://images.cryptorank.io/image-hub/dfasfa_11773328275937.jpg)\n\n3. Take screenshots as proof, then post them and mention your EVM address in the [comments](https://x.com/RaxFinance/status/2031700682697519278).",
+          "status": "ended",
           "categories": [
             "Social Activity"
           ],
           "title": "Rax Finance x Phoenix Finance",
-          "createdAt": "2026-03-14T18:13:56.292Z",
           "endDate": "2026-03-18",
           "date": "2026-03-11",
-          "status": "active"
+          "id": "act_1773512036292",
+          "description": "Rax Finance has announced a partnership and the launch of a joint campaign with the Phoenix Finance protocol. You can complete a social task to be eligible for future rewards.\n\n1. Follow [Rax](https://x.com/RaxFinance) and [Phoenix](https://x.com/Phnx_fi) on X, then join the [Rax](https://t.me/raxfinance) and [Phoenix](https://t.me/phnx_fi) groups on Telegram.\n\n2. Sign up for the [waitlist](https://rax.finance/waitlist/?ref=am9k4fdj) on Rax and complete the 4 tasks.\n\n![image](https://images.cryptorank.io/image-hub/dfasfa_11773328275937.jpg)\n\n3. Take screenshots as proof, then post them and mention your EVM address in the [comments](https://x.com/RaxFinance/status/2031700682697519278).",
+          "createdAt": "2026-03-14T18:13:56.292Z"
         }
       ],
-      "deleted": false,
-      "guideUrl": "",
-      "hasDaily": false,
-      "lastUpdated": "2026-03-11",
-      "image": "https://img.cryptorank.io/coins/rax_finance1769012391368.png",
-      "description": "RAX Finance is a Real-World Asset (RWA) platform focused on creating a financial layer for the global computational economy, particularly for AI infrastructure. It tokenizes GPU capacities, data center power, and energy resources into verifiable, insured, and yield-generating assets on the blockchain, converting idle computational power and energy into investable digital instruments with usage tracking, transparent blockchain-based revenue monitoring, and open market access for participants - from suppliers to distributors.",
       "twitterUrl": "https://x.com/RaxFinance?crid=1103",
-      "status": "active",
       "categories": [
         "Social Activity"
       ],
-      "referralLink": "https://rax.finance/waitlist/?ref=am9k4fdj",
-      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/rax-finance-activity1073"
+      "createdAt": "2026-02-04T18:18:06.684Z",
+      "hasDaily": false,
+      "deleted": false,
+      "lastUpdated": "2026-03-11"
     },
     {
       "id": "proj_1770229430020",
