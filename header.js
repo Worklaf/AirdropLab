@@ -121,20 +121,15 @@
                 <span class="lang-text">ENG</span>
               </button>
 
-              <div id="adminPanel" class="flex gap-2 items-center border-l border-slate-700/50 pl-3 ml-1" style="display:none;">
-                <button onclick="typeof openAddModal==='function'&&openAddModal()"
-                  class="px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg text-xs font-bold transition-all hover:scale-105 shadow-lg shadow-cyan-500/30">
-                  <i class="fas fa-flask mr-1"></i>
-                                    <span class="hidden sm:inline" data-translate="new_test">Новый тест</span>
-                </button>
-                <button onclick="typeof openStats==='function'&&openStats()" class="admin-action-btn admin-btn-orange" data-translate-title="view_stats"><i class="fas fa-chart-pie text-base"></i></button>
-                <button onclick="typeof migrateToFirestore==='function'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" data-translate-title="upload_firebase"><i class="fas fa-cloud-upload-alt text-base"></i></button>
-                <button onclick="typeof exportAllData==='function'&&exportAllData()" class="admin-action-btn admin-btn-emerald" data-translate-title="export_json"><i class="fas fa-file-export text-base"></i></button>
-                <button onclick="typeof openDeletedProjects==='function'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" data-translate-title="view_deleted"><i class="fas fa-trash-restore text-base"></i></button>
-                <span class="px-2.5 py-1 bg-gradient-to-r from-cyan-600 to-cyan-500 rounded-md text-[10px] font-black text-white uppercase">
-                  <i class="fas fa-user-shield mr-1"></i>Admin
-                </span>
-              </div>
+              <!-- ДИНАМИЧЕСКИЕ КНОПКИ АДМИНА -->
+<div id="adminPanel" class="flex gap-2 items-center border-l border-slate-700/50 pl-3 ml-1" style="display:none;">
+  <div id="desktopAdminButtons" class="flex gap-2 items-center">
+    <!-- Кнопки вставляет JS -->
+  </div>
+  <span class="px-2.5 py-1 bg-gradient-to-r from-cyan-600 to-cyan-500 rounded-md text-[10px] font-black text-white uppercase">
+    <i class="fas fa-user-shield mr-1"></i>Admin
+  </span>
+</div>
 
               <div id="authPanel" class="flex items-center gap-3 border-l border-slate-700/50 pl-3 ml-1">
                 <div id="loggedOutView">
@@ -1015,16 +1010,18 @@
 // ════════════════════════════════════════════════════
 window.updateMobileAdminButtons = function() {
   var mobAdminBtns = document.getElementById('mobAdminBtns');
-  var deskAdminBtns = document.getElementById('deskAdminBtns');
+  var deskAdminBtns = document.getElementById('desktopAdminButtons');
   var deskAddBtn = document.getElementById('deskAddBtn');
   var mobAddBtn = document.getElementById('mobAddBtn');
 
-  if (!mobAdminBtns) return;
+  if (!mobAdminBtns || !deskAdminBtns) return;
 
   var isAdmin = window.currentUser && window.currentUser.uid === ADMIN_UID;
   if (!isAdmin) {
     mobAdminBtns.style.display = 'none';
-    if (deskAdminBtns) deskAdminBtns.innerHTML = '';
+    deskAdminBtns.innerHTML = '';
+    if (deskAddBtn) deskAddBtn.style.display = 'none';
+    if (mobAddBtn) mobAddBtn.style.display = 'none';
     return;
   }
   mobAdminBtns.style.display = 'flex';
@@ -1041,41 +1038,53 @@ window.updateMobileAdminButtons = function() {
   var mobButtonsHTML = '';
   var btnStyle = 'style="padding:5px 8px;font-size:11px;"';
 
-  buttonsHTML    += '<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" data-translate-title="view_stats"><i class="fas fa-chart-pie text-base"></i></button>';
-  mobButtonsHTML += '<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" ' + btnStyle + ' title="Статистика"><i class="fas fa-chart-pie"></i></button>';
+  function addDesktopButton(html) { buttonsHTML += html; }
+  function addMobileButton(html) { mobButtonsHTML += html; }
 
   if (isMainPage) {
-    buttonsHTML    += '<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" data-translate-title="upload_firebase"><i class="fas fa-cloud-upload-alt text-base"></i></button>';
-    buttonsHTML    += '<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" data-translate-title="export_json"><i class="fas fa-file-export text-base"></i></button>';
-    buttonsHTML    += '<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" data-translate-title="view_deleted"><i class="fas fa-trash-restore text-base"></i></button>';
-    buttonsHTML    += '<button onclick="window.importAllData()" class="admin-action-btn admin-btn-blue" data-translate-title="import_json"><i class="fas fa-file-import text-base"></i></button>';
-    mobButtonsHTML += '<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Загрузить в Firebase"><i class="fas fa-cloud-upload-alt"></i></button>';
-    mobButtonsHTML += '<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт проектов"><i class="fas fa-file-export"></i></button>';
-    mobButtonsHTML += '<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" ' + btnStyle + ' title="Удалённые проекты"><i class="fas fa-trash-restore"></i></button>';
-    mobButtonsHTML += '<button onclick="typeof importAllData===\'function\'&&importAllData()" class="admin-action-btn admin-btn-blue" ' + btnStyle + ' title="Импорт проектов"><i class="fas fa-file-import"></i></button>';
     if (deskAddBtn) deskAddBtn.style.display = 'flex';
-    if (mobAddBtn)  mobAddBtn.style.display  = 'flex';
+    if (mobAddBtn) mobAddBtn.style.display = 'flex';
+
+    addDesktopButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange"><i class="fas fa-chart-pie text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple"><i class="fas fa-cloud-upload-alt text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald"><i class="fas fa-file-export text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red"><i class="fas fa-trash-restore text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof importAllData===\'function\'&&importAllData()" class="admin-action-btn admin-btn-blue"><i class="fas fa-file-import text-base"></i></button>');
+
+    addMobileButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" ' + btnStyle + ' title="Статистика"><i class="fas fa-chart-pie"></i></button>');
+    addMobileButton('<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Загрузить в Firebase"><i class="fas fa-cloud-upload-alt"></i></button>');
+    addMobileButton('<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт проектов"><i class="fas fa-file-export"></i></button>');
+    addMobileButton('<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" ' + btnStyle + ' title="Удалённые проекты"><i class="fas fa-trash-restore"></i></button>');
+    addMobileButton('<button onclick="typeof importAllData===\'function\'&&importAllData()" class="admin-action-btn admin-btn-blue" ' + btnStyle + ' title="Импорт проектов"><i class="fas fa-file-import"></i></button>');
+
   } else if (isFaucetPage) {
-    buttonsHTML    += '<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" data-translate-title="export_faucet"><i class="fas fa-file-export text-base"></i></button>';
-    buttonsHTML    += '<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" data-translate-title="import_faucet"><i class="fas fa-file-import text-base"></i></button>';
-    mobButtonsHTML += '<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт данных кранов"><i class="fas fa-file-export"></i></button>';
-    mobButtonsHTML += '<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Импорт данных кранов"><i class="fas fa-file-import"></i></button>';
-    if (deskAddBtn) deskAddBtn.style.display = 'none';
-    if (mobAddBtn)  mobAddBtn.style.display  = 'none';
+    if (deskAddBtn) deskAddBtn.style.display = 'flex';
+    if (mobAddBtn) mobAddBtn.style.display = 'flex';
+
+    addDesktopButton('<button onclick="typeof toggleEditMode===\'function\'&&toggleEditMode()" class="admin-action-btn admin-btn-purple" title="Режим редактирования"><i id="editModeIcon" class="fas fa-pen text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof showAllHiddenFaucets===\'function\'&&showAllHiddenFaucets()" class="admin-action-btn admin-btn-red" title="Показать скрытые"><i class="fas fa-eye-slash text-base"></i><span id="hiddenCountHeader" class="ml-1 text-[11px] font-bold">0</span></button>');
+    addDesktopButton('<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" title="Экспорт кранов"><i class="fas fa-file-export text-base"></i></button>');
+    addDesktopButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-blue" title="Импорт кранов"><i class="fas fa-file-import text-base"></i></button>');
+
+    addMobileButton('<button onclick="typeof toggleEditMode===\'function\'&&toggleEditMode()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Режим редактирования"><i class="fas fa-pen"></i></button>');
+    addMobileButton('<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт"><i class="fas fa-file-export"></i></button>');
+    addMobileButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-blue" ' + btnStyle + ' title="Импорт"><i class="fas fa-file-import"></i></button>');
+
   } else if (isGuidesPage) {
-    buttonsHTML    += '<button onclick="window.exportGuidesData()" class="admin-action-btn admin-btn-emerald" data-translate-title="export_guides"><i class="fas fa-file-export text-base"></i></button>';
-    buttonsHTML    += '<button onclick="window.importGuidesData()" class="admin-action-btn admin-btn-purple" data-translate-title="import_guides"><i class="fas fa-file-import text-base"></i></button>';
-    mobButtonsHTML += '<button onclick="window.exportGuidesData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт гайдов"><i class="fas fa-file-export"></i></button>';
-    mobButtonsHTML += '<button onclick="window.importGuidesData()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Импорт гайдов"><i class="fas fa-file-import"></i></button>';
     if (deskAddBtn) deskAddBtn.style.display = 'none';
-    if (mobAddBtn)  mobAddBtn.style.display  = 'none';
-  } else {
-    if (deskAddBtn) deskAddBtn.style.display = 'none';
-    if (mobAddBtn)  mobAddBtn.style.display  = 'none';
+    if (mobAddBtn) mobAddBtn.style.display = 'none';
+
+    addDesktopButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange"><i class="fas fa-chart-pie text-base"></i></button>');
+    addDesktopButton('<button onclick="window.exportGuidesData()" class="admin-action-btn admin-btn-emerald"><i class="fas fa-file-export text-base"></i></button>');
+    addDesktopButton('<button onclick="window.importGuidesData()" class="admin-action-btn admin-btn-purple"><i class="fas fa-file-import text-base"></i></button>');
   }
 
-  if (deskAdminBtns) deskAdminBtns.innerHTML = buttonsHTML;
+  deskAdminBtns.innerHTML = buttonsHTML;
   mobAdminBtns.innerHTML = mobButtonsHTML;
+
+  if (isFaucetPage) {
+    window.updateHiddenCountHeader && window.updateHiddenCountHeader();
+  }
 };
 
 // Функции для экспорта/импорта данных
