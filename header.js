@@ -214,7 +214,7 @@
           </div>
 
           <!-- MOBILE: строка 2 — Статистика -->
-          <div id="mobStatsRow" class="flex md:hidden mob-stats-row overflow-x-auto">
+          <div class="flex md:hidden mob-stats-row overflow-x-auto">
             <div class="mob-stat-item" onclick="window.location.href='index.html?filter=active'">
               <span class="mob-stat-num" style="color:#34d399;" id="mobStatActive">0</span>
               <span class="mob-stat-lbl" data-translate="active">Акт.</span>
@@ -861,7 +861,7 @@
       window.syncAuth();
       
       // Показываем мобильную статистику только на главной странице
-      var mobStatsRow = document.getElementById('mobStatsRow');
+      var mobStatsRow = document.querySelector('.mob-stats-row');
       if (mobStatsRow) {
         var isMainPage = window.location.pathname.endsWith('/') || 
                          window.location.pathname.endsWith('index.html') ||
