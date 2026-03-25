@@ -3462,6 +3462,10 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
     window.currentUser = currentUser;
     isAdmin = !!(user && (user.uid === ADMIN_UID));
     window.isAdmin = isAdmin; // Добавляем эту строку!
+    // Обновляем мобильные и десктопные кнопки администратора
+    if (typeof window.updateMobileAdminButtons === 'function') {
+      window.updateMobileAdminButtons();
+    }
     // Показываем фиксированную админ-панель
     const adminPanel = document.getElementById('fixedAdminPanel');
     if (adminPanel) {
@@ -3599,6 +3603,7 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
     </button>
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
+    <div id="deskAdminBtns" style="display:flex;align-items:center;gap:6px;"></div>
     <button onclick="window.scrollTo({top:0,behavior:'smooth'})" style="padding:6px 12px;background:rgba(71,85,105,0.2);border:1px solid rgba(71,85,105,0.3);border-radius:6px;color:#94a3b8;font-size:12px;cursor:pointer;">
       <i class="fas fa-arrow-up"></i>
     </button>
