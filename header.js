@@ -1032,7 +1032,6 @@ window.updateMobileAdminButtons = function() {
                    window.location.pathname === '/';
 
   var isFaucetPage = window.location.pathname.includes('faucet');
-  var isGuidesPage = window.location.pathname.includes('guides');
 
   var buttonsHTML = '';
   var mobButtonsHTML = '';
@@ -1049,42 +1048,31 @@ window.updateMobileAdminButtons = function() {
     addDesktopButton('<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple"><i class="fas fa-cloud-upload-alt text-base"></i></button>');
     addDesktopButton('<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald"><i class="fas fa-file-export text-base"></i></button>');
     addDesktopButton('<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red"><i class="fas fa-trash-restore text-base"></i></button>');
-    addDesktopButton('<button onclick="typeof importAllData===\'function\'&&importAllData()" class="admin-action-btn admin-btn-blue"><i class="fas fa-file-import text-base"></i></button>');
 
     addMobileButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" ' + btnStyle + ' title="Статистика"><i class="fas fa-chart-pie"></i></button>');
-    addMobileButton('<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Загрузить в Firebase"><i class="fas fa-cloud-upload-alt"></i></button>');
-    addMobileButton('<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт проектов"><i class="fas fa-file-export"></i></button>');
-    addMobileButton('<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" ' + btnStyle + ' title="Удалённые проекты"><i class="fas fa-trash-restore"></i></button>');
-    addMobileButton('<button onclick="typeof importAllData===\'function\'&&importAllData()" class="admin-action-btn admin-btn-blue" ' + btnStyle + ' title="Импорт проектов"><i class="fas fa-file-import"></i></button>');
+    addMobileButton('<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Загрузить"><i class="fas fa-cloud-upload-alt"></i></button>');
+    addMobileButton('<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт"><i class="fas fa-file-export"></i></button>');
+    addMobileButton('<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" ' + btnStyle + ' title="Удалённые"><i class="fas fa-trash-restore"></i></button>');
 
   } else if (isFaucetPage) {
     if (deskAddBtn) deskAddBtn.style.display = 'flex';
     if (mobAddBtn) mobAddBtn.style.display = 'flex';
 
+    // Кнопки для кранов
     addDesktopButton('<button onclick="typeof toggleEditMode===\'function\'&&toggleEditMode()" class="admin-action-btn admin-btn-purple" title="Режим редактирования"><i id="editModeIcon" class="fas fa-pen text-base"></i></button>');
-    addDesktopButton('<button onclick="typeof showAllHiddenFaucets===\'function\'&&showAllHiddenFaucets()" class="admin-action-btn admin-btn-red" title="Показать скрытые"><i class="fas fa-eye-slash text-base"></i><span id="hiddenCountHeader" class="ml-1 text-[11px] font-bold">0</span></button>');
+    addDesktopButton('<button onclick="typeof showAllHiddenFaucets===\'function\'&&showAllHiddenFaucets()" class="admin-action-btn admin-btn-red" title="Показать скрытые"><i class="fas fa-eye-slash text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" title="Статистика"><i class="fas fa-chart-pie text-base"></i></button>');
     addDesktopButton('<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" title="Экспорт кранов"><i class="fas fa-file-export text-base"></i></button>');
-    addDesktopButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-blue" title="Импорт кранов"><i class="fas fa-file-import text-base"></i></button>');
+    addDesktopButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" title="Импорт кранов"><i class="fas fa-file-import text-base"></i></button>');
 
-    addMobileButton('<button onclick="typeof toggleEditMode===\'function\'&&toggleEditMode()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Режим редактирования"><i class="fas fa-pen"></i></button>');
+    addMobileButton('<button onclick="typeof toggleEditMode===\'function\'&&toggleEditMode()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Режим"><i class="fas fa-pen"></i></button>');
+    addMobileButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" ' + btnStyle + ' title="Статистика"><i class="fas fa-chart-pie"></i></button>');
     addMobileButton('<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт"><i class="fas fa-file-export"></i></button>');
-    addMobileButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-blue" ' + btnStyle + ' title="Импорт"><i class="fas fa-file-import"></i></button>');
-
-  } else if (isGuidesPage) {
-    if (deskAddBtn) deskAddBtn.style.display = 'none';
-    if (mobAddBtn) mobAddBtn.style.display = 'none';
-
-    addDesktopButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange"><i class="fas fa-chart-pie text-base"></i></button>');
-    addDesktopButton('<button onclick="window.exportGuidesData()" class="admin-action-btn admin-btn-emerald"><i class="fas fa-file-export text-base"></i></button>');
-    addDesktopButton('<button onclick="window.importGuidesData()" class="admin-action-btn admin-btn-purple"><i class="fas fa-file-import text-base"></i></button>');
+    addMobileButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Импорт"><i class="fas fa-file-import"></i></button>');
   }
 
   deskAdminBtns.innerHTML = buttonsHTML;
   mobAdminBtns.innerHTML = mobButtonsHTML;
-
-  if (isFaucetPage) {
-    window.updateHiddenCountHeader && window.updateHiddenCountHeader();
-  }
 };
 
 // Функции для экспорта/импорта данных
