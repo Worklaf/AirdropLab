@@ -833,6 +833,11 @@
         if (mobIn)  mobIn.style.display  = isLoggedIn ? 'flex' : 'none';
         if (mobOut) mobOut.style.display = isLoggedIn ? 'none' : 'block';
         if (deskAva && mobAva && deskAva.src) mobAva.src = deskAva.src;
+        
+        // Обновляем мобильные админские кнопки при изменении авторизации
+        if (typeof window.updateMobileAdminButtons === 'function') {
+          window.updateMobileAdminButtons();
+        }
       }
       if (deskIn)  new MutationObserver(window.syncAuth).observe(deskIn,  { attributes:true, attributeFilter:['class','style'] });
       if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
@@ -991,6 +996,14 @@ window.updateMobileAdminButtons = function() {
   
   if (!mobAdminBtns || !deskAdminBtns) return;
   
+  // Показываем мобильные админские кнопки только для администратора
+  if (currentUser && currentUser.uid === ADMIN_UID) {
+    mobAdminBtns.style.display = 'flex';
+  } else {
+    mobAdminBtns.style.display = 'none';
+    return;
+  }
+  
   var isMainPage = window.location.pathname.endsWith('/') || 
                    window.location.pathname.endsWith('index.html') ||
                    window.location.pathname === '' ||
@@ -1009,6 +1022,7 @@ window.updateMobileAdminButtons = function() {
     buttonsHTML += '<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" data-translate-title="upload_firebase"><i class="fas fa-cloud-upload-alt text-base"></i></button>';
     buttonsHTML += '<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" data-translate-title="export_json"><i class="fas fa-file-export text-base"></i></button>';
     buttonsHTML += '<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" data-translate-title="view_deleted"><i class="fas fa-trash-restore text-base"></i></button>';
+    buttonsHTML += '<button onclick="window.importAllData()" class="admin-action-btn admin-btn-blue" data-translate-title="import_json"><i class="fas fa-file-import text-base"></i></button>';
     
     // Показываем кнопку "Добавить"
     if (deskAddBtn) deskAddBtn.style.display = 'flex';
@@ -1047,6 +1061,7 @@ window.updateMobileAdminButtons = function() {
     mobButtonsHTML += '<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" style="padding:5px 8px;font-size:11px;" title="Загрузить в Firebase"><i class="fas fa-cloud-upload-alt"></i></button>';
     mobButtonsHTML += '<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" style="padding:5px 8px;font-size:11px;" title="Экспорт проектов"><i class="fas fa-file-export"></i></button>';
     mobButtonsHTML += '<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" style="padding:5px 8px;font-size:11px;" title="Удаленные проекты"><i class="fas fa-trash-restore"></i></button>';
+    mobButtonsHTML += '<button onclick="typeof importAllData===\'function\'&&importAllData()" class="admin-action-btn admin-btn-blue" style="padding:5px 8px;font-size:11px;" title="Импорт проектов"><i class="fas fa-file-import"></i></button>';
   } else if (isFaucetPage) {
     mobButtonsHTML += '<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" style="padding:5px 8px;font-size:11px;" title="Экспорт данных кранов"><i class="fas fa-file-export"></i></button>';
     mobButtonsHTML += '<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" style="padding:5px 8px;font-size:11px;" title="Импорт данных кранов"><i class="fas fa-file-import"></i></button>';
@@ -1287,6 +1302,66 @@ window.importGuidesData = function() {
   } else {
     alert('Импорт данных гайдов...');
   }
+};
+
+window.importAllData = function() {
+  if (!currentUser || currentUser.uid !== ADMIN_UID) {
+    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
+    return;
+  }
+  
+  // Создаем input для выбора файла
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      try {
+        const projectsData = JSON.parse(event.target.result);
+        
+        // Проверяем структуру данных
+        if (!Array.isArray(projectsData)) {
+          throw new Error('Некорректный формат данных - ожидается массив проектов');
+        }
+        
+        // Сохраняем в localStorage
+        localStorage.setItem('projects_backup', JSON.stringify(projectsData));
+        
+        // Если есть функция для импорта на главной странице, используем её
+        if (typeof importProjects === 'function') {
+          importProjects(projectsData);
+        }
+        
+        if (typeof showToast === 'function') {
+          showToast(`Импортировано ${projectsData.length} проектов`);
+        } else {
+          alert(`Импортировано ${projectsData.length} проектов`);
+        }
+        
+        // Перезагружаем страницу для применения изменений
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+        
+      } catch (error) {
+        console.error('Ошибка импорта проектов:', error);
+        if (typeof showToast === 'function') {
+          showToast('Ошибка импорта: ' + error.message);
+        } else {
+          alert('Ошибка импорта: ' + error.message);
+        }
+      }
+    };
+    
+    reader.readAsText(file);
+  };
+  
+  input.click();
 };
 
 // ════════════════════════════════════════════════════
