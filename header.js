@@ -1386,13 +1386,17 @@ window.importGuidesData = function() {
   }
 };
 
+// ================================================
+// ИМПОРТ ИЗ JSON — ИСПРАВЛЕННАЯ ВЕРСИЯ
+// ================================================
+
 window.importAllData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
+    if (typeof showToast === 'function') showToast('Нет доступа'); 
+    else alert('Нет доступа');
     return;
   }
   
-  // Создаем input для выбора файла
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.json';
@@ -1402,41 +1406,49 @@ window.importAllData = function() {
     if (!file) return;
     
     const reader = new FileReader();
-    reader.onload = function(event) {
+    reader.onload = async function(event) {
       try {
-        const projectsData = JSON.parse(event.target.result);
+        let raw = JSON.parse(event.target.result);
         
-        // Проверяем структуру данных
-        if (!Array.isArray(projectsData)) {
-          throw new Error('Некорректный формат данных - ожидается массив проектов');
-        }
-        
-        // Сохраняем в localStorage
-        localStorage.setItem('projects_backup', JSON.stringify(projectsData));
-        
-        // Если есть функция для импорта на главной странице, используем её
-        if (typeof importProjects === 'function') {
-          importProjects(projectsData);
-        }
-        
-        if (typeof showToast === 'function') {
-          showToast(`Импортировано ${projectsData.length} проектов`);
+        // Поддержка разных форматов экспорта
+        let projectsToImport = [];
+        if (Array.isArray(raw)) {
+          projectsToImport = raw;
+        } else if (raw.projects && Array.isArray(raw.projects)) {
+          projectsToImport = raw.projects;
+        } else if (raw.data && Array.isArray(raw.data)) {
+          projectsToImport = raw.data;
         } else {
-          alert(`Импортировано ${projectsData.length} проектов`);
+          throw new Error('Неверный формат JSON. Ожидается массив или объект с полем "projects"');
         }
-        
-        // Перезагружаем страницу для применения изменений
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-        
+
+        if (projectsToImport.length === 0) {
+          throw new Error('Файл не содержит проектов');
+        }
+
+        showToast(`Загрузка ${projectsToImport.length} проектов...`);
+
+        const { collection, doc, writeBatch, serverTimestamp } = window.__firestoreExports;
+        const batch = writeBatch(window.db);
+
+        projectsToImport.forEach(p => {
+          const id = p.id || ('project_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8));
+          const { id: _, ...cleanData } = p;
+          
+          batch.set(doc(collection(window.db, 'projects'), id), {
+            ...cleanData,
+            updatedAt: serverTimestamp(),
+            updatedBy: currentUser.uid
+          }, { merge: true });
+        });
+
+        await batch.commit();
+        showToast(`Успешно импортировано ${projectsToImport.length} проектов!`);
+        setTimeout(() => location.reload(), 1500);
+
       } catch (error) {
         console.error('Ошибка импорта проектов:', error);
-        if (typeof showToast === 'function') {
-          showToast('Ошибка импорта: ' + error.message);
-        } else {
-          alert('Ошибка импорта: ' + error.message);
-        }
+        showToast('Ошибка: ' + error.message);
       }
     };
     
@@ -1446,166 +1458,40 @@ window.importAllData = function() {
   input.click();
 };
 
-// Реальные функции для миграции и экспорта данных
-if (typeof window.migrateDataToFirestore === 'undefined') {
-  window.migrateDataToFirestore = function() {
-    if (!currentUser || currentUser.uid !== ADMIN_UID) {
-      if (typeof showToast === 'function') {
-        showToast('Нет доступа');
-      } else {
-        alert('Нет доступа');
-      }
-      return;
-    }
-    
-    // Если на главной странице, выполняем миграцию проектов
-    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-      // Выполняем миграцию данных из localStorage в Firebase
-      const projectsData = localStorage.getItem('projects_backup');
-      if (projectsData) {
-        try {
-          const projects = JSON.parse(projectsData);
-          console.log('Migrating', projects.length, 'projects to Firebase');
-          
-          // Здесь можно добавить логику сохранения в Firebase
-          if (window.db && typeof window.__firestoreExports !== 'undefined') {
-            const { collection, doc, setDoc, writeBatch, serverTimestamp } = window.__firestoreExports;
-            if (collection && doc && setDoc && writeBatch) {
-              const batch = writeBatch(window.db);
-              
-              projects.forEach(project => {
-                const projectData = {
-                  ...project,
-                  migratedAt: serverTimestamp(),
-                  migratedBy: currentUser.uid
-                };
-                
-                if (project.id) {
-                  batch.set(doc(window.db, 'projects', project.id), projectData, { merge: true });
-                } else {
-                  const newId = 'project_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                  batch.set(doc(window.db, 'projects', newId), {
-                    ...projectData,
-                    id: newId,
-                    createdAt: serverTimestamp(),
-                    createdBy: currentUser.uid
-                  });
-                }
-              });
-              
-              batch.commit().then(() => {
-                console.log(`✅ Мигрировано ${projects.length} проектов в Firebase`);
-                if (typeof showToast === 'function') {
-                  showToast(`Мигрировано ${projects.length} проектов в Firebase!`);
-                }
-              }).catch(error => {
-                console.error('Migration error:', error);
-                if (typeof showToast === 'function') {
-                  showToast('Ошибка миграции: ' + error.message);
-                }
-              });
-            } else {
-              if (typeof showToast === 'function') {
-                showToast('Firebase функции недоступны');
-              }
-            }
-          } else {
-            if (typeof showToast === 'function') {
-              showToast(`Миграция ${projects.length} проектов...`);
-            }
-          }
-        } catch (error) {
-          console.error('Migration error:', error);
-          if (typeof showToast === 'function') {
-            showToast('Ошибка миграции: ' + error.message);
-          }
-        }
-      } else {
-        if (typeof showToast === 'function') {
-          showToast('Нет данных для миграции');
-        }
-      }
-    } else {
-      // На других страницах просто показываем сообщение
-      if (typeof showToast === 'function') {
-        showToast('Миграция доступна только на главной странице');
-      } else {
-        alert('Миграция доступна только на главной странице');
-      }
-    }
-  };
-}
+// Миграция теперь тоже использует улучшенную функцию импорта
+window.migrateToFirestore = function() {
+  if (!currentUser || currentUser.uid !== ADMIN_UID) {
+    showToast('Нет доступа');
+    return;
+  }
+  importAllData();   // теперь просто вызывает тот же импорт
+};
 
+// Экспорт оставляем как был (можно улучшить позже)
 if (typeof window.exportData === 'undefined') {
   window.exportData = function() {
     if (!currentUser || currentUser.uid !== ADMIN_UID) {
-      if (typeof showToast === 'function') {
-        showToast('Нет доступа');
-      } else {
-        alert('Нет доступа');
-      }
+      showToast('Нет доступа');
       return;
     }
-    
-    // Если на главной странице, экспортируем проекты
-    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-      // Экспортируем данные проектов из localStorage
-      const projectsData = localStorage.getItem('projects_backup');
-      if (projectsData) {
-        try {
-          const projects = JSON.parse(projectsData);
-          const dataStr = JSON.stringify(projects, null, 2);
-          const dataBlob = new Blob([dataStr], { type: 'application/json' });
-          const url = URL.createObjectURL(dataBlob);
-          
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `projects_backup_${new Date().toISOString().split('T')[0]}.json`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          
-          if (typeof showToast === 'function') {
-            showToast(`Экспортировано ${projects.length} проектов`);
-          }
-          return;
-        } catch (error) {
-          console.error('Export error:', error);
-        }
-      }
-    }
-    
-    // Иначе экспортируем из localStorage
     const projectsData = localStorage.getItem('projects_backup');
-    if (projectsData) {
-      try {
-        const projects = JSON.parse(projectsData);
-        const dataStr = JSON.stringify(projects, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `projects_backup_${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        if (typeof showToast === 'function') {
-          showToast(`Экспортировано ${projects.length} проектов`);
-        }
-      } catch (error) {
-        console.error('Export error:', error);
-        if (typeof showToast === 'function') {
-          showToast('Ошибка экспорта: ' + error.message);
-        }
-      }
-    } else {
-      if (typeof showToast === 'function') {
-        showToast('Нет данных для экспорта');
-      }
+    if (!projectsData) {
+      showToast('Нет данных для экспорта');
+      return;
+    }
+    try {
+      const projects = JSON.parse(projectsData);
+      const dataStr = JSON.stringify({ projects: projects }, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `projects_backup_${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast(`Экспортировано ${projects.length} проектов`);
+    } catch (e) {
+      showToast('Ошибка экспорта');
     }
   };
 }
