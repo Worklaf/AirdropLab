@@ -859,17 +859,7 @@
       if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
                      .observe(deskAva, { attributes:true, attributeFilter:['src'] });
       window.syncAuth();
-      
-      // Показываем мобильную статистику только на главной странице
-      var mobStatsRow = document.querySelector('.mob-stats-row');
-      if (mobStatsRow) {
-        var isMainPage = window.location.pathname.endsWith('/') || 
-                         window.location.pathname.endsWith('index.html') ||
-                         window.location.pathname === '' ||
-                         window.location.pathname === '/';
-        mobStatsRow.style.display = isMainPage ? 'flex' : 'none';
-      }
-      
+         
       // Дополнительная проверка каждые 1000мс для надежной синхронизации мобильной авторизации
       setInterval(window.syncAuth, 1000);
       
