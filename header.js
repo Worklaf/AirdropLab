@@ -838,6 +838,15 @@
         if (typeof window.updateMobileAdminButtons === 'function') {
           window.updateMobileAdminButtons();
         }
+        
+        // Синхронизация имени пользователя в мобильной версии
+        if (isLoggedIn && window.currentUser) {
+          var userName = window.currentUser.displayName || window.currentUser.email || 'User';
+          var mobUserNameEl = document.getElementById('mobUserName');
+          if (mobUserNameEl) {
+            mobUserNameEl.textContent = userName;
+          }
+        }
       }
       if (deskIn)  new MutationObserver(window.syncAuth).observe(deskIn,  { attributes:true, attributeFilter:['class','style'] });
       if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
@@ -859,6 +868,13 @@
       
       // Обновляем мобильные админские кнопки в зависимости от страницы
       updateMobileAdminButtons();
+      
+      // Дополнительное обновление через небольшую задержку для гарантии
+      setTimeout(function() {
+        if (typeof window.updateMobileAdminButtons === 'function') {
+          window.updateMobileAdminButtons();
+        }
+      }, 500);
 
       // 3. Feedback panel
       var deskFP     = document.getElementById('generalFeedbackPanel');
@@ -997,7 +1013,7 @@ window.updateMobileAdminButtons = function() {
   if (!mobAdminBtns || !deskAdminBtns) return;
   
   // Показываем мобильные админские кнопки только для администратора
-  if (currentUser && currentUser.uid === ADMIN_UID) {
+  if (window.currentUser && window.currentUser.uid === ADMIN_UID) {
     mobAdminBtns.style.display = 'flex';
   } else {
     mobAdminBtns.style.display = 'none';
@@ -1364,6 +1380,27 @@ window.importAllData = function() {
   input.click();
 };
 
+// Функции-заглушки если они не существуют на других страницах
+if (typeof window.migrateDataToFirestore === 'undefined') {
+  window.migrateDataToFirestore = function() {
+    if (typeof showToast === 'function') {
+      showToast('Функция миграции доступна только на главной странице');
+    } else {
+      alert('Функция миграции доступна только на главной странице');
+    }
+  };
+}
+
+if (typeof window.exportData === 'undefined') {
+  window.exportData = function() {
+    if (typeof showToast === 'function') {
+      showToast('Функция экспорта доступна только на главной странице');
+    } else {
+      alert('Функция экспорта доступна только на главной странице');
+    }
+  };
+}
+
 // ════════════════════════════════════════════════════
 // Глобальные переменные
 // ════════════════════════════════════════════════════
@@ -1444,8 +1481,8 @@ window.migrateToFirestore = function() {
     }
     return; 
   }
-  if (typeof migrateToFirestore === 'function') {
-    migrateToFirestore();
+  if (typeof window.migrateDataToFirestore === 'function') {
+    window.migrateDataToFirestore();
   } else {
     window.open('index.html#migrate-firestore', '_blank');
   }
@@ -1468,8 +1505,8 @@ window.exportAllData = function() {
     }
     return; 
   }
-  if (typeof exportAllData === 'function') {
-    exportAllData();
+  if (typeof window.exportData === 'function') {
+    window.exportData();
   } else {
     window.open('index.html#export-data', '_blank');
   }
