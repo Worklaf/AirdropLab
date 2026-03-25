@@ -123,6 +123,10 @@
 
               <!-- ДИНАМИЧЕСКИЕ КНОПКИ АДМИНА -->
 <div id="adminPanel" class="flex gap-2 items-center border-l border-slate-700/50 pl-3 ml-1" style="display:none;">
+<button id="deskAddBtn" onclick="typeof openAddModal==='function'&&openAddModal()"
+      class="hidden px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg text-xs font-bold transition-all hover:scale-105 shadow-lg shadow-cyan-500/30">
+      <i class="fas fa-flask mr-1"></i> <span data-translate="new_test">Добавить</span>
+    </button>
   <div id="desktopAdminButtons" class="flex gap-2 items-center">
     <!-- Кнопки вставляет JS -->
   </div>
@@ -1669,86 +1673,46 @@ window.openDeletedProjects = function() {
 };
 
 window.migrateToFirestore = function() { 
-  if (!currentUser) { 
-    if (typeof showToast === 'function') {
-      showToast('Войдите'); 
-    } else {
-      alert('Войдите');
-    }
-    return; 
+  if (!currentUser || currentUser.uid !== ADMIN_UID) {
+    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
+    return;
   }
-  if (currentUser.uid !== ADMIN_UID) { 
-    if (typeof showToast === 'function') {
-      showToast('Нет доступа'); 
-    } else {
-      alert('Нет доступа');
-    }
-    return; 
-  }
-  // Прямая миграция данных без рекурсии
-  const projectsData = localStorage.getItem('projects_backup');
-  if (projectsData) {
-    try {
-      const projects = JSON.parse(projectsData);
-      console.log('Migrating', projects.length, 'projects to Firebase');
-      
-      if (window.db && typeof window.__firestoreExports !== 'undefined') {
+  
+  // Создаем input для выбора файла (режим импорта в Firebase)
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async function(event) {
+      try {
+        const data = JSON.parse(event.target.result);
+        const projectsToImport = data.projects || data; // Поддерживаем разные форматы JSON
+        
+        showToast('Загрузка в Firebase...');
         const { collection, doc, setDoc, writeBatch, serverTimestamp } = window.__firestoreExports;
-        if (collection && doc && setDoc && writeBatch) {
-          const batch = writeBatch(window.db);
-          
-          projects.forEach(project => {
-            const projectData = {
-              ...project,
-              migratedAt: serverTimestamp(),
-              migratedBy: currentUser.uid
-            };
-            
-            if (project.id) {
-              batch.set(doc(window.db, 'projects', project.id), projectData, { merge: true });
-            } else {
-              const newId = 'project_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-              batch.set(doc(window.db, 'projects', newId), {
-                ...projectData,
-                id: newId,
-                createdAt: serverTimestamp(),
-                createdBy: currentUser.uid
-              });
-            }
-          });
-          
-          batch.commit().then(() => {
-            console.log(`✅ Мигрировано ${projects.length} проектов в Firebase`);
-            if (typeof showToast === 'function') {
-              showToast(`Мигрировано ${projects.length} проектов в Firebase!`);
-            }
-          }).catch(error => {
-            console.error('Migration error:', error);
-            if (typeof showToast === 'function') {
-              showToast('Ошибка миграции: ' + error.message);
-            }
-          });
-        } else {
-          if (typeof showToast === 'function') {
-            showToast('Firebase функции недоступны');
-          }
-        }
-      } else {
-        if (typeof showToast === 'function') {
-          showToast(`Миграция ${projects.length} проектов...`);
-        }
+        const batch = writeBatch(window.db);
+        
+        projectsToImport.forEach(p => {
+            // Удаляем лишние локальные поля, если нужно
+            const { id, ...cleanData } = p;
+            const docRef = id ? doc(window.db, 'projects', id) : doc(collection(window.db, 'projects'));
+            batch.set(docRef, { ...cleanData, updatedAt: serverTimestamp() }, { merge: true });
+        });
+        
+        await batch.commit();
+        showToast('Успешно загружено в Firebase!');
+      } catch (err) {
+        showToast('Ошибка загрузки: ' + err.message);
       }
-    } catch (error) {
-      console.error('Migration error:', error);
-      if (typeof showToast === 'function') {
-        showToast('Ошибка миграции: ' + error.message);
-      }
-    }
-  } else {
-    if (typeof showToast === 'function') {
-      showToast('Нет данных для миграции');
-    }
-  }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 };
 
 window.exportAllData = function() { 
