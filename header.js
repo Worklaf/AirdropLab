@@ -278,7 +278,7 @@
               <span data-translate="new_test">Добавить</span>
             </button>
 
-            <div id="mobAdminBtns" style="display:flex;" class="flex gap-1 items-center flex-wrap">
+            <div id="mobAdminBtns" style="display:none;" class="flex gap-1 items-center flex-wrap">
               <!-- Кнопки будут добавлены динамически в зависимости от страницы -->
             </div>
           </div>
@@ -833,28 +833,7 @@
         if (mobIn)  mobIn.style.display  = isLoggedIn ? 'flex' : 'none';
         if (mobOut) mobOut.style.display = isLoggedIn ? 'none' : 'block';
         if (deskAva && mobAva && deskAva.src) mobAva.src = deskAva.src;
-        
-        // Обновляем мобильные админские кнопки при изменении авторизации
-        if (typeof window.updateMobileAdminButtons === 'function') {
-          window.updateMobileAdminButtons();
-        }
-        
-        // Синхронизация имени пользователя в мобильной версии
-        if (isLoggedIn && window.currentUser) {
-          var userName = window.currentUser.displayName || window.currentUser.email || 'User';
-          var mobUserNameEl = document.getElementById('mobUserName');
-          if (mobUserNameEl) {
-            mobUserNameEl.textContent = userName;
-          }
-        }
       }
-      
-      // Дополнительный вызов для гарантии отображения кнопок
-      setTimeout(function() {
-        if (typeof window.updateMobileAdminButtons === 'function') {
-          window.updateMobileAdminButtons();
-        }
-      }, 200);
       if (deskIn)  new MutationObserver(window.syncAuth).observe(deskIn,  { attributes:true, attributeFilter:['class','style'] });
       if (deskAva) new MutationObserver(function(){ if (mobAva) mobAva.src = deskAva.src; })
                      .observe(deskAva, { attributes:true, attributeFilter:['src'] });
@@ -875,13 +854,6 @@
       
       // Обновляем мобильные админские кнопки в зависимости от страницы
       updateMobileAdminButtons();
-      
-      // Дополнительное обновление через небольшую задержку для гарантии
-      setTimeout(function() {
-        if (typeof window.updateMobileAdminButtons === 'function') {
-          window.updateMobileAdminButtons();
-        }
-      }, 500);
 
       // 3. Feedback panel
       var deskFP     = document.getElementById('generalFeedbackPanel');
@@ -1001,23 +973,9 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      injectHeader();
-      // Вызываем обновление мобильных кнопок после инъекции хедера
-      setTimeout(function() {
-        if (typeof window.updateMobileAdminButtons === 'function') {
-          window.updateMobileAdminButtons();
-        }
-      }, 100);
-    });
+    document.addEventListener('DOMContentLoaded', injectHeader);
   } else {
     injectHeader();
-    // Вызываем обновление мобильных кнопок после инъекции хедера
-    setTimeout(function() {
-      if (typeof window.updateMobileAdminButtons === 'function') {
-        window.updateMobileAdminButtons();
-      }
-    }, 100);
   }
 
 })();
@@ -1032,14 +990,6 @@ window.updateMobileAdminButtons = function() {
   var mobAddBtn = document.getElementById('mobAddBtn');
   
   if (!mobAdminBtns || !deskAdminBtns) return;
-  
-  // Показываем мобильные админские кнопки только для администратора
-  if (window.currentUser && window.currentUser.uid === ADMIN_UID) {
-    mobAdminBtns.style.display = 'flex';
-  } else {
-    mobAdminBtns.style.display = 'none';
-    return;
-  }
   
   var isMainPage = window.location.pathname.endsWith('/') || 
                    window.location.pathname.endsWith('index.html') ||
@@ -1059,7 +1009,6 @@ window.updateMobileAdminButtons = function() {
     buttonsHTML += '<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" data-translate-title="upload_firebase"><i class="fas fa-cloud-upload-alt text-base"></i></button>';
     buttonsHTML += '<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" data-translate-title="export_json"><i class="fas fa-file-export text-base"></i></button>';
     buttonsHTML += '<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" data-translate-title="view_deleted"><i class="fas fa-trash-restore text-base"></i></button>';
-    buttonsHTML += '<button onclick="window.importAllData()" class="admin-action-btn admin-btn-blue" data-translate-title="import_json"><i class="fas fa-file-import text-base"></i></button>';
     
     // Показываем кнопку "Добавить"
     if (deskAddBtn) deskAddBtn.style.display = 'flex';
@@ -1098,7 +1047,6 @@ window.updateMobileAdminButtons = function() {
     mobButtonsHTML += '<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" style="padding:5px 8px;font-size:11px;" title="Загрузить в Firebase"><i class="fas fa-cloud-upload-alt"></i></button>';
     mobButtonsHTML += '<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" style="padding:5px 8px;font-size:11px;" title="Экспорт проектов"><i class="fas fa-file-export"></i></button>';
     mobButtonsHTML += '<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" style="padding:5px 8px;font-size:11px;" title="Удаленные проекты"><i class="fas fa-trash-restore"></i></button>';
-    mobButtonsHTML += '<button onclick="typeof importAllData===\'function\'&&importAllData()" class="admin-action-btn admin-btn-blue" style="padding:5px 8px;font-size:11px;" title="Импорт проектов"><i class="fas fa-file-import"></i></button>';
   } else if (isFaucetPage) {
     mobButtonsHTML += '<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" style="padding:5px 8px;font-size:11px;" title="Экспорт данных кранов"><i class="fas fa-file-export"></i></button>';
     mobButtonsHTML += '<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" style="padding:5px 8px;font-size:11px;" title="Импорт данных кранов"><i class="fas fa-file-import"></i></button>';
@@ -1117,13 +1065,9 @@ window.exportFaucetData = function() {
     return;
   }
   
-  console.log('Starting faucet data export...');
-  
   try {
     // Функция для экспорта данных
     const exportData = (faucetsData) => {
-      console.log('Exporting faucets data:', faucetsData.length, 'items');
-      
       // Создаем JSON файл для скачивания
       const dataStr = JSON.stringify(faucetsData, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
@@ -1138,41 +1082,22 @@ window.exportFaucetData = function() {
       URL.revokeObjectURL(url);
       
       if (typeof showToast === 'function') {
-        showToast(`Экспортировано ${faucetsData.length} кранов!`);
+        showToast('Данные кранов экспортированы!');
       } else {
-        alert(`Экспортировано ${faucetsData.length} кранов!`);
+        alert('Данные кранов экспортированы!');
       }
     };
     
-    // Проверяем находимся ли мы на странице faucet.html
-    if (window.location.pathname.includes('faucet')) {
-      // На странице faucet.html используем локальную переменную faucets
-      if (typeof faucets !== 'undefined' && faucets.length > 0) {
-        console.log('Using local faucets variable from faucet.html');
-        exportData(faucets);
-        return;
-      }
-    }
-    
-    // Пробуем получить данные из глобальной переменной (для других страниц)
-    if (typeof window.faucets !== 'undefined' && window.faucets.length > 0) {
-      console.log('Using window.faucets data');
-      exportData(window.faucets);
-      return;
-    }
-    
-    // Пробуем получить данные из Firebase
+    // Сначала пробуем получить данные из Firebase
     if (window.db && typeof window.__firestoreExports !== 'undefined') {
       const { collection, getDocs, query, orderBy } = window.__firestoreExports;
       if (collection && getDocs && query && orderBy) {
-        console.log('Loading data from Firebase...');
         getDocs(query(collection(window.db, 'faucets'), orderBy('name')))
           .then(snap => {
             const faucetsData = [];
             for (const d of snap.docs) {
               faucetsData.push({ id: d.id, ...d.data() });
             }
-            console.log('Loaded from Firebase:', faucetsData.length, 'items');
             exportData(faucetsData);
           })
           .catch(error => {
@@ -1180,27 +1105,37 @@ window.exportFaucetData = function() {
             // Fallback на localStorage
             const storedData = localStorage.getItem('faucets_backup') || localStorage.getItem('faucets');
             if (storedData) {
-              console.log('Using localStorage fallback');
               exportData(JSON.parse(storedData));
             } else {
-              throw new Error('Нет данных для экспорта ни в Firebase, ни в localStorage');
+              throw error;
             }
           });
         return;
       }
     }
     
-    // Fallback на localStorage
-    const storedData = localStorage.getItem('faucets_backup') || localStorage.getItem('faucets');
-    if (storedData) {
-      console.log('Using localStorage data');
-      exportData(JSON.parse(storedData));
-    } else {
+    // Fallback: получаем данные из localStorage или глобальной переменной
+    let faucetsData = [];
+    if (typeof localStorage !== 'undefined') {
+      const storedData = localStorage.getItem('faucets_backup') || localStorage.getItem('faucets');
+      if (storedData) {
+        faucetsData = JSON.parse(storedData);
+      }
+    }
+    
+    // Если данных нет, пробуем получить из глобальной переменной
+    if (faucetsData.length === 0 && typeof window.faucets !== 'undefined') {
+      faucetsData = window.faucets;
+    }
+    
+    if (faucetsData.length === 0) {
       throw new Error('Нет данных для экспорта');
     }
     
+    exportData(faucetsData);
+    
   } catch (error) {
-    console.error('Ошибка экспорта кранов:', error);
+    console.error('Ошибка экспорта:', error);
     if (typeof showToast === 'function') {
       showToast('Ошибка экспорта: ' + error.message);
     } else {
@@ -1215,127 +1150,65 @@ window.importFaucetData = function() {
     return;
   }
   
-  console.log('Starting faucet data import...');
-  
   // Создаем файловый инпут
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.json';
-  
+  input.accept = '.json,application/json';
   input.onchange = function(e) {
     const file = e.target.files[0];
     if (!file) return;
     
-    console.log('File selected:', file.name);
-    
     const reader = new FileReader();
-    reader.onload = function(event) {
+    reader.onload = function(e) {
       try {
-        const faucetsData = JSON.parse(event.target.result);
-        console.log('Parsed faucets data:', faucetsData.length, 'items');
+        const faucetsData = JSON.parse(e.target.result);
         
-        // Проверяем структуру данных
-        if (!Array.isArray(faucetsData)) {
-          throw new Error('Некорректный формат данных - ожидается массив кранов');
+        // Сохраняем в localStorage
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('faucets_backup', JSON.stringify(faucetsData));
         }
-        
-        // Сохраняем в localStorage как бэкап
-        localStorage.setItem('faucets_backup', JSON.stringify(faucetsData));
-        console.log('Saved to localStorage backup');
         
         // Обновляем глобальную переменную если есть
         if (typeof window !== 'undefined') {
           window.faucets = faucetsData;
-          console.log('Updated window.faucets');
-        }
-        
-        // Если находимся на странице faucet.html, обновляем локальную переменную
-        if (window.location.pathname.includes('faucet') && typeof faucets !== 'undefined') {
-          faucets.length = 0; // Очищаем массив
-          faucets.push(...faucetsData); // Добавляем новые данные
-          console.log('Updated local faucets variable in faucet.html');
-          
-          // Перерисовываем интерфейс если есть функция renderAll
-          if (typeof renderAll === 'function') {
-            renderAll();
-            console.log('Called renderAll() to refresh UI');
-          }
         }
         
         // Сохраняем в Firebase если доступно
-        if (window.db && typeof window.__firestoreExports !== 'undefined') {
-          const { collection, doc, setDoc, writeBatch, serverTimestamp } = window.__firestoreExports;
-          if (collection && doc && setDoc && writeBatch) {
-            console.log('Saving to Firebase...');
-            const faucetsCollection = collection(window.db, 'faucets');
-            const batch = writeBatch(window.db);
-            
-            faucetsData.forEach(faucet => {
-              const faucetData = {
-                ...faucet,
-                updatedAt: serverTimestamp(),
-                updatedBy: currentUser.uid
-              };
-              
-              if (faucet.id) {
-                // Обновляем существующий
-                batch.set(doc(window.db, 'faucets', faucet.id), faucetData, { merge: true });
-              } else {
-                // Создаем новый с ID
-                const newId = 'faucet_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                batch.set(doc(window.db, 'faucets', newId), {
-                  ...faucetData,
-                  id: newId,
-                  createdAt: serverTimestamp(),
-                  createdBy: currentUser.uid
-                });
-              }
-            });
-            
-            batch.commit().then(() => {
-              console.log(`✅ Сохранено ${faucetsData.length} кранов в Firebase`);
-              
+        if (window.db && faucetsData.length > 0) {
+          saveFaucetsToFirebase(faucetsData).then(() => {
+            setTimeout(() => {
               if (typeof showToast === 'function') {
-                showToast(`Импортировано ${faucetsData.length} кранов в Firebase!`);
+                showToast('Данные кранов импортированы в Firebase! Перезагрузка...');
               } else {
-                alert(`Импортировано ${faucetsData.length} кранов в Firebase!`);
+                alert('Данные кранов импортированы в Firebase! Перезагрузка...');
               }
-              
-              // Если на faucet.html, перезагружаем данные
-              if (window.location.pathname.includes('faucet') && typeof loadFaucetsFromFirestore === 'function') {
-                setTimeout(() => {
-                  loadFaucetsFromFirestore();
-                }, 500);
-              }
-            }).catch(error => {
-              console.error('Ошибка сохранения в Firebase:', error);
+              location.reload();
+            }, 1000);
+          }).catch(error => {
+            console.error('Ошибка сохранения в Firebase:', error);
+            setTimeout(() => {
               if (typeof showToast === 'function') {
-                showToast(`Сохранено локально ${faucetsData.length} кранов. Ошибка Firebase: ${error.message}`);
+                showToast('Данные импортированы локально! Перезагрузка...');
               } else {
-                alert(`Сохранено локально ${faucetsData.length} кранов. Ошибка Firebase: ${error.message}`);
+                alert('Данные импортированы локально! Перезагрузка...');
               }
-            });
-          } else {
-            // Firebase доступен но функции не готовы
-            console.log('Firebase available but functions not ready');
-            if (typeof showToast === 'function') {
-              showToast(`Импортировано ${faucetsData.length} кранов локально`);
-            } else {
-              alert(`Импортировано ${faucetsData.length} кранов локально`);
-            }
-          }
+              location.reload();
+            }, 1000);
+          });
         } else {
-          // Firebase недоступен
-          console.log('Firebase not available, using localStorage only');
-          if (typeof showToast === 'function') {
-            showToast(`Импортировано ${faucetsData.length} кранов в localStorage`);
-          } else {
-            alert(`Импортировано ${faucetsData.length} кранов в localStorage`);
-          }
+          // Перезагружаем страницу для применения изменений
+          setTimeout(() => {
+            if (typeof showToast === 'function') {
+              showToast('Данные кранов импортированы! Перезагрузка...');
+            } else {
+              alert('Данные кранов импортированы! Перезагрузка...');
+            }
+            location.reload();
+          }, 1000);
         }
         
       } catch (error) {
-        console.error('Ошибка импорта кранов:', error);
+        console.error('Ошибка импорта:', error);
         if (typeof showToast === 'function') {
           showToast('Ошибка импорта: ' + error.message);
         } else {
@@ -1343,10 +1216,10 @@ window.importFaucetData = function() {
         }
       }
     };
-    
     reader.readAsText(file);
   };
   
+  // Запускаем выбор файла
   input.click();
 };
 
@@ -1415,230 +1288,6 @@ window.importGuidesData = function() {
     alert('Импорт данных гайдов...');
   }
 };
-
-window.importAllData = function() {
-  if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
-    return;
-  }
-  
-  // Создаем input для выбора файла
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json';
-  
-  input.onchange = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      try {
-        const projectsData = JSON.parse(event.target.result);
-        
-        // Проверяем структуру данных
-        if (!Array.isArray(projectsData)) {
-          throw new Error('Некорректный формат данных - ожидается массив проектов');
-        }
-        
-        // Сохраняем в localStorage
-        localStorage.setItem('projects_backup', JSON.stringify(projectsData));
-        
-        // Если есть функция для импорта на главной странице, используем её
-        if (typeof importProjects === 'function') {
-          importProjects(projectsData);
-        }
-        
-        if (typeof showToast === 'function') {
-          showToast(`Импортировано ${projectsData.length} проектов`);
-        } else {
-          alert(`Импортировано ${projectsData.length} проектов`);
-        }
-        
-        // Перезагружаем страницу для применения изменений
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-        
-      } catch (error) {
-        console.error('Ошибка импорта проектов:', error);
-        if (typeof showToast === 'function') {
-          showToast('Ошибка импорта: ' + error.message);
-        } else {
-          alert('Ошибка импорта: ' + error.message);
-        }
-      }
-    };
-    
-    reader.readAsText(file);
-  };
-  
-  input.click();
-};
-
-// Реальные функции для миграции и экспорта данных
-if (typeof window.migrateDataToFirestore === 'undefined') {
-  window.migrateDataToFirestore = function() {
-    if (!currentUser || currentUser.uid !== ADMIN_UID) {
-      if (typeof showToast === 'function') {
-        showToast('Нет доступа');
-      } else {
-        alert('Нет доступа');
-      }
-      return;
-    }
-    
-    // Если на главной странице, выполняем миграцию проектов
-    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-      // Выполняем миграцию данных из localStorage в Firebase
-      const projectsData = localStorage.getItem('projects_backup');
-      if (projectsData) {
-        try {
-          const projects = JSON.parse(projectsData);
-          console.log('Migrating', projects.length, 'projects to Firebase');
-          
-          // Здесь можно добавить логику сохранения в Firebase
-          if (window.db && typeof window.__firestoreExports !== 'undefined') {
-            const { collection, doc, setDoc, writeBatch, serverTimestamp } = window.__firestoreExports;
-            if (collection && doc && setDoc && writeBatch) {
-              const batch = writeBatch(window.db);
-              
-              projects.forEach(project => {
-                const projectData = {
-                  ...project,
-                  migratedAt: serverTimestamp(),
-                  migratedBy: currentUser.uid
-                };
-                
-                if (project.id) {
-                  batch.set(doc(window.db, 'projects', project.id), projectData, { merge: true });
-                } else {
-                  const newId = 'project_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                  batch.set(doc(window.db, 'projects', newId), {
-                    ...projectData,
-                    id: newId,
-                    createdAt: serverTimestamp(),
-                    createdBy: currentUser.uid
-                  });
-                }
-              });
-              
-              batch.commit().then(() => {
-                console.log(`✅ Мигрировано ${projects.length} проектов в Firebase`);
-                if (typeof showToast === 'function') {
-                  showToast(`Мигрировано ${projects.length} проектов в Firebase!`);
-                }
-              }).catch(error => {
-                console.error('Migration error:', error);
-                if (typeof showToast === 'function') {
-                  showToast('Ошибка миграции: ' + error.message);
-                }
-              });
-            } else {
-              if (typeof showToast === 'function') {
-                showToast('Firebase функции недоступны');
-              }
-            }
-          } else {
-            if (typeof showToast === 'function') {
-              showToast(`Миграция ${projects.length} проектов...`);
-            }
-          }
-        } catch (error) {
-          console.error('Migration error:', error);
-          if (typeof showToast === 'function') {
-            showToast('Ошибка миграции: ' + error.message);
-          }
-        }
-      } else {
-        if (typeof showToast === 'function') {
-          showToast('Нет данных для миграции');
-        }
-      }
-    } else {
-      // На других страницах просто показываем сообщение
-      if (typeof showToast === 'function') {
-        showToast('Миграция доступна только на главной странице');
-      } else {
-        alert('Миграция доступна только на главной странице');
-      }
-    }
-  };
-}
-
-if (typeof window.exportData === 'undefined') {
-  window.exportData = function() {
-    if (!currentUser || currentUser.uid !== ADMIN_UID) {
-      if (typeof showToast === 'function') {
-        showToast('Нет доступа');
-      } else {
-        alert('Нет доступа');
-      }
-      return;
-    }
-    
-    // Если на главной странице, экспортируем проекты
-    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-      // Экспортируем данные проектов из localStorage
-      const projectsData = localStorage.getItem('projects_backup');
-      if (projectsData) {
-        try {
-          const projects = JSON.parse(projectsData);
-          const dataStr = JSON.stringify(projects, null, 2);
-          const dataBlob = new Blob([dataStr], { type: 'application/json' });
-          const url = URL.createObjectURL(dataBlob);
-          
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `projects_backup_${new Date().toISOString().split('T')[0]}.json`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          
-          if (typeof showToast === 'function') {
-            showToast(`Экспортировано ${projects.length} проектов`);
-          }
-          return;
-        } catch (error) {
-          console.error('Export error:', error);
-        }
-      }
-    }
-    
-    // Иначе экспортируем из localStorage
-    const projectsData = localStorage.getItem('projects_backup');
-    if (projectsData) {
-      try {
-        const projects = JSON.parse(projectsData);
-        const dataStr = JSON.stringify(projects, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `projects_backup_${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        if (typeof showToast === 'function') {
-          showToast(`Экспортировано ${projects.length} проектов`);
-        }
-      } catch (error) {
-        console.error('Export error:', error);
-        if (typeof showToast === 'function') {
-          showToast('Ошибка экспорта: ' + error.message);
-        }
-      }
-    } else {
-      if (typeof showToast === 'function') {
-        showToast('Нет данных для экспорта');
-      }
-    }
-  };
-}
 
 // ════════════════════════════════════════════════════
 // Глобальные переменные
@@ -1720,69 +1369,10 @@ window.migrateToFirestore = function() {
     }
     return; 
   }
-  // Прямая миграция данных без рекурсии
-  const projectsData = localStorage.getItem('projects_backup');
-  if (projectsData) {
-    try {
-      const projects = JSON.parse(projectsData);
-      console.log('Migrating', projects.length, 'projects to Firebase');
-      
-      if (window.db && typeof window.__firestoreExports !== 'undefined') {
-        const { collection, doc, setDoc, writeBatch, serverTimestamp } = window.__firestoreExports;
-        if (collection && doc && setDoc && writeBatch) {
-          const batch = writeBatch(window.db);
-          
-          projects.forEach(project => {
-            const projectData = {
-              ...project,
-              migratedAt: serverTimestamp(),
-              migratedBy: currentUser.uid
-            };
-            
-            if (project.id) {
-              batch.set(doc(window.db, 'projects', project.id), projectData, { merge: true });
-            } else {
-              const newId = 'project_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-              batch.set(doc(window.db, 'projects', newId), {
-                ...projectData,
-                id: newId,
-                createdAt: serverTimestamp(),
-                createdBy: currentUser.uid
-              });
-            }
-          });
-          
-          batch.commit().then(() => {
-            console.log(`✅ Мигрировано ${projects.length} проектов в Firebase`);
-            if (typeof showToast === 'function') {
-              showToast(`Мигрировано ${projects.length} проектов в Firebase!`);
-            }
-          }).catch(error => {
-            console.error('Migration error:', error);
-            if (typeof showToast === 'function') {
-              showToast('Ошибка миграции: ' + error.message);
-            }
-          });
-        } else {
-          if (typeof showToast === 'function') {
-            showToast('Firebase функции недоступны');
-          }
-        }
-      } else {
-        if (typeof showToast === 'function') {
-          showToast(`Миграция ${projects.length} проектов...`);
-        }
-      }
-    } catch (error) {
-      console.error('Migration error:', error);
-      if (typeof showToast === 'function') {
-        showToast('Ошибка миграции: ' + error.message);
-      }
-    }
+  if (typeof migrateToFirestore === 'function') {
+    migrateToFirestore();
   } else {
-    if (typeof showToast === 'function') {
-      showToast('Нет данных для миграции');
-    }
+    window.open('index.html#migrate-firestore', '_blank');
   }
 };
 
@@ -1803,36 +1393,10 @@ window.exportAllData = function() {
     }
     return; 
   }
-  // Прямой экспорт данных без рекурсии
-  const projectsData = localStorage.getItem('projects_backup');
-  if (projectsData) {
-    try {
-      const projects = JSON.parse(projectsData);
-      const dataStr = JSON.stringify(projects, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `projects_backup_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      if (typeof showToast === 'function') {
-        showToast(`Экспортировано ${projects.length} проектов`);
-      }
-    } catch (error) {
-      console.error('Export error:', error);
-      if (typeof showToast === 'function') {
-        showToast('Ошибка экспорта: ' + error.message);
-      }
-    }
+  if (typeof exportAllData === 'function') {
+    exportAllData();
   } else {
-    if (typeof showToast === 'function') {
-      showToast('Нет данных для экспорта');
-    }
+    window.open('index.html#export-data', '_blank');
   }
 };
 
