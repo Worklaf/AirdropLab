@@ -1390,6 +1390,9 @@ window.importGuidesData = function() {
 // ИМПОРТ ИЗ JSON — ИСПРАВЛЕННАЯ ВЕРСИЯ
 // ================================================
 
+// ================================================
+// ИСПРАВЛЕННЫЙ ИМПОРТ JSON (без writeBatch)
+// ================================================
 window.importAllData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
     if (typeof showToast === 'function') showToast('Нет доступа'); 
@@ -1410,7 +1413,6 @@ window.importAllData = function() {
       try {
         let raw = JSON.parse(event.target.result);
         
-        // Поддержка разных форматов экспорта
         let projectsToImport = [];
         if (Array.isArray(raw)) {
           projectsToImport = raw;
@@ -1419,36 +1421,42 @@ window.importAllData = function() {
         } else if (raw.data && Array.isArray(raw.data)) {
           projectsToImport = raw.data;
         } else {
-          throw new Error('Неверный формат JSON. Ожидается массив или объект с полем "projects"');
+          throw new Error('Неверный формат JSON. Ожидается массив проектов или объект с полем "projects"');
         }
 
         if (projectsToImport.length === 0) {
-          throw new Error('Файл не содержит проектов');
+          throw new Error('В файле нет проектов');
         }
 
+        if (!window.db || !window.__firestoreExports) {
+          throw new Error('Firebase не инициализирован');
+        }
+
+        const { collection, doc, setDoc, serverTimestamp } = window.__firestoreExports;
+        
         showToast(`Загрузка ${projectsToImport.length} проектов...`);
 
-        const { collection, doc, writeBatch, serverTimestamp } = window.__firestoreExports;
-        const batch = writeBatch(window.db);
-
-        projectsToImport.forEach(p => {
-          const id = p.id || ('project_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8));
+        for (const p of projectsToImport) {
+          const id = p.id || ('project_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));
           const { id: _, ...cleanData } = p;
           
-          batch.set(doc(collection(window.db, 'projects'), id), {
+          await setDoc(doc(collection(window.db, 'projects'), id), {
             ...cleanData,
             updatedAt: serverTimestamp(),
             updatedBy: currentUser.uid
           }, { merge: true });
-        });
+        }
 
-        await batch.commit();
-        showToast(`Успешно импортировано ${projectsToImport.length} проектов!`);
+        showToast(`✅ Успешно импортировано ${projectsToImport.length} проектов!`);
         setTimeout(() => location.reload(), 1500);
 
       } catch (error) {
         console.error('Ошибка импорта проектов:', error);
-        showToast('Ошибка: ' + error.message);
+        if (typeof showToast === 'function') {
+          showToast('Ошибка: ' + error.message);
+        } else {
+          alert('Ошибка: ' + error.message);
+        }
       }
     };
     
