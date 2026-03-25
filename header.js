@@ -1052,7 +1052,8 @@ window.updateMobileAdminButtons = function() {
     addDesktopButton('<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple"><i class="fas fa-cloud-upload-alt text-base"></i></button>');
     addDesktopButton('<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald"><i class="fas fa-file-export text-base"></i></button>');
     addDesktopButton('<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red"><i class="fas fa-trash-restore text-base"></i></button>');
-
+    addDesktopButton('<button onclick="typeof importAllData===\'function\'&&importAllData()" class="admin-action-btn admin-btn-purple"><i class="fas fa-file-import text-base"></i></button>');
+    
     addMobileButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" ' + btnStyle + ' title="Статистика"><i class="fas fa-chart-pie"></i></button>');
     addMobileButton('<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Загрузить"><i class="fas fa-cloud-upload-alt"></i></button>');
     addMobileButton('<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт"><i class="fas fa-file-export"></i></button>');
@@ -1673,46 +1674,86 @@ window.openDeletedProjects = function() {
 };
 
 window.migrateToFirestore = function() { 
-  if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
-    return;
+  if (!currentUser) { 
+    if (typeof showToast === 'function') {
+      showToast('Войдите'); 
+    } else {
+      alert('Войдите');
+    }
+    return; 
   }
-  
-  // Создаем input для выбора файла (режим импорта в Firebase)
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json';
-  
-  input.onchange = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = async function(event) {
-      try {
-        const data = JSON.parse(event.target.result);
-        const projectsToImport = data.projects || data; // Поддерживаем разные форматы JSON
-        
-        showToast('Загрузка в Firebase...');
+  if (currentUser.uid !== ADMIN_UID) { 
+    if (typeof showToast === 'function') {
+      showToast('Нет доступа'); 
+    } else {
+      alert('Нет доступа');
+    }
+    return; 
+  }
+  // Прямая миграция данных без рекурсии
+  const projectsData = localStorage.getItem('projects_backup');
+  if (projectsData) {
+    try {
+      const projects = JSON.parse(projectsData);
+      console.log('Migrating', projects.length, 'projects to Firebase');
+      
+      if (window.db && typeof window.__firestoreExports !== 'undefined') {
         const { collection, doc, setDoc, writeBatch, serverTimestamp } = window.__firestoreExports;
-        const batch = writeBatch(window.db);
-        
-        projectsToImport.forEach(p => {
-            // Удаляем лишние локальные поля, если нужно
-            const { id, ...cleanData } = p;
-            const docRef = id ? doc(window.db, 'projects', id) : doc(collection(window.db, 'projects'));
-            batch.set(docRef, { ...cleanData, updatedAt: serverTimestamp() }, { merge: true });
-        });
-        
-        await batch.commit();
-        showToast('Успешно загружено в Firebase!');
-      } catch (err) {
-        showToast('Ошибка загрузки: ' + err.message);
+        if (collection && doc && setDoc && writeBatch) {
+          const batch = writeBatch(window.db);
+          
+          projects.forEach(project => {
+            const projectData = {
+              ...project,
+              migratedAt: serverTimestamp(),
+              migratedBy: currentUser.uid
+            };
+            
+            if (project.id) {
+              batch.set(doc(window.db, 'projects', project.id), projectData, { merge: true });
+            } else {
+              const newId = 'project_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+              batch.set(doc(window.db, 'projects', newId), {
+                ...projectData,
+                id: newId,
+                createdAt: serverTimestamp(),
+                createdBy: currentUser.uid
+              });
+            }
+          });
+          
+          batch.commit().then(() => {
+            console.log(`✅ Мигрировано ${projects.length} проектов в Firebase`);
+            if (typeof showToast === 'function') {
+              showToast(`Мигрировано ${projects.length} проектов в Firebase!`);
+            }
+          }).catch(error => {
+            console.error('Migration error:', error);
+            if (typeof showToast === 'function') {
+              showToast('Ошибка миграции: ' + error.message);
+            }
+          });
+        } else {
+          if (typeof showToast === 'function') {
+            showToast('Firebase функции недоступны');
+          }
+        }
+      } else {
+        if (typeof showToast === 'function') {
+          showToast(`Миграция ${projects.length} проектов...`);
+        }
       }
-    };
-    reader.readAsText(file);
-  };
-  input.click();
+    } catch (error) {
+      console.error('Migration error:', error);
+      if (typeof showToast === 'function') {
+        showToast('Ошибка миграции: ' + error.message);
+      }
+    }
+  } else {
+    if (typeof showToast === 'function') {
+      showToast('Нет данных для миграции');
+    }
+  }
 };
 
 window.exportAllData = function() { 
