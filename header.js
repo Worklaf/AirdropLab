@@ -1031,22 +1031,13 @@ window.updateMobileAdminButtons = function() {
   var deskAddBtn = document.getElementById('deskAddBtn');
   var mobAddBtn = document.getElementById('mobAddBtn');
   
-  console.log('updateMobileAdminButtons called:', {
-    mobAdminBtns: !!mobAdminBtns,
-    deskAdminBtns: !!deskAdminBtns,
-    currentUser: !!window.currentUser,
-    uid: window.currentUser ? window.currentUser.uid : 'no user'
-  });
-  
   if (!mobAdminBtns || !deskAdminBtns) return;
   
   // Показываем мобильные админские кнопки только для администратора
   if (window.currentUser && window.currentUser.uid === ADMIN_UID) {
     mobAdminBtns.style.display = 'flex';
-    console.log('Showing mobile admin buttons');
   } else {
     mobAdminBtns.style.display = 'none';
-    console.log('Hiding mobile admin buttons');
     return;
   }
   
@@ -1153,7 +1144,17 @@ window.exportFaucetData = function() {
       }
     };
     
-    // Сначала пробуем получить данные из глобальной переменной (для faucet.html)
+    // Проверяем находимся ли мы на странице faucet.html
+    if (window.location.pathname.includes('faucet')) {
+      // На странице faucet.html используем локальную переменную faucets
+      if (typeof faucets !== 'undefined' && faucets.length > 0) {
+        console.log('Using local faucets variable from faucet.html');
+        exportData(faucets);
+        return;
+      }
+    }
+    
+    // Пробуем получить данные из глобальной переменной (для других страниц)
     if (typeof window.faucets !== 'undefined' && window.faucets.length > 0) {
       console.log('Using window.faucets data');
       exportData(window.faucets);
@@ -1248,6 +1249,19 @@ window.importFaucetData = function() {
           console.log('Updated window.faucets');
         }
         
+        // Если находимся на странице faucet.html, обновляем локальную переменную
+        if (window.location.pathname.includes('faucet') && typeof faucets !== 'undefined') {
+          faucets.length = 0; // Очищаем массив
+          faucets.push(...faucetsData); // Добавляем новые данные
+          console.log('Updated local faucets variable in faucet.html');
+          
+          // Перерисовываем интерфейс если есть функция renderAll
+          if (typeof renderAll === 'function') {
+            renderAll();
+            console.log('Called renderAll() to refresh UI');
+          }
+        }
+        
         // Сохраняем в Firebase если доступно
         if (window.db && typeof window.__firestoreExports !== 'undefined') {
           const { collection, doc, setDoc, writeBatch, serverTimestamp } = window.__firestoreExports;
@@ -1282,14 +1296,17 @@ window.importFaucetData = function() {
               console.log(`✅ Сохранено ${faucetsData.length} кранов в Firebase`);
               
               if (typeof showToast === 'function') {
-                showToast(`Импортировано ${faucetsData.length} кранов в Firebase! Перезагрузка...`);
+                showToast(`Импортировано ${faucetsData.length} кранов в Firebase!`);
               } else {
-                alert(`Импортировано ${faucetsData.length} кранов в Firebase! Перезагрузка...`);
+                alert(`Импортировано ${faucetsData.length} кранов в Firebase!`);
               }
               
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
+              // Если на faucet.html, перезагружаем данные
+              if (window.location.pathname.includes('faucet') && typeof loadFaucetsFromFirestore === 'function') {
+                setTimeout(() => {
+                  loadFaucetsFromFirestore();
+                }, 500);
+              }
             }).catch(error => {
               console.error('Ошибка сохранения в Firebase:', error);
               if (typeof showToast === 'function') {
@@ -1459,23 +1476,92 @@ window.importAllData = function() {
   input.click();
 };
 
-// Функции-заглушки если они не существуют на других страницах
+// Реальные функции для миграции и экспорта данных
 if (typeof window.migrateDataToFirestore === 'undefined') {
   window.migrateDataToFirestore = function() {
-    if (typeof showToast === 'function') {
-      showToast('Функция миграции доступна только на главной странице');
+    if (!currentUser || currentUser.uid !== ADMIN_UID) {
+      if (typeof showToast === 'function') {
+        showToast('Нет доступа');
+      } else {
+        alert('Нет доступа');
+      }
+      return;
+    }
+    
+    // Если на главной странице, вызываем оригинальную функцию
+    if (typeof migrateToFirestore === 'function') {
+      migrateToFirestore();
     } else {
-      alert('Функция миграции доступна только на главной странице');
+      // Иначе пробуем импортировать данные из localStorage в Firebase
+      const projectsData = localStorage.getItem('projects_backup');
+      if (projectsData) {
+        try {
+          const projects = JSON.parse(projectsData);
+          console.log('Migrating', projects.length, 'projects to Firebase');
+          if (typeof showToast === 'function') {
+            showToast(`Миграция ${projects.length} проектов...`);
+          }
+        } catch (error) {
+          console.error('Migration error:', error);
+          if (typeof showToast === 'function') {
+            showToast('Ошибка миграции: ' + error.message);
+          }
+        }
+      } else {
+        if (typeof showToast === 'function') {
+          showToast('Нет данных для миграции');
+        }
+      }
     }
   };
 }
 
 if (typeof window.exportData === 'undefined') {
   window.exportData = function() {
-    if (typeof showToast === 'function') {
-      showToast('Функция экспорта доступна только на главной странице');
+    if (!currentUser || currentUser.uid !== ADMIN_UID) {
+      if (typeof showToast === 'function') {
+        showToast('Нет доступа');
+      } else {
+        alert('Нет доступа');
+      }
+      return;
+    }
+    
+    // Если на главной странице, вызываем оригинальную функцию
+    if (typeof exportAllData === 'function') {
+      exportAllData();
     } else {
-      alert('Функция экспорта доступна только на главной странице');
+      // Иначе экспортируем из localStorage
+      const projectsData = localStorage.getItem('projects_backup');
+      if (projectsData) {
+        try {
+          const projects = JSON.parse(projectsData);
+          const dataStr = JSON.stringify(projects, null, 2);
+          const dataBlob = new Blob([dataStr], { type: 'application/json' });
+          const url = URL.createObjectURL(dataBlob);
+          
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `projects_backup_${new Date().toISOString().split('T')[0]}.json`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          
+          if (typeof showToast === 'function') {
+            showToast(`Экспортировано ${projects.length} проектов`);
+          }
+        } catch (error) {
+          console.error('Export error:', error);
+          if (typeof showToast === 'function') {
+            showToast('Ошибка экспорта: ' + error.message);
+          }
+        }
+      } else {
+        if (typeof showToast === 'function') {
+          showToast('Нет данных для экспорта');
+        }
+      }
     }
   };
 }
