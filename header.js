@@ -1488,18 +1488,61 @@ if (typeof window.migrateDataToFirestore === 'undefined') {
       return;
     }
     
-    // Если на главной странице, вызываем оригинальную функцию
-    if (typeof migrateToFirestore === 'function') {
-      migrateToFirestore();
-    } else {
-      // Иначе пробуем импортировать данные из localStorage в Firebase
+    // Если на главной странице, выполняем миграцию проектов
+    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+      // Выполняем миграцию данных из localStorage в Firebase
       const projectsData = localStorage.getItem('projects_backup');
       if (projectsData) {
         try {
           const projects = JSON.parse(projectsData);
           console.log('Migrating', projects.length, 'projects to Firebase');
-          if (typeof showToast === 'function') {
-            showToast(`Миграция ${projects.length} проектов...`);
+          
+          // Здесь можно добавить логику сохранения в Firebase
+          if (window.db && typeof window.__firestoreExports !== 'undefined') {
+            const { collection, doc, setDoc, writeBatch, serverTimestamp } = window.__firestoreExports;
+            if (collection && doc && setDoc && writeBatch) {
+              const batch = writeBatch(window.db);
+              
+              projects.forEach(project => {
+                const projectData = {
+                  ...project,
+                  migratedAt: serverTimestamp(),
+                  migratedBy: currentUser.uid
+                };
+                
+                if (project.id) {
+                  batch.set(doc(window.db, 'projects', project.id), projectData, { merge: true });
+                } else {
+                  const newId = 'project_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                  batch.set(doc(window.db, 'projects', newId), {
+                    ...projectData,
+                    id: newId,
+                    createdAt: serverTimestamp(),
+                    createdBy: currentUser.uid
+                  });
+                }
+              });
+              
+              batch.commit().then(() => {
+                console.log(`✅ Мигрировано ${projects.length} проектов в Firebase`);
+                if (typeof showToast === 'function') {
+                  showToast(`Мигрировано ${projects.length} проектов в Firebase!`);
+                }
+              }).catch(error => {
+                console.error('Migration error:', error);
+                if (typeof showToast === 'function') {
+                  showToast('Ошибка миграции: ' + error.message);
+                }
+              });
+            } else {
+              if (typeof showToast === 'function') {
+                showToast('Firebase функции недоступны');
+              }
+            }
+          } else {
+            if (typeof showToast === 'function') {
+              showToast(`Миграция ${projects.length} проектов...`);
+            }
           }
         } catch (error) {
           console.error('Migration error:', error);
@@ -1511,6 +1554,13 @@ if (typeof window.migrateDataToFirestore === 'undefined') {
         if (typeof showToast === 'function') {
           showToast('Нет данных для миграции');
         }
+      }
+    } else {
+      // На других страницах просто показываем сообщение
+      if (typeof showToast === 'function') {
+        showToast('Миграция доступна только на главной странице');
+      } else {
+        alert('Миграция доступна только на главной странице');
       }
     }
   };
@@ -1527,11 +1577,9 @@ if (typeof window.exportData === 'undefined') {
       return;
     }
     
-    // Если на главной странице, вызываем оригинальную функцию
-    if (typeof exportAllData === 'function') {
-      exportAllData();
-    } else {
-      // Иначе экспортируем из localStorage
+    // Если на главной странице, экспортируем проекты
+    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+      // Экспортируем данные проектов из localStorage
       const projectsData = localStorage.getItem('projects_backup');
       if (projectsData) {
         try {
@@ -1551,16 +1599,42 @@ if (typeof window.exportData === 'undefined') {
           if (typeof showToast === 'function') {
             showToast(`Экспортировано ${projects.length} проектов`);
           }
+          return;
         } catch (error) {
           console.error('Export error:', error);
-          if (typeof showToast === 'function') {
-            showToast('Ошибка экспорта: ' + error.message);
-          }
         }
-      } else {
+      }
+    }
+    
+    // Иначе экспортируем из localStorage
+    const projectsData = localStorage.getItem('projects_backup');
+    if (projectsData) {
+      try {
+        const projects = JSON.parse(projectsData);
+        const dataStr = JSON.stringify(projects, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `projects_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
         if (typeof showToast === 'function') {
-          showToast('Нет данных для экспорта');
+          showToast(`Экспортировано ${projects.length} проектов`);
         }
+      } catch (error) {
+        console.error('Export error:', error);
+        if (typeof showToast === 'function') {
+          showToast('Ошибка экспорта: ' + error.message);
+        }
+      }
+    } else {
+      if (typeof showToast === 'function') {
+        showToast('Нет данных для экспорта');
       }
     }
   };
@@ -1646,10 +1720,69 @@ window.migrateToFirestore = function() {
     }
     return; 
   }
-  if (typeof window.migrateDataToFirestore === 'function') {
-    window.migrateDataToFirestore();
+  // Прямая миграция данных без рекурсии
+  const projectsData = localStorage.getItem('projects_backup');
+  if (projectsData) {
+    try {
+      const projects = JSON.parse(projectsData);
+      console.log('Migrating', projects.length, 'projects to Firebase');
+      
+      if (window.db && typeof window.__firestoreExports !== 'undefined') {
+        const { collection, doc, setDoc, writeBatch, serverTimestamp } = window.__firestoreExports;
+        if (collection && doc && setDoc && writeBatch) {
+          const batch = writeBatch(window.db);
+          
+          projects.forEach(project => {
+            const projectData = {
+              ...project,
+              migratedAt: serverTimestamp(),
+              migratedBy: currentUser.uid
+            };
+            
+            if (project.id) {
+              batch.set(doc(window.db, 'projects', project.id), projectData, { merge: true });
+            } else {
+              const newId = 'project_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+              batch.set(doc(window.db, 'projects', newId), {
+                ...projectData,
+                id: newId,
+                createdAt: serverTimestamp(),
+                createdBy: currentUser.uid
+              });
+            }
+          });
+          
+          batch.commit().then(() => {
+            console.log(`✅ Мигрировано ${projects.length} проектов в Firebase`);
+            if (typeof showToast === 'function') {
+              showToast(`Мигрировано ${projects.length} проектов в Firebase!`);
+            }
+          }).catch(error => {
+            console.error('Migration error:', error);
+            if (typeof showToast === 'function') {
+              showToast('Ошибка миграции: ' + error.message);
+            }
+          });
+        } else {
+          if (typeof showToast === 'function') {
+            showToast('Firebase функции недоступны');
+          }
+        }
+      } else {
+        if (typeof showToast === 'function') {
+          showToast(`Миграция ${projects.length} проектов...`);
+        }
+      }
+    } catch (error) {
+      console.error('Migration error:', error);
+      if (typeof showToast === 'function') {
+        showToast('Ошибка миграции: ' + error.message);
+      }
+    }
   } else {
-    window.open('index.html#migrate-firestore', '_blank');
+    if (typeof showToast === 'function') {
+      showToast('Нет данных для миграции');
+    }
   }
 };
 
@@ -1670,10 +1803,36 @@ window.exportAllData = function() {
     }
     return; 
   }
-  if (typeof window.exportData === 'function') {
-    window.exportData();
+  // Прямой экспорт данных без рекурсии
+  const projectsData = localStorage.getItem('projects_backup');
+  if (projectsData) {
+    try {
+      const projects = JSON.parse(projectsData);
+      const dataStr = JSON.stringify(projects, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `projects_backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      if (typeof showToast === 'function') {
+        showToast(`Экспортировано ${projects.length} проектов`);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      if (typeof showToast === 'function') {
+        showToast('Ошибка экспорта: ' + error.message);
+      }
+    }
   } else {
-    window.open('index.html#export-data', '_blank');
+    if (typeof showToast === 'function') {
+      showToast('Нет данных для экспорта');
+    }
   }
 };
 
