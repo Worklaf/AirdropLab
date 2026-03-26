@@ -304,7 +304,7 @@
       <!-- Navigation Bar -->
       <div id="site-nav-wrapper" style="position:relative;z-index:9000;">
         <nav id="site-nav" style="background:rgba(11,15,25,0.98);border-bottom:1px solid rgba(34,211,238,0.12);backdrop-filter:blur(12px);">
-          <div style="max-width:min(1600px,100%);margin:0 auto;padding:0 16px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+          <div id="nav-container" style="max-width:min(1600px,100%);margin:0 auto;padding:0 16px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
             <div style="display:inline-flex;align-items:stretch;gap:0;vertical-align:top;">
 
               <!-- Активности -->
@@ -667,19 +667,39 @@
 
         /* ─── КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: position:fixed, CSS управляет позицией ─── */
         .al-nav-dropdown {
-          display: none;
-          position: absolute;
-          min-width: 280px; /* увеличена ширина */
-          background: rgba(11,15,30,0.99);
-          border: 1px solid rgba(34,211,238,0.2);
-          border-radius: 12px;
-          box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,211,238,0.05);
-          backdrop-filter: blur(20px);
-          z-index: 999999; /* очень высокий для поверх ВСЕХ элементов */
-          padding: 6px 0;
-          animation: alNavFadeIn 0.15s ease;
-          /* убрали max-height и overflow-y для отображения полного меню */
-        }
+  display: none;
+  position: fixed; /* Изменили с absolute на fixed */
+  min-width: 280px;
+  background: rgba(11,15,30,0.99);
+  border: 1px solid rgba(34,211,238,0.2);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,211,238,0.05);
+  backdrop-filter: blur(20px);
+  z-index: 999999;
+  padding: 6px 0;
+  animation: alNavFadeIn 0.15s ease;
+  /* Позиционируем через CSS переменные */
+  top: var(--dropdown-top, auto);
+  left: var(--dropdown-left, auto);
+}
+/* При hover на любую nav-group - убираем обрезание */
+#nav-container:has(.al-nav-group:hover) {
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
+/* Для браузеров без :has() */
+.al-nav-group:hover {
+  position: static;
+}
+
+.al-nav-group:hover .al-nav-dropdown {
+  position: fixed;
+  top: calc(var(--header-h, 120px) + 45px); /* Примерная высота */
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 280px;
+}
         /* Hover logic - показываем меню при наведении на группу */
 .al-nav-group:hover .al-nav-dropdown {
   display: block;
@@ -1757,6 +1777,48 @@ window.closeAlNav = function(el) {
   // Эта функция больше ничего не делает при hover-навигации
   return;
 };
+// Позиционирование dropdown при hover
+document.addEventListener('DOMContentLoaded', function() {
+  const navGroups = document.querySelectorAll('.al-nav-group');
+  
+  navGroups.forEach(group => {
+    const btn = group.querySelector('.al-nav-btn');
+    const dropdown = group.querySelector('.al-nav-dropdown');
+    
+    if (!btn || !dropdown) return;
+    
+    // При наведении на группу - позиционируем dropdown
+    group.addEventListener('mouseenter', function() {
+      const rect = btn.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      
+      // Устанавливаем позицию через CSS переменные
+      dropdown.style.setProperty('--dropdown-top', (rect.bottom + 2) + 'px');
+      dropdown.style.setProperty('--dropdown-left', rect.left + 'px');
+      dropdown.style.width = Math.max(rect.width, 280) + 'px';
+    });
+    
+    // При уходе курсора - сбрасываем позицию
+    group.addEventListener('mouseleave', function() {
+      dropdown.style.removeProperty('--dropdown-top');
+      dropdown.style.removeProperty('--dropdown-left');
+    });
+  });
+  
+  // Обновляем позицию при скролле
+  window.addEventListener('scroll', function() {
+    document.querySelectorAll('.al-nav-group:hover').forEach(group => {
+      const btn = group.querySelector('.al-nav-btn');
+      const dropdown = group.querySelector('.al-nav-dropdown');
+      
+      if (btn && dropdown) {
+        const rect = btn.getBoundingClientRect();
+        dropdown.style.setProperty('--dropdown-top', (rect.bottom + 2) + 'px');
+        dropdown.style.setProperty('--dropdown-left', rect.left + 'px');
+      }
+    });
+  }, { passive: true });
+});
 // ════════════════════════════════════════════════════
 // Coming Soon Modal
 // ════════════════════════════════════════════════════
