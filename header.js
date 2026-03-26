@@ -309,7 +309,7 @@
 
               <!-- Активности -->
               <div class="al-nav-group">
-                <button class="al-nav-btn" onclick="alNavToggle(this)">
+                <button class="al-nav-btn">
                   <i class="fas fa-bolt" style="color:#22d3ee;"></i>
                   <span data-translate="menu_activities">Активности</span>
                   <i class="fas fa-chevron-down al-nav-arrow"></i>
@@ -680,7 +680,26 @@
           animation: alNavFadeIn 0.15s ease;
           /* убрали max-height и overflow-y для отображения полного меню */
         }
-        .al-nav-dropdown.al-open { display:block; }
+        /* Hover logic - показываем меню при наведении на группу */
+.al-nav-group:hover .al-nav-dropdown {
+  display: block;
+}
+
+/* Стрелочка поворачивается при hover */
+.al-nav-group:hover .al-nav-arrow {
+  transform: rotate(180deg);
+}
+
+/* Подсвечиваем кнопку при hover */
+.al-nav-group:hover .al-nav-btn {
+  color: #f1f5f9;
+  background: rgba(34,211,238,0.06);
+}
+
+/* Убираем старые классы - они больше не нужны */
+.al-nav-dropdown.al-open { display:block; }
+.al-nav-btn.al-nav-open { color: #f1f5f9; background: rgba(34,211,238,0.06); }
+.al-nav-btn.al-nav-open .al-nav-arrow { transform:rotate(180deg); }
 
         @keyframes alNavFadeIn {
           from { opacity:0; transform:translateY(-4px); }
@@ -1730,85 +1749,10 @@ if (localStorage.getItem('firestore_online_state_firestore/[DEFAULT]/testnet-hub
   location.reload(true);
 }
 
-// ════════════════════════════════════════════════════
-// Navigation toggle — ИСПРАВЛЕНО: position:fixed без scrollTop
-// ════════════════════════════════════════════════════
 window.alNavToggle = function(btn) {
-  var group = btn.closest('.al-nav-group');
-  
-  // Убеждаемся что у группы есть ID для поиска
-  if (!group.id) {
-    group.id = 'al-nav-group-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-  }
-  
-  var dropdown = group.querySelector('.al-nav-dropdown');
-  
-  // Если меню не найдено в группе, ищем его в body по data-parent-id
-  if (!dropdown) {
-    // Ищем меню в body которое принадлежит этой группе
-    dropdown = document.querySelector('[data-parent-id="' + group.id + '"]');
-  }
-  
-  // Если все еще не найдено, выходим
-  if (!dropdown) return;
-  
-  var isOpen = dropdown.classList.contains('al-open');
-
-  // Закрыть все открытые
-  document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
-    d.classList.remove('al-open');
-    // Ищем родительскую группу по ID
-    var parentId = d.getAttribute('data-parent-id');
-    if (parentId) {
-      var parentGroup = document.getElementById(parentId);
-      if (parentGroup) {
-        var b = parentGroup.querySelector('.al-nav-btn');
-        if (b) b.classList.remove('al-nav-open');
-      }
-    }
-  });
-
-  if (!isOpen) {
-    var rect = btn.getBoundingClientRect();
-    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-    
-    // Сохраняем ссылку на родительскую группу перед перемещением
-    var parentGroup = dropdown.closest('.al-nav-group') || group;
-    
-    // Перемещаем меню в body чтобы избежать ограничений родителя
-    document.body.appendChild(dropdown);
-    
-    // Сохраняем ID родительской группы в атрибуте меню
-    dropdown.setAttribute('data-parent-id', parentGroup.id);
-    
-    // position:fixed - координаты относительно вьюпорта
-    dropdown.style.position = 'fixed';
-    dropdown.style.top  = (rect.bottom + 2) + 'px';
-    dropdown.style.left = rect.left + 'px';
-    dropdown.style.width = rect.width + 'px'; // устанавливаем ширину равную кнопке
-    dropdown.classList.add('al-open');
-    btn.classList.add('al-nav-open');
-  }
+  // Функция больше не нужна для hover, но оставим пустую для совместимости
+  return;
 };
-
-// Закрытие по клику вне меню
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.al-nav-group')) {
-    document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
-      d.classList.remove('al-open');
-      // Ищем родительскую группу по ID
-      var parentId = d.getAttribute('data-parent-id');
-      if (parentId) {
-        var parentGroup = document.getElementById(parentId);
-        if (parentGroup) {
-          var b = parentGroup.querySelector('.al-nav-btn');
-          if (b) b.classList.remove('al-nav-open');
-        }
-      }
-    });
-  }
-});
 
 // Обновление позиции при скролле (fixed - пересчитываем по вьюпорту)
 window.addEventListener('scroll', function() {
