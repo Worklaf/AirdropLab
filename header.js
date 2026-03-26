@@ -304,18 +304,18 @@
       <!-- Navigation Bar -->
       <div id="site-nav-wrapper" style="position:relative;z-index:9000;">
         <nav id="site-nav" style="background:rgba(11,15,25,0.98);border-bottom:1px solid rgba(34,211,238,0.12);backdrop-filter:blur(12px);">
-          <div id="nav-container" style="max-width:min(1600px,100%);margin:0 auto;padding:0 16px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+          <div style="max-width:min(1600px,100%);margin:0 auto;padding:0 16px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
             <div style="display:inline-flex;align-items:stretch;gap:0;vertical-align:top;">
 
               <!-- Активности -->
               <div class="al-nav-group">
-                <button class="al-nav-btn">
+                <button class="al-nav-btn" onclick="alNavToggle(this)">
                   <i class="fas fa-bolt" style="color:#22d3ee;"></i>
                   <span data-translate="menu_activities">Активности</span>
                   <i class="fas fa-chevron-down al-nav-arrow"></i>
                 </button>
                 <div class="al-nav-dropdown">
-                  <a href="index.html" class="al-nav-item"><i class="fas fa-layer-group"></i><span data-translate="all_projects">Все активности</span></a>
+                  <a href="index.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-layer-group"></i><span data-translate="all_projects">Все активности</span></a>
                   <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-parachute-box"></i><span data-translate="airdrops_lotteries">Аирдропы и розыгрыши</span></a>
                   <a href="faucet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-faucet"></i><span data-translate="faucets">Краны</span></a>
                   <a href="index.html?filter=mainnet" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-network-wired"></i><span data-translate="mainnets">Мейннеты</span></a>
@@ -667,59 +667,20 @@
 
         /* ─── КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: position:fixed, CSS управляет позицией ─── */
         .al-nav-dropdown {
-  display: none;
-  position: fixed; /* Изменили с absolute на fixed */
-  min-width: 280px;
-  background: rgba(11,15,30,0.99);
-  border: 1px solid rgba(34,211,238,0.2);
-  border-radius: 12px;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,211,238,0.05);
-  backdrop-filter: blur(20px);
-  z-index: 999999;
-  padding: 6px 0;
-  animation: alNavFadeIn 0.15s ease;
-  /* Позиционируем через CSS переменные */
-  top: var(--dropdown-top, auto);
-  left: var(--dropdown-left, auto);
-}
-/* При hover на любую nav-group - убираем обрезание */
-#nav-container:has(.al-nav-group:hover) {
-  overflow-x: visible !important;
-  overflow-y: visible !important;
-}
-
-/* Для браузеров без :has() */
-.al-nav-group:hover {
-  position: static;
-}
-
-.al-nav-group:hover .al-nav-dropdown {
-  position: fixed;
-  top: calc(var(--header-h, 120px) + 45px); /* Примерная высота */
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 280px;
-}
-        /* Hover logic - показываем меню при наведении на группу */
-.al-nav-group:hover .al-nav-dropdown {
-  display: block;
-}
-
-/* Стрелочка поворачивается при hover */
-.al-nav-group:hover .al-nav-arrow {
-  transform: rotate(180deg);
-}
-
-/* Подсвечиваем кнопку при hover */
-.al-nav-group:hover .al-nav-btn {
-  color: #f1f5f9;
-  background: rgba(34,211,238,0.06);
-}
-
-/* Убираем старые классы - они больше не нужны */
-.al-nav-dropdown.al-open { display:block; }
-.al-nav-btn.al-nav-open { color: #f1f5f9; background: rgba(34,211,238,0.06); }
-.al-nav-btn.al-nav-open .al-nav-arrow { transform:rotate(180deg); }
+          display: none;
+          position: absolute;
+          min-width: 280px; /* увеличена ширина */
+          background: rgba(11,15,30,0.99);
+          border: 1px solid rgba(34,211,238,0.2);
+          border-radius: 12px;
+          box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,211,238,0.05);
+          backdrop-filter: blur(20px);
+          z-index: 999999; /* очень высокий для поверх ВСЕХ элементов */
+          padding: 6px 0;
+          animation: alNavFadeIn 0.15s ease;
+          /* убрали max-height и overflow-y для отображения полного меню */
+        }
+        .al-nav-dropdown.al-open { display:block; }
 
         @keyframes alNavFadeIn {
           from { opacity:0; transform:translateY(-4px); }
@@ -1769,56 +1730,122 @@ if (localStorage.getItem('firestore_online_state_firestore/[DEFAULT]/testnet-hub
   location.reload(true);
 }
 
+// ════════════════════════════════════════════════════
+// Navigation toggle — ИСПРАВЛЕНО: position:fixed без scrollTop
+// ════════════════════════════════════════════════════
 window.alNavToggle = function(btn) {
-  // Функция больше не нужна для hover, но оставим пустую для совместимости
-  return;
-};
-window.closeAlNav = function(el) {
-  // Эта функция больше ничего не делает при hover-навигации
-  return;
-};
-// Позиционирование dropdown при hover
-document.addEventListener('DOMContentLoaded', function() {
-  const navGroups = document.querySelectorAll('.al-nav-group');
+  var group = btn.closest('.al-nav-group');
   
-  navGroups.forEach(group => {
-    const btn = group.querySelector('.al-nav-btn');
-    const dropdown = group.querySelector('.al-nav-dropdown');
-    
-    if (!btn || !dropdown) return;
-    
-    // При наведении на группу - позиционируем dropdown
-    group.addEventListener('mouseenter', function() {
-      const rect = btn.getBoundingClientRect();
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      
-      // Устанавливаем позицию через CSS переменные
-      dropdown.style.setProperty('--dropdown-top', (rect.bottom + 2) + 'px');
-      dropdown.style.setProperty('--dropdown-left', rect.left + 'px');
-      dropdown.style.width = Math.max(rect.width, 280) + 'px';
-    });
-    
-    // При уходе курсора - сбрасываем позицию
-    group.addEventListener('mouseleave', function() {
-      dropdown.style.removeProperty('--dropdown-top');
-      dropdown.style.removeProperty('--dropdown-left');
-    });
+  // Убеждаемся что у группы есть ID для поиска
+  if (!group.id) {
+    group.id = 'al-nav-group-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  }
+  
+  var dropdown = group.querySelector('.al-nav-dropdown');
+  
+  // Если меню не найдено в группе, ищем его в body по data-parent-id
+  if (!dropdown) {
+    // Ищем меню в body которое принадлежит этой группе
+    dropdown = document.querySelector('[data-parent-id="' + group.id + '"]');
+  }
+  
+  // Если все еще не найдено, выходим
+  if (!dropdown) return;
+  
+  var isOpen = dropdown.classList.contains('al-open');
+
+  // Закрыть все открытые
+  document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
+    d.classList.remove('al-open');
+    // Ищем родительскую группу по ID
+    var parentId = d.getAttribute('data-parent-id');
+    if (parentId) {
+      var parentGroup = document.getElementById(parentId);
+      if (parentGroup) {
+        var b = parentGroup.querySelector('.al-nav-btn');
+        if (b) b.classList.remove('al-nav-open');
+      }
+    }
   });
-  
-  // Обновляем позицию при скролле
-  window.addEventListener('scroll', function() {
-    document.querySelectorAll('.al-nav-group:hover').forEach(group => {
-      const btn = group.querySelector('.al-nav-btn');
-      const dropdown = group.querySelector('.al-nav-dropdown');
-      
-      if (btn && dropdown) {
-        const rect = btn.getBoundingClientRect();
-        dropdown.style.setProperty('--dropdown-top', (rect.bottom + 2) + 'px');
-        dropdown.style.setProperty('--dropdown-left', rect.left + 'px');
+
+  if (!isOpen) {
+    var rect = btn.getBoundingClientRect();
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    // Сохраняем ссылку на родительскую группу перед перемещением
+    var parentGroup = dropdown.closest('.al-nav-group') || group;
+    
+    // Перемещаем меню в body чтобы избежать ограничений родителя
+    document.body.appendChild(dropdown);
+    
+    // Сохраняем ID родительской группы в атрибуте меню
+    dropdown.setAttribute('data-parent-id', parentGroup.id);
+    
+    // position:fixed - координаты относительно вьюпорта
+    dropdown.style.position = 'fixed';
+    dropdown.style.top  = (rect.bottom + 2) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px'; // устанавливаем ширину равную кнопке
+    dropdown.classList.add('al-open');
+    btn.classList.add('al-nav-open');
+  }
+};
+
+// Закрытие по клику вне меню
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.al-nav-group')) {
+    document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
+      d.classList.remove('al-open');
+      // Ищем родительскую группу по ID
+      var parentId = d.getAttribute('data-parent-id');
+      if (parentId) {
+        var parentGroup = document.getElementById(parentId);
+        if (parentGroup) {
+          var b = parentGroup.querySelector('.al-nav-btn');
+          if (b) b.classList.remove('al-nav-open');
+        }
       }
     });
-  }, { passive: true });
+  }
 });
+
+// Обновление позиции при скролле (fixed - пересчитываем по вьюпорту)
+window.addEventListener('scroll', function() {
+  document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
+    // Ищем родительскую группу по ID
+    var parentId = d.getAttribute('data-parent-id');
+    if (parentId) {
+      var parentGroup = document.getElementById(parentId);
+      if (parentGroup) {
+        var b = parentGroup.querySelector('.al-nav-btn');
+        if (b) {
+          var rect = b.getBoundingClientRect();
+          d.style.top  = (rect.bottom + 2) + 'px';
+          d.style.left = rect.left + 'px';
+          d.style.width = rect.width + 'px'; // обновляем ширину при скролле
+        }
+      }
+    }
+  });
+}, { passive: true });
+
+// Закрытие при ресайзе
+window.addEventListener('resize', function() {
+  document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
+    d.classList.remove('al-open');
+    // Ищем родительскую группу по ID
+    var parentId = d.getAttribute('data-parent-id');
+    if (parentId) {
+      var parentGroup = document.getElementById(parentId);
+      if (parentGroup) {
+        var b = parentGroup.querySelector('.al-nav-btn');
+        if (b) b.classList.remove('al-nav-open');
+      }
+    }
+  });
+});
+
 // ════════════════════════════════════════════════════
 // Coming Soon Modal
 // ════════════════════════════════════════════════════
