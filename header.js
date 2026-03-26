@@ -315,7 +315,7 @@
                   <i class="fas fa-chevron-down al-nav-arrow"></i>
                 </button>
                 <div class="al-nav-dropdown">
-                  <a href="index.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-layer-group"></i><span data-translate="all_projects">Все активности</span></a>
+                  <a href="index.html" class="al-nav-item"><i class="fas fa-layer-group"></i><span data-translate="all_projects">Все активности</span></a>
                   <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-parachute-box"></i><span data-translate="airdrops_lotteries">Аирдропы и розыгрыши</span></a>
                   <a href="faucet.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-faucet"></i><span data-translate="faucets">Краны</span></a>
                   <a href="index.html?filter=mainnet" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-network-wired"></i><span data-translate="mainnets">Мейннеты</span></a>
@@ -1753,43 +1753,10 @@ window.alNavToggle = function(btn) {
   // Функция больше не нужна для hover, но оставим пустую для совместимости
   return;
 };
-
-// Обновление позиции при скролле (fixed - пересчитываем по вьюпорту)
-window.addEventListener('scroll', function() {
-  document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
-    // Ищем родительскую группу по ID
-    var parentId = d.getAttribute('data-parent-id');
-    if (parentId) {
-      var parentGroup = document.getElementById(parentId);
-      if (parentGroup) {
-        var b = parentGroup.querySelector('.al-nav-btn');
-        if (b) {
-          var rect = b.getBoundingClientRect();
-          d.style.top  = (rect.bottom + 2) + 'px';
-          d.style.left = rect.left + 'px';
-          d.style.width = rect.width + 'px'; // обновляем ширину при скролле
-        }
-      }
-    }
-  });
-}, { passive: true });
-
-// Закрытие при ресайзе
-window.addEventListener('resize', function() {
-  document.querySelectorAll('.al-nav-dropdown.al-open').forEach(function(d) {
-    d.classList.remove('al-open');
-    // Ищем родительскую группу по ID
-    var parentId = d.getAttribute('data-parent-id');
-    if (parentId) {
-      var parentGroup = document.getElementById(parentId);
-      if (parentGroup) {
-        var b = parentGroup.querySelector('.al-nav-btn');
-        if (b) b.classList.remove('al-nav-open');
-      }
-    }
-  });
-});
-
+window.closeAlNav = function(el) {
+  // Эта функция больше ничего не делает при hover-навигации
+  return;
+};
 // ════════════════════════════════════════════════════
 // Coming Soon Modal
 // ════════════════════════════════════════════════════
