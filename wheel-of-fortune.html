@@ -415,7 +415,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   getFirestore, initializeFirestore,
   collection, doc, getDoc, setDoc, getDocs,
@@ -1136,7 +1136,7 @@ function showToastLocal(key, fallback) {
 // AUTH STATE
 // ═══════════════════════════════════════════════════════════
 if (auth) {
- onAuthStateChanged(auth, async user => {
+  onAuthStateChanged(auth, async user => {  // ← правильный отступ
     currentUser = user;
     window.currentUser = user;
     isAdmin = !!(user && user.uid === WOF_ADMIN_UID);
@@ -1169,19 +1169,26 @@ if (auth) {
 } else {
   updateSpinsUI();
 }
+  function adjustLayout() {
+  // Простая адаптация под мобильные
+  if (window.innerWidth < 768) {
+    document.querySelector('.main-grid').style.gridTemplateColumns = '1fr';
+  } else {
+    document.querySelector('.main-grid').style.gridTemplateColumns = '1fr 1fr';
+  }
+}
 function initPage() {
   console.log('🚀 Initializing wheel page...');
   try {
-    adjustLayout();
+    resizeCanvas();  // ← используем существующую
     
-    // Инициализация canvas с задержкой
     setTimeout(() => {
       const canvasEl = document.getElementById('wheelCanvas');
       console.log('🎨 Canvas element:', canvasEl);
       console.log('🎨 Canvas parent:', canvasEl?.parentElement);
       console.log('🎨 Parent width:', canvasEl?.parentElement?.offsetWidth);
       
-      initWheel();
+      drawWheel();  // ← используем существующую
     }, 200);
     
     updateSpinsUI();
@@ -1190,6 +1197,8 @@ function initPage() {
     console.error('❌ Error during page init:', e);
   }
 }
+  // Запускаем инициализацию страницы
+setTimeout(initPage, 300);
 </script>
   <script>
 // ═══════════════════════════════════════════════════════════
