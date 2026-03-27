@@ -424,6 +424,20 @@
                 </div>
               </div>
 
+              <!-- Игры -->
+              <div class="al-nav-group">
+                <button class="al-nav-btn" onclick="alNavToggle(this)">
+                  <i class="fas fa-dice" style="color:#ec4899;"></i>
+                  <span data-translate="menu_games">Игры</span>
+                  <i class="fas fa-chevron-down al-nav-arrow"></i>
+                </button>
+                <div class="al-nav-dropdown">
+                  <a href="wheel-of-fortune.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-dharmachakra"></i>Wheel of Fortune (RGT)</a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-dice-d20"></i>Lucky Draw (скоро)</a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-card-diamonds"></i>Card Game (скоро)</a>
+                </div>
+              </div>
+
               <!-- Обучение -->
               <div class="al-nav-group">
                 <button class="al-nav-btn" onclick="alNavToggle(this)">
