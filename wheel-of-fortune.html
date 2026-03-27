@@ -446,11 +446,19 @@ try {
   } catch(e) {
     db = getFirestore(app);
   }
-  window.auth = auth;   // важно для header.js
-window.db   = db;     // важно для header.js
-window.__authExports = { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup };
-  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction };
-  window.__authExports = { onAuthStateChanged, signOut };
+  window.auth = auth;  // ВАЖНО: для header.js
+window.db = db;      // ВАЖНО: для header.js
+window.wofAuth = auth;
+window.wofDb = db;
+window.__firestoreExports = { 
+  collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, 
+  query, orderBy, limit, where, serverTimestamp, increment, 
+  runTransaction, writeBatch 
+};
+window.__authExports = { 
+  onAuthStateChanged, signOut, 
+  GoogleAuthProvider, signInWithPopup  // добавили для login
+};
   console.log('✅ WoF Firebase initialized');
 } catch(e) {
   console.warn('WoF Firebase init error:', e);
@@ -1133,11 +1141,7 @@ if (auth) {
     window.currentUser = user;
     isAdmin = !!(user && user.uid === WOF_ADMIN_UID);
 
-    // ← ВОТ СЮДА ДОБАВЛЯЕМ
-    if (typeof window.syncAuth === 'function') {
-        window.syncAuth();
-    }
-
+    
     if (user && db) {
       try {
         const uSnap = await getDoc(doc(db, COL_USERS, user.uid));
@@ -1156,25 +1160,85 @@ if (auth) {
 
     const ab = document.getElementById('jackpotAdminBtn');
     if (ab) ab.style.display = isAdmin ? 'inline-block' : 'none';
+   // ← ВОТ СЮДА ДОБАВЛЯЕМ
+    if (typeof window.syncAuth === 'function') {
+        window.syncAuth();
+    }
+
 });
 } else {
   updateSpinsUI();
 }
-
-// Expose logout for header.js
-window.logout = async function() {
-  if (auth && typeof signOut === 'function') await signOut(auth);
-};
-window.openLoginModal = async function() {
+function initPage() {
+  console.log('🚀 Initializing wheel page...');
   try {
+    adjustLayout();
+    
+    // Инициализация canvas с задержкой
+    setTimeout(() => {
+      const canvasEl = document.getElementById('wheelCanvas');
+      console.log('🎨 Canvas element:', canvasEl);
+      console.log('🎨 Canvas parent:', canvasEl?.parentElement);
+      console.log('🎨 Parent width:', canvasEl?.parentElement?.offsetWidth);
+      
+      initWheel();
+    }, 200);
+    
+    updateSpinsUI();
+    updateStatsUI();
+  } catch(e) {
+    console.error('❌ Error during page init:', e);
+  }
+}
+</script>
+  <script>
+// ═══════════════════════════════════════════════════════════
+// ГЛОБАЛЬНЫЕ ФУНКЦИИ ДЛЯ ХЕДЕРА (вне module)
+// ═══════════════════════════════════════════════════════════
+
+window.openLoginModal = async function() {
+  console.log('🔐 Login attempt...');
+  
+  // Ждем пока Firebase загрузится
+  let attempts = 0;
+  while (!window.auth && attempts < 50) {
+    await new Promise(r => setTimeout(r, 100));
+    attempts++;
+  }
+  
+  if (!window.auth || !window.__authExports) {
+    alert('Firebase загружается... Попробуйте снова через секунду');
+    return;
+  }
+  
+  try {
+    const { GoogleAuthProvider, signInWithPopup } = window.__authExports;
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(window.auth, provider);
+    console.log('✅ Login success:', result.user.displayName);
+    
+    // Обновляем хедер
+    if (typeof window.syncAuth === 'function') {
+      window.syncAuth();
+    }
   } catch (e) {
-    console.error('Login error:', e);
+    console.error('❌ Login error:', e);
     alert(e?.message || 'Ошибка входа');
   }
 };
 
+window.logout = async function() {
+  if (!window.__authExports || !window.auth) return;
+  try {
+    await window.__authExports.signOut(window.auth);
+    console.log('🚪 Logged out');
+  } catch (e) {
+    console.error('Logout error:', e);
+  }
+};
+
+// Для отладки
+console.log('🔧 Auth functions ready');
 </script>
 </body>
 </html>
