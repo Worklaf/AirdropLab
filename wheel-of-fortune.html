@@ -3,119 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wheel of Fortune — RGT Edition</title>
+  <title>Wheel of Fortune — RGT Edition | AirdropLab</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
+  <script src="languages.js"></script>
+  <script src="header.js"></script>
   <script src="config/firebase-config.js"></script>
-<script src="auth.js"></script>
-<script src="modal.js"></script>
-<script src="languages.js"></script>
-<script src="header.js"></script>
   <style>
-    /* Добавьте в <style> секцию */
-
-/* Modal styles */
-.modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 5000;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.modal.active {
-  display: flex;
-}
-
-.modal-content {
-  background: var(--bg-card);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  border-radius: 16px;
-  padding: 24px;
-  max-width: 500px;
-  width: 100%;
-  animation: modalIn 0.3s ease;
-}
-
-@keyframes modalIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-/* Chat styles для модалей обратной связи */
-.chat-bubble {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.chat-bubble.user {
-  flex-direction: row-reverse;
-}
-
-.chat-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: rgba(139, 92, 246, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #8b5cf6;
-  font-size: 14px;
-}
-
-.chat-bubble-wrapper {
-  max-width: 70%;
-}
-
-.chat-sender {
-  font-size: 11px;
-  color: var(--text-secondary);
-  margin-bottom: 2px;
-  display: block;
-}
-
-.chat-content {
-  background: rgba(139, 92, 246, 0.1);
-  padding: 8px 12px;
-  border-radius: 12px;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.chat-bubble.user .chat-content {
-  background: rgba(34, 211, 238, 0.1);
-}
-
-.chat-time {
-  font-size: 10px;
-  color: var(--text-secondary);
-  margin-top: 4px;
-  display: block;
-}
-    .wheel-canvas {
-  width: 100% !important; 
-  height: 100% !important;
-  filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.4));
-  display: block; /* Важно для canvas */
-}
-
-.wheel-container {
-  position: relative; 
-  width: 100%; 
-  max-width: 480px; 
-  margin: 0 auto;
-  aspect-ratio: 1;
-  min-height: 300px; /* Минимальная высота */
-}
     :root {
       --bg-primary: #0b0f19;
       --bg-secondary: #151b2b;
@@ -126,1063 +22,1148 @@
       --danger: #ef4444;
       --text-primary: #f1f5f9;
       --text-secondary: #94a3b8;
-      --rgt-color: #8b5cf6;
     }
-
     * { box-sizing: border-box; }
-    html, body {
-      margin: 0; padding: 0; background: var(--bg-primary);
-      color: var(--text-primary); font-family: 'Inter', -apple-system, sans-serif;
-      overflow-x: hidden;
-    }
+    html, body { margin:0; padding:0; background:var(--bg-primary); color:var(--text-primary); font-family:'Inter',-apple-system,sans-serif; overflow-x:hidden; }
+    main { max-width:1400px; margin:0 auto; padding:28px 16px 80px; }
 
-    main { max-width: 1400px; margin: 0 auto; padding: 28px 16px 60px; }
-
-    /* Wheel styles */
-    .wheel-container {
-      position: relative; width: 100%; max-width: 480px; margin: 0 auto;
-      aspect-ratio: 1;
-    }
-
-    .wheel-canvas {
-      width: 100%; height: 100%;
-      filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.4));
-    }
-
+    /* ── Wheel ── */
+    .wheel-wrap { position:relative; width:100%; max-width:400px; margin:0 auto; }
+    #wheelCanvas { display:block; width:100%; height:auto; filter:drop-shadow(0 0 28px rgba(139,92,246,.55)); border-radius:50%; }
     .wheel-pointer {
-      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-      width: 0; height: 0;
-      border-left: 12px solid transparent; border-right: 12px solid transparent;
-      border-top: 20px solid #8b5cf6; z-index: 10;
-      filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.8));
+      position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+      width:0; height:0;
+      border-left:14px solid transparent; border-right:14px solid transparent;
+      border-top:26px solid #8b5cf6;
+      filter:drop-shadow(0 0 8px #8b5cf6);
+      z-index:10;
     }
+    .spin-btn {
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      width:100%; margin-top:20px; padding:14px 24px;
+      background:linear-gradient(135deg,#8b5cf6,#7c3aed);
+      border:2px solid rgba(139,92,246,.5); border-radius:14px;
+      color:white; font-weight:800; font-size:15px; cursor:pointer;
+      transition:all .25s; letter-spacing:.02em;
+    }
+    .spin-btn:hover:not(:disabled) { background:linear-gradient(135deg,#7c3aed,#6d28d9); box-shadow:0 0 24px rgba(139,92,246,.6); }
+    .spin-btn:disabled { opacity:.45; cursor:not-allowed; }
 
-    .wheel-spin-btn {
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-      padding: 12px 32px; background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-      border: 2px solid rgba(139, 92, 246, 0.5); border-radius: 12px;
-      color: white; font-weight: 700; font-size: 14px; cursor: pointer;
-      transition: all 0.3s; z-index: 20; white-space: nowrap;
+    /* ── Stat cards ── */
+    .stat-card {
+      background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.22);
+      border-radius:12px; padding:14px 16px; text-align:center;
     }
-    .wheel-spin-btn:hover:not(:disabled) {
-      background: linear-gradient(135deg, #7c3aed, #6d28d9);
-      border-color: rgba(139, 92, 246, 0.8);
-      box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
-    }
-    .wheel-spin-btn:disabled {
-      opacity: 0.5; cursor: not-allowed;
-    }
+    .stat-label { font-size:11px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.06em; margin-bottom:5px; }
+    .stat-val { font-size:22px; font-weight:800; color:#a78bfa; }
 
-    /* Info cards */
-    .info-row {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px; margin: 20px 0;
-    }
-
-    .info-card {
-      background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.25);
-      border-radius: 12px; padding: 16px; text-align: center;
-    }
-    .info-card-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; }
-    .info-card-value { font-size: 20px; font-weight: 700; color: #8b5cf6; }
-
-    /* Spins remaining */
-    .spins-indicator {
-      display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
-      margin: 16px 0;
-    }
+    /* ── Spins dots ── */
     .spin-dot {
-      width: 12px; height: 12px; border-radius: 50%;
-      background: rgba(139, 92, 246, 0.3); border: 1px solid rgba(139, 92, 246, 0.5);
-      transition: all 0.3s;
+      width:11px; height:11px; border-radius:50%;
+      background:rgba(139,92,246,.25); border:1px solid rgba(139,92,246,.4);
+      transition:all .3s;
     }
-    .spin-dot.active { background: #8b5cf6; box-shadow: 0 0 10px rgba(139, 92, 246, 0.8); }
+    .spin-dot.on { background:#8b5cf6; box-shadow:0 0 10px rgba(139,92,246,.9); }
 
-    /* Result notification */
-    .result-modal {
-      display: none; position: fixed; inset: 0; z-index: 5000;
-      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
-      align-items: center; justify-content: center; padding: 20px;
-    }
-    .result-modal.show { display: flex; }
-    .result-box {
-      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
-      border: 2px solid rgba(139, 92, 246, 0.5); border-radius: 20px;
-      padding: 40px 30px; text-align: center; max-width: 400px;
-      animation: resultPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    @keyframes resultPop {
-      0% { transform: scale(0.8); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    .result-amount {
-      font-size: 48px; font-weight: 900; background: linear-gradient(135deg, #8b5cf6, #ec4899);
-      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      margin: 20px 0;
-    }
-    .result-label { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; }
-
-    /* Tabs */
-    .tab-buttons {
-      display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 8px;
-    }
+    /* ── Tabs ── */
+    .tab-nav { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
     .tab-btn {
-      padding: 8px 16px; background: rgba(139, 92, 246, 0.08);
-      border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px;
-      color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
-      font-size: 12px; font-weight: 600; white-space: nowrap;
+      padding:8px 18px; border-radius:9px; font-size:12px; font-weight:600; cursor:pointer;
+      border:1px solid rgba(139,92,246,.22);
+      background:rgba(139,92,246,.07); color:var(--text-secondary);
+      transition:all .2s; white-space:nowrap;
     }
-    .tab-btn:hover { color: #8b5cf6; border-color: rgba(139, 92, 246, 0.5); }
-    .tab-btn.active {
-      background: rgba(139, 92, 246, 0.2); color: #8b5cf6;
-      border-color: rgba(139, 92, 246, 0.5);
-    }
+    .tab-btn:hover { color:#a78bfa; border-color:rgba(139,92,246,.5); }
+    .tab-btn.active { background:rgba(139,92,246,.22); color:#a78bfa; border-color:rgba(139,92,246,.55); }
 
-    /* Leaderboard */
-    .leaderboard-table {
-      width: 100%; border-collapse: collapse;
-      background: rgba(139, 92, 246, 0.05); border-radius: 12px; overflow: hidden;
-    }
-    .leaderboard-table th {
-      background: rgba(139, 92, 246, 0.15); padding: 12px; text-align: left;
-      font-size: 12px; color: #8b5cf6; font-weight: 700; border-bottom: 1px solid rgba(139, 92, 246, 0.2);
-    }
-    .leaderboard-table td {
-      padding: 12px; border-bottom: 1px solid rgba(139, 92, 246, 0.1);
-      font-size: 12px;
-    }
-    .leaderboard-table tr:hover { background: rgba(139, 92, 246, 0.08); }
-    .rank-badge {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 28px; height: 28px; border-radius: 50%; font-weight: 700; font-size: 11px;
-      background: rgba(139, 92, 246, 0.2); color: #8b5cf6;
-    }
-    .rank-1 { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
-    .rank-2 { background: rgba(156, 163, 175, 0.2); color: #d1d5db; }
-    .rank-3 { background: rgba(214, 88, 58, 0.2); color: #ea580c; }
-
-    /* Jackpot banner */
+    /* ── Jackpot banner ── */
     .jackpot-banner {
-      background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(139, 92, 246, 0.2));
-      border: 2px solid rgba(236, 72, 153, 0.5); border-radius: 16px; padding: 24px;
-      text-align: center; margin-bottom: 24px;
+      position:relative; overflow:hidden;
+      background:linear-gradient(135deg,rgba(236,72,153,.18),rgba(139,92,246,.18));
+      border:2px solid rgba(236,72,153,.45); border-radius:18px;
+      padding:24px 28px; text-align:center; margin-bottom:28px;
     }
-    .jackpot-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; }
+    .jackpot-glow {
+      position:absolute; inset:0;
+      background:radial-gradient(ellipse at 50% 0%,rgba(236,72,153,.15),transparent 60%);
+      pointer-events:none;
+    }
+    .jackpot-title { font-size:11px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.1em; }
     .jackpot-amount {
-      font-size: 36px; font-weight: 900; background: linear-gradient(135deg, #ec4899, #8b5cf6);
-      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      font-size:42px; font-weight:900; margin:6px 0;
+      background:linear-gradient(135deg,#ec4899,#8b5cf6);
+      background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent;
     }
-    .jackpot-timer { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+    .jackpot-timer { font-size:12px; color:var(--text-secondary); }
 
-    /* Empty state */
-    .empty-state {
-      text-align: center; padding: 40px; color: var(--text-secondary);
+    /* ── Leaderboard ── */
+    .lb-table { width:100%; border-collapse:collapse; }
+    .lb-table thead th {
+      background:rgba(139,92,246,.15); padding:10px 14px; text-align:left;
+      font-size:11px; color:#8b5cf6; font-weight:700; text-transform:uppercase;
+      border-bottom:1px solid rgba(139,92,246,.2);
     }
-    .empty-state i { font-size: 48px; opacity: 0.3; margin-bottom: 16px; display: block; }
+    .lb-table tbody td { padding:11px 14px; border-bottom:1px solid rgba(139,92,246,.09); font-size:13px; }
+    .lb-table tbody tr:hover td { background:rgba(139,92,246,.07); }
+    .rank-pill {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:28px; height:28px; border-radius:50%; font-weight:700; font-size:11px;
+      background:rgba(139,92,246,.2); color:#a78bfa;
+    }
+    .rank-1 { background:rgba(251,191,36,.2); color:#fbbf24; }
+    .rank-2 { background:rgba(203,213,225,.15); color:#cbd5e1; }
+    .rank-3 { background:rgba(249,115,22,.18); color:#fb923c; }
 
-    /* Responsive */
-    @media (max-width: 640px) {
-      .wheel-container { max-width: 300px; }
-      .result-box { padding: 30px 20px; }
-      .result-amount { font-size: 36px; }
-      .info-row { grid-template-columns: 1fr 1fr; }
+    /* ── Result modal ── */
+    .result-overlay {
+      display:none; position:fixed; inset:0; z-index:8000;
+      background:rgba(0,0,0,.88); backdrop-filter:blur(10px);
+      align-items:center; justify-content:center; padding:20px;
+    }
+    .result-overlay.show { display:flex; }
+    .result-card {
+      position:relative; width:100%; max-width:440px;
+      border-radius:24px; padding:36px 28px; text-align:center;
+      animation:popIn .45s cubic-bezier(.34,1.56,.64,1);
+      overflow:hidden;
+    }
+    @keyframes popIn { from{transform:scale(.75);opacity:0;} to{transform:scale(1);opacity:1;} }
+    .res-win {
+      background:linear-gradient(145deg,rgba(16,185,129,.14),rgba(139,92,246,.14));
+      border:2px solid rgba(16,185,129,.5);
+    }
+    .res-lose {
+      background:linear-gradient(145deg,rgba(239,68,68,.12),rgba(139,92,246,.12));
+      border:2px solid rgba(239,68,68,.4);
+    }
+    .res-jackpot {
+      background:linear-gradient(145deg,rgba(236,72,153,.22),rgba(139,92,246,.22));
+      border:2px solid rgba(236,72,153,.7);
+    }
+    .res-amount {
+      font-size:52px; font-weight:900; margin:12px 0;
+      background:linear-gradient(135deg,#8b5cf6,#ec4899);
+      background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .res-emoji { font-size:52px; line-height:1; margin-bottom:8px; }
+    .res-label { font-size:13px; color:var(--text-secondary); margin-bottom:18px; }
+    .res-close-btn {
+      padding:10px 28px; background:rgba(139,92,246,.2);
+      border:1px solid rgba(139,92,246,.4); border-radius:10px;
+      color:#a78bfa; font-weight:700; font-size:13px; cursor:pointer;
+      transition:all .2s;
+    }
+    .res-close-btn:hover { background:rgba(139,92,246,.35); }
+
+    /* ── Jackpot Winner Modal ── */
+    .jackpot-winner-overlay {
+      display:none; position:fixed; inset:0; z-index:9000;
+      background:rgba(0,0,0,.92); backdrop-filter:blur(14px);
+      align-items:center; justify-content:center; padding:20px;
+    }
+    .jackpot-winner-overlay.show { display:flex; animation:fadeIn .5s; }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+    .jackpot-winner-card {
+      width:100%; max-width:500px; border-radius:28px; padding:40px 32px; text-align:center;
+      background:linear-gradient(145deg,rgba(236,72,153,.2),rgba(139,92,246,.2));
+      border:2px solid rgba(236,72,153,.7);
+      animation:jackpotPopIn .6s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes jackpotPopIn { from{transform:scale(.6) rotate(-5deg);opacity:0;} to{transform:scale(1) rotate(0deg);opacity:1;} }
+
+    /* ── History items ── */
+    .history-item {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      background:rgba(139,92,246,.06); border:1px solid rgba(139,92,246,.15);
+      border-radius:10px; padding:12px 16px;
     }
 
-    /* Animations */
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+    /* ── Admin jackpot btn ── */
+    .jackpot-admin-btn {
+      display:none; margin-top:12px;
+      padding:10px 24px;
+      background:linear-gradient(135deg,rgba(236,72,153,.25),rgba(139,92,246,.25));
+      border:2px solid rgba(236,72,153,.6); border-radius:12px;
+      color:white; font-weight:700; font-size:13px; cursor:pointer;
+      transition:all .25s;
+    }
+    .jackpot-admin-btn:hover { box-shadow:0 0 20px rgba(236,72,153,.5); }
+
+    /* ── Responsive ── */
+    @media(max-width:768px) {
+      .main-grid { grid-template-columns:1fr !important; }
+      .jackpot-amount { font-size:30px; }
     }
 
-    .wheel-spinning {
-      animation: spin 4s linear infinite;
+    /* ── Confetti ── */
+    .confetti-piece {
+      position:fixed; width:10px; height:10px; border-radius:2px;
+      animation:confettiFall 3s ease-in forwards;
+      pointer-events:none; z-index:9999;
+    }
+    @keyframes confettiFall {
+      0% { transform:translateY(-20px) rotate(0deg); opacity:1; }
+      100% { transform:translateY(110vh) rotate(720deg); opacity:0; }
     }
   </style>
 </head>
 <body class="antialiased">
-<script>
-// Защита от content.bundle.js и других расширений
-(function() {
-  'use strict';
-  
-  // Сохраняем оригинальные функции до их перехвата
-  window._origFetch = window.fetch;
-  window._origXHR = window.XMLHttpRequest;
-  
-  // Блокируем перехват событий расширениями
-  Object.defineProperty(window, 'currentUser', {
-    writable: true,
-    value: null
-  });
-  
-  // Исправляем ошибки content.bundle.js
-  if (typeof window.chrome !== 'undefined') {
-    window.chrome.runtime = window.chrome.runtime || {};
-    window.chrome.runtime.onMessage = window.chrome.runtime.onMessage || {addListener: function(){}};
-  }
-})();
-</script>
+
 <div id="site-header"></div>
 
 <main>
-  <!-- Page Title -->
-  <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px;">
-    <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(236,72,153,0.2));border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;justify-content:center;">
-      <i class="fas fa-dharmachakra" style="color:#8b5cf6;font-size:20px;"></i>
+
+  <!-- Page header -->
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
+    <div style="width:52px;height:52px;flex-shrink:0;border-radius:14px;background:linear-gradient(135deg,rgba(139,92,246,.22),rgba(236,72,153,.22));border:1px solid rgba(139,92,246,.35);display:flex;align-items:center;justify-content:center;">
+      <i class="fas fa-dharmachakra" style="color:#a78bfa;font-size:22px;"></i>
     </div>
     <div>
-      <h1 style="font-size:28px;font-weight:800;color:white;line-height:1.2;margin:0;">Wheel of Fortune <span style="color:#8b5cf6;">RGT Edition</span></h1>
-      <p style="font-size:13px;color:var(--text-secondary);margin:6px 0 0;">Крутите колесо и выигрывайте RGT награды</p>
+      <h1 style="font-size:26px;font-weight:900;color:white;margin:0;line-height:1.2;">
+        Wheel of Fortune &nbsp;<span style="color:#a78bfa;">RGT Edition</span>
+      </h1>
+      <p style="font-size:13px;color:var(--text-secondary);margin:5px 0 0;" data-translate="wof_subtitle">Spin the wheel and win RGT rewards</p>
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:32px;" id="mainLayout">
+  <!-- Main grid -->
+  <div class="main-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:32px;">
+
     <!-- LEFT: WHEEL -->
     <div>
-      <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:16px;padding:24px;">
-        <div class="wheel-container">
+      <div style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);border-radius:18px;padding:24px;">
+        <div class="wheel-wrap">
           <div class="wheel-pointer"></div>
-          <canvas id="wheelCanvas" class="wheel-canvas"></canvas>
-          <button id="spinBtn" class="wheel-spin-btn" onclick="spinWheel()">КРУТИТЬ</button>
+          <canvas id="wheelCanvas"></canvas>
         </div>
-        <div class="spins-indicator" id="spinsIndicator"></div>
-        <div class="info-row" style="margin-top:24px;">
-          <div class="info-card">
-            <div class="info-card-label">Осталось сегодня</div>
-            <div class="info-card-value"><span id="freeSpinsCount">3</span>/<span id="totalSpinsCount">3</span></div>
+
+        <!-- Spins dots -->
+        <div style="display:flex;gap:8px;justify-content:center;margin:16px 0;" id="spinDots"></div>
+
+        <!-- Spin info row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <div class="stat-card">
+            <div class="stat-label" data-translate="wof_free_today">Free today</div>
+            <div class="stat-val"><span id="freeLeft">3</span>/<span id="freeTot">3</span></div>
           </div>
-          <div class="info-card">
-            <div class="info-card-label">Следующая за</div>
-            <div class="info-card-value" id="nextSpinCost">5 RGT</div>
+          <div class="stat-card">
+            <div class="stat-label" data-translate="wof_paid_cost">Extra spin</div>
+            <div class="stat-val" id="spinCostLabel">5 RGT</div>
           </div>
         </div>
+
+        <button id="spinBtn" class="spin-btn" onclick="doSpin()">
+          <i class="fas fa-dharmachakra"></i>
+          <span id="spinBtnLabel" data-translate="wof_spin_free">SPIN (FREE)</span>
+        </button>
       </div>
     </div>
 
-    <!-- RIGHT: INFO & STATS -->
-    <div>
-      <!-- Правила -->
-      <div style="background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.2);border-radius:16px;padding:20px;margin-bottom:20px;">
-        <h3 style="font-size:14px;font-weight:700;color:white;margin-top:0;">📋 Правила</h3>
-        <ul style="font-size:12px;color:var(--text-secondary);line-height:1.8;margin:0;padding-left:20px;">
-          <li>3 бесплатные прокрутки в день</li>
-          <li>Дополнительные прокрутки — 5 RGT каждая</li>
-          <li>Награды: 1, 2, 3, 4, 10, 20, 50, 100 RGT</li>
-          <li>Вероятность выигрыша зависит от размера награды</li>
-          <li>Возможен выигрыш меньше, чем ставка</li>
+    <!-- RIGHT: rules + stats -->
+    <div style="display:flex;flex-direction:column;gap:18px;">
+
+      <!-- Rules -->
+      <div style="background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.2);border-radius:16px;padding:20px;">
+        <div style="font-size:14px;font-weight:700;color:white;margin-bottom:10px;">
+          <i class="fas fa-scroll" style="color:#22d3ee;margin-right:8px;"></i><span data-translate="wof_rules_title">Rules</span>
+        </div>
+        <ul style="font-size:12px;color:var(--text-secondary);line-height:1.9;margin:0;padding-left:18px;">
+          <li data-translate="wof_rule1">3 free spins per day</li>
+          <li data-translate="wof_rule2">Extra spins cost 5 RGT each</li>
+          <li data-translate="wof_rule3">Rewards: 1, 2, 3, 4, 10, 20, 50, 100 RGT</li>
+          <li data-translate="wof_rule4">Higher reward = lower probability</li>
+          <li data-translate="wof_rule5">You may win less than you paid</li>
         </ul>
       </div>
 
-      <!-- Статистика за месяц -->
-      <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:16px;padding:20px;">
-        <h3 style="font-size:14px;font-weight:700;color:white;margin-top:0;">📊 Ваша статистика</h3>
-        <div class="info-row" style="gap:12px;">
-          <div style="background:rgba(139,92,246,0.1);border-radius:8px;padding:12px;text-align:center;">
-            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Всего крутил</div>
-            <div style="font-size:18px;font-weight:700;color:#8b5cf6;" id="totalSpins">0</div>
+      <!-- Stats -->
+      <div style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);border-radius:16px;padding:20px;">
+        <div style="font-size:14px;font-weight:700;color:white;margin-bottom:14px;">
+          <i class="fas fa-chart-bar" style="color:#a78bfa;margin-right:8px;"></i><span data-translate="wof_your_stats">Your Stats</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div class="stat-card">
+            <div class="stat-label" data-translate="wof_total_spins">Spins</div>
+            <div class="stat-val" id="stTotalSpins">0</div>
           </div>
-          <div style="background:rgba(139,92,246,0.1);border-radius:8px;padding:12px;text-align:center;">
-            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Выиграно</div>
-            <div style="font-size:18px;font-weight:700;color:#34d399;" id="totalWon">0 RGT</div>
+          <div class="stat-card" style="border-color:rgba(52,211,153,.3);">
+            <div class="stat-label" data-translate="wof_total_won">Won</div>
+            <div class="stat-val" id="stTotalWon" style="color:#34d399;">0</div>
           </div>
-          <div style="background:rgba(139,92,246,0.1);border-radius:8px;padding:12px;text-align:center;">
-            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Потеряно</div>
-            <div style="font-size:18px;font-weight:700;color:#f87171;" id="totalLost">0 RGT</div>
+          <div class="stat-card" style="border-color:rgba(248,113,113,.3);">
+            <div class="stat-label" data-translate="wof_total_lost">Lost</div>
+            <div class="stat-val" id="stTotalLost" style="color:#f87171;">0</div>
           </div>
         </div>
       </div>
+
+      <!-- Monthly chance -->
+      <div style="background:rgba(236,72,153,.07);border:1px solid rgba(236,72,153,.2);border-radius:16px;padding:20px;">
+        <div style="font-size:14px;font-weight:700;color:white;margin-bottom:8px;">
+          <i class="fas fa-percentage" style="color:#ec4899;margin-right:8px;"></i><span data-translate="wof_jackpot_chance">Your Jackpot Chance</span>
+        </div>
+        <div style="font-size:32px;font-weight:900;color:#ec4899;" id="stJackpotChance">0%</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;" data-translate="wof_chance_hint">Based on your losses vs total losses this month</div>
+      </div>
     </div>
   </div>
 
-  <!-- Jackpot Banner -->
+  <!-- JACKPOT BANNER -->
   <div class="jackpot-banner" id="jackpotBanner">
-    <div class="jackpot-label">🎁 Месячный Jackpot</div>
-    <div class="jackpot-amount" id="jackpotAmount">0 RGT</div>
-    <div class="jackpot-timer" id="jackpotTimer">До конца месяца: 15 дней 6 часов</div>
+    <div class="jackpot-glow"></div>
+    <div class="jackpot-title" data-translate="wof_monthly_jackpot">🎁 MONTHLY JACKPOT</div>
+    <div class="jackpot-amount" id="jackpotAmt">0 RGT</div>
+    <div class="jackpot-timer" id="jackpotTimer"></div>
+    <button class="jackpot-admin-btn" id="jackpotAdminBtn" onclick="openJackpotSpin()">
+      <i class="fas fa-dice" style="margin-right:8px;"></i><span data-translate="wof_spin_jackpot">Spin Jackpot (Admin)</span>
+    </button>
   </div>
 
-  <!-- Tabs for Leaderboard & History -->
-  <div class="tab-buttons">
-    <button class="tab-btn active" onclick="showTab('leaderboard')">🏆 Топ выигрыши</button>
-    <button class="tab-btn" onclick="showTab('history')">📜 История</button>
-    <button class="tab-btn" onclick="showTab('jackpot-info')">💎 Информация Jackpot</button>
+  <!-- TABS -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('leaderboard',this)">🏆 <span data-translate="wof_tab_top">Top Wins</span></button>
+    <button class="tab-btn" onclick="switchTab('history',this)">📜 <span data-translate="wof_tab_history">History</span></button>
+    <button class="tab-btn" onclick="switchTab('jackpot-info',this)">💎 <span data-translate="wof_tab_jackpot">Jackpot Info</span></button>
   </div>
 
-  <!-- Leaderboard Tab -->
-  <div id="leaderboard-tab" class="tab-content">
-    <table class="leaderboard-table">
-      <thead>
-        <tr>
-          <th style="width:50px;">Место</th>
-          <th>Игрок</th>
-          <th style="text-align:right;">Макс выигрыш</th>
-        </tr>
-      </thead>
-      <tbody id="leaderboardBody">
-        <tr>
-          <td colspan="3" class="empty-state" style="padding:30px;">
-            <i class="fas fa-chart-bar"></i>
-            <p>Загрузка данных...</p>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- LEADERBOARD TAB -->
+  <div id="tab-leaderboard">
+    <div style="background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.15);border-radius:14px;overflow:hidden;">
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th style="width:50px;">#</th>
+            <th data-translate="wof_lb_player">Player</th>
+            <th style="text-align:right;" data-translate="wof_lb_maxwin">Best Win</th>
+            <th style="text-align:right;" data-translate="wof_lb_totalwon">Total Won</th>
+          </tr>
+        </thead>
+        <tbody id="lbBody">
+          <tr><td colspan="4" style="text-align:center;padding:28px;color:var(--text-secondary);"><i class="fas fa-circle-notch fa-spin"></i> <span data-translate="wof_loading">Loading...</span></td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- History Tab -->
-  <div id="history-tab" class="tab-content" style="display:none;">
-    <div style="display:flex;flex-direction:column;gap:12px;" id="historyList">
-      <div class="empty-state">
-        <i class="fas fa-history"></i>
-        <p>История пуста</p>
+  <!-- HISTORY TAB -->
+  <div id="tab-history" style="display:none;">
+    <div style="display:flex;flex-direction:column;gap:10px;" id="historyList">
+      <div style="text-align:center;padding:40px;color:var(--text-secondary);">
+        <i class="fas fa-history" style="font-size:36px;opacity:.3;display:block;margin-bottom:12px;"></i>
+        <span data-translate="wof_history_empty">No spins yet</span>
       </div>
     </div>
   </div>
 
-  <!-- Jackpot Info Tab -->
-  <div id="jackpot-info-tab" class="tab-content" style="display:none;">
-    <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:16px;padding:24px;">
-      <h3 style="font-size:14px;font-weight:700;color:white;margin-top:0;">Как работает Jackpot?</h3>
-      <p style="font-size:12px;color:var(--text-secondary);line-height:1.8;margin:16px 0;">
-        В конце каждого месяца проводится розыгрыш Jackpot из всех RGT, которые игроки потеряли в игре.
-      </p>
-      <div style="background:rgba(139,92,246,0.1);border-left:3px solid #8b5cf6;border-radius:8px;padding:12px;margin:16px 0;font-size:12px;">
-        <strong>Как считается проигрыш:</strong>
-        <p style="margin:8px 0 0;">Если вы сделали прокрутку за 5 RGT и выиграли 3 RGT, то проигрыш = 2 RGT. Если вы выиграли больше, чем поставили, проигрыш = 0.</p>
+  <!-- JACKPOT INFO TAB -->
+  <div id="tab-jackpot-info" style="display:none;">
+    <div style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:white;margin-bottom:8px;" data-translate="wof_how_jackpot">How does Jackpot work?</div>
+        <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin:0;" data-translate="wof_jackpot_desc">At the end of each month the admin draws a jackpot from all RGT that players lost on the wheel. Only net losses are counted.</p>
       </div>
-      <div style="background:rgba(139,92,246,0.1);border-left:3px solid #8b5cf6;border-radius:8px;padding:12px;margin:16px 0;font-size:12px;">
-        <strong>Как рассчитывается ваш шанс:</strong>
-        <p style="margin:8px 0 0;">Ваш шанс = Ваш проигрыш / Общий проигрыш всех игроков</p>
-        <p style="margin:8px 0 0;opacity:0.8;">Пример: Если вы проиграли 5 RGT, а общий проигрыш 7 RGT, ваш шанс = 5/7 ≈ 71%</p>
+      <div style="background:rgba(139,92,246,.12);border-left:3px solid #8b5cf6;border-radius:8px;padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:6px;" data-translate="wof_loss_calc">Loss calculation</div>
+        <p style="font-size:12px;color:var(--text-secondary);margin:0;line-height:1.7;" data-translate="wof_loss_calc_desc">If you spent 5 RGT and won 3 RGT → loss = 2 RGT. If you won more than you spent → loss = 0.</p>
       </div>
-      <div style="background:rgba(34,211,153,0.08);border:1px solid rgba(34,211,153,0.2);border-radius:8px;padding:16px;margin-top:16px;font-size:12px;color:var(--text-secondary);">
-        <strong style="color:#34d399;">💡 Совет:</strong> Чем больше вы потеряете в колесе за месяц, тем выше ваш шанс выиграть месячный Jackpot!
+      <div style="background:rgba(139,92,246,.12);border-left:3px solid #8b5cf6;border-radius:8px;padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:6px;" data-translate="wof_chance_calc">Your chance formula</div>
+        <p style="font-size:12px;color:var(--text-secondary);margin:0;line-height:1.7;" data-translate="wof_chance_calc_desc">Your chance = Your loss / Total loss of all players. E.g. if you lost 5 RGT and total is 7 RGT → your chance = 5/7 ≈ 71%.</p>
+      </div>
+      <div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:14px;">
+        <span style="color:#34d399;font-weight:700;">💡 </span>
+        <span style="font-size:12px;color:var(--text-secondary);" data-translate="wof_jackpot_tip">The more you lose on the wheel this month, the higher your jackpot chance!</span>
       </div>
     </div>
   </div>
+
 </main>
 
-<!-- Result Modal -->
-<div id="resultModal" class="result-modal" onclick="if(event.target===this)closeResult()">
-  <div class="result-box">
-    <div id="resultTitle" style="font-size:18px;font-weight:700;color:white;">Вы выиграли!</div>
-    <div class="result-amount" id="resultAmount">50 RGT</div>
-    <div class="result-label" id="resultLabel">Поздравляем!</div>
-    <button onclick="closeResult()" style="padding:10px 20px;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.4);border-radius:8px;color:#8b5cf6;cursor:pointer;font-weight:700;font-size:12px;">Закрыть</button>
+<!-- RESULT MODAL -->
+<div id="resultOverlay" class="result-overlay" onclick="if(event.target===this)closeResult()">
+  <div class="result-card" id="resultCard">
+    <div class="res-emoji" id="resEmoji">🎉</div>
+    <div style="font-size:18px;font-weight:800;color:white;" id="resTitle">You Won!</div>
+    <div class="res-amount" id="resAmount">+50 RGT</div>
+    <div class="res-label" id="resLabel">Congratulations!</div>
+    <button class="res-close-btn" onclick="closeResult()" data-translate="close">Close</button>
+  </div>
+</div>
+
+<!-- JACKPOT WINNER MODAL -->
+<div id="jackpotWinnerOverlay" class="jackpot-winner-overlay" onclick="if(event.target===this)closeJackpotWinner()">
+  <div class="jackpot-winner-card">
+    <div style="font-size:60px;margin-bottom:10px;">🏆</div>
+    <div style="font-size:13px;color:#ec4899;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;" data-translate="wof_jackpot_winner">JACKPOT WINNER</div>
+    <img id="jwAvatar" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ec4899;margin:0 auto 12px;display:block;" onerror="this.style.display='none'">
+    <div style="font-size:22px;font-weight:900;color:white;margin-bottom:6px;" id="jwName">—</div>
+    <div style="font-size:38px;font-weight:900;background:linear-gradient(135deg,#ec4899,#8b5cf6);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px;" id="jwAmount">0 RGT</div>
+    <p style="font-size:12px;color:var(--text-secondary);margin:0 0 20px;" data-translate="wof_jackpot_congrats">Congratulations! The monthly jackpot has been awarded.</p>
+    <button onclick="closeJackpotWinner()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;" data-translate="close">Close</button>
   </div>
 </div>
 
 <script src="footer.js"></script>
-<script>
-// ADMIN_UID уже объявлена в header.js - используем глобальное значение
-const WHEEL_REWARDS = [1, 2, 3, 4, 10, 20, 50, 100];
-const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#22d3ee', '#ef4444', '#a78bfa', '#fbbf24'];
-const DAILY_FREE_SPINS = 3;
-const COST_PER_SPIN = 5; // RGT
+<script src="assets/reagents.js"></script>
 
-let wheelCanvas = null;
-let wheelCtx = null;
-let currentUser = null;
-let userData = {};
-let wheelAngle = 0;
-let isSpinning = false;
-let spinHistory = [];
-let leaderboardData = [];
+<script type="module">
+// ═══════════════════════════════════════════════════════════
+// FIREBASE INIT (same pattern as faucet.html)
+// ═══════════════════════════════════════════════════════════
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore, initializeFirestore,
+  collection, doc, getDoc, setDoc, getDocs,
+  updateDoc, addDoc, query, orderBy, limit, where,
+  serverTimestamp, increment, runTransaction, writeBatch
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const WHEEL_REWARDS = [1, 2, 3, 4, 10, 20, 50, 100];
-const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#22d3ee', '#ef4444', '#a78bfa', '#fbbf24'];
-const DAILY_FREE_SPINS = 3;
-const COST_PER_SPIN = 5;
-const SPIN_DURATION = 4000;
-const SPIN_ROTATION = 360 * 5;
-
-const REWARD_WEIGHTS = {
-  100: 0.5, 50: 1, 20: 2, 10: 3, 4: 4, 3: 5, 2: 6, 1: 8
-};
-async function waitForFirebase() {
-  let attempts = 0;
-  while (attempts < 50) { // 5 секунд максимум
-    if (window.db && window.__firestoreExports && window.__authExports && window.auth) {
-      console.log('✅ Firebase ready');
-      return true;
-    }
-    await new Promise(resolve => setTimeout(resolve, 100));
-    attempts++;
+// Wait for firebase-config.js to set window.firebaseConfig
+async function waitForConfig(maxMs = 3000) {
+  const t0 = Date.now();
+  while (!window.firebaseConfig?.apiKey && Date.now() - t0 < maxMs) {
+    await new Promise(r => setTimeout(r, 80));
   }
-  console.warn('⚠️ Firebase not ready after 5 seconds');
-  return false;
-}function initWheel() {
-  try {
-    wheelCanvas = document.getElementById('wheelCanvas');
-    if (!wheelCanvas) {
-      console.error('❌ Canvas не найден');
-      return false;
-    }
-    
-    wheelCtx = wheelCanvas.getContext('2d');
-    if (!wheelCtx) {
-      console.error('❌ Canvas context не получен');
-      return false;
-    }
-    
-    // Ждем, пока контейнер получит размеры
-    const container = wheelCanvas.parentElement;
-    if (container.offsetWidth === 0) {
-      console.log('⏳ Ждем размеры контейнера...');
-      setTimeout(initWheel, 100);
-      return false;
-    }
-    
-    const size = Math.min(container.offsetWidth - 40, 400);
-    wheelCanvas.width = size;
-    wheelCanvas.height = size;
-    
-    console.log('✅ Wheel initialized:', size + 'x' + size);
-    drawWheel();
-    return true;
-  } catch (error) {
-    console.error('❌ Error initializing wheel:', error);
-    return false;
-  }
-}
-window.openLoginModal = function() {
-  if (!window.__authExports || !window.auth) {
-    alert('Система авторизации загружается...');
-    setTimeout(() => {
-      if (window.openLoginModal) window.openLoginModal();
-    }, 1000);
-    return;
-  }
-  
-  signInWithGoogle();
-};
-
-// Вход через Google
-async function signInWithGoogle() {
-  try {
-    if (!window.__authExports) {
-      throw new Error('Firebase Auth не загружен');
-    }
-    
-    const { GoogleAuthProvider, signInWithPopup } = window.__authExports;
-    const provider = new GoogleAuthProvider();
-    provider.addScope('profile');
-    provider.addScope('email');
-    
-    console.log('🔐 Начинаем вход через Google...');
-    const result = await signInWithPopup(window.auth, provider);
-    const user = result.user;
-    
-    console.log('✅ Успешный вход:', user.displayName);
-    
-    // Сохраняем данные пользователя в Firestore
-    if (window.db && window.__firestoreExports) {
-      await saveUserToFirestore(user);
-    }
-    
-    // Показываем успех
-    if (typeof showToast === 'function') {
-      showToast(`Добро пожаловать, ${user.displayName}!`);
-    } else {
-      alert(`Добро пожаловать, ${user.displayName}!`);
-    }
-    
-  } catch (error) {
-    console.error('❌ Ошибка входа:', error);
-    
-    let errorMsg = 'Ошибка входа';
-    if (error.code === 'auth/popup-closed-by-user') {
-      errorMsg = 'Вход отменен пользователем';
-    } else if (error.code === 'auth/popup-blocked') {
-      errorMsg = 'Всплывающее окно заблокировано браузером';
-    } else if (error.message) {
-      errorMsg = error.message;
-    }
-    
-    if (typeof showToast === 'function') {
-      showToast(errorMsg);
-    } else {
-      alert(errorMsg);
-    }
-  }
+  return window.firebaseConfig;
 }
 
-// Сохранение пользователя в Firestore
-async function saveUserToFirestore(user) {
-  try {
-    const { doc, setDoc, serverTimestamp } = window.__firestoreExports;
-    
-    const userData = {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-      photoURL: user.photoURL,
-      lastLogin: serverTimestamp(),
-      rgt: 100, // Стартовый баланс для новых пользователей
-      wheel: {
-        totalSpins: 0,
-        totalWon: 0,
-        totalLost: 0,
-        monthlyLoss: 0,
-        freeSpinsUsed: 0,
-        lastSpinDate: ''
-      }
-    };
-    
-    await setDoc(doc(window.db, 'users', user.uid), userData, { merge: true });
-    console.log('✅ Пользователь сохранен в Firestore');
-  } catch (error) {
-    console.warn('⚠️ Ошибка сохранения пользователя:', error);
-  }
+const cfg = await waitForConfig();
+if (!cfg?.apiKey) {
+  console.warn('WoF: Firebase config not available, running offline');
 }
 
-// Функция выхода
-window.logout = async function() {
-  if (!window.__authExports || !window.auth) return;
-  
+let app, auth, db;
+try {
+  app  = initializeApp(cfg, 'wof-app');
+  auth = getAuth(app);
   try {
-    const { signOut } = window.__authExports;
-    await signOut(window.auth);
-    
-    if (typeof showToast === 'function') {
-      showToast('Вы вышли из системы');
-    }
-    
-    // Обновляем интерфейс
-    window.currentUser = null;
-    if (typeof updateSpinsUI === 'function') updateSpinsUI();
-    
-  } catch (error) {
-    console.error('❌ Ошибка выхода:', error);
-  }
-};
-
-// Простая функция toast если нет основной
-if (typeof window.showToast === 'undefined') {
-  window.showToast = function(message) {
-    // Создаем простой toast
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(59, 130, 246, 0.9);
-      color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      z-index: 10000;
-      max-width: 300px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    `;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 3000);
-  };
-}
-
-console.log('✅ Minimal auth system loaded for wheel-of-fortune');
-function drawWheel() {
-  if (!wheelCtx || !wheelCanvas) return;
-  
-  try {
-    const centerX = wheelCanvas.width / 2;
-    const centerY = wheelCanvas.height / 2;
-    const radius = Math.min(centerX, centerY) - 30;
-    
-    wheelCtx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
-    
-    const sliceAngle = (Math.PI * 2) / WHEEL_REWARDS.length;
-    
-    WHEEL_REWARDS.forEach((reward, index) => {
-      const startAngle = sliceAngle * index + wheelAngle;
-      const endAngle = startAngle + sliceAngle;
-      
-      // Сегмент
-      wheelCtx.beginPath();
-      wheelCtx.moveTo(centerX, centerY);
-      wheelCtx.arc(centerX, centerY, radius, startAngle, endAngle);
-      wheelCtx.lineTo(centerX, centerY);
-      wheelCtx.fillStyle = COLORS[index];
-      wheelCtx.fill();
-      
-      // Граница
-      wheelCtx.strokeStyle = 'rgba(255,255,255,0.3)';
-      wheelCtx.lineWidth = 3;
-      wheelCtx.stroke();
-      
-      // Текст
-      const textAngle = startAngle + sliceAngle / 2;
-      const textX = centerX + Math.cos(textAngle) * (radius * 0.7);
-      const textY = centerY + Math.sin(textAngle) * (radius * 0.7);
-      
-      wheelCtx.save();
-      wheelCtx.translate(textX, textY);
-      wheelCtx.rotate(textAngle + Math.PI / 2);
-      wheelCtx.fillStyle = 'white';
-      wheelCtx.font = 'bold 16px Arial, sans-serif';
-      wheelCtx.textAlign = 'center';
-      wheelCtx.textBaseline = 'middle';
-      wheelCtx.fillText(reward + ' RGT', 0, 0);
-      wheelCtx.restore();
-    });
-    
-    // Центральный круг
-    wheelCtx.beginPath();
-    wheelCtx.arc(centerX, centerY, 35, 0, Math.PI * 2);
-    wheelCtx.fillStyle = 'rgba(139,92,246,0.4)';
-    wheelCtx.fill();
-    wheelCtx.strokeStyle = '#8b5cf6';
-    wheelCtx.lineWidth = 4;
-    wheelCtx.stroke();
-  } catch (error) {
-    console.error('❌ Error drawing wheel:', error);
-  }
-}
-  function setupAuthListener() {
-  try {
-    if (window.__authExports && window.__authExports.onAuthStateChanged && window.auth) {
-      window.__authExports.onAuthStateChanged(window.auth, async (user) => {
-        console.log('👤 Auth state changed:', user ? 'logged in' : 'logged out');
-        currentUser = user;
-        window.currentUser = user;
-        
-        if (user && window.db && window.__firestoreExports) {
-          try {
-            const { doc, getDoc } = window.__firestoreExports;
-            const userDocRef = doc(window.db, 'users', user.uid);
-            const userSnap = await getDoc(userDocRef);
-            
-            if (userSnap.exists()) {
-              const allData = userSnap.data();
-              userData = allData.wheel || {};
-            } else {
-              userData = {};
-            }
-          } catch (e) {
-            console.warn('⚠️ Error loading user data:', e);
-            userData = {};
-          }
-        } else {
-          userData = {};
-        }
-        
-        updateSpinsUI();
-        updateStatsUI();
-        if (user) await loadLeaderboard();
-      });
-    }
-  } catch (error) {
-    console.error('❌ Error setting up auth listener:', error);
-  }
-}
-
-// Инициализация при готовности DOM
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(initializePage, 100);
-  });
-} else {
-  setTimeout(initializePage, 100);
-}
-
-// Дополнительная инициализация через 1 секунду для надежности  
-setTimeout(initializePage, 1000);
-async function initializePage() {
-  console.log('🚀 Initializing Wheel of Fortune page...');
-  
-  try {
-    // Ждем Firebase
-    const firebaseReady = await waitForFirebase();
-    
-    // Инициализируем колесо
-    let wheelReady = false;
-    for (let i = 0; i < 10; i++) {
-      wheelReady = initWheel();
-      if (wheelReady) break;
-      await new Promise(resolve => setTimeout(resolve, 200));
-    }
-    
-    if (!wheelReady) {
-      console.error('❌ Failed to initialize wheel after multiple attempts');
-    }
-    
-    // Настраиваем layout
-    adjustLayout();
-    updateSpinsUI();
-    updateStatsUI();
-    
-    if (firebaseReady) {
-      // Настраиваем auth listener
-      setupAuthListener();
-      await loadLeaderboard();
-    }
-    
-    console.log('✅ Page initialization complete');
-  } catch (error) {
-    console.error('❌ Error during page initialization:', error);
-  }
-}
-function updateSpinsUI() {
-  if (!currentUser) {
-    const btn = document.getElementById('spinBtn');
-    if (btn) {
-      btn.textContent = 'ВОЙДИТЕ В АККАУНТ';
-      btn.disabled = true;
-    }
-    return;
-  }
-  
-  try {
-    const today = new Date().toDateString();
-    const lastSpinDate = userData.lastSpinDate || '';
-    const freeSpinsUsed = lastSpinDate === today ? (userData.freeSpinsUsed || 0) : 0;
-    const freeSpinsRemaining = Math.max(0, DAILY_FREE_SPINS - freeSpinsUsed);
-    
-    const countEl = document.getElementById('freeSpinsCount');
-    if (countEl) countEl.textContent = freeSpinsRemaining;
-    
-    const totalEl = document.getElementById('totalSpinsCount');
-    if (totalEl) totalEl.textContent = DAILY_FREE_SPINS;
-    
-    // Update spin dots
-    const spinsIndicator = document.getElementById('spinsIndicator');
-    if (spinsIndicator) {
-      spinsIndicator.innerHTML = '';
-      for (let i = 0; i < DAILY_FREE_SPINS; i++) {
-        const dot = document.createElement('div');
-        dot.className = 'spin-dot' + (i < freeSpinsRemaining ? ' active' : '');
-        spinsIndicator.appendChild(dot);
-      }
-    }
-    
-    const btn = document.getElementById('spinBtn');
-    if (btn) {
-      if (freeSpinsRemaining > 0) {
-        btn.textContent = 'КРУТИТЬ (БЕСПЛАТНО)';
-        btn.disabled = false;
-      } else {
-        btn.textContent = `КРУТИТЬ (${COST_PER_SPIN} RGT)`;
-        btn.disabled = false;
-      }
-    }
+    db = initializeFirestore(app, { cacheSizeBytes: 5000000 });
   } catch(e) {
-    console.warn('Error updating spins UI:', e);
+    db = getFirestore(app);
   }
+  window.wofAuth = auth;
+  window.wofDb   = db;
+  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction };
+  window.__authExports = { onAuthStateChanged, signOut };
+  console.log('✅ WoF Firebase initialized');
+} catch(e) {
+  console.warn('WoF Firebase init error:', e);
 }
 
-function spinWheel() {
+// ═══════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════
+const WOF_ADMIN_UID  = globalThis.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2';
+const REWARDS        = [100, 50, 20, 10, 4, 3, 2, 1];
+const COLORS         = ['#ec4899','#8b5cf6','#f59e0b','#10b981','#3b82f6','#ef4444','#22d3ee','#a78bfa'];
+const WEIGHTS        = [0.5, 1, 2, 3, 5, 6, 7, 9];
+const DAILY_FREE     = 3;
+const PAID_COST      = 5;
+const SPIN_MS        = 4500;
+const COL_WHEEL      = 'wheel_spins';
+const COL_JACKPOT    = 'wheel_jackpot';
+const COL_USERS      = 'users';
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let currentUser = null;
+let isAdmin     = false;
+let userData    = {};
+let wheelAngle  = 0;   // radians
+let spinning    = false;
+let localHistory = [];
+
+// ═══════════════════════════════════════════════════════════
+// CANVAS WHEEL
+// ═══════════════════════════════════════════════════════════
+const canvas  = document.getElementById('wheelCanvas');
+const ctx     = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const w = canvas.parentElement.offsetWidth;
+  canvas.width  = w;
+  canvas.height = w;
+  drawWheel();
+}
+
+function drawWheel() {
+  if (!ctx) return;
+  const W = canvas.width;
+  const cx = W / 2, cy = W / 2;
+  const R  = cx - 8;
+  ctx.clearRect(0, 0, W, W);
+
+  const n = REWARDS.length;
+  const slice = (Math.PI * 2) / n;
+
+  for (let i = 0; i < n; i++) {
+    const a0 = slice * i + wheelAngle - Math.PI / 2;
+    const a1 = a0 + slice;
+
+    // Slice
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, a0, a1);
+    ctx.closePath();
+    ctx.fillStyle = COLORS[i];
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.25)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Text
+    const ta = a0 + slice / 2;
+    const tx = cx + Math.cos(ta) * R * 0.68;
+    const ty = cy + Math.sin(ta) * R * 0.68;
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate(ta + Math.PI / 2);
+    ctx.fillStyle = 'white';
+    ctx.font = `bold ${Math.max(11, W * 0.038)}px Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,.5)';
+    ctx.shadowBlur = 4;
+    ctx.fillText(REWARDS[i] + ' RGT', 0, 0);
+    ctx.restore();
+  }
+
+  // Outer ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(139,92,246,.7)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  // Center circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, R * 0.09, 0, Math.PI * 2);
+  ctx.fillStyle = '#0b0f19';
+  ctx.fill();
+  ctx.strokeStyle = '#8b5cf6';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+window.addEventListener('resize', () => { resizeCanvas(); });
+setTimeout(resizeCanvas, 100);
+
+// ═══════════════════════════════════════════════════════════
+// SPIN LOGIC
+// ═══════════════════════════════════════════════════════════
+function pickReward() {
+  const total = WEIGHTS.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < REWARDS.length; i++) {
+    r -= WEIGHTS[i];
+    if (r <= 0) return REWARDS[i];
+  }
+  return REWARDS[REWARDS.length - 1];
+}
+
+window.doSpin = async function() {
+  if (spinning) return;
   if (!currentUser) {
-    alert('Пожалуйста, войдите в аккаунт для игры');
+    showToastLocal('wof_need_login', 'Please log in to play');
     return;
   }
-  
-  if (isSpinning) return;
-  
-  // Check free spins
   const today = new Date().toDateString();
-  const lastSpinDate = userData.lastSpinDate || '';
-  const freeSpinsUsed = lastSpinDate === today ? (userData.freeSpinsUsed || 0) : 0;
-  const freeSpinsRemaining = Math.max(0, DAILY_FREE_SPINS - freeSpinsUsed);
-  
-  if (freeSpinsRemaining > 0) {
-    // Free spin
-    performSpin(true);
-  } else {
-    // Check if user has enough RGT
-    const userRgt = userData.rgt || 0;
-    if (userRgt < COST_PER_SPIN) {
-      alert(`Недостаточно RGT для прокрутки. У вас: ${userRgt} RGT, нужно: ${COST_PER_SPIN} RGT`);
-      return;
-    }
-    // Paid spin
-    performSpin(false);
-  }
-}
+  const wof   = userData.wof || {};
+  const usedToday = wof.lastSpinDate === today ? (wof.freeUsed || 0) : 0;
+  const freeLeft  = Math.max(0, DAILY_FREE - usedToday);
 
-function performSpin(isFree) {
-  isSpinning = true;
+  if (freeLeft === 0 && (wof.rgt || userData.rgt || 0) < PAID_COST) {
+    showToastLocal('wof_not_enough', `Not enough RGT. Need ${PAID_COST} RGT`);
+    return;
+  }
+  const isFree = freeLeft > 0;
+  spinning = true;
   document.getElementById('spinBtn').disabled = true;
-  
-  // Pick random reward weighted by probability
-  const reward = getWeightedReward();
-  const targetIndex = WHEEL_REWARDS.indexOf(reward);
-  const targetAngle = (Math.PI * 2 / WHEEL_REWARDS.length) * (targetIndex + 0.5);
-  
-  // Animate spin
-  const startTime = Date.now();
+
+  const reward = pickReward();
+  const rewardIdx = REWARDS.indexOf(reward);
+
+  // Target angle: pointer is at top (−π/2). Slice center i → angle = (i + 0.5) * slice − π/2
+  const slice = (Math.PI * 2) / REWARDS.length;
+  const targetSliceAngle = -(rewardIdx + 0.5) * slice; // so that slice center aligns with top
+  const extraRotations   = Math.PI * 2 * (6 + Math.floor(Math.random() * 3));
+  const targetAngle      = targetSliceAngle + extraRotations;
+
   const startAngle = wheelAngle;
-  const spinAmount = SPIN_ROTATION + targetAngle;
-  
-  function animateSpin() {
-    const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / SPIN_DURATION, 1);
-    
-    // Easing: ease-out
-    const easeProgress = 1 - Math.pow(1 - progress, 3);
-    
-    wheelAngle = startAngle + spinAmount * easeProgress;
+  const startTime  = performance.now();
+
+  function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
+
+  function animate(now) {
+    const t = Math.min((now - startTime) / SPIN_MS, 1);
+    wheelAngle = startAngle + (targetAngle - startAngle) * easeOut(t);
     drawWheel();
-    
-    if (progress < 1) {
-      requestAnimationFrame(animateSpin);
+    if (t < 1) {
+      requestAnimationFrame(animate);
     } else {
-      isSpinning = false;
-      handleSpinResult(reward, isFree);
+      wheelAngle = targetAngle % (Math.PI * 2);
+      spinning = false;
+      handleResult(reward, isFree);
     }
   }
-  
-  animateSpin();
-}
+  requestAnimationFrame(animate);
+};
 
-function getWeightedReward() {
-  const rewards = Object.keys(REWARD_WEIGHTS).map(Number);
-  const weights = rewards.map(r => REWARD_WEIGHTS[r]);
-  const totalWeight = weights.reduce((a, b) => a + b);
-  
-  let random = Math.random() * totalWeight;
-  for (let i = 0; i < rewards.length; i++) {
-    random -= weights[i];
-    if (random <= 0) return rewards[i];
-  }
-  return rewards[0];
-}
-
-async function handleSpinResult(reward, isFree) {
+// ═══════════════════════════════════════════════════════════
+// RESULT HANDLER
+// ═══════════════════════════════════════════════════════════
+async function handleResult(reward, isFree) {
   const today = new Date().toDateString();
-  const lastSpinDate = userData.lastSpinDate || '';
-  const freeSpinsUsed = lastSpinDate === today ? (userData.freeSpinsUsed || 0) : 0;
-  
-  // Calculate spent RGT and loss
-  let spentRGT = 0;
-  let loss = 0;
-  
-  if (isFree) {
-    spentRGT = 0;
-  } else {
-    spentRGT = COST_PER_SPIN;
-    loss = Math.max(0, spentRGT - reward);
+  const wof   = { ...(userData.wof || {}) };
+
+  const usedToday  = wof.lastSpinDate === today ? (wof.freeUsed || 0) : 0;
+  const spentRGT   = isFree ? 0 : PAID_COST;
+  const netLoss    = Math.max(0, spentRGT - reward);
+  const netProfit  = reward - spentRGT;
+
+  // Update local userData
+  wof.totalSpins  = (wof.totalSpins  || 0) + 1;
+  wof.totalWon    = (wof.totalWon    || 0) + reward;
+  wof.totalLost   = (wof.totalLost   || 0) + netLoss;
+  wof.monthlyLoss = (wof.monthlyLoss || 0) + netLoss;
+  wof.freeUsed    = isFree ? usedToday + 1 : (wof.freeUsed || 0);
+  wof.lastSpinDate = today;
+  if (!isFree) {
+    wof.rgt   = ((wof.rgt   || 0) + netProfit);
+    userData.rgt = ((userData.rgt || 0) + netProfit);
   }
-  
-  // Update user stats
-  userData.totalSpins = (userData.totalSpins || 0) + 1;
-  userData.totalWon = (userData.totalWon || 0) + reward;
-  userData.totalLost = (userData.totalLost || 0) + loss;
-  userData.rgt = (userData.rgt || 0) + reward - spentRGT;
-  userData.monthlyLoss = (userData.monthlyLoss || 0) + loss;
-  
-  if (isFree) {
-    userData.freeSpinsUsed = (lastSpinDate === today ? freeSpinsUsed : 0) + 1;
-    userData.lastSpinDate = today;
+  userData.wof = wof;
+
+  // Add to jackpot if there was a loss
+  if (netLoss > 0) {
+    await addToJackpot(netLoss);
   }
-  
+
   // Save to Firestore
   try {
-    if (window.currentUser && window.db && window.updateDoc && window.doc) {
-      const userRef = window.doc(window.db, 'users', currentUser.uid);
-      await window.updateDoc(userRef, {
-        'wheel': userData,
-        'rgt': userData.rgt,
-        'lastUpdated': new Date().toISOString()
+    if (db && currentUser) {
+      const uRef = doc(db, COL_USERS, currentUser.uid);
+      const updates = {
+        'wof.totalSpins':   wof.totalSpins,
+        'wof.totalWon':     wof.totalWon,
+        'wof.totalLost':    wof.totalLost,
+        'wof.monthlyLoss':  wof.monthlyLoss,
+        'wof.freeUsed':     wof.freeUsed,
+        'wof.lastSpinDate': wof.lastSpinDate,
+      };
+      if (!isFree) {
+        updates['rgt'] = increment(netProfit);
+      }
+      await updateDoc(uRef, updates);
+
+      // Log spin
+      await addDoc(collection(db, COL_WHEEL), {
+        uid:       currentUser.uid,
+        display:   currentUser.displayName || currentUser.email || '—',
+        reward,
+        spentRGT,
+        netLoss,
+        isFree,
+        ts:        serverTimestamp()
       });
     }
   } catch(e) {
-    console.warn('Error saving spin result:', e);
+    console.warn('WoF save error:', e);
   }
-  
-  // Add to history
-  spinHistory.unshift({
-    timestamp: new Date(),
-    reward: reward,
-    spent: spentRGT,
-    isFree: isFree
-  });
-  
-  // Show result modal
-  showResult(reward, spentRGT);
-  
-  // Update UI
-  updateSpinsUI();
+
+  // Local history
+  localHistory.unshift({ reward, spentRGT, isFree, ts: new Date() });
+  renderHistory();
+
+  // Send notification to user
+  sendSpinNotification(reward, spentRGT, netProfit);
+
+  // UI update
   updateStatsUI();
-  try {
-    await loadLeaderboard();
-  } catch(e) {
-    console.warn('Error updating leaderboard:', e);
-  }
-}
-
-function showResult(reward, spent) {
-  const modal = document.getElementById('resultModal');
-  const profit = reward - spent;
-  
-  if (profit >= 0) {
-    document.getElementById('resultTitle').textContent = '🎉 Вы выиграли!';
-    document.getElementById('resultTitle').style.color = '#34d399';
-    document.getElementById('resultAmount').textContent = '+' + reward + ' RGT';
-  } else {
-    document.getElementById('resultTitle').textContent = '😢 Не повезло';
-    document.getElementById('resultTitle').style.color = '#f87171';
-    document.getElementById('resultAmount').textContent = profit + ' RGT';
-  }
-  
-  if (spent > 0) {
-    document.getElementById('resultLabel').textContent = `Потратили: ${spent} RGT`;
-  } else {
-    document.getElementById('resultLabel').textContent = 'Бесплатная прокрутка';
-  }
-  
-  modal.classList.add('show');
-}
-
-function closeResult() {
-  document.getElementById('resultModal').classList.remove('show');
-  document.getElementById('spinBtn').disabled = false;
   updateSpinsUI();
+  await loadLeaderboard();
+  await loadJackpot();
+
+  // Show result
+  showResult(reward, spentRGT, netProfit);
+}
+
+async function addToJackpot(loss) {
+  if (!db) return;
+  const now = new Date();
+  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  try {
+    const jRef = doc(db, COL_JACKPOT, month);
+    await runTransaction(db, async tx => {
+      const snap = await tx.get(jRef);
+      if (snap.exists()) {
+        tx.update(jRef, {
+          total: increment(loss),
+          [`players.${currentUser.uid}`]: increment(loss)
+        });
+      } else {
+        tx.set(jRef, {
+          month,
+          total: loss,
+          players: { [currentUser.uid]: loss },
+          drawn: false,
+          winner: null,
+          ts: serverTimestamp()
+        });
+      }
+    });
+  } catch(e) {
+    console.warn('addToJackpot error:', e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// RESULT MODAL
+// ═══════════════════════════════════════════════════════════
+function showResult(reward, spent, profit) {
+  const overlay = document.getElementById('resultOverlay');
+  const card    = document.getElementById('resultCard');
+  const emoji   = document.getElementById('resEmoji');
+  const title   = document.getElementById('resTitle');
+  const amount  = document.getElementById('resAmount');
+  const label   = document.getElementById('resLabel');
+
+  card.className = 'result-card';
+  const isEn = (window.currentLang === 'en');
+
+  if (profit > 0) {
+    card.classList.add('res-win');
+    if (reward === 100) {
+      emoji.textContent = '🎰';
+      title.textContent = isEn ? 'JACKPOT SPIN!' : 'МЕГА ВЫИГРЫШ!';
+      title.style.color = '#fbbf24';
+    } else if (reward >= 20) {
+      emoji.textContent = '🎉';
+      title.textContent = isEn ? 'Big Win!' : 'Большой выигрыш!';
+      title.style.color = '#34d399';
+    } else {
+      emoji.textContent = '✨';
+      title.textContent = isEn ? 'You Won!' : 'Вы выиграли!';
+      title.style.color = '#34d399';
+    }
+    amount.textContent = '+' + reward + ' RGT';
+    amount.style.background = 'linear-gradient(135deg,#34d399,#22d3ee)';
+    amount.style.backgroundClip = 'text';
+    amount.style.webkitBackgroundClip = 'text';
+    amount.style.webkitTextFillColor = 'transparent';
+    label.textContent = isEn ? `You spent ${spent} RGT and won ${reward} RGT` : `Потратили ${spent} RGT, выиграли ${reward} RGT`;
+  } else if (reward === spent) {
+    card.classList.add('res-win');
+    emoji.textContent = '🤝';
+    title.textContent = isEn ? 'Even!' : 'В ноль!';
+    title.style.color = '#fbbf24';
+    amount.textContent = reward + ' RGT';
+    amount.style.background = 'linear-gradient(135deg,#fbbf24,#f59e0b)';
+    amount.style.backgroundClip = 'text';
+    amount.style.webkitBackgroundClip = 'text';
+    amount.style.webkitTextFillColor = 'transparent';
+    label.textContent = isEn ? 'Got back what you spent!' : 'Вернули свою ставку!';
+  } else {
+    card.classList.add('res-lose');
+    emoji.textContent = reward === 0 ? '💸' : '😓';
+    title.textContent = isEn ? 'Not this time...' : 'Не повезло...';
+    title.style.color = '#f87171';
+    amount.textContent = profit + ' RGT';
+    amount.style.background = 'linear-gradient(135deg,#f87171,#ef4444)';
+    amount.style.backgroundClip = 'text';
+    amount.style.webkitBackgroundClip = 'text';
+    amount.style.webkitTextFillColor = 'transparent';
+    label.textContent = isEn ? `Won ${reward} RGT / Spent ${spent} RGT` : `Выиграли ${reward} RGT / Потратили ${spent} RGT`;
+  }
+
+  overlay.classList.add('show');
+  if (profit > 20) launchConfetti();
+}
+
+window.closeResult = function() {
+  document.getElementById('resultOverlay').classList.remove('show');
+  if (!spinning) document.getElementById('spinBtn').disabled = false;
+};
+
+// ═══════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+function sendSpinNotification(reward, spent, profit) {
+  if (!db || !currentUser) return;
+  const isEn = (window.currentLang === 'en');
+  let msg = '';
+  if (profit > 0) {
+    msg = isEn ? `🎉 You won ${reward} RGT on the wheel!` : `🎉 Вы выиграли ${reward} RGT на колесе!`;
+  } else if (profit === 0) {
+    msg = isEn ? `🤝 Wheel: even! Got back ${reward} RGT.` : `🤝 Колесо: в ноль! Вернули ${reward} RGT.`;
+  } else {
+    msg = isEn ? `😓 Wheel: won ${reward} RGT / spent ${spent} RGT.` : `😓 Колесо: выиграли ${reward} RGT / потратили ${spent} RGT.`;
+  }
+  try {
+    addDoc(collection(db, 'notifications'), {
+      uid:    currentUser.uid,
+      type:   'wheel_spin',
+      msg,
+      read:   false,
+      ts:     serverTimestamp()
+    });
+  } catch(e) {}
+}
+
+function sendJackpotWinnerNotification(uid, amount) {
+  if (!db) return;
+  const msg = `🏆 Congratulations! You won the monthly jackpot: ${amount} RGT!`;
+  try {
+    addDoc(collection(db, 'notifications'), {
+      uid, type: 'jackpot_win', msg, read: false, ts: serverTimestamp()
+    });
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════
+// JACKPOT
+// ═══════════════════════════════════════════════════════════
+async function loadJackpot() {
+  if (!db) return;
+  const now   = new Date();
+  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  // Days remaining
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const diff    = lastDay - now;
+  const days    = Math.floor(diff / 86400000);
+  const hours   = Math.floor((diff % 86400000) / 3600000);
+  const isEn    = (window.currentLang === 'en');
+
+  document.getElementById('jackpotTimer').textContent =
+    isEn ? `${days}d ${hours}h until draw` : `До розыгрыша: ${days} дн. ${hours} ч.`;
+
+  try {
+    const snap = await getDoc(doc(db, COL_JACKPOT, month));
+    const total = snap.exists() ? (snap.data().total || 0) : 0;
+    document.getElementById('jackpotAmt').textContent = total + ' RGT';
+
+    // Jackpot chance for current user
+    if (currentUser && snap.exists()) {
+      const players = snap.data().players || {};
+      const myLoss  = players[currentUser.uid] || 0;
+      const chance  = total > 0 ? ((myLoss / total) * 100).toFixed(1) : 0;
+      document.getElementById('stJackpotChance').textContent = chance + '%';
+    }
+
+    // Admin button
+    const adminBtn = document.getElementById('jackpotAdminBtn');
+    if (adminBtn) adminBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  } catch(e) {
+    console.warn('loadJackpot error:', e);
+  }
+}
+
+// ─── Admin: spin jackpot ───
+window.openJackpotSpin = async function() {
+  if (!isAdmin) return;
+  const now   = new Date();
+  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  try {
+    const snap = await getDoc(doc(db, COL_JACKPOT, month));
+    if (!snap.exists()) { alert('No jackpot data for this month'); return; }
+    const data = snap.data();
+    if (data.drawn) { alert('Jackpot already drawn this month'); return; }
+
+    const total   = data.total || 0;
+    const players = data.players || {};
+
+    if (total === 0 || Object.keys(players).length === 0) {
+      alert('Jackpot pool is empty'); return;
+    }
+
+    // Weighted random draw
+    const entries = Object.entries(players);
+    let rand = Math.random() * total;
+    let winnerUid = entries[entries.length - 1][0];
+    for (const [uid, loss] of entries) {
+      rand -= loss;
+      if (rand <= 0) { winnerUid = uid; break; }
+    }
+
+    // Animate wheel spin for visual proof
+    spinning = true;
+    document.getElementById('spinBtn').disabled = true;
+    const extraRot = Math.PI * 2 * (8 + Math.floor(Math.random() * 4));
+    const startA   = wheelAngle;
+    const startT   = performance.now();
+
+    function animateJP(now2) {
+      const t = Math.min((now2 - startT) / 6000, 1);
+      const e = 1 - Math.pow(1 - t, 4);
+      wheelAngle = startA + extraRot * e;
+      drawWheel();
+      if (t < 1) requestAnimationFrame(animateJP);
+      else {
+        spinning = false;
+        document.getElementById('spinBtn').disabled = false;
+        finalizeJackpot(winnerUid, total, month, data);
+      }
+    }
+    requestAnimationFrame(animateJP);
+
+  } catch(e) {
+    console.error('Jackpot spin error:', e);
+    alert('Error: ' + e.message);
+  }
+};
+
+async function finalizeJackpot(winnerUid, amount, month, jpData) {
+  // Get winner info
+  let winnerName = '—';
+  let winnerAvatar = '';
+  try {
+    const uSnap = await getDoc(doc(db, COL_USERS, winnerUid));
+    if (uSnap.exists()) {
+      const d = uSnap.data();
+      winnerName   = d.displayName || d.email || winnerUid;
+      winnerAvatar = d.photoURL || d.avatarUrl || '';
+    }
+    // Award RGT to winner
+    await updateDoc(doc(db, COL_USERS, winnerUid), { rgt: increment(amount) });
+  } catch(e) {}
+
+  // Mark jackpot as drawn
+  try {
+    await updateDoc(doc(db, COL_JACKPOT, month), {
+      drawn:  true,
+      winner: winnerUid,
+      winnerName,
+      drawnAt: serverTimestamp()
+    });
+  } catch(e) {}
+
+  // Reset monthly losses for all players in batch
+  try {
+    const playerUids = Object.keys(jpData.players || {});
+    const chunkSize = 450;
+    for (let i = 0; i < playerUids.length; i += chunkSize) {
+      const chunk = playerUids.slice(i, i + chunkSize);
+      const batchWrite = writeBatch(db);
+      for (const uid of chunk) {
+        batchWrite.update(doc(db, COL_USERS, uid), { 'wof.monthlyLoss': 0 });
+      }
+      await batchWrite.commit();
+    }
+  } catch(e) {}
+
+  sendJackpotWinnerNotification(winnerUid, amount);
+
+  // Show winner screen
+  document.getElementById('jwName').textContent   = winnerName;
+  document.getElementById('jwAmount').textContent = amount + ' RGT';
+  if (winnerAvatar) {
+    document.getElementById('jwAvatar').src = winnerAvatar;
+    document.getElementById('jwAvatar').style.display = 'block';
+  } else {
+    document.getElementById('jwAvatar').style.display = 'none';
+  }
+  document.getElementById('jackpotWinnerOverlay').classList.add('show');
+  launchConfetti(80);
+}
+
+window.closeJackpotWinner = function() {
+  document.getElementById('jackpotWinnerOverlay').classList.remove('show');
+};
+
+// ═══════════════════════════════════════════════════════════
+// LEADERBOARD
+// ═══════════════════════════════════════════════════════════
+async function loadLeaderboard() {
+  const tbody = document.getElementById('lbBody');
+  if (!tbody) return;
+  if (!db) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:28px;color:var(--text-secondary);">Firebase not available</td></tr>';
+    return;
+  }
+  try {
+    const q   = query(collection(db, COL_USERS), orderBy('wof.totalWon', 'desc'), limit(10));
+    const snp = await getDocs(q);
+    tbody.innerHTML = '';
+    let rank = 1;
+    snp.forEach(d => {
+      const u  = d.data();
+      const w  = u.wof || {};
+      const nm = u.displayName || u.email || ('Player ' + rank);
+      const mw = w.maxSingleWin || w.totalWon || 0;
+      const tw = w.totalWon || 0;
+      const r  = document.createElement('tr');
+      r.innerHTML = `
+        <td><span class="rank-pill rank-${rank < 4 ? rank : ''}">${rank}</span></td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${nm}</td>
+        <td style="text-align:right;color:#fbbf24;font-weight:700;">${mw} RGT</td>
+        <td style="text-align:right;color:#a78bfa;font-weight:600;">${tw} RGT</td>`;
+      tbody.appendChild(r);
+      rank++;
+    });
+    if (snp.empty) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-secondary);"><i class="fas fa-trophy" style="font-size:32px;opacity:.3;display:block;margin-bottom:10px;"></i>No data yet</td></tr>';
+    }
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:28px;color:#f87171;">Error loading</td></tr>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function updateSpinsUI() {
+  const today    = new Date().toDateString();
+  const wof      = userData.wof || {};
+  const usedToday = wof.lastSpinDate === today ? (wof.freeUsed || 0) : 0;
+  const freeLeft  = Math.max(0, DAILY_FREE - usedToday);
+  const isEn      = (window.currentLang === 'en');
+
+  document.getElementById('freeLeft').textContent = freeLeft;
+  document.getElementById('freeTot').textContent  = DAILY_FREE;
+
+  // Dots
+  const dots = document.getElementById('spinDots');
+  if (dots) {
+    dots.innerHTML = '';
+    for (let i = 0; i < DAILY_FREE; i++) {
+      const d = document.createElement('div');
+      d.className = 'spin-dot' + (i < freeLeft ? ' on' : '');
+      dots.appendChild(d);
+    }
+  }
+
+  const btn   = document.getElementById('spinBtn');
+  const lbl   = document.getElementById('spinBtnLabel');
+  if (!btn || !lbl) return;
+
+  if (!currentUser) {
+    lbl.textContent = isEn ? 'LOG IN TO PLAY' : 'ВОЙДИТЕ В АККАУНТ';
+    btn.disabled = true;
+    return;
+  }
+  btn.disabled = spinning;
+  if (freeLeft > 0) {
+    lbl.textContent = isEn ? `SPIN FREE (${freeLeft} left)` : `КРУТИТЬ БЕСПЛАТНО (${freeLeft})`;
+  } else {
+    lbl.textContent = isEn ? `SPIN (${PAID_COST} RGT)` : `КРУТИТЬ (${PAID_COST} RGT)`;
+  }
 }
 
 function updateStatsUI() {
-  try {
-    document.getElementById('totalSpins').textContent = userData.totalSpins || 0;
-    document.getElementById('totalWon').textContent = (userData.totalWon || 0) + ' RGT';
-    document.getElementById('totalLost').textContent = (userData.totalLost || 0) + ' RGT';
-  } catch(e) {
-    console.warn('Error updating stats UI:', e);
+  const wof = userData.wof || {};
+  document.getElementById('stTotalSpins').textContent = wof.totalSpins || 0;
+  document.getElementById('stTotalWon').textContent   = (wof.totalWon  || 0) + ' RGT';
+  document.getElementById('stTotalLost').textContent  = (wof.totalLost || 0) + ' RGT';
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!list) return;
+  if (localHistory.length === 0) {
+    const isEn = (window.currentLang === 'en');
+    list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-secondary);"><i class="fas fa-history" style="font-size:36px;opacity:.3;display:block;margin-bottom:12px;"></i>${isEn ? 'No spins yet' : 'История пуста'}</div>`;
+    return;
+  }
+  list.innerHTML = localHistory.slice(0, 20).map(h => {
+    const profit = h.reward - h.spentRGT;
+    const color  = profit >= 0 ? '#34d399' : '#f87171';
+    const sign   = profit >= 0 ? '+' : '';
+    const time   = h.ts.toLocaleTimeString();
+    return `<div class="history-item">
+      <div style="font-size:13px;color:white;font-weight:600;">${h.reward} RGT</div>
+      <div style="font-size:12px;color:var(--text-secondary);">${h.isFree ? '🆓' : `${h.spentRGT} RGT`} · ${time}</div>
+      <div style="font-size:13px;font-weight:700;color:${color};">${sign}${profit} RGT</div>
+    </div>`;
+  }).join('');
+}
+
+// Tabs
+window.switchTab = function(name, btn) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('tab-' + name);
+  if (el) el.style.display = '';
+  if (btn) btn.classList.add('active');
+};
+
+// Confetti
+function launchConfetti(count = 40) {
+  const colors = ['#8b5cf6','#ec4899','#fbbf24','#34d399','#22d3ee','#f87171'];
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.cssText = `
+      left:${Math.random() * 100}vw;
+      background:${colors[Math.floor(Math.random() * colors.length)]};
+      width:${6 + Math.random() * 8}px;
+      height:${6 + Math.random() * 8}px;
+      border-radius:${Math.random() > .5 ? '50%' : '2px'};
+      animation-delay:${Math.random() * .8}s;
+      animation-duration:${2.5 + Math.random() * 1.5}s;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 4500);
   }
 }
 
-async function loadLeaderboard() {
-  try {
-    if (!window.db || !window.collection || !window.getDocs || !window.query || !window.orderBy || !window.limit) {
-      console.warn('Firebase functions not available');
-      return;
-    }
-    
-    const usersRef = window.collection(window.db, 'users');
-    const q = window.query(usersRef, window.orderBy('wheel.totalWon', 'desc'), window.limit(10));
-    const snapshot = await window.getDocs(q);
-    
-    const tbody = document.getElementById('leaderboardBody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-    
-    let rank = 1;
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const wheelData = data.wheel || {};
-      const displayName = data.displayName || ('Игрок ' + rank);
-      const totalWon = wheelData.totalWon || 0;
-      
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td><span class="rank-badge rank-${rank < 4 ? rank : ''}">${rank}</span></td>
-        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${displayName}</td>
-        <td style="text-align:right;color:#8b5cf6;font-weight:600;">${totalWon} RGT</td>
-      `;
-      tbody.appendChild(row);
-      rank++;
-    });
-    
-    if (snapshot.empty) {
-      tbody.innerHTML = '<tr><td colspan="3" class="empty-state" style="padding:30px;"><i class="fas fa-trophy"></i><p>Лидерборд пуст</p></td></tr>';
-    }
-  } catch(e) {
-    console.warn('Error loading leaderboard:', e);
-    const tbody = document.getElementById('leaderboardBody');
-    if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="3" class="empty-state" style="padding:30px;"><i class="fas fa-exclamation-triangle"></i><p>Ошибка загрузки</p></td></tr>';
-    }
-  }
-}
-
-function showTab(tabName) {
-  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  
-  document.getElementById(tabName + '-tab').style.display = 'block';
-  event.target.classList.add('active');
-}
-
-// Auth listener
-if (window.onAuthStateChanged && window.getAuth) {
-  try {
-    const auth = window.getAuth();
-    window.onAuthStateChanged(auth, async (user) => {
-      currentUser = user;
-      window.currentUser = user;
-      
-      if (user && window.db && window.getDoc && window.doc) {
-        try {
-          const userDocRef = window.doc(window.db, 'users', user.uid);
-          const userSnap = await window.getDoc(userDocRef);
-          
-          if (userSnap.exists()) {
-            const allData = userSnap.data();
-            userData = allData.wheel ? allData : {};
-          }
-          
-          updateSpinsUI();
-          updateStatsUI();
-          await loadLeaderboard();
-        } catch(e) {
-          console.warn('Error loading user data:', e);
-        }
-      } else {
-        userData = {};
-        updateSpinsUI();
-      }
-    });
-  } catch(e) {
-    console.warn('Firebase auth not ready yet:', e);
-  }
-} else {
-  console.warn('Firebase not available, initializing without auth');
-}
-
-// Responsive layout
-function adjustLayout() {
-  const mainLayout = document.getElementById('mainLayout');
-  if (!mainLayout) return;
-  
-  if (window.innerWidth < 1024) {
-    mainLayout.style.gridTemplateColumns = '1fr';
+// Toast fallback
+function showToastLocal(key, fallback) {
+  if (typeof window.showToast === 'function') {
+    window.showToast(typeof window.t === 'function' ? window.t(key) || fallback : fallback);
   } else {
-    mainLayout.style.gridTemplateColumns = '1fr 1fr';
+    console.log(fallback);
   }
 }
 
-window.addEventListener('resize', adjustLayout);
+// ═══════════════════════════════════════════════════════════
+// AUTH STATE
+// ═══════════════════════════════════════════════════════════
+if (auth) {
+  onAuthStateChanged(auth, async user => {
+    currentUser = user;
+    window.currentUser = user;
+    isAdmin = !!(user && user.uid === WOF_ADMIN_UID);
 
-// Initialize on load
-function initPage() {
-  console.log('Initializing wheel page...');
-  try {
-    adjustLayout();
-    initWheel();
+    if (user && db) {
+      try {
+        const uSnap = await getDoc(doc(db, COL_USERS, user.uid));
+        userData = uSnap.exists() ? uSnap.data() : {};
+      } catch(e) {
+        userData = {};
+      }
+    } else {
+      userData = {};
+    }
+
     updateSpinsUI();
     updateStatsUI();
-  } catch(e) {
-    console.error('Error during page init:', e);
-  }
-}
+    await loadJackpot();
+    await loadLeaderboard();
 
-// Multiple initialization attempts for safety
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(initPage, 100);
+    // Admin jackpot button
+    const ab = document.getElementById('jackpotAdminBtn');
+    if (ab) ab.style.display = isAdmin ? 'inline-block' : 'none';
   });
 } else {
-  setTimeout(initPage, 100);
+  updateSpinsUI();
 }
 
-// Also try after a delay for safety
-setTimeout(initPage, 500);
+// Expose logout for header.js
+window.logout = async function() {
+  if (auth && typeof signOut === 'function') await signOut(auth);
+};
+
+// Also wire up header login modal trigger
+window.openLoginModal = window.openLoginModal || function() {};
+
 </script>
 </body>
 </html>
