@@ -9,9 +9,98 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
   <script src="config/firebase-config.js"></script>
+<script src="auth.js"></script>
+<script src="modal.js"></script>
 <script src="languages.js"></script>
 <script src="header.js"></script>
   <style>
+    /* Добавьте в <style> секцию */
+
+/* Modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 500px;
+  width: 100%;
+  animation: modalIn 0.3s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Chat styles для модалей обратной связи */
+.chat-bubble {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chat-bubble.user {
+  flex-direction: row-reverse;
+}
+
+.chat-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: rgba(139, 92, 246, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8b5cf6;
+  font-size: 14px;
+}
+
+.chat-bubble-wrapper {
+  max-width: 70%;
+}
+
+.chat-sender {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+  display: block;
+}
+
+.chat-content {
+  background: rgba(139, 92, 246, 0.1);
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.chat-bubble.user .chat-content {
+  background: rgba(34, 211, 238, 0.1);
+}
+
+.chat-time {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  display: block;
+}
     .wheel-canvas {
   width: 100% !important; 
   height: 100% !important;
@@ -456,7 +545,149 @@ async function waitForFirebase() {
     return false;
   }
 }
+window.openLoginModal = function() {
+  if (!window.__authExports || !window.auth) {
+    alert('Система авторизации загружается...');
+    setTimeout(() => {
+      if (window.openLoginModal) window.openLoginModal();
+    }, 1000);
+    return;
+  }
+  
+  signInWithGoogle();
+};
 
+// Вход через Google
+async function signInWithGoogle() {
+  try {
+    if (!window.__authExports) {
+      throw new Error('Firebase Auth не загружен');
+    }
+    
+    const { GoogleAuthProvider, signInWithPopup } = window.__authExports;
+    const provider = new GoogleAuthProvider();
+    provider.addScope('profile');
+    provider.addScope('email');
+    
+    console.log('🔐 Начинаем вход через Google...');
+    const result = await signInWithPopup(window.auth, provider);
+    const user = result.user;
+    
+    console.log('✅ Успешный вход:', user.displayName);
+    
+    // Сохраняем данные пользователя в Firestore
+    if (window.db && window.__firestoreExports) {
+      await saveUserToFirestore(user);
+    }
+    
+    // Показываем успех
+    if (typeof showToast === 'function') {
+      showToast(`Добро пожаловать, ${user.displayName}!`);
+    } else {
+      alert(`Добро пожаловать, ${user.displayName}!`);
+    }
+    
+  } catch (error) {
+    console.error('❌ Ошибка входа:', error);
+    
+    let errorMsg = 'Ошибка входа';
+    if (error.code === 'auth/popup-closed-by-user') {
+      errorMsg = 'Вход отменен пользователем';
+    } else if (error.code === 'auth/popup-blocked') {
+      errorMsg = 'Всплывающее окно заблокировано браузером';
+    } else if (error.message) {
+      errorMsg = error.message;
+    }
+    
+    if (typeof showToast === 'function') {
+      showToast(errorMsg);
+    } else {
+      alert(errorMsg);
+    }
+  }
+}
+
+// Сохранение пользователя в Firestore
+async function saveUserToFirestore(user) {
+  try {
+    const { doc, setDoc, serverTimestamp } = window.__firestoreExports;
+    
+    const userData = {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      lastLogin: serverTimestamp(),
+      rgt: 100, // Стартовый баланс для новых пользователей
+      wheel: {
+        totalSpins: 0,
+        totalWon: 0,
+        totalLost: 0,
+        monthlyLoss: 0,
+        freeSpinsUsed: 0,
+        lastSpinDate: ''
+      }
+    };
+    
+    await setDoc(doc(window.db, 'users', user.uid), userData, { merge: true });
+    console.log('✅ Пользователь сохранен в Firestore');
+  } catch (error) {
+    console.warn('⚠️ Ошибка сохранения пользователя:', error);
+  }
+}
+
+// Функция выхода
+window.logout = async function() {
+  if (!window.__authExports || !window.auth) return;
+  
+  try {
+    const { signOut } = window.__authExports;
+    await signOut(window.auth);
+    
+    if (typeof showToast === 'function') {
+      showToast('Вы вышли из системы');
+    }
+    
+    // Обновляем интерфейс
+    window.currentUser = null;
+    if (typeof updateSpinsUI === 'function') updateSpinsUI();
+    
+  } catch (error) {
+    console.error('❌ Ошибка выхода:', error);
+  }
+};
+
+// Простая функция toast если нет основной
+if (typeof window.showToast === 'undefined') {
+  window.showToast = function(message) {
+    // Создаем простой toast
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(59, 130, 246, 0.9);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 10000;
+      max-width: 300px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 3000);
+  };
+}
+
+console.log('✅ Minimal auth system loaded for wheel-of-fortune');
 function drawWheel() {
   if (!wheelCtx || !wheelCanvas) return;
   
