@@ -8,10 +8,25 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
-  <script src="languages.js"></script>
-  <script src="header.js"></script>
   <script src="config/firebase-config.js"></script>
+<script src="languages.js"></script>
+<script src="header.js"></script>
   <style>
+    .wheel-canvas {
+  width: 100% !important; 
+  height: 100% !important;
+  filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.4));
+  display: block; /* Важно для canvas */
+}
+
+.wheel-container {
+  position: relative; 
+  width: 100%; 
+  max-width: 480px; 
+  margin: 0 auto;
+  aspect-ratio: 1;
+  min-height: 300px; /* Минимальная высота */
+}
     :root {
       --bg-primary: #0b0f19;
       --bg-secondary: #151b2b;
@@ -196,7 +211,28 @@
   </style>
 </head>
 <body class="antialiased">
-
+<script>
+// Защита от content.bundle.js и других расширений
+(function() {
+  'use strict';
+  
+  // Сохраняем оригинальные функции до их перехвата
+  window._origFetch = window.fetch;
+  window._origXHR = window.XMLHttpRequest;
+  
+  // Блокируем перехват событий расширениями
+  Object.defineProperty(window, 'currentUser', {
+    writable: true,
+    value: null
+  });
+  
+  // Исправляем ошибки content.bundle.js
+  if (typeof window.chrome !== 'undefined') {
+    window.chrome.runtime = window.chrome.runtime || {};
+    window.chrome.runtime.onMessage = window.chrome.runtime.onMessage || {addListener: function(){}};
+  }
+})();
+</script>
 <div id="site-header"></div>
 
 <main>
@@ -364,95 +400,204 @@ let isSpinning = false;
 let spinHistory = [];
 let leaderboardData = [];
 
-const SPIN_DURATION = 4000; // 4 seconds
-const SPIN_ROTATION = 360 * 5; // 5 full rotations
+const WHEEL_REWARDS = [1, 2, 3, 4, 10, 20, 50, 100];
+const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#22d3ee', '#ef4444', '#a78bfa', '#fbbf24'];
+const DAILY_FREE_SPINS = 3;
+const COST_PER_SPIN = 5;
+const SPIN_DURATION = 4000;
+const SPIN_ROTATION = 360 * 5;
 
-// Calculate probability weights for rewards
 const REWARD_WEIGHTS = {
-  100: 0.5,
-  50: 1,
-  20: 2,
-  10: 3,
-  4: 4,
-  3: 5,
-  2: 6,
-  1: 8
+  100: 0.5, 50: 1, 20: 2, 10: 3, 4: 4, 3: 5, 2: 6, 1: 8
 };
-
-function initWheel() {
-  wheelCanvas = document.getElementById('wheelCanvas');
-  if (!wheelCanvas) {
-    console.error('Canvas не найден');
-    return;
+async function waitForFirebase() {
+  let attempts = 0;
+  while (attempts < 50) { // 5 секунд максимум
+    if (window.db && window.__firestoreExports && window.__authExports && window.auth) {
+      console.log('✅ Firebase ready');
+      return true;
+    }
+    await new Promise(resolve => setTimeout(resolve, 100));
+    attempts++;
   }
-  
-  wheelCtx = wheelCanvas.getContext('2d');
-  
-  // Set canvas size
-  const container = wheelCanvas.parentElement;
-  const size = Math.min(container.offsetWidth - 40, 400);
-  wheelCanvas.width = size;
-  wheelCanvas.height = size;
-  
-  console.log('Wheel initialized:', size, 'x', size);
-  drawWheel();
+  console.warn('⚠️ Firebase not ready after 5 seconds');
+  return false;
+}function initWheel() {
+  try {
+    wheelCanvas = document.getElementById('wheelCanvas');
+    if (!wheelCanvas) {
+      console.error('❌ Canvas не найден');
+      return false;
+    }
+    
+    wheelCtx = wheelCanvas.getContext('2d');
+    if (!wheelCtx) {
+      console.error('❌ Canvas context не получен');
+      return false;
+    }
+    
+    // Ждем, пока контейнер получит размеры
+    const container = wheelCanvas.parentElement;
+    if (container.offsetWidth === 0) {
+      console.log('⏳ Ждем размеры контейнера...');
+      setTimeout(initWheel, 100);
+      return false;
+    }
+    
+    const size = Math.min(container.offsetWidth - 40, 400);
+    wheelCanvas.width = size;
+    wheelCanvas.height = size;
+    
+    console.log('✅ Wheel initialized:', size + 'x' + size);
+    drawWheel();
+    return true;
+  } catch (error) {
+    console.error('❌ Error initializing wheel:', error);
+    return false;
+  }
 }
 
 function drawWheel() {
   if (!wheelCtx || !wheelCanvas) return;
   
-  const centerX = wheelCanvas.width / 2;
-  const centerY = wheelCanvas.height / 2;
-  const radius = Math.min(centerX, centerY) - 30;
-  
-  // Clear canvas
-  wheelCtx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
-  
-  const sliceAngle = (Math.PI * 2) / WHEEL_REWARDS.length;
-  
-  WHEEL_REWARDS.forEach((reward, index) => {
-    const startAngle = sliceAngle * index + wheelAngle;
-    const endAngle = startAngle + sliceAngle;
+  try {
+    const centerX = wheelCanvas.width / 2;
+    const centerY = wheelCanvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 30;
     
-    // Draw slice background
+    wheelCtx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
+    
+    const sliceAngle = (Math.PI * 2) / WHEEL_REWARDS.length;
+    
+    WHEEL_REWARDS.forEach((reward, index) => {
+      const startAngle = sliceAngle * index + wheelAngle;
+      const endAngle = startAngle + sliceAngle;
+      
+      // Сегмент
+      wheelCtx.beginPath();
+      wheelCtx.moveTo(centerX, centerY);
+      wheelCtx.arc(centerX, centerY, radius, startAngle, endAngle);
+      wheelCtx.lineTo(centerX, centerY);
+      wheelCtx.fillStyle = COLORS[index];
+      wheelCtx.fill();
+      
+      // Граница
+      wheelCtx.strokeStyle = 'rgba(255,255,255,0.3)';
+      wheelCtx.lineWidth = 3;
+      wheelCtx.stroke();
+      
+      // Текст
+      const textAngle = startAngle + sliceAngle / 2;
+      const textX = centerX + Math.cos(textAngle) * (radius * 0.7);
+      const textY = centerY + Math.sin(textAngle) * (radius * 0.7);
+      
+      wheelCtx.save();
+      wheelCtx.translate(textX, textY);
+      wheelCtx.rotate(textAngle + Math.PI / 2);
+      wheelCtx.fillStyle = 'white';
+      wheelCtx.font = 'bold 16px Arial, sans-serif';
+      wheelCtx.textAlign = 'center';
+      wheelCtx.textBaseline = 'middle';
+      wheelCtx.fillText(reward + ' RGT', 0, 0);
+      wheelCtx.restore();
+    });
+    
+    // Центральный круг
     wheelCtx.beginPath();
-    wheelCtx.moveTo(centerX, centerY);
-    wheelCtx.arc(centerX, centerY, radius, startAngle, endAngle);
-    wheelCtx.lineTo(centerX, centerY);
-    wheelCtx.fillStyle = COLORS[index];
+    wheelCtx.arc(centerX, centerY, 35, 0, Math.PI * 2);
+    wheelCtx.fillStyle = 'rgba(139,92,246,0.4)';
     wheelCtx.fill();
-    
-    // Draw border
-    wheelCtx.strokeStyle = 'rgba(255,255,255,0.3)';
-    wheelCtx.lineWidth = 3;
+    wheelCtx.strokeStyle = '#8b5cf6';
+    wheelCtx.lineWidth = 4;
     wheelCtx.stroke();
-    
-    // Draw text
-    const textAngle = startAngle + sliceAngle / 2;
-    const textX = centerX + Math.cos(textAngle) * (radius * 0.7);
-    const textY = centerY + Math.sin(textAngle) * (radius * 0.7);
-    
-    wheelCtx.save();
-    wheelCtx.translate(textX, textY);
-    wheelCtx.rotate(textAngle + Math.PI / 2);
-    wheelCtx.fillStyle = 'white';
-    wheelCtx.font = 'bold 16px Arial, sans-serif';
-    wheelCtx.textAlign = 'center';
-    wheelCtx.textBaseline = 'middle';
-    wheelCtx.fillText(reward + ' RGT', 0, 0);
-    wheelCtx.restore();
-  });
-  
-  // Draw center circle
-  wheelCtx.beginPath();
-  wheelCtx.arc(centerX, centerY, 35, 0, Math.PI * 2);
-  wheelCtx.fillStyle = 'rgba(139,92,246,0.4)';
-  wheelCtx.fill();
-  wheelCtx.strokeStyle = '#8b5cf6';
-  wheelCtx.lineWidth = 4;
-  wheelCtx.stroke();
+  } catch (error) {
+    console.error('❌ Error drawing wheel:', error);
+  }
+}
+  function setupAuthListener() {
+  try {
+    if (window.__authExports && window.__authExports.onAuthStateChanged && window.auth) {
+      window.__authExports.onAuthStateChanged(window.auth, async (user) => {
+        console.log('👤 Auth state changed:', user ? 'logged in' : 'logged out');
+        currentUser = user;
+        window.currentUser = user;
+        
+        if (user && window.db && window.__firestoreExports) {
+          try {
+            const { doc, getDoc } = window.__firestoreExports;
+            const userDocRef = doc(window.db, 'users', user.uid);
+            const userSnap = await getDoc(userDocRef);
+            
+            if (userSnap.exists()) {
+              const allData = userSnap.data();
+              userData = allData.wheel || {};
+            } else {
+              userData = {};
+            }
+          } catch (e) {
+            console.warn('⚠️ Error loading user data:', e);
+            userData = {};
+          }
+        } else {
+          userData = {};
+        }
+        
+        updateSpinsUI();
+        updateStatsUI();
+        if (user) await loadLeaderboard();
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error setting up auth listener:', error);
+  }
 }
 
+// Инициализация при готовности DOM
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initializePage, 100);
+  });
+} else {
+  setTimeout(initializePage, 100);
+}
+
+// Дополнительная инициализация через 1 секунду для надежности  
+setTimeout(initializePage, 1000);
+async function initializePage() {
+  console.log('🚀 Initializing Wheel of Fortune page...');
+  
+  try {
+    // Ждем Firebase
+    const firebaseReady = await waitForFirebase();
+    
+    // Инициализируем колесо
+    let wheelReady = false;
+    for (let i = 0; i < 10; i++) {
+      wheelReady = initWheel();
+      if (wheelReady) break;
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+    
+    if (!wheelReady) {
+      console.error('❌ Failed to initialize wheel after multiple attempts');
+    }
+    
+    // Настраиваем layout
+    adjustLayout();
+    updateSpinsUI();
+    updateStatsUI();
+    
+    if (firebaseReady) {
+      // Настраиваем auth listener
+      setupAuthListener();
+      await loadLeaderboard();
+    }
+    
+    console.log('✅ Page initialization complete');
+  } catch (error) {
+    console.error('❌ Error during page initialization:', error);
+  }
+}
 function updateSpinsUI() {
   if (!currentUser) {
     const btn = document.getElementById('spinBtn');
