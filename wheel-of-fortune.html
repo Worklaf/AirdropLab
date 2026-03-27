@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wheel of Fortune — RGT Edition</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="languages.js"></script>
+  <script src="header.js"></script>
+  <script src="config/firebase-config.js"></script>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js';
+    import { getFirestore, collection, query, where, getDocs, getDoc, setDoc, updateDoc, doc, addDoc, serverTimestamp, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js';
+    
+    window.firebaseReady = true;
+    window.getAuth = getAuth;
+    window.onAuthStateChanged = onAuthStateChanged;
+    window.signOut = signOut;
+    window.getFirestore = getFirestore;
+    window.db = getFirestore(window.firebaseApp);
+    window.collection = collection;
+    window.query = query;
+    window.where = where;
+    window.getDocs = getDocs;
+    window.getDoc = getDoc;
+    window.setDoc = setDoc;
+    window.updateDoc = updateDoc;
+    window.doc = doc;
+    window.addDoc = addDoc;
+    window.serverTimestamp = serverTimestamp;
+    window.orderBy = orderBy;
+    window.limit = limit;
+  </script>
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-secondary: #151b2b;
+      --bg-card: #1e2538;
+      --accent: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --rgt-color: #8b5cf6;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; background: var(--bg-primary);
+      color: var(--text-primary); font-family: 'Inter', -apple-system, sans-serif;
+      overflow-x: hidden;
+    }
+
+    main { max-width: 1400px; margin: 0 auto; padding: 28px 16px 60px; }
+
+    /* Wheel styles */
+    .wheel-container {
+      position: relative; width: 100%; max-width: 480px; margin: 0 auto;
+      aspect-ratio: 1;
+    }
+
+    .wheel-canvas {
+      width: 100%; height: 100%;
+      filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.4));
+    }
+
+    .wheel-pointer {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 12px solid transparent; border-right: 12px solid transparent;
+      border-top: 20px solid #8b5cf6; z-index: 10;
+      filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.8));
+    }
+
+    .wheel-spin-btn {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      padding: 12px 32px; background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      border: 2px solid rgba(139, 92, 246, 0.5); border-radius: 12px;
+      color: white; font-weight: 700; font-size: 14px; cursor: pointer;
+      transition: all 0.3s; z-index: 20; white-space: nowrap;
+    }
+    .wheel-spin-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      border-color: rgba(139, 92, 246, 0.8);
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+    }
+    .wheel-spin-btn:disabled {
+      opacity: 0.5; cursor: not-allowed;
+    }
+
+    /* Info cards */
+    .info-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px; margin: 20px 0;
+    }
+
+    .info-card {
+      background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.25);
+      border-radius: 12px; padding: 16px; text-align: center;
+    }
+    .info-card-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; }
+    .info-card-value { font-size: 20px; font-weight: 700; color: #8b5cf6; }
+
+    /* Spins remaining */
+    .spins-indicator {
+      display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+      margin: 16px 0;
+    }
+    .spin-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: rgba(139, 92, 246, 0.3); border: 1px solid rgba(139, 92, 246, 0.5);
+      transition: all 0.3s;
+    }
+    .spin-dot.active { background: #8b5cf6; box-shadow: 0 0 10px rgba(139, 92, 246, 0.8); }
+
+    /* Result notification */
+    .result-modal {
+      display: none; position: fixed; inset: 0; z-index: 5000;
+      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .result-modal.show { display: flex; }
+    .result-box {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+      border: 2px solid rgba(139, 92, 246, 0.5); border-radius: 20px;
+      padding: 40px 30px; text-align: center; max-width: 400px;
+      animation: resultPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes resultPop {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .result-amount {
+      font-size: 48px; font-weight: 900; background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin: 20px 0;
+    }
+    .result-label { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; }
+
+    /* Tabs */
+    .tab-buttons {
+      display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 8px;
+    }
+    .tab-btn {
+      padding: 8px 16px; background: rgba(139, 92, 246, 0.08);
+      border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px;
+      color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
+      font-size: 12px; font-weight: 600; white-space: nowrap;
+    }
+    .tab-btn:hover { color: #8b5cf6; border-color: rgba(139, 92, 246, 0.5); }
+    .tab-btn.active {
+      background: rgba(139, 92, 246, 0.2); color: #8b5cf6;
+      border-color: rgba(139, 92, 246, 0.5);
+    }
+
+    /* Leaderboard */
+    .leaderboard-table {
+      width: 100%; border-collapse: collapse;
+      background: rgba(139, 92, 246, 0.05); border-radius: 12px; overflow: hidden;
+    }
+    .leaderboard-table th {
+      background: rgba(139, 92, 246, 0.15); padding: 12px; text-align: left;
+      font-size: 12px; color: #8b5cf6; font-weight: 700; border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    }
+    .leaderboard-table td {
+      padding: 12px; border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+      font-size: 12px;
+    }
+    .leaderboard-table tr:hover { background: rgba(139, 92, 246, 0.08); }
+    .rank-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%; font-weight: 700; font-size: 11px;
+      background: rgba(139, 92, 246, 0.2); color: #8b5cf6;
+    }
+    .rank-1 { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+    .rank-2 { background: rgba(156, 163, 175, 0.2); color: #d1d5db; }
+    .rank-3 { background: rgba(214, 88, 58, 0.2); color: #ea580c; }
+
+    /* Jackpot banner */
+    .jackpot-banner {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(139, 92, 246, 0.2));
+      border: 2px solid rgba(236, 72, 153, 0.5); border-radius: 16px; padding: 24px;
+      text-align: center; margin-bottom: 24px;
+    }
+    .jackpot-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; }
+    .jackpot-amount {
+      font-size: 36px; font-weight: 900; background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .jackpot-timer { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 40px; color: var(--text-secondary);
+    }
+    .empty-state i { font-size: 48px; opacity: 0.3; margin-bottom: 16px; display: block; }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .wheel-container { max-width: 300px; }
+      .result-box { padding: 30px 20px; }
+      .result-amount { font-size: 36px; }
+      .info-row { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Animations */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .wheel-spinning {
+      animation: spin 4s linear infinite;
+    }
+  </style>
+</head>
+<body class="antialiased">
+
+<div id="site-header"></div>
+
+<main>
+  <!-- Page Title -->
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px;">
+    <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(236,72,153,0.2));border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;justify-content:center;">
+      <i class="fas fa-dharmachakra" style="color:#8b5cf6;font-size:20px;"></i>
+    </div>
+    <div>
+      <h1 style="font-size:28px;font-weight:800;color:white;line-height:1.2;margin:0;">Wheel of Fortune <span style="color:#8b5cf6;">RGT Edition</span></h1>
+      <p style="font-size:13px;color:var(--text-secondary);margin:6px 0 0;">Крутите колесо и выигрывайте RGT награды</p>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:32px;" id="mainLayout">
+    <!-- LEFT: WHEEL -->
+    <div>
+      <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:16px;padding:24px;">
+        <div class="wheel-container">
+          <div class="wheel-pointer"></div>
+          <canvas id="wheelCanvas" class="wheel-canvas"></canvas>
+          <button id="spinBtn" class="wheel-spin-btn" onclick="spinWheel()">КРУТИТЬ</button>
+        </div>
+        <div class="spins-indicator" id="spinsIndicator"></div>
+        <div class="info-row" style="margin-top:24px;">
+          <div class="info-card">
+            <div class="info-card-label">Осталось сегодня</div>
+            <div class="info-card-value"><span id="freeSpinsCount">3</span>/<span id="totalSpinsCount">3</span></div>
+          </div>
+          <div class="info-card">
+            <div class="info-card-label">Следующая за</div>
+            <div class="info-card-value" id="nextSpinCost">5 RGT</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: INFO & STATS -->
+    <div>
+      <!-- Правила -->
+      <div style="background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.2);border-radius:16px;padding:20px;margin-bottom:20px;">
+        <h3 style="font-size:14px;font-weight:700;color:white;margin-top:0;">📋 Правила</h3>
+        <ul style="font-size:12px;color:var(--text-secondary);line-height:1.8;margin:0;padding-left:20px;">
+          <li>3 бесплатные прокрутки в день</li>
+          <li>Дополнительные прокрутки — 5 RGT каждая</li>
+          <li>Награды: 1, 2, 3, 4, 10, 20, 50, 100 RGT</li>
+          <li>Вероятность выигрыша зависит от размера награды</li>
+          <li>Возможен выигрыш меньше, чем ставка</li>
+        </ul>
+      </div>
+
+      <!-- Статистика за месяц -->
+      <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:16px;padding:20px;">
+        <h3 style="font-size:14px;font-weight:700;color:white;margin-top:0;">📊 Ваша статистика</h3>
+        <div class="info-row" style="gap:12px;">
+          <div style="background:rgba(139,92,246,0.1);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Всего крутил</div>
+            <div style="font-size:18px;font-weight:700;color:#8b5cf6;" id="totalSpins">0</div>
+          </div>
+          <div style="background:rgba(139,92,246,0.1);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Выиграно</div>
+            <div style="font-size:18px;font-weight:700;color:#34d399;" id="totalWon">0 RGT</div>
+          </div>
+          <div style="background:rgba(139,92,246,0.1);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Потеряно</div>
+            <div style="font-size:18px;font-weight:700;color:#f87171;" id="totalLost">0 RGT</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jackpot Banner -->
+  <div class="jackpot-banner" id="jackpotBanner">
+    <div class="jackpot-label">🎁 Месячный Jackpot</div>
+    <div class="jackpot-amount" id="jackpotAmount">0 RGT</div>
+    <div class="jackpot-timer" id="jackpotTimer">До конца месяца: 15 дней 6 часов</div>
+  </div>
+
+  <!-- Tabs for Leaderboard & History -->
+  <div class="tab-buttons">
+    <button class="tab-btn active" onclick="showTab('leaderboard')">🏆 Топ выигрыши</button>
+    <button class="tab-btn" onclick="showTab('history')">📜 История</button>
+    <button class="tab-btn" onclick="showTab('jackpot-info')">💎 Информация Jackpot</button>
+  </div>
+
+  <!-- Leaderboard Tab -->
+  <div id="leaderboard-tab" class="tab-content">
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th style="width:50px;">Место</th>
+          <th>Игрок</th>
+          <th style="text-align:right;">Макс выигрыш</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboardBody">
+        <tr>
+          <td colspan="3" class="empty-state" style="padding:30px;">
+            <i class="fas fa-chart-bar"></i>
+            <p>Загрузка данных...</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- History Tab -->
+  <div id="history-tab" class="tab-content" style="display:none;">
+    <div style="display:flex;flex-direction:column;gap:12px;" id="historyList">
+      <div class="empty-state">
+        <i class="fas fa-history"></i>
+        <p>История пуста</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jackpot Info Tab -->
+  <div id="jackpot-info-tab" class="tab-content" style="display:none;">
+    <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:16px;padding:24px;">
+      <h3 style="font-size:14px;font-weight:700;color:white;margin-top:0;">Как работает Jackpot?</h3>
+      <p style="font-size:12px;color:var(--text-secondary);line-height:1.8;margin:16px 0;">
+        В конце каждого месяца проводится розыгрыш Jackpot из всех RGT, которые игроки потеряли в игре.
+      </p>
+      <div style="background:rgba(139,92,246,0.1);border-left:3px solid #8b5cf6;border-radius:8px;padding:12px;margin:16px 0;font-size:12px;">
+        <strong>Как считается проигрыш:</strong>
+        <p style="margin:8px 0 0;">Если вы сделали прокрутку за 5 RGT и выиграли 3 RGT, то проигрыш = 2 RGT. Если вы выиграли больше, чем поставили, проигрыш = 0.</p>
+      </div>
+      <div style="background:rgba(139,92,246,0.1);border-left:3px solid #8b5cf6;border-radius:8px;padding:12px;margin:16px 0;font-size:12px;">
+        <strong>Как рассчитывается ваш шанс:</strong>
+        <p style="margin:8px 0 0;">Ваш шанс = Ваш проигрыш / Общий проигрыш всех игроков</p>
+        <p style="margin:8px 0 0;opacity:0.8;">Пример: Если вы проиграли 5 RGT, а общий проигрыш 7 RGT, ваш шанс = 5/7 ≈ 71%</p>
+      </div>
+      <div style="background:rgba(34,211,153,0.08);border:1px solid rgba(34,211,153,0.2);border-radius:8px;padding:16px;margin-top:16px;font-size:12px;color:var(--text-secondary);">
+        <strong style="color:#34d399;">💡 Совет:</strong> Чем больше вы потеряете в колесе за месяц, тем выше ваш шанс выиграть месячный Jackpot!
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Result Modal -->
+<div id="resultModal" class="result-modal" onclick="if(event.target===this)closeResult()">
+  <div class="result-box">
+    <div id="resultTitle" style="font-size:18px;font-weight:700;color:white;">Вы выиграли!</div>
+    <div class="result-amount" id="resultAmount">50 RGT</div>
+    <div class="result-label" id="resultLabel">Поздравляем!</div>
+    <button onclick="closeResult()" style="padding:10px 20px;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.4);border-radius:8px;color:#8b5cf6;cursor:pointer;font-weight:700;font-size:12px;">Закрыть</button>
+  </div>
+</div>
+
+<script src="footer.js"></script>
+<script>
+const ADMIN_UID = 'SAkz4mdW9reDaIsvqigCNZhEKJR2';
+const WHEEL_REWARDS = [1, 2, 3, 4, 10, 20, 50, 100];
+const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#22d3ee', '#ef4444', '#a78bfa', '#fbbf24'];
+const DAILY_FREE_SPINS = 3;
+const COST_PER_SPIN = 5; // RGT
+
+let wheelCanvas = null;
+let wheelCtx = null;
+let currentUser = null;
+let userData = {};
+let wheelAngle = 0;
+let isSpinning = false;
+let spinHistory = [];
+let leaderboardData = [];
+
+const SPIN_DURATION = 4000; // 4 seconds
+const SPIN_ROTATION = 360 * 5; // 5 full rotations
+
+// Calculate probability weights for rewards
+const REWARD_WEIGHTS = {
+  100: 0.5,
+  50: 1,
+  20: 2,
+  10: 3,
+  4: 4,
+  3: 5,
+  2: 6,
+  1: 8
+};
+
+function initWheel() {
+  wheelCanvas = document.getElementById('wheelCanvas');
+  wheelCtx = wheelCanvas.getContext('2d');
+  
+  // Set canvas size
+  const size = Math.min(wheelCanvas.parentElement.offsetWidth, 480);
+  wheelCanvas.width = size;
+  wheelCanvas.height = size;
+  
+  drawWheel();
+}
+
+function drawWheel() {
+  const centerX = wheelCanvas.width / 2;
+  const centerY = wheelCanvas.height / 2;
+  const radius = wheelCanvas.width / 2 - 20;
+  
+  const sliceAngle = (Math.PI * 2) / WHEEL_REWARDS.length;
+  
+  WHEEL_REWARDS.forEach((reward, index) => {
+    const startAngle = sliceAngle * index + wheelAngle;
+    const endAngle = startAngle + sliceAngle;
+    
+    // Draw slice
+    wheelCtx.beginPath();
+    wheelCtx.arc(centerX, centerY, radius, startAngle, endAngle);
+    wheelCtx.lineTo(centerX, centerY);
+    wheelCtx.fillStyle = COLORS[index];
+    wheelCtx.fill();
+    
+    // Draw border
+    wheelCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+    wheelCtx.lineWidth = 2;
+    wheelCtx.stroke();
+    
+    // Draw text
+    const textAngle = startAngle + sliceAngle / 2;
+    const textX = centerX + Math.cos(textAngle) * (radius * 0.65);
+    const textY = centerY + Math.sin(textAngle) * (radius * 0.65);
+    
+    wheelCtx.save();
+    wheelCtx.translate(textX, textY);
+    wheelCtx.rotate(textAngle + Math.PI / 2);
+    wheelCtx.fillStyle = 'white';
+    wheelCtx.font = 'bold 14px Arial';
+    wheelCtx.textAlign = 'center';
+    wheelCtx.textBaseline = 'middle';
+    wheelCtx.fillText(reward + ' RGT', 0, 0);
+    wheelCtx.restore();
+  });
+  
+  // Draw center circle
+  wheelCtx.beginPath();
+  wheelCtx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+  wheelCtx.fillStyle = 'rgba(139,92,246,0.3)';
+  wheelCtx.fill();
+  wheelCtx.strokeStyle = '#8b5cf6';
+  wheelCtx.lineWidth = 3;
+  wheelCtx.stroke();
+}
+
+function updateSpinsUI() {
+  if (!currentUser) return;
+  
+  const today = new Date().toDateString();
+  const lastSpinDate = userData.lastSpinDate || '';
+  const freeSpinsUsed = lastSpinDate === today ? (userData.freeSpinsUsed || 0) : 0;
+  const freeSpinsRemaining = Math.max(0, DAILY_FREE_SPINS - freeSpinsUsed);
+  
+  document.getElementById('freeSpinsCount').textContent = freeSpinsRemaining;
+  
+  // Update spin dots
+  const spinsIndicator = document.getElementById('spinsIndicator');
+  spinsIndicator.innerHTML = '';
+  for (let i = 0; i < DAILY_FREE_SPINS; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'spin-dot' + (i < freeSpinsRemaining ? ' active' : '');
+    spinsIndicator.appendChild(dot);
+  }
+  
+  const btn = document.getElementById('spinBtn');
+  if (freeSpinsRemaining > 0) {
+    btn.textContent = 'КРУТИТЬ (БЕСПЛАТНО)';
+    btn.disabled = false;
+  } else {
+    btn.textContent = `КРУТИТЬ (${COST_PER_SPIN} RGT)`;
+    btn.disabled = false;
+  }
+}
+
+function spinWheel() {
+  if (!currentUser) {
+    alert('Пожалуйста, войдите в аккаунт');
+    return;
+  }
+  
+  if (isSpinning) return;
+  
+  // Check free spins
+  const today = new Date().toDateString();
+  const lastSpinDate = userData.lastSpinDate || '';
+  const freeSpinsUsed = lastSpinDate === today ? (userData.freeSpinsUsed || 0) : 0;
+  const freeSpinsRemaining = Math.max(0, DAILY_FREE_SPINS - freeSpinsUsed);
+  
+  if (freeSpinsRemaining > 0) {
+    // Free spin
+    performSpin(true);
+  } else {
+    // Check if user has enough RGT
+    if ((userData.rgt || 0) < COST_PER_SPIN) {
+      alert('Недостаточно RGT для прокрутки. Нужно ' + COST_PER_SPIN + ' RGT');
+      return;
+    }
+    // Paid spin
+    performSpin(false);
+  }
+}
+
+function performSpin(isFree) {
+  isSpinning = true;
+  document.getElementById('spinBtn').disabled = true;
+  
+  // Pick random reward weighted by probability
+  const reward = getWeightedReward();
+  const targetIndex = WHEEL_REWARDS.indexOf(reward);
+  const targetAngle = (Math.PI * 2 / WHEEL_REWARDS.length) * (targetIndex + 0.5);
+  
+  // Animate spin
+  const startTime = Date.now();
+  const startAngle = wheelAngle;
+  const spinAmount = SPIN_ROTATION + targetAngle;
+  
+  function animateSpin() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / SPIN_DURATION, 1);
+    
+    // Easing: ease-out
+    const easeProgress = 1 - Math.pow(1 - progress, 3);
+    
+    wheelAngle = startAngle + spinAmount * easeProgress;
+    drawWheel();
+    
+    if (progress < 1) {
+      requestAnimationFrame(animateSpin);
+    } else {
+      isSpinning = false;
+      handleSpinResult(reward, isFree);
+    }
+  }
+  
+  animateSpin();
+}
+
+function getWeightedReward() {
+  const rewards = Object.keys(REWARD_WEIGHTS).map(Number);
+  const weights = rewards.map(r => REWARD_WEIGHTS[r]);
+  const totalWeight = weights.reduce((a, b) => a + b);
+  
+  let random = Math.random() * totalWeight;
+  for (let i = 0; i < rewards.length; i++) {
+    random -= weights[i];
+    if (random <= 0) return rewards[i];
+  }
+  return rewards[0];
+}
+
+async function handleSpinResult(reward, isFree) {
+  const today = new Date().toDateString();
+  const lastSpinDate = userData.lastSpinDate || '';
+  const freeSpinsUsed = lastSpinDate === today ? (userData.freeSpinsUsed || 0) : 0;
+  
+  // Calculate spent RGT and loss
+  let spentRGT = 0;
+  let loss = 0;
+  
+  if (isFree) {
+    spentRGT = 0;
+  } else {
+    spentRGT = COST_PER_SPIN;
+    loss = Math.max(0, spentRGT - reward);
+  }
+  
+  // Update user stats
+  userData.totalSpins = (userData.totalSpins || 0) + 1;
+  userData.totalWon = (userData.totalWon || 0) + reward;
+  userData.totalLost = (userData.totalLost || 0) + loss;
+  userData.rgt = (userData.rgt || 0) + reward - spentRGT;
+  userData.monthlyLoss = (userData.monthlyLoss || 0) + loss;
+  
+  if (isFree) {
+    userData.freeSpinsUsed = (lastSpinDate === today ? freeSpinsUsed : 0) + 1;
+    userData.lastSpinDate = today;
+  }
+  
+  // Save to Firestore
+  try {
+    if (window.currentUser && window.db && window.updateDoc && window.doc) {
+      const userRef = window.doc(window.db, 'users', currentUser.uid);
+      await window.updateDoc(userRef, {
+        'wheel.totalSpins': userData.totalSpins,
+        'wheel.totalWon': userData.totalWon,
+        'wheel.totalLost': userData.totalLost,
+        'wheel.monthlyLoss': userData.monthlyLoss,
+        'wheel.freeSpinsUsed': userData.freeSpinsUsed || 0,
+        'wheel.lastSpinDate': userData.lastSpinDate || new Date().toDateString(),
+        'rgt': userData.rgt || 0,
+        'lastUpdated': window.serverTimestamp ? window.serverTimestamp() : new Date()
+      });
+    }
+  } catch(e) {
+    console.error('Error saving spin result:', e);
+  }
+  
+  // Add to history
+  spinHistory.unshift({
+    timestamp: new Date(),
+    reward: reward,
+    spent: spentRGT,
+    isFree: isFree
+  });
+  
+  // Show result modal
+  showResult(reward, spentRGT);
+  
+  // Update UI
+  updateSpinsUI();
+  updateStatsUI();
+  await loadLeaderboard();
+}
+
+function showResult(reward, spent) {
+  const modal = document.getElementById('resultModal');
+  const profit = reward - spent;
+  
+  if (profit >= 0) {
+    document.getElementById('resultTitle').textContent = '🎉 Вы выиграли!';
+    document.getElementById('resultTitle').style.color = '#34d399';
+    document.getElementById('resultAmount').textContent = '+' + reward + ' RGT';
+  } else {
+    document.getElementById('resultTitle').textContent = '😢 Не повезло';
+    document.getElementById('resultTitle').style.color = '#f87171';
+    document.getElementById('resultAmount').textContent = profit + ' RGT';
+  }
+  
+  if (spent > 0) {
+    document.getElementById('resultLabel').textContent = `Потратили: ${spent} RGT`;
+  } else {
+    document.getElementById('resultLabel').textContent = 'Бесплатная прокрутка';
+  }
+  
+  modal.classList.add('show');
+}
+
+function closeResult() {
+  document.getElementById('resultModal').classList.remove('show');
+  document.getElementById('spinBtn').disabled = false;
+  updateSpinsUI();
+}
+
+function updateStatsUI() {
+  document.getElementById('totalSpins').textContent = userData.totalSpins || 0;
+  document.getElementById('totalWon').textContent = (userData.totalWon || 0) + ' RGT';
+  document.getElementById('totalLost').textContent = (userData.totalLost || 0) + ' RGT';
+}
+
+async function loadLeaderboard() {
+  try {
+    if (!window.db || !window.collection || !window.getDocs || !window.query || !window.orderBy || !window.limit) {
+      return;
+    }
+    
+    const usersRef = window.collection(window.db, 'users');
+    const q = window.query(usersRef, window.orderBy('wheel.totalWon', 'desc'), window.limit(10));
+    const snapshot = await window.getDocs(q);
+    
+    const tbody = document.getElementById('leaderboardBody');
+    tbody.innerHTML = '';
+    
+    let rank = 1;
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const wheelData = data.wheel || {};
+      const displayName = data.displayName || 'Пользователь ' + rank;
+      const totalWon = wheelData.totalWon || 0;
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><span class="rank-badge rank-${rank}">${rank}</span></td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${displayName}</td>
+        <td style="text-align:right;color:#8b5cf6;font-weight:600;">${totalWon} RGT</td>
+      `;
+      tbody.appendChild(row);
+      rank++;
+    });
+    
+    if (snapshot.empty) {
+      tbody.innerHTML = '<tr><td colspan="3" class="empty-state"><i class="fas fa-trophy"></i><p>Лидерборд пуст</p></td></tr>';
+    }
+  } catch(e) {
+    console.error('Error loading leaderboard:', e);
+  }
+}
+
+function showTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  
+  document.getElementById(tabName + '-tab').style.display = 'block';
+  event.target.classList.add('active');
+}
+
+// Auth listener
+if (window.onAuthStateChanged && window.getAuth) {
+  const auth = window.getAuth();
+  window.onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    window.currentUser = user;
+    
+    if (user && window.db && window.getDoc && window.doc) {
+      try {
+        const userDocRef = window.doc(window.db, 'users', user.uid);
+        const userSnap = await window.getDoc(userDocRef);
+        
+        if (userSnap.exists()) {
+          userData = userSnap.data().wheel ? userSnap.data() : {};
+        }
+        
+        updateSpinsUI();
+        updateStatsUI();
+        await loadLeaderboard();
+      } catch(e) {
+        console.error('Error loading user data:', e);
+      }
+    } else {
+      userData = {};
+      updateSpinsUI();
+    }
+  });
+}
+
+// Responsive layout
+function adjustLayout() {
+  const mainLayout = document.getElementById('mainLayout');
+  if (window.innerWidth < 1024) {
+    mainLayout.style.gridTemplateColumns = '1fr';
+  } else {
+    mainLayout.style.gridTemplateColumns = '1fr 1fr';
+  }
+}
+
+window.addEventListener('resize', adjustLayout);
+window.addEventListener('DOMContentLoaded', () => {
+  adjustLayout();
+  initWheel();
+});
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    adjustLayout();
+    initWheel();
+  });
+} else {
+  adjustLayout();
+  initWheel();
+}
+</script>
+</body>
+</html>
