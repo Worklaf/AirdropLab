@@ -439,16 +439,28 @@ if (!cfg?.apiKey) {
 
 let app, auth, db;
 try {
-  app  = initializeApp(cfg, 'wof-app');
-  auth = getAuth(app);
-  try {
-    db = initializeFirestore(app, { cacheSizeBytes: 5000000 });
-  } catch(e) {
-    db = getFirestore(app);
+  // Try to reuse existing Firebase app if available
+  if (window.firebaseApp) {
+    app = window.firebaseApp;
+    auth = getAuth(app);
+    try {
+      db = getFirestore(app);
+    } catch(e) {
+      db = initializeFirestore(app, { cacheSizeBytes: 5000000 });
+    }
+  } else {
+    // Otherwise, create a new named app
+    app  = initializeApp(cfg, 'wof-app');
+    auth = getAuth(app);
+    try {
+      db = initializeFirestore(app, { cacheSizeBytes: 5000000 });
+    } catch(e) {
+      db = getFirestore(app);
+    }
   }
   window.wofAuth = auth;
   window.wofDb   = db;
-  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction };
+  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch };
   window.__authExports = { onAuthStateChanged, signOut };
   console.log('✅ WoF Firebase initialized');
 } catch(e) {
@@ -1131,6 +1143,12 @@ if (auth) {
     currentUser = user;
     window.currentUser = user;
     isAdmin = !!(user && user.uid === WOF_ADMIN_UID);
+    window.isAdmin = isAdmin;
+
+    // Обновляем мобильные и десктопные кнопки администратора
+    if (typeof window.updateMobileAdminButtons === 'function') {
+      window.updateMobileAdminButtons();
+    }
 
     if (user && db) {
       try {
@@ -1164,6 +1182,22 @@ window.logout = async function() {
 // Also wire up header login modal trigger
 window.openLoginModal = window.openLoginModal || function() {};
 
+// Update translations on language change
+document.addEventListener('languageChanged', () => {
+  // Re-update all UI text with new language
+  if (typeof window.t === 'function') {
+    const updateTranslations = () => {
+      document.querySelectorAll('[data-translate]').forEach(el => {
+        const key = el.getAttribute('data-translate');
+        const translated = window.t(key);
+        if (translated && translated !== key) {
+          el.textContent = translated;
+        }
+      });
+    };
+    updateTranslations();
+  }
+});
 </script>
 </body>
 </html>
