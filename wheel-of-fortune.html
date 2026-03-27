@@ -11,30 +11,6 @@
   <script src="languages.js"></script>
   <script src="header.js"></script>
   <script src="config/firebase-config.js"></script>
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js';
-    import { getFirestore, collection, query, where, getDocs, getDoc, setDoc, updateDoc, doc, addDoc, serverTimestamp, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js';
-    
-    window.firebaseReady = true;
-    window.getAuth = getAuth;
-    window.onAuthStateChanged = onAuthStateChanged;
-    window.signOut = signOut;
-    window.getFirestore = getFirestore;
-    window.db = getFirestore(window.firebaseApp);
-    window.collection = collection;
-    window.query = query;
-    window.where = where;
-    window.getDocs = getDocs;
-    window.getDoc = getDoc;
-    window.setDoc = setDoc;
-    window.updateDoc = updateDoc;
-    window.doc = doc;
-    window.addDoc = addDoc;
-    window.serverTimestamp = serverTimestamp;
-    window.orderBy = orderBy;
-    window.limit = limit;
-  </script>
   <style>
     :root {
       --bg-primary: #0b0f19;
@@ -373,7 +349,7 @@
 
 <script src="footer.js"></script>
 <script>
-const ADMIN_UID = 'SAkz4mdW9reDaIsvqigCNZhEKJR2';
+// ADMIN_UID уже объявлена в header.js - используем глобальное значение
 const WHEEL_REWARDS = [1, 2, 3, 4, 10, 20, 50, 100];
 const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#22d3ee', '#ef4444', '#a78bfa', '#fbbf24'];
 const DAILY_FREE_SPINS = 3;
@@ -405,20 +381,32 @@ const REWARD_WEIGHTS = {
 
 function initWheel() {
   wheelCanvas = document.getElementById('wheelCanvas');
+  if (!wheelCanvas) {
+    console.error('Canvas не найден');
+    return;
+  }
+  
   wheelCtx = wheelCanvas.getContext('2d');
   
   // Set canvas size
-  const size = Math.min(wheelCanvas.parentElement.offsetWidth, 480);
+  const container = wheelCanvas.parentElement;
+  const size = Math.min(container.offsetWidth - 40, 400);
   wheelCanvas.width = size;
   wheelCanvas.height = size;
   
+  console.log('Wheel initialized:', size, 'x', size);
   drawWheel();
 }
 
 function drawWheel() {
+  if (!wheelCtx || !wheelCanvas) return;
+  
   const centerX = wheelCanvas.width / 2;
   const centerY = wheelCanvas.height / 2;
-  const radius = wheelCanvas.width / 2 - 20;
+  const radius = Math.min(centerX, centerY) - 30;
+  
+  // Clear canvas
+  wheelCtx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
   
   const sliceAngle = (Math.PI * 2) / WHEEL_REWARDS.length;
   
@@ -426,28 +414,29 @@ function drawWheel() {
     const startAngle = sliceAngle * index + wheelAngle;
     const endAngle = startAngle + sliceAngle;
     
-    // Draw slice
+    // Draw slice background
     wheelCtx.beginPath();
+    wheelCtx.moveTo(centerX, centerY);
     wheelCtx.arc(centerX, centerY, radius, startAngle, endAngle);
     wheelCtx.lineTo(centerX, centerY);
     wheelCtx.fillStyle = COLORS[index];
     wheelCtx.fill();
     
     // Draw border
-    wheelCtx.strokeStyle = 'rgba(255,255,255,0.2)';
-    wheelCtx.lineWidth = 2;
+    wheelCtx.strokeStyle = 'rgba(255,255,255,0.3)';
+    wheelCtx.lineWidth = 3;
     wheelCtx.stroke();
     
     // Draw text
     const textAngle = startAngle + sliceAngle / 2;
-    const textX = centerX + Math.cos(textAngle) * (radius * 0.65);
-    const textY = centerY + Math.sin(textAngle) * (radius * 0.65);
+    const textX = centerX + Math.cos(textAngle) * (radius * 0.7);
+    const textY = centerY + Math.sin(textAngle) * (radius * 0.7);
     
     wheelCtx.save();
     wheelCtx.translate(textX, textY);
     wheelCtx.rotate(textAngle + Math.PI / 2);
     wheelCtx.fillStyle = 'white';
-    wheelCtx.font = 'bold 14px Arial';
+    wheelCtx.font = 'bold 16px Arial, sans-serif';
     wheelCtx.textAlign = 'center';
     wheelCtx.textBaseline = 'middle';
     wheelCtx.fillText(reward + ' RGT', 0, 0);
@@ -456,46 +445,65 @@ function drawWheel() {
   
   // Draw center circle
   wheelCtx.beginPath();
-  wheelCtx.arc(centerX, centerY, 30, 0, Math.PI * 2);
-  wheelCtx.fillStyle = 'rgba(139,92,246,0.3)';
+  wheelCtx.arc(centerX, centerY, 35, 0, Math.PI * 2);
+  wheelCtx.fillStyle = 'rgba(139,92,246,0.4)';
   wheelCtx.fill();
   wheelCtx.strokeStyle = '#8b5cf6';
-  wheelCtx.lineWidth = 3;
+  wheelCtx.lineWidth = 4;
   wheelCtx.stroke();
 }
 
 function updateSpinsUI() {
-  if (!currentUser) return;
-  
-  const today = new Date().toDateString();
-  const lastSpinDate = userData.lastSpinDate || '';
-  const freeSpinsUsed = lastSpinDate === today ? (userData.freeSpinsUsed || 0) : 0;
-  const freeSpinsRemaining = Math.max(0, DAILY_FREE_SPINS - freeSpinsUsed);
-  
-  document.getElementById('freeSpinsCount').textContent = freeSpinsRemaining;
-  
-  // Update spin dots
-  const spinsIndicator = document.getElementById('spinsIndicator');
-  spinsIndicator.innerHTML = '';
-  for (let i = 0; i < DAILY_FREE_SPINS; i++) {
-    const dot = document.createElement('div');
-    dot.className = 'spin-dot' + (i < freeSpinsRemaining ? ' active' : '');
-    spinsIndicator.appendChild(dot);
+  if (!currentUser) {
+    const btn = document.getElementById('spinBtn');
+    if (btn) {
+      btn.textContent = 'ВОЙДИТЕ В АККАУНТ';
+      btn.disabled = true;
+    }
+    return;
   }
   
-  const btn = document.getElementById('spinBtn');
-  if (freeSpinsRemaining > 0) {
-    btn.textContent = 'КРУТИТЬ (БЕСПЛАТНО)';
-    btn.disabled = false;
-  } else {
-    btn.textContent = `КРУТИТЬ (${COST_PER_SPIN} RGT)`;
-    btn.disabled = false;
+  try {
+    const today = new Date().toDateString();
+    const lastSpinDate = userData.lastSpinDate || '';
+    const freeSpinsUsed = lastSpinDate === today ? (userData.freeSpinsUsed || 0) : 0;
+    const freeSpinsRemaining = Math.max(0, DAILY_FREE_SPINS - freeSpinsUsed);
+    
+    const countEl = document.getElementById('freeSpinsCount');
+    if (countEl) countEl.textContent = freeSpinsRemaining;
+    
+    const totalEl = document.getElementById('totalSpinsCount');
+    if (totalEl) totalEl.textContent = DAILY_FREE_SPINS;
+    
+    // Update spin dots
+    const spinsIndicator = document.getElementById('spinsIndicator');
+    if (spinsIndicator) {
+      spinsIndicator.innerHTML = '';
+      for (let i = 0; i < DAILY_FREE_SPINS; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'spin-dot' + (i < freeSpinsRemaining ? ' active' : '');
+        spinsIndicator.appendChild(dot);
+      }
+    }
+    
+    const btn = document.getElementById('spinBtn');
+    if (btn) {
+      if (freeSpinsRemaining > 0) {
+        btn.textContent = 'КРУТИТЬ (БЕСПЛАТНО)';
+        btn.disabled = false;
+      } else {
+        btn.textContent = `КРУТИТЬ (${COST_PER_SPIN} RGT)`;
+        btn.disabled = false;
+      }
+    }
+  } catch(e) {
+    console.warn('Error updating spins UI:', e);
   }
 }
 
 function spinWheel() {
   if (!currentUser) {
-    alert('Пожалуйста, войдите в аккаунт');
+    alert('Пожалуйста, войдите в аккаунт для игры');
     return;
   }
   
@@ -512,8 +520,9 @@ function spinWheel() {
     performSpin(true);
   } else {
     // Check if user has enough RGT
-    if ((userData.rgt || 0) < COST_PER_SPIN) {
-      alert('Недостаточно RGT для прокрутки. Нужно ' + COST_PER_SPIN + ' RGT');
+    const userRgt = userData.rgt || 0;
+    if (userRgt < COST_PER_SPIN) {
+      alert(`Недостаточно RGT для прокрутки. У вас: ${userRgt} RGT, нужно: ${COST_PER_SPIN} RGT`);
       return;
     }
     // Paid spin
@@ -602,18 +611,13 @@ async function handleSpinResult(reward, isFree) {
     if (window.currentUser && window.db && window.updateDoc && window.doc) {
       const userRef = window.doc(window.db, 'users', currentUser.uid);
       await window.updateDoc(userRef, {
-        'wheel.totalSpins': userData.totalSpins,
-        'wheel.totalWon': userData.totalWon,
-        'wheel.totalLost': userData.totalLost,
-        'wheel.monthlyLoss': userData.monthlyLoss,
-        'wheel.freeSpinsUsed': userData.freeSpinsUsed || 0,
-        'wheel.lastSpinDate': userData.lastSpinDate || new Date().toDateString(),
-        'rgt': userData.rgt || 0,
-        'lastUpdated': window.serverTimestamp ? window.serverTimestamp() : new Date()
+        'wheel': userData,
+        'rgt': userData.rgt,
+        'lastUpdated': new Date().toISOString()
       });
     }
   } catch(e) {
-    console.error('Error saving spin result:', e);
+    console.warn('Error saving spin result:', e);
   }
   
   // Add to history
@@ -630,7 +634,11 @@ async function handleSpinResult(reward, isFree) {
   // Update UI
   updateSpinsUI();
   updateStatsUI();
-  await loadLeaderboard();
+  try {
+    await loadLeaderboard();
+  } catch(e) {
+    console.warn('Error updating leaderboard:', e);
+  }
 }
 
 function showResult(reward, spent) {
@@ -663,14 +671,19 @@ function closeResult() {
 }
 
 function updateStatsUI() {
-  document.getElementById('totalSpins').textContent = userData.totalSpins || 0;
-  document.getElementById('totalWon').textContent = (userData.totalWon || 0) + ' RGT';
-  document.getElementById('totalLost').textContent = (userData.totalLost || 0) + ' RGT';
+  try {
+    document.getElementById('totalSpins').textContent = userData.totalSpins || 0;
+    document.getElementById('totalWon').textContent = (userData.totalWon || 0) + ' RGT';
+    document.getElementById('totalLost').textContent = (userData.totalLost || 0) + ' RGT';
+  } catch(e) {
+    console.warn('Error updating stats UI:', e);
+  }
 }
 
 async function loadLeaderboard() {
   try {
     if (!window.db || !window.collection || !window.getDocs || !window.query || !window.orderBy || !window.limit) {
+      console.warn('Firebase functions not available');
       return;
     }
     
@@ -679,18 +692,20 @@ async function loadLeaderboard() {
     const snapshot = await window.getDocs(q);
     
     const tbody = document.getElementById('leaderboardBody');
+    if (!tbody) return;
+    
     tbody.innerHTML = '';
     
     let rank = 1;
     snapshot.forEach(doc => {
       const data = doc.data();
       const wheelData = data.wheel || {};
-      const displayName = data.displayName || 'Пользователь ' + rank;
+      const displayName = data.displayName || ('Игрок ' + rank);
       const totalWon = wheelData.totalWon || 0;
       
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td><span class="rank-badge rank-${rank}">${rank}</span></td>
+        <td><span class="rank-badge rank-${rank < 4 ? rank : ''}">${rank}</span></td>
         <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${displayName}</td>
         <td style="text-align:right;color:#8b5cf6;font-weight:600;">${totalWon} RGT</td>
       `;
@@ -699,10 +714,14 @@ async function loadLeaderboard() {
     });
     
     if (snapshot.empty) {
-      tbody.innerHTML = '<tr><td colspan="3" class="empty-state"><i class="fas fa-trophy"></i><p>Лидерборд пуст</p></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="3" class="empty-state" style="padding:30px;"><i class="fas fa-trophy"></i><p>Лидерборд пуст</p></td></tr>';
     }
   } catch(e) {
-    console.error('Error loading leaderboard:', e);
+    console.warn('Error loading leaderboard:', e);
+    const tbody = document.getElementById('leaderboardBody');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="3" class="empty-state" style="padding:30px;"><i class="fas fa-exclamation-triangle"></i><p>Ошибка загрузки</p></td></tr>';
+    }
   }
 }
 
@@ -716,36 +735,45 @@ function showTab(tabName) {
 
 // Auth listener
 if (window.onAuthStateChanged && window.getAuth) {
-  const auth = window.getAuth();
-  window.onAuthStateChanged(auth, async (user) => {
-    currentUser = user;
-    window.currentUser = user;
-    
-    if (user && window.db && window.getDoc && window.doc) {
-      try {
-        const userDocRef = window.doc(window.db, 'users', user.uid);
-        const userSnap = await window.getDoc(userDocRef);
-        
-        if (userSnap.exists()) {
-          userData = userSnap.data().wheel ? userSnap.data() : {};
+  try {
+    const auth = window.getAuth();
+    window.onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      window.currentUser = user;
+      
+      if (user && window.db && window.getDoc && window.doc) {
+        try {
+          const userDocRef = window.doc(window.db, 'users', user.uid);
+          const userSnap = await window.getDoc(userDocRef);
+          
+          if (userSnap.exists()) {
+            const allData = userSnap.data();
+            userData = allData.wheel ? allData : {};
+          }
+          
+          updateSpinsUI();
+          updateStatsUI();
+          await loadLeaderboard();
+        } catch(e) {
+          console.warn('Error loading user data:', e);
         }
-        
+      } else {
+        userData = {};
         updateSpinsUI();
-        updateStatsUI();
-        await loadLeaderboard();
-      } catch(e) {
-        console.error('Error loading user data:', e);
       }
-    } else {
-      userData = {};
-      updateSpinsUI();
-    }
-  });
+    });
+  } catch(e) {
+    console.warn('Firebase auth not ready yet:', e);
+  }
+} else {
+  console.warn('Firebase not available, initializing without auth');
 }
 
 // Responsive layout
 function adjustLayout() {
   const mainLayout = document.getElementById('mainLayout');
+  if (!mainLayout) return;
+  
   if (window.innerWidth < 1024) {
     mainLayout.style.gridTemplateColumns = '1fr';
   } else {
@@ -754,20 +782,31 @@ function adjustLayout() {
 }
 
 window.addEventListener('resize', adjustLayout);
-window.addEventListener('DOMContentLoaded', () => {
-  adjustLayout();
-  initWheel();
-});
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
+// Initialize on load
+function initPage() {
+  console.log('Initializing wheel page...');
+  try {
     adjustLayout();
     initWheel();
+    updateSpinsUI();
+    updateStatsUI();
+  } catch(e) {
+    console.error('Error during page init:', e);
+  }
+}
+
+// Multiple initialization attempts for safety
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initPage, 100);
   });
 } else {
-  adjustLayout();
-  initWheel();
+  setTimeout(initPage, 100);
 }
+
+// Also try after a delay for safety
+setTimeout(initPage, 500);
 </script>
 </body>
 </html>
