@@ -10,7 +10,6 @@
   <link rel="stylesheet" href="styles.css">
   <script src="languages.js"></script>
   <script src="header.js"></script>
-  <script src="assets/reagents.js"></script>
   <script src="config/firebase-config.js"></script>
   <style>
     :root {
@@ -405,7 +404,7 @@
 </div>
 
 <script src="footer.js"></script>
-
+<script src="assets/reagents.js"></script>
 
 <script type="module">
 // ═══════════════════════════════════════════════════════════
@@ -682,6 +681,15 @@ async function handleResult(reward, isFree) {
         updates['rgt'] = increment(netProfit);
       }
       await updateDoc(uRef, updates);
+
+      // Reload userData to sync balance
+      try {
+        const updatedSnap = await getDoc(uRef);
+        if (updatedSnap.exists()) {
+          userData = updatedSnap.data();
+          window.userProfileData = userData;
+        }
+      } catch(e) {}
 
       // Log spin
       await addDoc(collection(db, COL_WHEEL), {
