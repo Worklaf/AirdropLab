@@ -1122,9 +1122,9 @@ window.exportFaucetData = function() {
       URL.revokeObjectURL(url);
       
       if (typeof showToast === 'function') {
-        showToast(t('exported', 'Экспортировано') + ` ${faucetsData.length} кранов!`);
+        showToast(`Экспортировано ${faucetsData.length} кранов!`);
       } else {
-        alert(t('exported', 'Экспортировано') + ` ${faucetsData.length} кранов!`);
+        alert(`Экспортировано ${faucetsData.length} кранов!`);
       }
     };
     
@@ -1280,9 +1280,9 @@ window.importFaucetData = function() {
               console.log(`✅ Сохранено ${faucetsData.length} кранов в Firebase`);
               
               if (typeof showToast === 'function') {
-                showToast(t('imported', 'Импортировано') + ` ${faucetsData.length} кранов в Firebase!`);
+                showToast(`Импортировано ${faucetsData.length} кранов в Firebase!`);
               } else {
-                alert(t('imported', 'Импортировано') + ` ${faucetsData.length} кранов в Firebase!`);
+                alert(`Импортировано ${faucetsData.length} кранов в Firebase!`);
               }
               
               // Если на faucet.html, перезагружаем данные
@@ -1294,9 +1294,9 @@ window.importFaucetData = function() {
             }).catch(error => {
               console.error('Ошибка сохранения в Firebase:', error);
               if (typeof showToast === 'function') {
-                showToast(t('saved_locally', 'Сохранено локально') + ` ${faucetsData.length} кранов. Ошибка Firebase: ${error.message}`);
+                showToast(`Сохранено локально ${faucetsData.length} кранов. Ошибка Firebase: ${error.message}`);
               } else {
-                alert(t('saved_locally', 'Сохранено локально') + ` ${faucetsData.length} кранов. Ошибка Firebase: ${error.message}`);
+                alert(`Сохранено локально ${faucetsData.length} кранов. Ошибка Firebase: ${error.message}`);
               }
             });
           } else {
@@ -1568,7 +1568,7 @@ window.openDeletedProjects = function() {
     if (typeof showToast === 'function') {
       showToast('Только для админа'); 
     } else {
-      alert(t('admin_only', 'Только для админа'));
+      alert('Только для админа');
     }
     return; 
   }
@@ -1941,6 +1941,12 @@ window.closeFeedbackListModal = function() {
   if (modal) modal.classList.remove('active'); 
 };
 
+// ← ДОБАВЬ СЮДА, ПОСЛЕ ОПРЕДЕЛЕНИЯ ФУНКЦИИ
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  var m = document.getElementById('feedbackListModal');
+  if (m && m.classList.contains('active')) window.closeFeedbackListModal();
+});
 // Базовая функция renderFeedbackList для всех страниц
 window.renderFeedbackList = function() {
   const container = document.getElementById('feedbacksContainer');
@@ -2177,6 +2183,7 @@ function updateFeedbackBadge() {
 // Создаем модальное окно для сообщений (доступно на всех страницах)
 function createFeedbackModal() {
   console.log('🔧 Creating feedback modal...');
+
   const modalHTML = `
     <div id="feedbackListModal" class="modal">
       <div class="modal-content modal-large">
@@ -2204,11 +2211,27 @@ function createFeedbackModal() {
       </div>
     </div>
   `;
-  
-  // Добавляем модальное окно в body если его еще нет
+
   if (!document.getElementById('feedbackListModal')) {
     console.log('🔧 Adding feedback modal to DOM...');
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    var _fbModalMdDown = false;
+    var _fbModal = document.getElementById('feedbackListModal');
+
+    if (_fbModal) {
+      _fbModal.addEventListener('mousedown', function(e) {
+        _fbModalMdDown = (e.target === _fbModal);
+      });
+
+      _fbModal.addEventListener('mouseup', function(e) {
+        if (_fbModalMdDown && e.target === _fbModal) {
+          window.closeFeedbackListModal();
+        }
+        _fbModalMdDown = false;
+      });
+    }
+
     console.log('🔧 Feedback modal added successfully');
   } else {
     console.log('🔧 Feedback modal already exists');
