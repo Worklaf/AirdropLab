@@ -1519,26 +1519,71 @@ window.spinJackpotWheel = function() {
   requestAnimationFrame(animate);
 };
 
-// Функция отображения победителя
+// Функция отображения победителя (использует jackpotWinnerOverlay поверх модального окна)
 async function showJackpotWinner(winnerUid, amount) {
-  const resultDiv = document.getElementById('jackpotSpinResult');
-  const winnerInfo = document.getElementById('jackpotWinnerInfo');
-
   try {
     const userSnap = await getDoc(doc(db, COL_USERS, winnerUid));
     const userData = userSnap.exists() ? userSnap.data() : {};
     const winnerName = userData.displayName || userData.email || winnerUid.substring(0, 8) + '...';
+    const winnerAvatar = userData.photoURL || userData.avatarUrl || '';
 
-    winnerInfo.innerHTML = `
-      <div style="font-size: 20px; font-weight: 700; color: #22d3ee; margin-bottom: 8px;">🏆 ${winnerName}</div>
-      <div style="font-size: 16px; color: #22c55e;">Выиграл: ${amount} RGT</div>
-    `;
+    console.log('🏆 Showing jackpot winner:', { winnerName, amount, hasAvatar: !!winnerAvatar });
 
-    resultDiv.style.display = 'block';
+    // Обновляем элементы в jackpotWinnerOverlay
+    const nameElement = document.getElementById('jwName');
+    const amountElement = document.getElementById('jwAmount');
+    const avatarElement = document.getElementById('jwAvatar');
+    
+    if (nameElement) nameElement.textContent = winnerName;
+    if (amountElement) amountElement.textContent = amount + ' RGT';
+    
+    if (avatarElement) {
+      if (winnerAvatar) {
+        avatarElement.src = winnerAvatar;
+        avatarElement.style.display = 'block';
+        avatarElement.onerror = function() {
+          this.style.display = 'none';
+          console.log('🖼️ Avatar failed to load, hiding');
+        };
+        console.log('🖼️ Avatar set to:', winnerAvatar);
+      } else {
+        avatarElement.style.display = 'none';
+        console.log('🖼️ No avatar, hiding element');
+      }
+    }
+    
+    // Показываем оверлей с высоким z-index поверх модального окна розыгрыша
+    const overlay = document.getElementById('jackpotWinnerOverlay');
+    if (overlay) {
+      overlay.style.zIndex = '30000'; // Еще выше чем модальное окно розыгрыша
+      overlay.classList.add('show');
+      console.log('🎯 Jackpot overlay shown on top with z-index:', overlay.style.zIndex);
+    }
+    
+    // Запускаем конфетти для эффекта
+    if (typeof launchConfetti === 'function') {
+      setTimeout(() => launchConfetti(100), 500); // Больше конфетти и с задержкой
+    }
+    
   } catch (error) {
-    console.error('Error showing winner:', error);
-    winnerInfo.textContent = 'Ошибка определения победителя';
-    resultDiv.style.display = 'block';
+    console.error('Error showing jackpot winner:', error);
+    
+    // Fallback - показываем в модальном окне если что-то пошло не так
+    const resultDiv = document.getElementById('jackpotSpinResult');
+    const winnerInfo = document.getElementById('jackpotWinnerInfo');
+    
+    if (resultDiv && winnerInfo) {
+      const userSnap = await getDoc(doc(db, COL_USERS, winnerUid));
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      const winnerName = userData.displayName || userData.email || winnerUid.substring(0, 8) + '...';
+
+      winnerInfo.innerHTML = `
+        <div style="font-size: 20px; font-weight: 700; color: #22d3ee; margin-bottom: 8px;">🏆 ${winnerName}</div>
+        <div style="font-size: 16px; color: #22c55e;">Выиграл: ${amount} RGT</div>
+      `;
+
+      resultDiv.style.display = 'block';
+    }
   }
 }
 
@@ -1582,18 +1627,6 @@ async function finalizeJackpot(winnerUid, amount, month, jpData) {
   } catch(e) {}
 
   sendJackpotWinnerNotification(winnerUid, amount);
-
-  // Show winner screen
-  document.getElementById('jwName').textContent   = winnerName;
-  document.getElementById('jwAmount').textContent = amount + ' RGT';
-  if (winnerAvatar) {
-    document.getElementById('jwAvatar').src = winnerAvatar;
-    document.getElementById('jwAvatar').style.display = 'block';
-  } else {
-    document.getElementById('jwAvatar').style.display = 'none';
-  }
-  document.getElementById('jackpotWinnerOverlay').classList.add('show');
-  launchConfetti(80);
 }
 
 window.closeJackpotWinner = function() {
