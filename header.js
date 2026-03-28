@@ -1940,7 +1940,14 @@ window.closeFeedbackListModal = function() {
   const modal = document.getElementById('feedbackListModal');
   if (modal) modal.classList.remove('active'); 
 };
-
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var modal = document.getElementById('feedbackListModal');
+    if (modal && modal.classList.contains('active')) {
+      closeFeedbackListModal();
+    }
+  }
+});
 // Базовая функция renderFeedbackList для всех страниц
 window.renderFeedbackList = function() {
   const container = document.getElementById('feedbacksContainer');
@@ -2178,7 +2185,7 @@ function updateFeedbackBadge() {
 function createFeedbackModal() {
   console.log('🔧 Creating feedback modal...');
   const modalHTML = `
-    <div id="feedbackListModal" class="modal">
+  <div id="feedbackListModal" class="modal" onclick="if(event.target===this)closeFeedbackListModal()">
       <div class="modal-content modal-large">
         <div class="modal-header">
           <div class="flex justify-between items-center w-full">
