@@ -2919,6 +2919,16 @@ function initFeedbacksListener(uid) {
     console.log('✅ Firebase exports initialized in header.js');
   };
 
+  // Функция закрытия модального окна джекпота
+  window.closeJackpotWinnerOverlay = function() {
+    const overlay = document.getElementById('jackpotWinnerOverlay');
+    if (overlay) {
+      overlay.style.display = 'none';
+      overlay.classList.remove('show');
+      console.log('🎯 Jackpot overlay closed');
+    }
+  };
+
   // Функция отображения модального окна уведомлений (улучшенная версия)
   window.showNotifications = function() {
     if (!window.currentUser) { 
@@ -3476,7 +3486,7 @@ function initFeedbacksListener(uid) {
             <div style="font-size:22px;font-weight:900;color:white;margin-bottom:6px;" id="jwName">—</div>
             <div style="font-size:38px;font-weight:900;background:linear-gradient(135deg,#ec4899,#8b5cf6);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px;" id="jwAmount">0 RGT</div>
             <p style="font-size:12px;color:var(--text-secondary);margin:0 0 20px;">Congratulations! The monthly jackpot has been awarded.</p>
-            <button onclick="this.closest('.jackpot-winner-overlay').classList.remove('show')" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Close</button>
+            <button onclick="window.closeJackpotWinnerOverlay()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Close</button>
           </div>
         `;
         
