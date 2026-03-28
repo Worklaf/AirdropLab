@@ -1118,23 +1118,217 @@ function updateStatsUI() {
 function renderHistory() {
   const list = document.getElementById('historyList');
   if (!list) return;
+  
   if (localHistory.length === 0) {
     const isEn = (window.currentLang === 'en');
     list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-secondary);"><i class="fas fa-history" style="font-size:36px;opacity:.3;display:block;margin-bottom:12px;"></i>${isEn ? 'No spins yet' : 'История пуста'}</div>`;
     return;
   }
-  list.innerHTML = localHistory.slice(0, 20).map(h => {
+  
+  // Добавляем панель фильтров и статистики
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  
+  const weekSpins = localHistory.filter(h => h.ts >= weekAgo);
+  const monthSpins = localHistory.filter(h => h.ts >= monthAgo);
+  const allSpins = localHistory;
+  
+  const weekStats = calculateStats(weekSpins);
+  const monthStats = calculateStats(monthSpins);
+  const allStats = calculateStats(allSpins);
+  
+  list.innerHTML = `
+    <!-- Панель статистики -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
+      <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 12px;">
+        <div style="color: #22c55e; font-size: 11px; font-weight: 600; margin-bottom: 4px;">📅 За неделю</div>
+        <div style="color: white; font-size: 13px; font-weight: 700;">Заработано: +${weekStats.profit} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Потрачено: ${weekStats.spent} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Прокруток: ${weekStats.count}</div>
+      </div>
+      <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 12px;">
+        <div style="color: #3b82f6; font-size: 11px; font-weight: 600; margin-bottom: 4px;">📅 За месяц</div>
+        <div style="color: white; font-size: 13px; font-weight: 700;">Заработано: +${monthStats.profit} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Потрачено: ${monthStats.spent} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Прокруток: ${monthStats.count}</div>
+      </div>
+      <div style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3); border-radius: 12px; padding: 12px;">
+        <div style="color: #a855f7; font-size: 11px; font-weight: 600; margin-bottom: 4px;">📅 За все время</div>
+        <div style="color: white; font-size: 13px; font-weight: 700;">Заработано: +${allStats.profit} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Потрачено: ${allStats.spent} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Прокруток: ${allStats.count}</div>
+      </div>
+    </div>
+    
+    <!-- Фильтры и сортировка -->
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(139,92,246,0.2);">
+      <select id="timeFilter" onchange="filterHistory()" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">
+        <option value="all">📅 Все время</option>
+        <option value="week">📅 За неделю</option>
+        <option value="month">📅 За месяц</option>
+      </select>
+      <select id="sortFilter" onchange="filterHistory()" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">
+        <option value="newest">🆕 Новые</option>
+        <option value="oldest">📜 Старые</option>
+        <option value="profit">💰 По выигрышу</option>
+        <option value="loss">💸 По проигрышу</option>
+      </select>
+      <select id="typeFilter" onchange="filterHistory()" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">
+        <option value="all">🎲 Все</option>
+        <option value="wins">🏆 Только выигрыши</option>
+        <option value="losses">💸 Только проигрыши</option>
+        <option value="free">🆓 Бесплатные</option>
+      </select>
+    </div>
+    
+    <!-- Список истории -->
+    <div id="historyItems"></div>
+    
+    <!-- Пагинация -->
+    <div id="historyPagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 16px;"></div>
+  `;
+  
+  // Инициализация фильтров
+  window.currentHistoryPage = 1;
+  window.historyPageSize = 10;
+  filterHistory();
+}
+
+// Функция расчета статистики
+function calculateStats(spins) {
+  const totalSpent = spins.reduce((sum, h) => sum + (h.spentRGT || 0), 0);
+  const totalWon = spins.reduce((sum, h) => sum + (h.reward || 0), 0);
+  const profit = totalWon - totalSpent;
+  
+  return {
+    spent: totalSpent.toFixed(1),
+    profit: profit.toFixed(1),
+    count: spins.length
+  };
+}
+
+// Функция фильтрации и отображения истории
+window.filterHistory = function() {
+  const timeFilter = document.getElementById('timeFilter')?.value || 'all';
+  const sortFilter = document.getElementById('sortFilter')?.value || 'newest';
+  const typeFilter = document.getElementById('typeFilter')?.value || 'all';
+  
+  let filtered = [...localHistory];
+  
+  // Фильтр по времени
+  const now = new Date();
+  if (timeFilter === 'week') {
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    filtered = filtered.filter(h => h.ts >= weekAgo);
+  } else if (timeFilter === 'month') {
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    filtered = filtered.filter(h => h.ts >= monthAgo);
+  }
+  
+  // Фильтр по типу
+  if (typeFilter === 'wins') {
+    filtered = filtered.filter(h => h.reward > h.spentRGT);
+  } else if (typeFilter === 'losses') {
+    filtered = filtered.filter(h => h.reward < h.spentRGT);
+  } else if (typeFilter === 'free') {
+    filtered = filtered.filter(h => h.isFree);
+  }
+  
+  // Сортировка
+  if (sortFilter === 'oldest') {
+    filtered.sort((a, b) => a.ts - b.ts);
+  } else if (sortFilter === 'profit') {
+    filtered.sort((a, b) => (b.reward - b.spentRGT) - (a.reward - a.spentRGT));
+  } else if (sortFilter === 'loss') {
+    filtered.sort((a, b) => (a.reward - a.spentRGT) - (b.reward - b.spentRGT));
+  } else {
+    filtered.sort((a, b) => b.ts - a.ts);
+  }
+  
+  // Сохраняем отфильтрованные данные
+  window.filteredHistory = filtered;
+  renderHistoryPage();
+};
+
+// Функция отображения страницы истории
+window.renderHistoryPage = function() {
+  const itemsContainer = document.getElementById('historyItems');
+  const paginationContainer = document.getElementById('historyPagination');
+  
+  if (!itemsContainer || !paginationContainer) return;
+  
+  const filtered = window.filteredHistory || [];
+  const page = window.currentHistoryPage || 1;
+  const pageSize = window.historyPageSize || 10;
+  
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const pageItems = filtered.slice(startIndex, endIndex);
+  
+  if (pageItems.length === 0) {
+    itemsContainer.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">Нет записей для выбранных фильтров</div>';
+    paginationContainer.innerHTML = '';
+    return;
+  }
+  
+  itemsContainer.innerHTML = pageItems.map(h => {
     const profit = h.reward - h.spentRGT;
-    const color  = profit >= 0 ? '#34d399' : '#f87171';
-    const sign   = profit >= 0 ? '+' : '';
-    const time   = h.ts.toLocaleTimeString();
+    const color = profit >= 0 ? '#34d399' : '#f87171';
+    const sign = profit >= 0 ? '+' : '';
+    const time = h.ts.toLocaleTimeString();
+    const date = h.ts.toLocaleDateString();
+    
     return `<div class="history-item">
-      <div style="font-size:13px;color:white;font-weight:600;">${h.reward} RGT</div>
-      <div style="font-size:12px;color:var(--text-secondary);">${h.isFree ? '🆓' : `${h.spentRGT} RGT`} · ${time}</div>
-      <div style="font-size:13px;font-weight:700;color:${color};">${sign}${profit} RGT</div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="font-size: 14px; color: white; font-weight: 600;">${h.reward} RGT</div>
+        ${h.isFree ? '<span style="background: rgba(34,197,94,0.2); color: #22c55e; padding: 2px 6px; border-radius: 4px; font-size: 10px;">🆓</span>' : ''}
+      </div>
+      <div style="font-size: 12px; color: var(--text-secondary);">${date} ${time}</div>
+      <div style="font-size: 13px; font-weight: 700; color: ${color};">${sign}${profit} RGT</div>
     </div>`;
   }).join('');
-}
+  
+  // Пагинация
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  if (totalPages > 1) {
+    let paginationHTML = '';
+    
+    // Кнопка предыдущей
+    if (page > 1) {
+      paginationHTML += `<button onclick="changeHistoryPage(${page - 1})" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">←</button>`;
+    }
+    
+    // Номера страниц
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      const isActive = i === page;
+      paginationHTML += `<button onclick="changeHistoryPage(${i})" style="background: ${isActive ? 'rgba(139,92,246,0.3)' : 'rgba(139,92,246,0.1)'}; border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; ${isActive ? 'font-weight: bold;' : ''}">${i}</button>`;
+    }
+    
+    // Кнопка следующей
+    if (page < totalPages) {
+      paginationHTML += `<button onclick="changeHistoryPage(${page + 1})" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">→</button>`;
+    }
+    
+    paginationContainer.innerHTML = paginationHTML;
+  } else {
+    paginationContainer.innerHTML = '';
+  }
+};
+
+// Функция смены страницы
+window.changeHistoryPage = function(page) {
+  window.currentHistoryPage = page;
+  renderHistoryPage();
+};
 
 // Tabs
 window.switchTab = function(name, btn) {
@@ -1305,7 +1499,7 @@ document.addEventListener('languageChanged', () => {
   }
 });
 
-// Функции для уведомлений (как в index.html)
+// Функции для уведомлений (улучшенная версия с фильтрами)
 window.showNotifications = function() {
   if (!currentUser) { 
     if (typeof showToast === 'function') {
@@ -1331,7 +1525,7 @@ window.showNotifications = function() {
     border: 2px solid rgba(34,211,238,0.3);
     border-radius: 20px;
     box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(34,211,238,0.2);
-    max-width: 500px; width: 100%; max-height: 70vh; overflow-y: auto;
+    max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto;
     padding: 24px;
   `;
   
@@ -1342,6 +1536,35 @@ window.showNotifications = function() {
       </h3>
       <button onclick="this.closest('#notificationsModalOverlay').remove()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer;">&times;</button>
     </div>
+    
+    <!-- Фильтры и кнопки управления -->
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(34,211,238,0.2);">
+      <button onclick="filterNotifications('all')" class="filter-btn active" data-filter="all" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+        📋 Все
+      </button>
+      <button onclick="filterNotifications('wheel_spin')" class="filter-btn" data-filter="wheel_spin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+        🎰 Колесо
+      </button>
+      <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+        🏆 Джекпот
+      </button>
+      <button onclick="filterNotifications('feedback_reply')" class="filter-btn" data-filter="feedback_reply" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+        💬 Ответы
+      </button>
+      <button onclick="filterNotifications('admin')" class="filter-btn" data-filter="admin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+        🛡️ Админ
+      </button>
+      
+      <div style="margin-left: auto; display: flex; gap: 8px;">
+        <button onclick="markAllNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid #22c55e; color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+          ✓ Прочитать все
+        </button>
+        <button onclick="clearAllNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+          🗑️ Очистить все
+        </button>
+      </div>
+    </div>
+    
     <div id="notificationsList">
       <p style="color: #64748b; text-align: center; padding: 20px;">Загрузка уведомлений...</p>
     </div>
@@ -1365,6 +1588,88 @@ window.showNotifications = function() {
   
   // Загружаем уведомления как в index.html
   loadNotificationsForWheel();
+};
+
+// Функция фильтрации уведомлений
+window.filterNotifications = function(type) {
+  const notifications = window.notifications || [];
+  let filtered = notifications;
+  
+  if (type !== 'all') {
+    if (type === 'admin') {
+      filtered = notifications.filter(n => n.type === 'feedback_reply' || n.type === 'admin');
+    } else {
+      filtered = notifications.filter(n => n.type === type);
+    }
+  }
+  
+  // Обновляем стили кнопок
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    if (btn.dataset.filter === type) {
+      btn.style.background = 'rgba(34,211,238,0.2)';
+      btn.style.borderColor = '#22d3ee';
+      btn.style.color = '#22d3ee';
+    } else {
+      btn.style.background = 'rgba(34,211,238,0.1)';
+      btn.style.borderColor = 'rgba(34,211,238,0.3)';
+      btn.style.color = '#64748b';
+    }
+  });
+  
+  renderNotificationsInWheel(filtered);
+};
+
+// Функция отметки всех уведомлений как прочитанные
+window.markAllNotificationsAsRead = async function() {
+  if (!window.notifications || window.notifications.length === 0) return;
+  
+  try {
+    const { updateDoc, doc } = window.__firestoreExports;
+    const unreadNotifications = window.notifications.filter(n => !n.read);
+    
+    for (const notif of unreadNotifications) {
+      await updateDoc(doc(window.db, "notifications", notif.id), {
+        read: true
+      });
+    }
+    
+    if (typeof showToast === 'function') {
+      showToast('Все уведомления отмечены как прочитанные');
+    }
+    
+    // Перезагружаем уведомления
+    loadNotificationsForWheel();
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    if (typeof showToast === 'function') {
+      showToast('Ошибка при отметке уведомлений');
+    }
+  }
+};
+
+// Функция очистки всех уведомлений
+window.clearAllNotifications = async function() {
+  if (!confirm('Вы уверены, что хотите удалить все уведомления?')) return;
+  
+  try {
+    const { deleteDoc, doc } = window.__firestoreExports;
+    
+    for (const notif of window.notifications || []) {
+      await deleteDoc(doc(window.db, "notifications", notif.id));
+    }
+    
+    if (typeof showToast === 'function') {
+      showToast('Все уведомления удалены');
+    }
+    
+    // Перезагружаем уведомления
+    loadNotificationsForWheel();
+  } catch (error) {
+    console.error('Error clearing notifications:', error);
+    if (typeof showToast === 'function') {
+      showToast('Ошибка при удалении уведомлений');
+    }
+  }
 };
 
 // Функция загрузки уведомлений для колеса
