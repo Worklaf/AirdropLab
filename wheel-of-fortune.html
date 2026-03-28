@@ -1539,25 +1539,43 @@ window.showNotifications = function() {
     
     <!-- Фильтры и кнопки управления -->
     <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(34,211,238,0.2);">
-      <button onclick="filterNotifications('all')" class="filter-btn active" data-filter="all" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
-        📋 Все <span id="filterCount-all" class="filter-count" style="background: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
-      </button>
-      <button onclick="filterNotifications('games')" class="filter-btn" data-filter="games" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
-        🎮 Игры <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
-      </button>
-      <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
-        🏆 Джекпот <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
-      </button>
-      <button onclick="filterNotifications('admin')" class="filter-btn" data-filter="admin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
-        🛡️ Админ <span id="filterCount-admin" class="filter-count" style="background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
-      </button>
+      <!-- Все -->
+      <div style="position: relative;">
+        <span id="unreadBadge-all" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
+        <button onclick="filterNotifications('all')" class="filter-btn active" data-filter="all" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #e2e8f0; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+          📋 Все <span id="filterCount-all" class="filter-count" style="background: rgba(255,255,255,0.15); color: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+        </button>
+      </div>
+      
+      <!-- Игры -->
+      <div style="position: relative;">
+        <span id="unreadBadge-games" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
+        <button onclick="filterNotifications('games')" class="filter-btn" data-filter="games" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+          🎮 Игры <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+        </button>
+      </div>
+      
+      <!-- Джекпот -->
+      <div style="position: relative;">
+        <span id="unreadBadge-jackpot_win" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
+        <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+          🏆 Джекпот <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+        </button>
+      </div>
+      
+      <!-- Админ -->
+      <div style="position: relative;">
+        <span id="unreadBadge-admin" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
+        <button onclick="filterNotifications('admin')" class="filter-btn" data-filter="admin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+          🛡️ Админ <span id="filterCount-admin" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+        </button>
+      </div>
       
       <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
-        <span id="currentFilterInfo" style="color: #64748b; font-size: 11px; margin-right: 8px;">0 уведомлений</span>
-        <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid #22c55e; color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+        <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid #22c55e; color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
           ✓ Прочитать все
         </button>
-        <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+        <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
           🗑️ Очистить все
         </button>
       </div>
@@ -1636,19 +1654,28 @@ window.filterNotifications = function(type) {
     if (btn.dataset.filter === type) {
       btn.style.background = 'rgba(34,211,238,0.2)';
       btn.style.borderColor = '#22d3ee';
-      btn.style.color = '#22d3ee';
+      btn.style.color = '#e2e8f0';
+      // Обновляем цвет счетчика
+      const countEl = btn.querySelector('.filter-count');
+      if (countEl) {
+        countEl.style.background = 'rgba(255,255,255,0.15)';
+        countEl.style.color = '#e2e8f0';
+      }
     } else {
       btn.style.background = 'rgba(34,211,238,0.1)';
       btn.style.borderColor = 'rgba(34,211,238,0.3)';
-      btn.style.color = '#64748b';
+      btn.style.color = '#94a3b8';
+      // Обновляем цвет счетчика
+      const countEl = btn.querySelector('.filter-count');
+      if (countEl) {
+        countEl.style.background = 'rgba(255,255,255,0.1)';
+        countEl.style.color = '#94a3b8';
+      }
     }
   });
   
   // Обновляем счетчики
   updateFilterCounts(notifications);
-  
-  // Обновляем информацию о текущем фильтре
-  updateFilterInfo(filtered, type);
   
   // Мгновенно перерисовываем уведомления (не перезаписывая оригинальный массив)
   renderNotificationsInWheel(filtered);
@@ -1663,6 +1690,13 @@ function updateFilterCounts(notifications) {
     admin: notifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game'))).length
   };
   
+  const unreadCounts = {
+    all: notifications.filter(n => !n.read).length,
+    games: notifications.filter(n => (n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))) && !n.read).length,
+    jackpot_win: notifications.filter(n => n.type === 'jackpot_win' && !n.read).length,
+    admin: notifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game')) && !n.read).length
+  };
+  
   // Обновляем счетчики на кнопках
   Object.keys(counts).forEach(filter => {
     const countEl = document.getElementById(`filterCount-${filter}`);
@@ -1670,21 +1704,20 @@ function updateFilterCounts(notifications) {
       countEl.textContent = counts[filter];
     }
   });
-}
-
-// Функция обновления информации о текущем фильтре
-function updateFilterInfo(filtered, filterType) {
-  const infoEl = document.getElementById('currentFilterInfo');
-  if (infoEl) {
-    const unreadCount = filtered.filter(n => !n.read).length;
-    const filterNames = {
-      all: 'Все уведомления',
-      games: 'Игровые уведомления',
-      jackpot_win: 'Джекпоты',
-      admin: 'Админские уведомления'
-    };
-    infoEl.textContent = `${filtered.length} уведомлений${unreadCount > 0 ? ` (${unreadCount} непрочитанных)` : ''}`;
-  }
+  
+  // Обновляем бейджи непрочитанных
+  Object.keys(unreadCounts).forEach(filter => {
+    const badgeEl = document.getElementById(`unreadBadge-${filter}`);
+    if (badgeEl) {
+      const count = unreadCounts[filter];
+      if (count > 0) {
+        badgeEl.textContent = count > 99 ? '99+' : count;
+        badgeEl.style.display = 'flex';
+      } else {
+        badgeEl.style.display = 'none';
+      }
+    }
+  });
 }
 
 // Функция отметки отфильтрованных уведомлений как прочитанные
