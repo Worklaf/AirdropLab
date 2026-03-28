@@ -2919,14 +2919,9 @@ function initFeedbacksListener(uid) {
     console.log('✅ Firebase exports initialized in header.js');
   };
 
-  // Функция закрытия модального окна джекпота
-  window.closeJackpotWinnerOverlay = function() {
-    const overlay = document.getElementById('jackpotWinnerOverlay');
-    if (overlay) {
-      overlay.style.display = 'none';
-      overlay.classList.remove('show');
-      console.log('🎯 Jackpot overlay closed');
-    }
+  // Функция закрытия модального окна джекпота (как в wheel-of-fortune.html)
+  window.closeJackpotWinner = function() {
+    document.getElementById('jackpotWinnerOverlay').classList.remove('show');
   };
 
   // Функция отображения модального окна уведомлений (улучшенная версия)
@@ -3432,7 +3427,7 @@ function initFeedbacksListener(uid) {
     }
   };
 
-  // Функция для отображения модального окна выигрыша джекпота из уведомлений
+  // Функция для отображения модального окна выигрыша джекпота из уведомлений (100% как в wheel-of-fortune.html)
   window.showJackpotWinnerFromNotification = async function(notification) {
     try {
       // Сначала закрываем модальное окно уведомлений
@@ -3463,30 +3458,68 @@ function initFeedbacksListener(uid) {
       // Проверяем есть ли элемент jackpotWinnerOverlay на странице
       let overlay = document.getElementById('jackpotWinnerOverlay');
       
-      // Если нет оверлея, создаем его
+      // Если нет оверлея, создаем его как в wheel-of-fortune.html
       if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'jackpotWinnerOverlay';
         overlay.className = 'jackpot-winner-overlay';
-        overlay.style.cssText = `
-          display: none; position: fixed; inset: 0; z-index: 20000;
-          background: rgba(0,0,0,.92); backdrop-filter: blur(14px);
-          align-items: center; justify-content: center; padding: 20px;
-        `;
+        overlay.setAttribute('onclick', 'if(event.target===this)window.closeJackpotWinner()');
         
+        // Добавляем CSS стили как в wheel-of-fortune.html
+        const style = document.createElement('style');
+        style.textContent = `
+          .jackpot-winner-overlay {
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            z-index: 30000;
+            background: rgba(0,0,0,.92); 
+            backdrop-filter: blur(14px);
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px;
+          }
+          .jackpot-winner-overlay.show { 
+            display: flex; 
+            animation: fadeIn .5s; 
+          }
+          @keyframes fadeIn { 
+            from { opacity: 0; } 
+            to { opacity: 1; } 
+          }
+          .jackpot-winner-card {
+            width: 100%; 
+            max-width: 500px; 
+            border-radius: 28px; 
+            padding: 40px 32px; 
+            text-align: center;
+            background: linear-gradient(145deg, rgba(236,72,153,.2), rgba(139,92,246,.2));
+            border: 2px solid rgba(236,72,153,.7);
+            animation: jackpotPopIn .6s cubic-bezier(.34,1.56,.64,1);
+          }
+          @keyframes jackpotPopIn { 
+            from { 
+              transform: scale(.6) rotate(-5deg); 
+              opacity: 0; 
+            } 
+            to { 
+              transform: scale(1) rotate(0deg); 
+              opacity: 1; 
+            } 
+          }
+        `;
+        document.head.appendChild(style);
+        
+        // HTML как в wheel-of-fortune.html
         overlay.innerHTML = `
-          <div class="jackpot-winner-card" style="
-            width: 100%; max-width: 500px; border-radius: 28px; padding: 40px 32px; text-align: center;
-            background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid rgba(236,72,153,.3);
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,.5);
-          ">
+          <div class="jackpot-winner-card">
             <div style="font-size:60px;margin-bottom:10px;">🏆</div>
             <div style="font-size:13px;color:#ec4899;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">JACKPOT WINNER</div>
             <img id="jwAvatar" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ec4899;margin:0 auto 12px;display:block;" onerror="this.style.display='none'">
             <div style="font-size:22px;font-weight:900;color:white;margin-bottom:6px;" id="jwName">—</div>
             <div style="font-size:38px;font-weight:900;background:linear-gradient(135deg,#ec4899,#8b5cf6);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px;" id="jwAmount">0 RGT</div>
             <p style="font-size:12px;color:var(--text-secondary);margin:0 0 20px;">Congratulations! The monthly jackpot has been awarded.</p>
-            <button onclick="window.closeJackpotWinnerOverlay()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Close</button>
+            <button onclick="window.closeJackpotWinner()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Close</button>
           </div>
         `;
         
@@ -3516,10 +3549,10 @@ function initFeedbacksListener(uid) {
         }
       }
       
-      // Показываем оверлей
-      overlay.style.display = 'flex';
+      // Показываем оверлей с высоким z-index как в wheel-of-fortune.html
+      overlay.style.zIndex = '30000'; // Такой же как в wheel-of-fortune.html
       overlay.classList.add('show');
-      console.log('🎯 Jackpot overlay shown');
+      console.log('🎯 Jackpot overlay shown with z-index:', overlay.style.zIndex);
       
       // Запускаем конфетти
       if (typeof launchConfetti === 'function') {
