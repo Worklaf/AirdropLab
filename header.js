@@ -733,34 +733,7 @@
       if (typeof updateLanguageButton === 'function') updateLanguageButton();
       if (typeof updateAllTranslations === 'function') updateAllTranslations();
     }, 0);
-// ════════════════════════════════════════════════════
-// Функция для авто-закрытия модальных окон
-// ════════════════════════════════════════════════════
-function attachModalAutoClose(modalId, closeHandler) {
-  const modal = document.getElementById(modalId);
-  if (!modal || modal.dataset.closeBound === '1') return;
 
-  // Клик по полупрозрачному фону
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeHandler();
-  });
-
-  // Закрытие по клавише ESC
-  const escListener = (e) => {
-    if (e.key === 'Escape' && modal.classList.contains('active')) {
-      closeHandler();
-    }
-  };
-  document.addEventListener('keydown', escListener);
-
-  // Сохраняем ссылку на слушатель для возможной очистки
-  if (!modal.dataset.escListener) {
-    modal.dataset.escListener = 'true';
-    modal._escListener = escListener;
-  }
-
-  modal.dataset.closeBound = '1';
-}
     // Рендер кнопки уведомлений в модале
     window.renderNotifyBtn = function() {
       var area = document.getElementById('csNotifyArea');
@@ -1968,11 +1941,6 @@ window.closeFeedbackListModal = function() {
   if (modal) modal.classList.remove('active'); 
 };
 
-window.closeFeedbackModal = function() {
-  const modal = document.getElementById('feedbackModal');
-  if (modal) modal.classList.remove('active');
-};
-
 // Базовая функция renderFeedbackList для всех страниц
 window.renderFeedbackList = function() {
   const container = document.getElementById('feedbacksContainer');
@@ -2242,17 +2210,16 @@ function createFeedbackModal() {
     console.log('🔧 Adding feedback modal to DOM...');
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     console.log('🔧 Feedback modal added successfully');
-    
-    // Привязываем авто-закрытие
-    attachModalAutoClose('feedbackListModal', window.closeFeedbackListModal);
   } else {
     console.log('🔧 Feedback modal already exists');
   }
-  if (document.readyState === 'loading') {
+}
+
+// Создаем модальное окно после загрузки DOM
+if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', createFeedbackModal);
 } else {
   createFeedbackModal();
-}
 }
 
 // Создаем модальное окно чата после загрузки DOM
@@ -2293,18 +2260,20 @@ function createFeedbackChatModal() {
 
   if (!document.getElementById('feedbackModal')) {
     document.body.insertAdjacentHTML('beforeend', chatHTML);
-    
-    // Привязываем авто-закрытие
-    attachModalAutoClose('feedbackModal', window.closeFeedbackModal);
   }
-  if (document.readyState === 'loading') {
+}
+
+if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', createFeedbackChatModal);
 } else {
   createFeedbackChatModal();
 }
-}
 
-
+// Feedback chat API (ported from index.html)
+window.closeFeedbackModal = function() {
+  const modal = document.getElementById('feedbackModal');
+  if (modal) modal.classList.remove('active');
+};
 
 window.closeFeedbackChat = function() {
   const modal = document.getElementById('feedbackModal');
