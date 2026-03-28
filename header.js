@@ -3231,7 +3231,7 @@ function initFeedbacksListener(uid) {
           
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
             <h4 style="color: ${headerColor}; font-size: 14px; font-weight: 600; margin: 0;">
-              ${typeIcon} ${typeLabel}
+              ${typeIcon} ${typeLabel} ${notif.type === 'info' || notif.type === 'success' || notif.type === 'warning' || notif.type === 'promo' || notif.type === 'referral' ? '<span style="color: #64748b; font-size: 12px;">(📢 Система)</span>' : ''}
               ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">🎉 Нажмите для подробностей</span>' : ''}
             </h4>
             ${isUnread ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
