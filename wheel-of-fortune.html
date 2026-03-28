@@ -1589,7 +1589,7 @@ window.showNotifications = function() {
 
 // Функция фильтрации уведомлений
 window.filterNotifications = function(type) {
-  const notifications = window.notifications || [];
+  const notifications = window.allNotifications || window.notifications || [];
   console.log('🔍 Filter notifications:', type, 'Total notifications:', notifications.length);
   console.log('🔍 All notifications types:', notifications.map(n => ({ id: n.id, type: n.type, message: n.message?.substring(0, 30) })));
   
@@ -1607,7 +1607,7 @@ window.filterNotifications = function(type) {
         return isGame;
       });
     } else if (type === 'admin') {
-      // Все админские уведомления (рассылки, поощрения, ответы, и все что не игры)
+      // Все админские уведомления (рассылки, поощрения, ответы, и все что не игры и не джекпот)
       filtered = notifications.filter(n => {
         const isNotGame = n.type !== 'wheel_spin' && 
                          n.type !== 'faucet_claim' && 
@@ -1639,17 +1639,17 @@ window.filterNotifications = function(type) {
     }
   });
   
-  // Мгновенно перерисовываем уведомления
+  // Мгновенно перерисовываем уведомления (не перезаписывая оригинальный массив)
   renderNotificationsInWheel(filtered);
 };
 
 // Функция отметки всех уведомлений как прочитанные
 window.markAllNotificationsAsRead = async function() {
-  if (!window.notifications || window.notifications.length === 0) return;
+  if (!window.allNotifications || window.allNotifications.length === 0) return;
   
   try {
     const { updateDoc, doc } = window.__firestoreExports;
-    const unreadNotifications = window.notifications.filter(n => !n.read);
+    const unreadNotifications = window.allNotifications.filter(n => !n.read);
     
     for (const notif of unreadNotifications) {
       await updateDoc(doc(window.db, "notifications", notif.id), {
@@ -1730,7 +1730,8 @@ async function loadNotificationsForWheel() {
       });
       
       console.log('📨 Total loaded notifications:', notifications.length);
-      window.notifications = notifications;
+      window.allNotifications = notifications; // Сохраняем полный массив
+      window.notifications = notifications; // Для совместимости
       renderNotificationsInWheel(notifications);
     });
   } catch (error) {
@@ -1866,8 +1867,8 @@ window.markNotificationAsReadWheel = async function(notificationId) {
       });
       
       // Обновляем локальный массив
-      if (window.notifications) {
-        const notif = window.notifications.find(n => n.id === notificationId);
+      if (window.allNotifications) {
+        const notif = window.allNotifications.find(n => n.id === notificationId);
         if (notif) notif.read = true;
       }
       
@@ -1888,13 +1889,14 @@ function updateNotificationBadge() {
   const badge = document.getElementById('notificationBadge');
   if (!badge) return;
   
-  const unreadCount = (window.notifications || []).filter(n => !n.read).length;
+  const unreadCount = (window.allNotifications || []).filter(n => !n.read).length;
   
   if (unreadCount > 0) {
     badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
     badge.classList.remove('hidden');
   } else {
     badge.classList.add('hidden');
+    badge.textContent = '0';
   }
 }
 
