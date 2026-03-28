@@ -464,7 +464,7 @@ try {
   // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
   window.auth = auth;
   window.db   = db;
-  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot };
+  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot };
   window.__authExports = { onAuthStateChanged, signOut };
   console.log('✅ WoF Firebase initialized');
 } catch(e) {
@@ -1777,6 +1777,14 @@ window.clearFilteredNotifications = async function() {
   
   try {
     const { deleteDoc, doc } = window.__firestoreExports;
+    
+    if (!deleteDoc || !doc) {
+      console.error('Firestore deleteDoc or doc function not available');
+      if (typeof showToast === 'function') {
+        showToast('Ошибка: функции Firestore недоступны');
+      }
+      return;
+    }
     
     for (const notif of filtered) {
       await deleteDoc(doc(window.db, "notifications", notif.id));
