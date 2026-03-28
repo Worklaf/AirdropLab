@@ -599,6 +599,9 @@ window.updateRatingDisplay = updateRatingDisplay;
 <!-- Firebase Configuration -->
 <script src="config/firebase-config.js"></script>
 
+<!-- Общие функции для всех страниц -->
+<script src="assets/common.js"></script>
+
 <!-- Firebase и приложение -->
 <script type="module">
 // ═══════════════════════════════════════════
@@ -2625,46 +2628,8 @@ async function submitSuggestion() {
 
 window.submitSuggestion = submitSuggestion;
 
-// Загрузка уведомлений из Firestore
-async function loadNotificationsFromFirestore() {
-  if (!currentUser) return;
-  
-  try {
-    const notificationsSnap = await getDocs(query(
-      collection(db, 'notifications'),
-      where('userId', '==', currentUser.uid),
-      orderBy('createdAt', 'desc'),
-      limit(50)
-    ));
-    
-    const notifications = [];
-    notificationsSnap.forEach(doc => {
-      const data = doc.data();
-      notifications.push({
-        id: doc.id,
-        type: data.type === 'reward' ? 'success' : 'info',
-        message: data.message,
-        read: data.read || false,
-        createdAt: data.createdAt?.toDate?.() || new Date()
-      });
-    });
-    
-    // Обновляем глобальную переменную для footer.js
-    window.notifications = notifications;
-    
-    // Обновляем бейдж уведомлений если он есть
-    const unreadCount = notifications.filter(n => !n.read).length;
-    const notifBadge = document.getElementById('notificationBadge');
-    if (notifBadge) {
-      notifBadge.textContent = unreadCount;
-      notifBadge.style.display = unreadCount > 0 ? 'block' : 'none';
-    }
-  } catch(e) {
-    console.warn('Failed to load notifications from Firestore:', e);
-  }
-}
-
-window.loadNotificationsFromFirestore = loadNotificationsFromFirestore;
+// Загрузка уведомлений из Firestore - теперь используется из common.js
+// Функция loadNotificationsFromFirestore удалена, используется loadNotifications из common.js
 
 // Обновление языка пользователя
 window.updateUserLanguage = async function(language) {
@@ -2707,127 +2672,11 @@ window.updateUserLanguage = async function(language) {
   }
 };
 
-// Функция показа уведомлений (из index.html)
-window.showNotifications = function() {
-  try {
-    if (!currentUser) { 
-      toast('Войдите в аккаунт'); 
-      return; 
-    }
-    
-  // Создаем модальное окно поверх всего с высоким z-index
-  const modal = document.createElement('div');
-  modal.id = 'notificationsModalOverlay';
-  modal.style.cssText = `
-    position: fixed; inset: 0; z-index: 99999;
-    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
-    display: flex; align-items: center; justify-content: center;
-    padding: 16px; opacity: 0; transition: opacity 0.2s ease;
-  `;
-  
-  const content = document.createElement('div');
-  content.style.cssText = `
-    background: #1e2538; border: 1px solid rgba(71,85,105,0.5);
-    border-radius: 20px; width: 100%; max-width: 500px; max-height: 70vh;
-    overflow: hidden; display: flex; flex-direction: column;
-    transform: scale(0.95); transition: transform 0.2s ease;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
-  `;
-  
-  const notifications = window.notifications || [];
-  
-  content.innerHTML = `
-    <div style="padding:20px;border-bottom:1px solid rgba(71,85,105,0.3);">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h2 style="font-size:18px;font-weight:700;color:#f1f5f9;display:flex;align-items:center;gap:8px;">
-          <i class="fas fa-bell" style="color:#22d3ee;"></i>
-          Уведомления
-        </h2>
-        <button onclick="this.closest('#notificationsModalOverlay').remove()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:18px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" 
-                onmouseover="this.style.background='rgba(239,68,68,0.3)';this.style.color='#f87171'" 
-                onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">&times;</button>
-      </div>
-    </div>
-    <div style="padding:20px;overflow-y:auto;flex:1;">
-      ${notifications.length === 0 
-        ? '<p style="text-align:center;color:#94a3b8;padding:20px;">Нет уведомлений</p>'
-        : notifications.map(notif => `
-          <div style="background:${notif.read ? 'rgba(71,85,105,0.2)' : 'rgba(34,211,238,0.1)'};border:1px solid ${notif.read ? 'rgba(71,85,105,0.3)' : 'rgba(34,211,238,0.2)'};border-radius:8px;padding:12px;margin-bottom:8px;">
-            <div style="display:flex;align-items:start;gap:8px;">
-              <div style="width:8px;height:8px;border-radius:50%;background:${notif.type === 'reward' ? '#22d3ee' : '#64748b'};margin-top:6px;flex-shrink:0;"></div>
-              <div style="flex:1;">
-                <p style="font-size:13px;color:#f1f5f9;line-height:1.4;margin:0 0 4px 0;">${notif.message}</p>
-                <p style="font-size:11px;color:#64748b;margin:0;">${new Date(notif.createdAt).toLocaleString()}</p>
-              </div>
-              ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); setTimeout(() => this.closest('#notificationsModalOverlay').remove(), 100);" style="background:none;border:none;color:#22d3ee;cursor:pointer;font-size:11px;padding:4px 8px;border-radius:4px;transition:all 0.2s;" onmouseover="this.style.background='rgba(34,211,238,0.2)'" onmouseout="this.style.background='transparent'">Отметить</button>` : ''}
-            </div>
-          </div>
-        `).join('')
-      }
-    </div>
-  `;
-  
-  modal.appendChild(content);
-  document.body.appendChild(modal);
-  
-  // Анимация появления
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      modal.style.opacity = '1';
-      content.style.transform = 'scale(1)';
-    });
-  });
-  
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) {
-      modal.style.opacity = '0';
-      content.style.transform = 'scale(0.95)';
-      setTimeout(() => modal.remove(), 200);
-    }
-  });
-  
-  // Закрытие по Escape
-  function onKeyDown(e) {
-    if (e.key === 'Escape') { 
-      modal.style.opacity = '0';
-      content.style.transform = 'scale(0.95)';
-      setTimeout(() => modal.remove(), 200);
-      document.removeEventListener('keydown', onKeyDown);
-    }
-  }
-  document.addEventListener('keydown', onKeyDown);
-  } catch(e) {
-    console.error('Error in showNotifications:', e);
-    toast('Ошибка при открытии уведомлений');
-  }
-};
+// Функция показа уведомлений - теперь используется из common.js
+// showNotifications удалена, используется функция из common.js
 
-// Отметить уведомление как прочитанное
-window.markNotificationAsRead = async function(notifId) {
-  if (!currentUser || !notifId) return;
-  
-  try {
-    await updateDoc(doc(db, 'notifications', notifId), {
-      read: true
-    });
-    
-    // Обновляем локальный массив
-    if (window.notifications) {
-      const notif = window.notifications.find(n => n.id === notifId);
-      if (notif) notif.read = true;
-    }
-    
-    // Обновляем бейдж
-    const unreadCount = window.notifications ? window.notifications.filter(n => !n.read).length : 0;
-    const notifBadge = document.getElementById('notificationBadge');
-    if (notifBadge) {
-      notifBadge.textContent = unreadCount;
-      notifBadge.style.display = unreadCount > 0 ? 'block' : 'none';
-    }
-  } catch(e) {
-    console.error('Failed to mark notification as read:', e);
-  }
-};
+// Отметить уведомление как прочитанное - теперь используется из common.js
+// markNotificationAsRead удалена, используется markNotificationAsReadWheel из common.js
 
 // Auth modal helpers
 function openLoginModal() {
@@ -3528,7 +3377,14 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
     setTimeout(function() { updateCounts(); }, 500);
     
     if (isAdmin) await loadPendingSuggestions();
-    if (user && window.db) await loadNotificationsFromFirestore();
+    if (user && window.db) {
+      await loadNotifications(); // Используем функцию из common.js
+      
+      // Инициализируем слушатель уведомлений для real-time обновлений
+      if (typeof initNotificationsListener === 'function') {
+        initNotificationsListener(user.uid);
+      }
+    }
 
     // Hook profile/account modal (footer.js)
     try {
