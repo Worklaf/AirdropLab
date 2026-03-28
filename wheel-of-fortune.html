@@ -390,54 +390,6 @@
   </div>
 </div>
 
-<!-- Feedback List Modal -->
-<div id="feedbackListModal" class="modal" style="display: none;">
-  <div class="modal-content modal-large">
-    <div class="modal-header">
-      <div class="flex justify-between items-center w-full">
-        <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments text-purple-400"></i><span data-translate="feedbacks_list">Отзывы и предложения</span></h2>
-        <button onclick="closeFeedbackListModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-      </div>
-    </div>
-    <div class="modal-body">
-      <div id="feedbacksContainer" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2"><p class="text-slate-500 text-center py-8" data-translate="loading_feedbacks">Загрузка отзывов...</p></div>
-    </div>
-    <div class="modal-footer"><div class="flex justify-center w-full"><button onclick="closeFeedbackListModal()" class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-lg text-sm" data-translate="close">Закрыть</button></div></div>
-  </div>
-</div>
-
-<!-- Feedback Modal -->
-<div id="feedbackModal" class="modal" style="display: none;">
-  <input type="hidden" id="feedbackProjectId" value="">
-  <input type="hidden" id="feedbackDocId" value="">
-  <div class="modal-content modal-large">
-    <div class="modal-header">
-      <div class="flex justify-between items-center w-full">
-        <h2 id="feedbackModalTitle" class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments text-purple-400"></i><span data-translate="feedback">Обратная связь</span></h2>
-        <button onclick="closeFeedbackModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-      </div>
-    </div>
-    <div class="modal-body">
-      <div id="feedbackChatHistory" class="h-80 overflow-y-auto pr-3 custom-scrollbar bg-slate-900/30 rounded-xl p-4"><div class="flex flex-col items-center justify-center h-full text-slate-500"><i class="fas fa-comments text-4xl mb-3 opacity-50"></i><p class="text-sm" data-translate="loading_chat">Загрузка переписки...</p></div></div>
-      <div id="feedbackFormNew" class="space-y-4">
-        <div><label class="block text-sm font-medium text-slate-300 mb-2" data-translate="message">Сообщение</label><textarea id="feedbackText" rows="4" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-200" placeholder="Опишите суть обращения..." data-translate="message_placeholder"></textarea></div>
-      </div>
-      <div id="feedbackFormReply" class="hidden">
-        <label class="block text-sm font-medium text-slate-300 mb-2" data-translate="your_answer">Ваш ответ</label>
-        <textarea id="feedbackReplyText" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-200" placeholder="Введите ответ..."></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <div class="flex gap-3">
-        <button onclick="backToFeedbackList()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm"><i class="fas fa-arrow-left"></i> Назад</button>
-        <button onclick="closeFeedbackModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg text-sm" data-translate="cancel">Отмена</button>
-        <button id="adminChatDeleteBtn" onclick="deleteFeedbackChat()" class="hidden bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-bold"><i class="fas fa-trash"></i> Удалить</button>
-        <button onclick="sendFeedback()" class="flex-1 bg-purple-600 hover:bg-purple-500 py-2 rounded-lg text-sm font-bold" data-translate="send">Отправить</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- JACKPOT WINNER MODAL -->
 <div id="jackpotWinnerOverlay" class="jackpot-winner-overlay" onclick="if(event.target===this)closeJackpotWinner()">
   <div class="jackpot-winner-card">
@@ -1550,190 +1502,262 @@ function updateNotificationBadge() {
   }
 }
 
-// Функции для сообщений (как в index.html)
+// Глобальные переменные для сообщений (как в index.html)
+let adminFeedbacks = [];
+let adminFeedbacksUnsubscribe = null;
+
+// Инициализация слушателя сообщений (как в index.html)
+function initFeedbacksListener(uid) {
+  if (adminFeedbacksUnsubscribe) { adminFeedbacksUnsubscribe(); adminFeedbacksUnsubscribe = null; }
+  let q;
+  const isAdmin = uid === ADMIN_UID;
+  try {
+    if (isAdmin) q = query(collection(db, "feedbacks"));
+    else q = query(collection(db, "feedbacks"), where("userId", "==", uid));
+    adminFeedbacksUnsubscribe = onSnapshot(q, (snapshot) => {
+      adminFeedbacks = [];
+      let unreadCount = 0;
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        if (isAdmin && data.deleted) return;
+        if (!isAdmin && data.userDeleted) return;
+        data.id = doc.id;
+        if (isAdmin ? !data.read : !data.userRead) unreadCount++;
+        adminFeedbacks.push(data);
+      });
+      adminFeedbacks.sort((a, b) => (b.createdAt?.toDate() || new Date(b.createdAt || 0)) - (a.createdAt?.toDate() || new Date(a.createdAt || 0)));
+      updateFeedbackBadgeUI(unreadCount);
+      const listModal = document.getElementById('feedbackListModal');
+      if (listModal && listModal.classList.contains('active')) renderFeedbackList();
+    });
+  } catch (e) { console.error("Error init listener:", e); }
+}
+
+// Обновление бейджа сообщений (как в index.html)
+function updateFeedbackBadgeUI(unreadCount) {
+  const badge = document.getElementById('feedbackBadge');
+  if (!badge) return;
+  if (unreadCount > 0) { badge.textContent = unreadCount > 9 ? '9+' : unreadCount; badge.classList.remove('hidden'); } 
+  else { badge.classList.add('hidden'); badge.textContent = '0'; }
+}
+
+// Открытие модального окна списка сообщений (как в header.js)
 window.openFeedbackListModal = function() {
+  if (!document.getElementById('feedbackListModal')) {
+    createFeedbackModal();
+  }
+  
   if (!currentUser) { 
     if (typeof showToast === 'function') {
-      showToast('Войдите'); 
-    } else {
-      alert('Войдите');
+      showToast('Войдите');
+    } else if (typeof toast === 'function') {
+      toast('Войдите');
     }
+    if (typeof openLoginModal === 'function') openLoginModal(); 
     return; 
   }
   
-  // Используем готовое модальное окно как в index.html
-  const modal = document.getElementById('feedbackListModal');
-  if (modal) {
-    modal.style.display = 'flex';
-    modal.classList.add('active');
-    // Загружаем сообщения
-    loadFeedbackMessagesForList();
+  const isAdmin = currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  const titleContainer = document.querySelector('#feedbackListModal h2');
+  const tr = (typeof t === 'function') ? t : (k) => {
+    const dict = {
+      all_requests: 'Все запросы',
+      my_messages: 'Мои сообщения'
+    };
+    return dict[k] || k;
+  };
+  if (titleContainer) {
+    titleContainer.innerHTML = isAdmin
+      ? '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>' + tr('all_requests')
+      : '<i class="fas fa-comments text-purple-400 mr-2"></i>' + tr('my_messages');
   }
+
+  const modal = document.getElementById('feedbackListModal');
+  if (!modal) return;
+  modal.classList.add('active');
+  setTimeout(function() {
+    if (typeof window.renderFeedbackList === 'function') window.renderFeedbackList();
+  }, 100);
 };
 
-// Функция закрытия списка сообщений
-window.closeFeedbackListModal = function() {
+// Закрытие модального окна списка сообщений (как в header.js)
+window.closeFeedbackListModal = function() { 
   const modal = document.getElementById('feedbackListModal');
-  if (modal) {
-    modal.style.display = 'none';
-    modal.classList.remove('active');
-  }
+  if (modal) modal.classList.remove('active'); 
 };
 
-// Функция загрузки сообщений для списка
-async function loadFeedbackMessagesForList() {
+// Базовая функция renderFeedbackList для всех страниц (как в header.js)
+window.renderFeedbackList = function() {
+  const container = document.getElementById('feedbacksContainer');
+  if (!container) return;
+
+  const isAdmin = currentUser && currentUser.uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+  
+  const items = Array.isArray(window.adminFeedbacks) ? window.adminFeedbacks : [];
+  if (!items.length) {
+    const tr = (typeof t === 'function') ? t : (k) => {
+      const dict = { no_messages: 'Нет сообщений' };
+      return dict[k] || k;
+    };
+    container.innerHTML = `
+      <div class="text-center py-12 text-slate-500">
+        <div class="bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-inbox text-2xl text-slate-600"></i>
+        </div>
+        <p>${tr('no_messages')}</p>
+      </div>`;
+    return;
+  }
+
+  renderFeedbackMessages(items, isAdmin);
+};
+
+// Функция для отображения сообщений (как в header.js)
+function renderFeedbackMessages(feedbacks, isAdmin) {
   const container = document.getElementById('feedbacksContainer');
   if (!container) return;
   
-  console.log('Loading feedback messages for wheel...');
-  
-  if (!window.db || !currentUser) {
-    console.log('No db or current user');
-    container.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Недоступно без авторизации</p>';
-    return;
-  }
-  
-  try {
-    const { collection, query, where, getDocs } = window.__firestoreExports || {};
-    console.log('Firestore exports:', !!collection, !!query, !!where, !!getDocs);
-    
-    if (collection && query && where && getDocs) {
-      console.log('Querying feedbacks for userId:', currentUser.uid);
-      const snapshot = await getDocs(query(collection(window.db, 'feedbacks'), 
-        where('userId', '==', currentUser.uid)
-      ));
-      
-      console.log('Snapshot docs count:', snapshot.docs.length);
-      
-      const messages = [];
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        console.log('Doc data:', data);
-        if (!data.userDeleted) {
-          messages.push({ 
-            id: doc.id, 
-            ...data,
-            createdAt: data.createdAt?.toDate() || new Date()
-          });
-        }
-      });
-      
-      console.log('Messages loaded:', messages.length);
-      
-      // Сортируем в памяти
-      messages.sort((a, b) => b.createdAt - a.createdAt);
-      
-      // Сохраняем глобально для других функций
-      window.adminFeedbacks = messages;
-      
-      renderFeedbackList();
-    } else {
-      console.log('Missing Firestore exports');
-      container.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Firestore недоступен</p>';
-    }
-  } catch (error) {
-    console.error('Error loading feedback messages:', error);
-    container.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка загрузки: ' + error.message + '</p>';
-  }
-}
-
-// Функция отображения списка сообщений (как в index.html)
-window.renderFeedbackList = function() {
-  const container = document.getElementById('feedbacksContainer');
-  if (!container) {
-    console.log('No feedbacksContainer found');
-    return;
-  }
-  
-  const messages = window.adminFeedbacks || [];
-  console.log('Rendering feedback list, messages count:', messages.length);
-  
-  // Очищаем контейнер
-  container.innerHTML = '';
-  
-  if (messages.length === 0) {
-    console.log('No messages to display');
-    const emptyDiv = document.createElement('div');
-    emptyDiv.style.cssText = 'text-align: center; padding: 40px; color: #64748b;';
-    emptyDiv.innerHTML = `
-      <div style="background: rgba(139,92,246,0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-        <i class="fas fa-inbox text-2xl" style="color: #a78bfa;"></i>
+  if (feedbacks.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-12 text-slate-500">
+        <div class="bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-inbox text-2xl text-slate-600"></i>
+        </div>
+        <p class="text-lg font-medium mb-2">У вас пока нет сообщений</p>
+        <p class="text-sm text-slate-400">Все ваши отзывы и предложения будут доступны на главной странице</p>
       </div>
-      <p>Нет сообщений</p>
     `;
-    container.appendChild(emptyDiv);
     return;
   }
   
-  console.log('Rendering messages:', messages);
+  // Словарь тем
+  const categoryLabels = {
+    suggestion: '💡 Предложение',
+    bug: '🐛 Ошибка',
+    question: '❓ Вопрос',
+    other: '💬 Другое',
+    technical: '🔧 Тех. проблема',
+    account: '👤 Аккаунт',
+    partnership: '🤝 Партнёрство'
+  };
   
-  messages.forEach(msg => {
-    const isUnread = !msg.userRead;
-    const lastMsg = msg.messages && msg.messages.length > 0 ? msg.messages[msg.messages.length - 1] : {};
-    const date = msg.createdAt;
+  const esc = (typeof window.safeText === 'function')
+    ? window.safeText
+    : function(s) {
+        return String(s || '').replace(/[&<>"']/g, function(ch) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+        });
+      };
+
+  const list = Array.isArray(window.adminFeedbacks) ? window.adminFeedbacks : [];
+  const filtered = isAdmin
+    ? adminFeedbacks
+    : adminFeedbacks.filter(item => item.userId === currentUser.uid);
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="text-center py-8 text-slate-400">
+      <i class="fas fa-inbox text-4xl mb-3 opacity-50"></i>
+      <p class="text-sm">${isAdmin ? 'Нет сообщений' : 'У вас пока нет сообщений'}</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(item => {
+    const isSupport = item.projectId === '__support__' || item.type === 'support';
+    const isUnread = isAdmin ? !item.read : !item.userRead;
+    const date = item.createdAt?.toDate ? item.createdAt.toDate() : new Date(item.createdAt || 0);
+    const lastMsg = (item.messages && item.messages.length > 0)
+      ? item.messages[item.messages.length - 1]
+      : { text: 'Без текста', timestamp: date };
     
-    console.log('Rendering message:', { id: msg.id, projectName: msg.projectName, isUnread, lastMsg: lastMsg.text });
-    
-    // Создаем элемент с помощью createElement чтобы избежать проблем с кавычками
-    const messageDiv = document.createElement('div');
-    messageDiv.style.cssText = 'background: rgba(30,37,56,0.6); border: 1px solid rgba(139,92,246,0.2); border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer; position: relative; transition: all 0.2s;';
-    messageDiv.onclick = () => openFeedbackFromList(msg.id, msg.projectId || '', msg.projectName || 'Support');
-    messageDiv.onmouseover = () => messageDiv.style.background = 'rgba(139,92,246,0.1)';
-    messageDiv.onmouseout = () => messageDiv.style.background = 'rgba(30,37,56,0.6)';
-    
-    if (isUnread) {
-      const unreadDot = document.createElement('div');
-      unreadDot.style.cssText = 'position: absolute; top: 12px; right: 12px; width: 10px; height: 10px; background: #a78bfa; border-radius: 50%; animation: pulse 2s infinite;';
-      messageDiv.appendChild(unreadDot);
+    let projectName = isSupport ? 'Support' : item.projectName;
+    let projectLogo = '';
+    if (!isSupport) {
+      const project = typeof projects !== 'undefined' && Array.isArray(projects)
+        ? projects.find(p => p.id === item.projectId)
+        : null;
+      if (project) {
+        projectName = project.name || projectName;
+        projectLogo = project.image || project.logoUrl || '';
+      }
+      projectLogo = projectLogo || item.projectLogo || '';
     }
-    
-    const headerDiv = document.createElement('div');
-    headerDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;';
-    
-    const titleDiv = document.createElement('div');
-    titleDiv.style.cssText = 'flex: 1; min-width: 0;';
-    
-    const projectNameDiv = document.createElement('div');
-    projectNameDiv.style.cssText = 'color: #a78bfa; font-size: 14px; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
-    projectNameDiv.textContent = msg.projectName || 'Support';
-    
-    const userDiv = document.createElement('div');
-    userDiv.style.cssText = 'color: #64748b; font-size: 11px; margin-top: 2px;';
-    userDiv.textContent = 'от ' + (msg.userName || 'Пользователь');
-    
-    titleDiv.appendChild(projectNameDiv);
-    titleDiv.appendChild(userDiv);
-    
-    const metaDiv = document.createElement('div');
-    metaDiv.style.cssText = 'display: flex; align-items: center; gap: 8px; flex-shrink: 0;';
-    
-    const timeSpan = document.createElement('span');
-    timeSpan.style.cssText = 'color: #64748b; font-size: 11px;';
-    timeSpan.textContent = formatTimeAgoWheel(date);
-    
-    metaDiv.appendChild(timeSpan);
-    
-    if (isUnread) {
-      const newBadge = document.createElement('span');
-      newBadge.style.cssText = 'background: #a78bfa; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;';
-      newBadge.textContent = 'NEW';
-      metaDiv.appendChild(newBadge);
+
+    const categoryLabel = item.category ? (categoryLabels[item.category] || item.category) : '';
+
+    const clickFn = isAdmin
+      ? `openAdminFeedbackChat('${String(item.id || '').replace(/'/g, "\\'")}')`
+      : `openFeedbackFromList('${String(item.id || '').replace(/'/g, "\\'")}', '${String(item.projectId || '').replace(/'/g, "\\'")}', '${String(projectName || '').replace(/'/g, "\\'")}')`;
+
+    let titleHtml = '';
+    if (isAdmin) {
+      titleHtml = `
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            ${isSupport
+              ? `<span style="background:linear-gradient(135deg,rgba(124,58,237,0.25),rgba(139,92,246,0.1));
+                            border:1px solid rgba(139,92,246,0.35);
+                            padding:2px 8px;border-radius:12px;
+                            color:#c084fc;font-size:11px;font-weight:700;letter-spacing:0.5px;">
+                  🛡️ SUPPORT
+                 </span>`
+              : `${projectLogo
+                  ? `<img src="${projectLogo}" class="w-5 h-5 rounded object-cover" onerror="this.style.display='none'">`
+                  : ''}
+                 <span class="text-blue-400 font-medium text-sm">${esc(projectName)}</span>`
+            }
+            ${categoryLabel
+              ? `<span class="text-xs px-2 py-0.5 rounded-full ${
+                  isSupport
+                    ? 'bg-purple-900/40 text-purple-300 border border-purple-700/40'
+                    : 'bg-slate-700/80 text-slate-300'
+                }">${esc(categoryLabel)}</span>`
+              : ''}
+          </div>
+          <div class="text-xs text-slate-400">
+            от <span class="text-white font-medium">${esc(item.userName || 'Пользователь')}</span>
+          </div>
+        </div>`;
+    } else {
+      titleHtml = `
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2">
+            ${isSupport
+              ? `<span style="background:linear-gradient(135deg,rgba(124,58,237,0.25),rgba(139,92,246,0.1));
+                            border:1px solid rgba(139,92,246,0.35);
+                            padding:2px 8px;border-radius:12px;
+                            color:#c084fc;font-size:11px;font-weight:700;letter-spacing:0.5px;">
+                  🛡️ SUPPORT
+                 </span>`
+              : `${projectLogo ? `<img src="${projectLogo}" class="w-6 h-6 rounded object-cover">` : ''}
+                 <span class="font-bold text-white">${esc(projectName)}</span>`
+            }
+          </div>
+          ${categoryLabel
+            ? `<span class="text-xs ${isSupport ? 'text-purple-400' : 'text-slate-400'}">${esc(categoryLabel)}</span>`
+            : ''}
+        </div>`;
     }
-    
-    headerDiv.appendChild(titleDiv);
-    headerDiv.appendChild(metaDiv);
-    
-    const messageText = document.createElement('div');
-    messageText.style.cssText = 'color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0;';
-    messageText.textContent = lastMsg.text || 'Нет текста';
-    
-    messageDiv.appendChild(headerDiv);
-    messageDiv.appendChild(messageText);
-    
-    container.appendChild(messageDiv);
-  });
-  
-  console.log('Render complete, container children count:', container.children.length);
+
+    return `
+      <div onclick="${clickFn}" 
+           class="relative p-4 bg-slate-800/60 border border-slate-700/50 rounded-xl cursor-pointer hover:bg-slate-700/60 hover:border-purple-500/30 transition-all duration-200 mb-4">
+        ${isUnread
+          ? '<div class="absolute top-3 right-3 w-2.5 h-2.5 bg-purple-500 rounded-full animate-pulse"></div>'
+          : ''}
+        <div class="flex justify-between items-start mb-2">
+          <div class="flex-1 min-w-0 pr-6">${titleHtml}</div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="text-xs text-slate-500">${formatTimeAgoWheel(date)}</span>
+            ${isUnread
+              ? '<span class="bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">NEW</span>'
+              : ''}
+          </div>
+        </div>
+        <div class="text-sm text-slate-400 line-clamp-2 mt-1 pl-0">${esc(lastMsg.text)}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 // Функция открытия конкретного сообщения (как в index.html)
@@ -1874,6 +1898,104 @@ function updateFeedbackBadge() {
   // Здесь можно добавить логику подсчета непрочитанных сообщений
   // Пока оставим как есть
   badge.classList.add('hidden');
+}
+
+// Создаем модальное окно для сообщений (доступно на всех страницах)
+function createFeedbackModal() {
+  console.log('🔧 Creating feedback modal...');
+  const modalHTML = `
+    <div id="feedbackListModal" class="modal">
+      <div class="modal-content modal-large">
+        <div class="modal-header">
+          <div class="flex justify-between items-center w-full">
+            <h2 class="text-xl font-bold flex items-center gap-2">
+              <i class="fas fa-comments text-purple-400"></i>
+              <span data-translate="feedbacks_list">Отзывы и предложения</span>
+            </h2>
+            <button onclick="closeFeedbackListModal()" class="text-slate-400 hover:text-white">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div id="feedbacksContainer" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+            <p class="text-slate-500 text-center py-8" data-translate="loading_feedbacks">Загрузка отзывов...</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="flex justify-center w-full">
+            <button onclick="closeFeedbackListModal()" class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-lg text-sm" data-translate="close">Закрыть</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Добавляем модальное окно в body если его еще нет
+  if (!document.getElementById('feedbackListModal')) {
+    console.log('🔧 Adding feedback modal to DOM...');
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    console.log('🔧 Feedback modal added successfully');
+  } else {
+    console.log('🔧 Feedback modal already exists');
+  }
+}
+
+// Создаем модальное окно чата после загрузки DOM
+function createFeedbackChatModal() {
+  const chatHTML = `
+    <div id="feedbackModal" class="modal">
+      <div class="modal-content modal-lg relative overflow-hidden">
+        <div class="modal-header">
+          <div class="flex justify-between items-center w-full">
+            <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments text-purple-400"></i><span id="feedbackModalTitle" data-translate="feedback">Обратная связь</span></h2>
+            <button onclick="closeFeedbackModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+          </div>
+        </div>
+        <div class="modal-body bg-[#151b2b]">
+          <input type="hidden" id="feedbackProjectId">
+          <input type="hidden" id="feedbackDocId">
+          <div class="mb-3 pb-3 border-b border-slate-700"><span class="text-sm text-slate-400" id="feedbackProjectLabel">Проект: </span><span id="feedbackProjectName" class="text-sm font-bold text-blue-400">...</span></div>
+          <div id="feedbackChatHistory" class="h-80 overflow-y-auto pr-3 custom-scrollbar bg-slate-900/30 rounded-xl p-4"><div class="flex flex-col items-center justify-center h-full text-slate-500"><i class="fas fa-comments text-4xl mb-3 opacity-50"></i><p class="text-sm" data-translate="loading_chat">Загрузка переписки...</p></div></div>
+          <div id="feedbackFormNew" class="space-y-4"></div>
+          <div id="feedbackFormReply" class="hidden">
+            <label class="block text-sm font-medium text-slate-300 mb-2" data-translate="your_answer">Ваш ответ</label>
+            <div class="flex gap-2">
+              <input type="text" id="feedbackUserReplyText" placeholder="Напишите ответ..." data-translate="reply_placeholder" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white">
+              <button onclick="sendUserFeedbackReply()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-bold"><i class="fas fa-paper-plane"></i></button>
+              <button id="adminChatDeleteBtn" class="hidden text-red-400 hover:text-red-300" title="Удалить"><i class="fas fa-trash text-xl"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer bg-[#1e2538] border-t border-slate-700 p-4 shrink-0">
+          <div class="flex gap-3 w-full justify-end" id="feedbackModalFooter">
+            <button onclick="closeFeedbackModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-sm" data-translate="close">Закрыть</button>
+            <button id="feedbackSendBtn" onclick="window.sendUserFeedback && window.sendUserFeedback()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg text-sm font-bold" data-translate="send">Отправить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (!document.getElementById('feedbackModal')) {
+    document.body.insertAdjacentHTML('beforeend', chatHTML);
+  }
+}
+
+// Создаем модальные окна после загрузки DOM
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    createFeedbackModal();
+    createFeedbackChatModal();
+  });
+} else {
+  createFeedbackModal();
+  createFeedbackChatModal();
+}
+
+// Инициализация слушателя сообщений при загрузке страницы
+if (currentUser && db) {
+  initFeedbacksListener(currentUser.uid);
 }
 </script>
 
