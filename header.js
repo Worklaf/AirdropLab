@@ -3210,6 +3210,16 @@ function initFeedbacksListener(uid) {
         filterType = 'all';
       }
       
+      // Определяем цвет заголовка с исправленным синтаксисом
+      let headerColor = '#22d3ee'; // синий по умолчанию
+      if (notif.type === 'jackpot_win') {
+        headerColor = '#22c55e'; // зеленый
+      } else if (notif.type === 'warning') {
+        headerColor = '#f59e0b'; // оранжевый
+      } else if (notif.type === 'success') {
+        headerColor = '#22c55e'; // зеленый
+      }
+      
       return `
         <div style="background: rgba(30,37,56,0.6); border: 1px solid ${isUnread ? 'rgba(34,211,238,0.4)' : 'rgba(34,211,238,0.2)'}; 
                   border-radius: 12px; padding: 16px; margin-bottom: 12px; 
@@ -3220,7 +3230,7 @@ function initFeedbacksListener(uid) {
                   ${notif.type === 'jackpot_win' ? `onclick="window.showJackpotWinnerFromNotification({id: '${notif.id}', userId: '${notif.userId || ''}', winnerName: '${notif.winnerName || ''}', amount: '${notif.amount || '0'}', message: '${notif.message || ''}'})"` : ''}>
           
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-            <h4 style="color: ${notif.type === 'jackpot_win' ? '#22c55e' : (notif.type === 'warning' ? '#f59e0b' : (notif.type === 'success' ? '#22c55e' : '#22d3ee')}; font-size: 14px; font-weight: 600; margin: 0;">
+            <h4 style="color: ${headerColor}; font-size: 14px; font-weight: 600; margin: 0;">
               ${typeIcon} ${typeLabel}
               ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">🎉 Нажмите для подробностей</span>' : ''}
             </h4>
