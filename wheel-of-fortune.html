@@ -7,6 +7,82 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: #1e2538;
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-sm {
+      max-width: 400px;
+      width: 90%;
+    }
+    
+    .modal-lg {
+      max-width: 600px;
+      width: 90%;
+    }
+    
+    .modal-xl {
+      max-width: 800px;
+      width: 90%;
+    }
+    
+    .modal-large {
+      max-width: 900px;
+      width: 90%;
+    }
+    
+    .custom-modal {
+      max-width: 500px;
+      width: 90%;
+    }
+    
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(148,163,184,0.1);
+    }
+    
+    .modal-body {
+      padding: 1.5rem;
+    }
+    
+    .modal-footer {
+      padding: 1.5rem;
+      border-top: 1px solid rgba(148,163,184,0.1);
+    }
+    
+    .space-y-3 > * + * {
+      margin-top: 0.75rem;
+    }
+    
+    .space-y-4 > * + * {
+      margin-top: 1rem;
+    }
+  </style>
   <link rel="stylesheet" href="styles.css">
   <script src="languages.js"></script>
   <script src="header.js"></script>
@@ -2116,47 +2192,85 @@ window.logout = async function() {
 };
 
 // Also wire up header login modal trigger
-window.openLoginModal = window.openLoginModal || function() {
-  const m = document.getElementById('loginModal');
-  if (!m) return;
-  m.style.display = 'flex';
-  m.classList.add('active');
+window.openLoginModal = window.openLoginModal || function() { 
+  document.getElementById('loginModal').classList.add('active'); 
 };
 
-window.closeLoginModal = function() {
-  const m = document.getElementById('loginModal');
-  if (!m) return;
-  m.style.display = 'none';
-  m.classList.remove('active');
+window.closeLoginModal = function() { 
+  document.getElementById('loginModal').classList.remove('active'); 
 };
 
-window.loginGoogle = async function() {
-  if (!window.auth) {
-    console.error('Auth not initialized');
-    return;
-  }
+window.loginGoogle = async function() { 
+  try { 
+    await signInWithPopup(window.auth, new GoogleAuthProvider()); 
+    closeLoginModal(); 
+    if (typeof showToast === 'function') {
+      showToast('Вход: Google'); 
+    }
+  } catch(e) { 
+    if (typeof showToast === 'function') {
+      showToast(e.message); 
+    }
+  } 
+};
+
+window.loginTwitter = async function() { 
+  try { 
+    await signInWithPopup(window.auth, new TwitterAuthProvider()); 
+    closeLoginModal(); 
+    if (typeof showToast === 'function') {
+      showToast('Вход: Twitter'); 
+    }
+  } catch(e) { 
+    if (typeof showToast === 'function') {
+      showToast(e.message); 
+    }
+  } 
+};
+
+window.handleEmailAuth = async function(e) { 
+  e.preventDefault(); 
+  const email = document.getElementById('emailInput').value; 
+  const pass = document.getElementById('passInput').value; 
+  try { 
+    await signInWithEmailAndPassword(window.auth, email, pass); 
+    closeLoginModal(); 
+    if (typeof showToast === 'function') {
+      showToast('Вход выполнен'); 
+    }
+  } catch(e) { 
+    if (typeof showToast === 'function') {
+      showToast(e.message); 
+    }
+  } 
+};
+
+window.handleRegister = async function() { 
+  const email = document.getElementById('emailInput').value; 
+  const pass = document.getElementById('passInput').value; 
+  try { 
+    await createUserWithEmailAndPassword(window.auth, email, pass); 
+    closeLoginModal(); 
+    if (typeof showToast === 'function') {
+      showToast('Аккаунт создан!'); 
+    }
+  } catch(e) { 
+    if (typeof showToast === 'function') {
+      showToast(e.message); 
+    }
+  } 
+};
+
+window.toggleRegisterMode = function() {
+  const submitBtn = document.querySelector('#loginModal button[type="submit"]');
+  const toggleBtn = document.querySelector('#loginModal button[onclick="toggleRegisterMode()"]');
   
-  try {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(window.auth, provider);
-    closeLoginModal();
-  } catch (error) {
-    console.error('Google login error:', error);
-  }
-};
-
-window.loginTwitter = async function() {
-  if (!window.auth) {
-    console.error('Auth not initialized');
-    return;
-  }
-  
-  try {
-    const provider = new TwitterAuthProvider();
-    await signInWithPopup(window.auth, provider);
-    closeLoginModal();
-  } catch (error) {
-    console.error('Twitter login error:', error);
+  if (submitBtn.textContent.includes('Войти')) {
+    submitBtn.innerHTML = '<span data-translate="register_btn">Зарегистрироваться</span>';
+    toggleBtn.innerHTML = '<span data-translate="has_account">Уже есть аккаунт?</span> <span data-translate="login">Войти</span>';
+  } else {
+    submitBtn.innerHTML = '<span data-translate="login_btn">Войти</span>';
+    toggleBtn.innerHTML = '<span data-translate="no_account">Нет аккаунта?</span> <span data-translate="register">Зарегистрироваться</span>';
   }
 };
 
@@ -2930,27 +3044,39 @@ if (currentUser && db) {
 </div>
 
 <!-- Login Modal -->
-<div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
-  <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid rgba(34,211,238,0.3); border-radius: 20px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-      <h2 style="color: #22d3ee; font-size: 24px; font-weight: bold;">Вход в аккаунт</h2>
-      <button onclick="closeLoginModal()" style="background: none; border: none; color: #64748b; font-size: 28px; cursor: pointer; padding: 5px;">&times;</button>
-    </div>
-    
-    <div style="display: flex; flex-direction: column; gap: 15px;">
-      <button onclick="loginGoogle()" style="background: linear-gradient(145deg, #4285f4, #1967d2); border: none; color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
-        <i class="fab fa-google"></i>
-        Войти через Google
+<div id="loginModal" class="modal" style="display: none;">
+  <div class="modal-content modal-sm p-6 relative">
+    <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+    <h2 class="text-2xl font-bold mb-6 text-center" data-translate="login_title">Вход</h2>
+    <div class="space-y-3">
+      <button onclick="loginGoogle()" class="w-full bg-white text-slate-900 font-bold py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-200">
+        <i class="fab fa-google text-red-500"></i> 
+        <span data-translate="google">Google</span>
       </button>
-      
-      <button onclick="loginTwitter()" style="background: linear-gradient(145deg, #1da1f2, #0c85d0); border: none; color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
-        <i class="fab fa-twitter"></i>
-        Войти через Twitter
+      <button onclick="loginTwitter()" class="w-full bg-[#1DA1F2] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-3">
+        <i class="fab fa-twitter"></i> 
+        <span data-translate="twitter">Twitter</span>
       </button>
-    </div>
-    
-    <div style="margin-top: 20px; text-align: center;">
-      <p style="color: #64748b; font-size: 12px;">Вход через социальные сети безопасен и быстр</p>
+      <div class="relative py-2">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-slate-700"></div>
+        </div>
+        <div class="relative flex justify-center">
+          <span class="bg-[#1e2538] px-2 text-xs text-slate-500" data-translate="or_email">ИЛИ EMAIL</span>
+        </div>
+      </div>
+      <form onsubmit="handleEmailAuth(event)" class="space-y-3">
+        <input type="email" id="emailInput" placeholder="Email" class="w-full bg-[#1e2538] border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" required>
+        <input type="password" id="passInput" placeholder="Пароль" class="w-full bg-[#1e2538] border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" required>
+        <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold py-3 rounded-xl hover:from-cyan-500 hover:to-blue-500">
+          <span data-translate="login_btn">Войти</span>
+        </button>
+      </form>
+      <div class="text-center">
+        <button onclick="toggleRegisterMode()" class="text-cyan-400 hover:text-cyan-300 text-sm">
+          <span data-translate="no_account">Нет аккаунта?</span> <span data-translate="register">Зарегистрироваться</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
