@@ -1542,14 +1542,11 @@ window.showNotifications = function() {
       <button onclick="filterNotifications('all')" class="filter-btn active" data-filter="all" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
         📋 Все
       </button>
-      <button onclick="filterNotifications('wheel_spin')" class="filter-btn" data-filter="wheel_spin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
-        🎰 Колесо
+      <button onclick="filterNotifications('games')" class="filter-btn" data-filter="games" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+        � Игры
       </button>
       <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
         🏆 Джекпот
-      </button>
-      <button onclick="filterNotifications('feedback_reply')" class="filter-btn" data-filter="feedback_reply" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
-        💬 Ответы
       </button>
       <button onclick="filterNotifications('admin')" class="filter-btn" data-filter="admin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
         🛡️ Админ
@@ -1596,9 +1593,26 @@ window.filterNotifications = function(type) {
   let filtered = notifications;
   
   if (type !== 'all') {
-    if (type === 'admin') {
-      filtered = notifications.filter(n => n.type === 'feedback_reply' || n.type === 'admin');
+    if (type === 'games') {
+      // Все игровые уведомления (колесо, краны, будущие игры)
+      filtered = notifications.filter(n => 
+        n.type === 'wheel_spin' || 
+        n.type === 'faucet_claim' || 
+        n.type === 'game_reward' ||
+        (n.type && n.type.includes('game'))
+      );
+    } else if (type === 'admin') {
+      // Все админские уведомления (рассылки, поощрения, ответы)
+      filtered = notifications.filter(n => 
+        n.type === 'feedback_reply' || 
+        n.type === 'admin' || 
+        n.type === 'broadcast' ||
+        n.type === 'reward' ||
+        n.type === 'announcement' ||
+        (n.type && n.type.includes('admin'))
+      );
     } else {
+      // Конкретный тип
       filtered = notifications.filter(n => n.type === type);
     }
   }
@@ -1616,6 +1630,7 @@ window.filterNotifications = function(type) {
     }
   });
   
+  // Мгновенно перерисовываем уведомления
   renderNotificationsInWheel(filtered);
 };
 
@@ -1631,14 +1646,20 @@ window.markAllNotificationsAsRead = async function() {
       await updateDoc(doc(window.db, "notifications", notif.id), {
         read: true
       });
+      // Мгновенно обновляем локальный массив
+      notif.read = true;
     }
+    
+    // Обновляем бейдж
+    updateNotificationBadge();
+    
+    // Мгновенно перерисовываем текущий фильтр
+    const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+    filterNotifications(activeFilter);
     
     if (typeof showToast === 'function') {
       showToast('Все уведомления отмечены как прочитанные');
     }
-    
-    // Перезагружаем уведомления
-    loadNotificationsForWheel();
   } catch (error) {
     console.error('Error marking all notifications as read:', error);
     if (typeof showToast === 'function') {
@@ -1721,20 +1742,44 @@ function renderNotificationsInWheel(notifications) {
     const messageWithLinks = (notif.message || notif.msg || '').replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #60a5fa; text-decoration: underline;">$1</a>');
     const isUnread = !notif.read;
     
+    // Определяем тип и иконку
+    let typeIcon = '📢';
+    let typeLabel = 'Уведомление';
+    
+    if (notif.type === 'wheel_spin') {
+      typeIcon = '🎰';
+      typeLabel = 'Колесо фортуны';
+    } else if (notif.type === 'jackpot_win') {
+      typeIcon = '🏆';
+      typeLabel = 'Джекпот';
+    } else if (notif.type === 'faucet_claim') {
+      typeIcon = '🚰';
+      typeLabel = 'Кран';
+    } else if (notif.type === 'game_reward') {
+      typeIcon = '🎮';
+      typeLabel = 'Игра';
+    } else if (notif.type === 'feedback_reply') {
+      typeIcon = '💬';
+      typeLabel = 'Ответ на сообщение';
+    } else if (notif.type === 'admin' || notif.type === 'broadcast' || notif.type === 'announcement') {
+      typeIcon = '🛡️';
+      typeLabel = 'Администрация';
+    } else if (notif.type === 'reward') {
+      typeIcon = '🎁';
+      typeLabel = 'Поощрение';
+    }
+    
     return `
-      <div style="background: rgba(30,37,56,0.6); border: 1px solid ${isUnread ? 'rgba(34,211,238,0.4)' : 'rgba(34,211,238,0.2)'}; border-radius: 12px; padding: 16px; margin-bottom: 12px; ${isUnread ? 'border-left: 3px solid #22d3ee;' : ''}">
+      <div style="background: rgba(30,37,56,0.6); border: 1px solid ${isUnread ? 'rgba(34,211,238,0.4)' : 'rgba(34,211,238,0.2)'}; border-radius: 12px; padding: 16px; margin-bottom: 12px; ${isUnread ? 'border-left: 3px solid #22d3ee;' : ''}" data-notif-id="${notif.id}">
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
           <h4 style="color: #22d3ee; font-size: 14px; font-weight: 600; margin: 0;">
-            ${notif.type === 'wheel_spin' ? '🎰 Колесо фортуны' : 
-              notif.type === 'jackpot_win' ? '🏆 Джекпот' : 
-              notif.type === 'feedback_reply' ? '💬 Ответ на сообщение' : 
-              '📢 Уведомление'}
+            ${typeIcon} ${typeLabel}
           </h4>
           ${isUnread ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
         </div>
         <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${messageWithLinks}</p>
         <p style="color: #64748b; font-size: 11px; margin: 0;">${formatTimeAgoWheel(notif.createdAt)}</p>
-        ${isUnread ? `<button onclick="markNotificationAsReadWheel('${notif.id}'); renderNotificationsInWheel(window.notifications || []);" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
+        ${isUnread ? `<button onclick="markNotificationAsReadWheel('${notif.id}')" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
       </div>
     `;
   }).join('');
@@ -1802,6 +1847,10 @@ window.markNotificationAsReadWheel = async function(notificationId) {
       
       // Обновляем бейдж
       updateNotificationBadge();
+      
+      // Мгновенно обновляем текущий фильтр
+      const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+      filterNotifications(activeFilter);
     }
   } catch (error) {
     console.error('Error marking notification as read:', error);
