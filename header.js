@@ -1940,13 +1940,12 @@ window.closeFeedbackListModal = function() {
   const modal = document.getElementById('feedbackListModal');
   if (modal) modal.classList.remove('active'); 
 };
+
+// ← ДОБАВЬ СЮДА, ПОСЛЕ ОПРЕДЕЛЕНИЯ ФУНКЦИИ
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    var modal = document.getElementById('feedbackListModal');
-    if (modal && modal.classList.contains('active')) {
-      closeFeedbackListModal();
-    }
-  }
+  if (e.key !== 'Escape') return;
+  var m = document.getElementById('feedbackListModal');
+  if (m && m.classList.contains('active')) window.closeFeedbackListModal();
 });
 // Базовая функция renderFeedbackList для всех страниц
 window.renderFeedbackList = function() {
@@ -2184,8 +2183,9 @@ function updateFeedbackBadge() {
 // Создаем модальное окно для сообщений (доступно на всех страницах)
 function createFeedbackModal() {
   console.log('🔧 Creating feedback modal...');
+
   const modalHTML = `
-  <div id="feedbackListModal" class="modal" onclick="if(event.target===this)closeFeedbackListModal()">
+    <div id="feedbackListModal" class="modal">
       <div class="modal-content modal-large">
         <div class="modal-header">
           <div class="flex justify-between items-center w-full">
@@ -2211,11 +2211,27 @@ function createFeedbackModal() {
       </div>
     </div>
   `;
-  
-  // Добавляем модальное окно в body если его еще нет
+
   if (!document.getElementById('feedbackListModal')) {
     console.log('🔧 Adding feedback modal to DOM...');
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    var _fbModalMdDown = false;
+    var _fbModal = document.getElementById('feedbackListModal');
+
+    if (_fbModal) {
+      _fbModal.addEventListener('mousedown', function(e) {
+        _fbModalMdDown = (e.target === _fbModal);
+      });
+
+      _fbModal.addEventListener('mouseup', function(e) {
+        if (_fbModalMdDown && e.target === _fbModal) {
+          window.closeFeedbackListModal();
+        }
+        _fbModalMdDown = false;
+      });
+    }
+
     console.log('🔧 Feedback modal added successfully');
   } else {
     console.log('🔧 Feedback modal already exists');
