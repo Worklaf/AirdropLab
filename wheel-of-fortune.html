@@ -420,7 +420,7 @@ import {
   getFirestore, initializeFirestore,
   collection, doc, getDoc, setDoc, getDocs,
   updateDoc, addDoc, query, orderBy, limit, where,
-  serverTimestamp, increment, runTransaction, writeBatch, arrayUnion
+  serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Wait for firebase-config.js to set window.firebaseConfig
@@ -464,7 +464,7 @@ try {
   // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
   window.auth = auth;
   window.db   = db;
-  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion };
+  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot };
   window.__authExports = { onAuthStateChanged, signOut };
   console.log('✅ WoF Firebase initialized');
 } catch(e) {
