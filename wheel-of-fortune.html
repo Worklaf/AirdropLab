@@ -1038,7 +1038,7 @@ function sendJackpotWinnerNotification(uid, amount) {
   // Получаем данные победителя для красивого отображения
   const getWinnerData = async () => {
     try {
-      const userSnap = await getDoc(doc(db, 'users', uid));
+      const userSnap = await getDoc(doc(db, COL_USERS, uid));
       const userData = userSnap.exists() ? userSnap.data() : {};
       const winnerName = userData.displayName || userData.email || uid.substring(0, 8) + '...';
       const winnerAvatar = userData.photoURL || userData.avatarUrl || '';
@@ -1280,7 +1280,7 @@ async function populateJackpotParticipants(players, total) {
         </div>
         <div style="text-align: right;">
           <div style="color: ${player.color}; font-size: 16px; font-weight: 700;">${player.percentage}%</div>
-          <div style="color: #64748b; font-size: 11px;">шанс победы</div>
+          <div style="color: #64748b; font-size: 11px;" data-translate="wof_win_chance">шанс победы</div>
         </div>
       </div>
     `).join('');
@@ -1746,46 +1746,48 @@ function renderHistory() {
     <!-- Панель статистики -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
       <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 12px;">
-        <div style="color: #22c55e; font-size: 11px; font-weight: 600; margin-bottom: 4px;">📅 За неделю</div>
-        <div style="color: white; font-size: 13px; font-weight: 700;">Заработано: +${weekStats.profit} RGT</div>
-        <div style="color: #64748b; font-size: 11px;">Потрачено: ${weekStats.spent} RGT</div>
-        <div style="color: #64748b; font-size: 11px;">Прокруток: ${weekStats.count}</div>
+        <div style="color: #22c55e; font-size: 11px; font-weight: 600; margin-bottom: 4px;" data-translate="wof_week_stats">📅 За неделю</div>
+        <div style="color: white; font-size: 13px; font-weight: 700;" data-translate="wof_earned">Заработано:</div> +${weekStats.profit} RGT
+        <div style="color: #64748b; font-size: 11px;" data-translate="wof_spent">Потрачено:</div> ${weekStats.spent} RGT
+        <div style="color: #64748b; font-size: 11px;" data-translate="wof_spins_count">Прокруток:</div> ${weekStats.count}
       </div>
       <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 12px;">
-        <div style="color: #3b82f6; font-size: 11px; font-weight: 600; margin-bottom: 4px;">📅 За месяц</div>
-        <div style="color: white; font-size: 13px; font-weight: 700;">Заработано: +${monthStats.profit} RGT</div>
-        <div style="color: #64748b; font-size: 11px;">Потрачено: ${monthStats.spent} RGT</div>
-        <div style="color: #64748b; font-size: 11px;">Прокруток: ${monthStats.count}</div>
+        <div style="color: #3b82f6; font-size: 11px; font-weight: 600; margin-bottom: 4px;" data-translate="wof_month_stats">📅 За месяц</div>
+        <div style="color: white; font-size: 13px; font-weight: 700;" data-translate="wof_earned">Заработано:</div> +${monthStats.profit} RGT
+        <div style="color: #64748b; font-size: 11px;" data-translate="wof_spent">Потрачено:</div> ${monthStats.spent} RGT
+        <div style="color: #64748b; font-size: 11px;" data-translate="wof_spins_count">Прокруток:</div> ${monthStats.count}
       </div>
       <div style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3); border-radius: 12px; padding: 12px;">
-        <div style="color: #a855f7; font-size: 11px; font-weight: 600; margin-bottom: 4px;">📅 За все время</div>
-        <div style="color: white; font-size: 13px; font-weight: 700;">Заработано: +${allStats.profit} RGT</div>
-        <div style="color: #64748b; font-size: 11px;">Потрачено: ${allStats.spent} RGT</div>
-        <div style="color: #64748b; font-size: 11px;">Прокруток: ${allStats.count}</div>
+        <div style="color: #a855f7; font-size: 11px; font-weight: 600; margin-bottom: 4px;" data-translate="wof_all_time_stats">📅 За все время</div>
+        <div style="color: white; font-size: 13px; font-weight: 700;" data-translate="wof_earned">Заработано:</div> +${allStats.profit} RGT
+        <div style="color: #64748b; font-size: 11px;" data-translate="wof_spent">Потрачено:</div> ${allStats.spent} RGT
+        <div style="color: #64748b; font-size: 11px;" data-translate="wof_spins_count">Прокруток:</div> ${allStats.count}
       </div>
     </div>
     
     <!-- Фильтры и сортировка -->
     <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(139,92,246,0.2);">
       <select id="timeFilter" onchange="filterHistory()" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">
-        <option value="all">📅 Все время</option>
-        <option value="week">📅 За неделю</option>
-        <option value="month">📅 За месяц</option>
+        <option value="all" data-translate="wof_all_time">📅 Все время</option>
+        <option value="week" data-translate="wof_week">📅 За неделю</option>
+        <option value="month" data-translate="wof_month">📅 За месяц</option>
       </select>
       <select id="sortFilter" onchange="filterHistory()" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">
-        <option value="newest">🆕 Новые</option>
-        <option value="oldest">📜 Старые</option>
-        <option value="profit">💰 По выигрышу</option>
-        <option value="loss">💸 По проигрышу</option>
+        <option value="newest" data-translate="wof_newest">🆕 Новые</option>
+        <option value="oldest" data-translate="wof_oldest">📜 Старые</option>
+        <option value="profit" data-translate="wof_profit">💰 По выигрышу</option>
+        <option value="loss" data-translate="wof_loss">💸 По проигрышу</option>
       </select>
       <select id="typeFilter" onchange="filterHistory()" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">
-        <option value="all">🎲 Все</option>
+        <option value="all" data-translate="wof_all">🎲 Все</option>
+        <option value="wins" data-translate="wof_wins">🏆 Только выигрыши</option>
+        <option value="losses" data-translate="wof_losses">💸 Только проигрыши</option>
         <option value="wins">🏆 Только выигрыши</option>
         <option value="losses">💸 Только проигрыши</option>
-        <option value="free">🆓 Бесплатные</option>
+        <option value="free" data-translate="wof_free">🆓 Бесплатные</option>
       </select>
       <button onclick="clearSpinHistory()" style="background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-left: auto;">
-        🗑️ Очистить историю
+        <span data-translate="wof_clear_history">🗑️ Очистить историю</span>
       </button>
     </div>
     
@@ -1933,7 +1935,7 @@ window.renderHistoryPage = function() {
 
 // Функция очистки истории
 window.clearSpinHistory = function() {
-  if (!confirm('Вы уверены, что хотите очистить всю историю прокруток? Это действие нельзя отменить.')) return;
+  if (!confirm(t('wof_clear_history_confirm', 'Вы уверены, что хотите очистить всю историю прокруток? Это действие нельзя отменить.'))) return;
   
   try {
     // Очищаем локальную историю
@@ -1950,7 +1952,7 @@ window.clearSpinHistory = function() {
     renderHistory();
     
     if (typeof showToast === 'function') {
-      showToast('История прокруток очищена на всех устройствах');
+      showToast(t('wof_history_cleared', 'История прокруток очищена на всех устройствах'));
     }
   } catch (error) {
     console.error('Error clearing history:', error);
@@ -2794,7 +2796,7 @@ window.showJackpotWinnerFromNotification = async function(notification) {
     // Всегда получаем свежие данные пользователя для аватарки
     if (notification.userId) {
       try {
-        const userSnap = await getDoc(doc(db, 'users', notification.userId));
+        const userSnap = await getDoc(doc(db, COL_USERS, notification.userId));
         if (userSnap.exists()) {
           const userData = userSnap.data();
           winnerName = userData.displayName || userData.email || notification.userId.substring(0, 8) + '...';
