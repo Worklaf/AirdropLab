@@ -1271,6 +1271,9 @@ if (auth) {
       // Инициализация слушателя сообщений (как в header.js)
       initFeedbacksListener(user.uid);
     }
+    
+    // Обновляем бейдж уведомлений сразу при загрузке
+    updateNotificationBadge();
 
     // Admin jackpot button
     const ab = document.getElementById('jackpotAdminBtn');
@@ -1349,6 +1352,19 @@ window.showNotifications = function() {
   
   modal.appendChild(content);
   document.body.appendChild(modal);
+  
+  // Добавляем обработчики для закрытия по клику вне области и ESC
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+  
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('notificationsModalOverlay')) {
+      document.getElementById('notificationsModalOverlay').remove();
+    }
+  });
   
   // Загружаем уведомления как в index.html
   loadNotificationsForWheel();
@@ -1939,6 +1955,23 @@ function createFeedbackModal() {
     console.log('🔧 Adding feedback modal to DOM...');
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     console.log('🔧 Feedback modal added successfully');
+    
+    // Добавляем обработчики для закрытия по клику вне области и ESC
+    const modal = document.getElementById('feedbackListModal');
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      });
+      
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          const modal = document.getElementById('feedbackListModal');
+          if (modal) modal.remove();
+        }
+      });
+    }
   } else {
     console.log('🔧 Feedback modal already exists');
   }
@@ -1982,6 +2015,23 @@ function createFeedbackChatModal() {
 
   if (!document.getElementById('feedbackModal')) {
     document.body.insertAdjacentHTML('beforeend', chatHTML);
+    
+    // Добавляем обработчики для закрытия по клику вне области и ESC
+    const modal = document.getElementById('feedbackModal');
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      });
+      
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          const modal = document.getElementById('feedbackModal');
+          if (modal) modal.remove();
+        }
+      });
+    }
   }
 }
 
