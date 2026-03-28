@@ -1540,23 +1540,24 @@ window.showNotifications = function() {
     <!-- Фильтры и кнопки управления -->
     <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(34,211,238,0.2);">
       <button onclick="filterNotifications('all')" class="filter-btn active" data-filter="all" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
-        📋 Все
+        📋 Все <span id="filterCount-all" class="filter-count" style="background: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
       </button>
       <button onclick="filterNotifications('games')" class="filter-btn" data-filter="games" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
-        � Игры
+        🎮 Игры <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
       </button>
       <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
-        🏆 Джекпот
+        🏆 Джекпот <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
       </button>
       <button onclick="filterNotifications('admin')" class="filter-btn" data-filter="admin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
-        🛡️ Админ
+        🛡️ Админ <span id="filterCount-admin" class="filter-count" style="background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
       </button>
       
-      <div style="margin-left: auto; display: flex; gap: 8px;">
-        <button onclick="markAllNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid #22c55e; color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+      <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+        <span id="currentFilterInfo" style="color: #64748b; font-size: 11px; margin-right: 8px;">0 уведомлений</span>
+        <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid #22c55e; color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
           ✓ Прочитать все
         </button>
-        <button onclick="clearAllNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+        <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
           🗑️ Очистить все
         </button>
       </div>
@@ -1626,6 +1627,10 @@ window.filterNotifications = function(type) {
   
   console.log('🔍 Filtered result:', filtered.length, 'items');
   
+  // Сохраняем текущий фильтр и отфильтрованные данные
+  window.currentFilter = type;
+  window.filteredNotifications = filtered;
+  
   // Обновляем стили кнопок
   document.querySelectorAll('.filter-btn').forEach(btn => {
     if (btn.dataset.filter === type) {
@@ -1639,8 +1644,132 @@ window.filterNotifications = function(type) {
     }
   });
   
+  // Обновляем счетчики
+  updateFilterCounts(notifications);
+  
+  // Обновляем информацию о текущем фильтре
+  updateFilterInfo(filtered, type);
+  
   // Мгновенно перерисовываем уведомления (не перезаписывая оригинальный массив)
   renderNotificationsInWheel(filtered);
+};
+
+// Функция обновления счетчиков фильтров
+function updateFilterCounts(notifications) {
+  const counts = {
+    all: notifications.length,
+    games: notifications.filter(n => n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))).length,
+    jackpot_win: notifications.filter(n => n.type === 'jackpot_win').length,
+    admin: notifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game'))).length
+  };
+  
+  // Обновляем счетчики на кнопках
+  Object.keys(counts).forEach(filter => {
+    const countEl = document.getElementById(`filterCount-${filter}`);
+    if (countEl) {
+      countEl.textContent = counts[filter];
+    }
+  });
+}
+
+// Функция обновления информации о текущем фильтре
+function updateFilterInfo(filtered, filterType) {
+  const infoEl = document.getElementById('currentFilterInfo');
+  if (infoEl) {
+    const unreadCount = filtered.filter(n => !n.read).length;
+    const filterNames = {
+      all: 'Все уведомления',
+      games: 'Игровые уведомления',
+      jackpot_win: 'Джекпоты',
+      admin: 'Админские уведомления'
+    };
+    infoEl.textContent = `${filtered.length} уведомлений${unreadCount > 0 ? ` (${unreadCount} непрочитанных)` : ''}`;
+  }
+}
+
+// Функция отметки отфильтрованных уведомлений как прочитанные
+window.markFilteredNotificationsAsRead = async function() {
+  const filtered = window.filteredNotifications || [];
+  const unreadFiltered = filtered.filter(n => !n.read);
+  
+  if (unreadFiltered.length === 0) {
+    if (typeof showToast === 'function') {
+      showToast('Нет непрочитанных уведомлений в текущем фильтре');
+    }
+    return;
+  }
+  
+  try {
+    const { updateDoc, doc } = window.__firestoreExports;
+    
+    for (const notif of unreadFiltered) {
+      await updateDoc(doc(window.db, "notifications", notif.id), {
+        read: true
+      });
+      // Мгновенно обновляем локальный массив
+      notif.read = true;
+    }
+    
+    // Обновляем бейдж
+    updateNotificationBadge();
+    
+    // Обновляем текущий фильтр
+    const currentFilter = window.currentFilter || 'all';
+    filterNotifications(currentFilter);
+    
+    if (typeof showToast === 'function') {
+      showToast(`Отмечено как прочитанные: ${unreadFiltered.length} уведомлений`);
+    }
+  } catch (error) {
+    console.error('Error marking filtered notifications as read:', error);
+    if (typeof showToast === 'function') {
+      showToast('Ошибка при отметке уведомлений');
+    }
+  }
+};
+
+// Функция очистки отфильтрованных уведомлений
+window.clearFilteredNotifications = async function() {
+  const filtered = window.filteredNotifications || [];
+  
+  if (filtered.length === 0) {
+    if (typeof showToast === 'function') {
+      showToast('Нет уведомлений в текущем фильтре');
+    }
+    return;
+  }
+  
+  const filterName = window.currentFilter === 'all' ? 'все уведомления' : 'уведомления из текущего фильтра';
+  if (!confirm(`Вы уверены, что хотите удалить ${filtered.length} ${filterName}?`)) return;
+  
+  try {
+    const { deleteDoc, doc } = window.__firestoreExports;
+    
+    for (const notif of filtered) {
+      await deleteDoc(doc(window.db, "notifications", notif.id));
+      // Удаляем из локального массива
+      const index = window.allNotifications.findIndex(n => n.id === notif.id);
+      if (index > -1) {
+        window.allNotifications.splice(index, 1);
+      }
+    }
+    
+    // Обновляем бейдж
+    updateNotificationBadge();
+    
+    // Обновляем текущий фильтр
+    const currentFilter = window.currentFilter || 'all';
+    filterNotifications(currentFilter);
+    
+    if (typeof showToast === 'function') {
+      showToast(`Удалено: ${filtered.length} уведомлений`);
+    }
+  } catch (error) {
+    console.error('Error clearing filtered notifications:', error);
+    if (typeof showToast === 'function') {
+      showToast('Ошибка при удалении уведомлений');
+    }
+  }
 };
 
 // Функция отметки всех уведомлений как прочитанные
@@ -1732,7 +1861,22 @@ async function loadNotificationsForWheel() {
       console.log('📨 Total loaded notifications:', notifications.length);
       window.allNotifications = notifications; // Сохраняем полный массив
       window.notifications = notifications; // Для совместимости
-      renderNotificationsInWheel(notifications);
+      
+      // Автоматически обновляем бейдж при изменениях
+      updateNotificationBadge();
+      
+      // Если модальное окно открыто, обновляем его
+      if (document.getElementById('notificationsModalOverlay')) {
+        const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+        filterNotifications(activeFilter);
+      } else {
+        renderNotificationsInWheel(notifications);
+      }
+      
+      // Обновляем счетчики если модальное окно открыто
+      if (document.getElementById('notificationsModalOverlay')) {
+        updateFilterCounts(notifications);
+      }
     });
   } catch (error) {
     console.error('Error loading notifications:', error);
