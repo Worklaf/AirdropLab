@@ -390,6 +390,54 @@
   </div>
 </div>
 
+<!-- Feedback List Modal -->
+<div id="feedbackListModal" class="modal" style="display: none;">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <div class="flex justify-between items-center w-full">
+        <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments text-purple-400"></i><span data-translate="feedbacks_list">Отзывы и предложения</span></h2>
+        <button onclick="closeFeedbackListModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="feedbacksContainer" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2"><p class="text-slate-500 text-center py-8" data-translate="loading_feedbacks">Загрузка отзывов...</p></div>
+    </div>
+    <div class="modal-footer"><div class="flex justify-center w-full"><button onclick="closeFeedbackListModal()" class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-lg text-sm" data-translate="close">Закрыть</button></div></div>
+  </div>
+</div>
+
+<!-- Feedback Modal -->
+<div id="feedbackModal" class="modal" style="display: none;">
+  <input type="hidden" id="feedbackProjectId" value="">
+  <input type="hidden" id="feedbackDocId" value="">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <div class="flex justify-between items-center w-full">
+        <h2 id="feedbackModalTitle" class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments text-purple-400"></i><span data-translate="feedback">Обратная связь</span></h2>
+        <button onclick="closeFeedbackModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="feedbackChatHistory" class="h-80 overflow-y-auto pr-3 custom-scrollbar bg-slate-900/30 rounded-xl p-4"><div class="flex flex-col items-center justify-center h-full text-slate-500"><i class="fas fa-comments text-4xl mb-3 opacity-50"></i><p class="text-sm" data-translate="loading_chat">Загрузка переписки...</p></div></div>
+      <div id="feedbackFormNew" class="space-y-4">
+        <div><label class="block text-sm font-medium text-slate-300 mb-2" data-translate="message">Сообщение</label><textarea id="feedbackText" rows="4" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-200" placeholder="Опишите суть обращения..." data-translate="message_placeholder"></textarea></div>
+      </div>
+      <div id="feedbackFormReply" class="hidden">
+        <label class="block text-sm font-medium text-slate-300 mb-2" data-translate="your_answer">Ваш ответ</label>
+        <textarea id="feedbackReplyText" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-200" placeholder="Введите ответ..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="flex gap-3">
+        <button onclick="backToFeedbackList()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm"><i class="fas fa-arrow-left"></i> Назад</button>
+        <button onclick="closeFeedbackModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg text-sm" data-translate="cancel">Отмена</button>
+        <button id="adminChatDeleteBtn" onclick="deleteFeedbackChat()" class="hidden bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-bold"><i class="fas fa-trash"></i> Удалить</button>
+        <button onclick="sendFeedback()" class="flex-1 bg-purple-600 hover:bg-purple-500 py-2 rounded-lg text-sm font-bold" data-translate="send">Отправить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- JACKPOT WINNER MODAL -->
 <div id="jackpotWinnerOverlay" class="jackpot-winner-overlay" onclick="if(event.target===this)closeJackpotWinner()">
   <div class="jackpot-winner-card">
@@ -1513,42 +1561,23 @@ window.openFeedbackListModal = function() {
     return; 
   }
   
-  // Создаем модальное окно для списка сообщений как в index.html
-  const modal = document.createElement('div');
-  modal.id = 'feedbackListModalOverlay';
-  modal.style.cssText = `
-    position: fixed; inset: 0; z-index: 99999;
-    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
-    display: flex; align-items: center; justify-content: center; padding: 20px;
-  `;
-  
-  const content = document.createElement('div');
-  content.style.cssText = `
-    background: linear-gradient(135deg, #1e293b, #0f172a);
-    border: 2px solid rgba(139,92,246,0.3);
-    border-radius: 20px;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(139,92,246,0.2);
-    max-width: 700px; width: 100%; max-height: 80vh; overflow-y: auto;
-    padding: 24px;
-  `;
-  
-  content.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h3 style="color: #a78bfa; font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-        <i class="fas fa-comments"></i> Сообщения
-      </h3>
-      <button onclick="this.closest('#feedbackListModalOverlay').remove()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer;">&times;</button>
-    </div>
-    <div id="feedbacksContainer">
-      <p style="color: #64748b; text-align: center; padding: 20px;">Загрузка сообщений...</p>
-    </div>
-  `;
-  
-  modal.appendChild(content);
-  document.body.appendChild(modal);
-  
-  // Загружаем сообщения
-  loadFeedbackMessagesForList();
+  // Используем готовое модальное окно как в index.html
+  const modal = document.getElementById('feedbackListModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+    // Загружаем сообщения
+    loadFeedbackMessagesForList();
+  }
+};
+
+// Функция закрытия списка сообщений
+window.closeFeedbackListModal = function() {
+  const modal = document.getElementById('feedbackListModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
 };
 
 // Функция загрузки сообщений для списка
@@ -1712,54 +1741,28 @@ window.openFeedbackFromList = function(docId, projectId, projectName) {
   const isSupport = projectId === '__support__' || projectName === 'Support';
 
   // Закрываем список
-  const listModal = document.getElementById('feedbackListModalOverlay');
-  if (listModal) listModal.remove();
+  const listModal = document.getElementById('feedbackListModal');
+  if (listModal) {
+    listModal.style.display = 'none';
+    listModal.classList.remove('active');
+  }
 
-  // Создаем модальное окно чата
-  const modal = document.createElement('div');
-  modal.id = 'feedbackModalOverlay';
-  modal.style.cssText = `
-    position: fixed; inset: 0; z-index: 99999;
-    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
-    display: flex; align-items: center; justify-content: center; padding: 20px;
-  `;
+  // Открываем готовое модальное окно чата
+  const modal = document.getElementById('feedbackModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+  }
   
-  const content = document.createElement('div');
-  content.style.cssText = `
-    background: linear-gradient(135deg, #1e293b, #0f172a);
-    border: 2px solid rgba(139,92,246,0.3);
-    border-radius: 20px;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(139,92,246,0.2);
-    max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto;
-    padding: 24px;
-  `;
+  // Устанавливаем данные
+  const projectIdInput = document.getElementById('feedbackProjectId');
+  const docIdInput = document.getElementById('feedbackDocId');
+  const deleteBtn = document.getElementById('adminChatDeleteBtn');
   
-  content.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h3 style="color: #a78bfa; font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-        <i class="fas fa-comments"></i> ${projectName || 'Support'}
-      </h3>
-      <div style="display: flex; gap: 8px;">
-        <button onclick="backToFeedbackList()" style="background: rgba(139,92,246,0.2); border: 1px solid #a78bfa; color: #a78bfa; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-          <i class="fas fa-arrow-left"></i> Назад
-        </button>
-        <button onclick="this.closest('#feedbackModalOverlay').remove()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer;">&times;</button>
-      </div>
-    </div>
-    <div id="feedbackChatHistory" style="background: rgba(30,37,56,0.4); border-radius: 12px; padding: 16px; margin-bottom: 16px; min-height: 300px;">
-      <p style="color: #64748b; text-align: center; padding: 20px;">Загрузка переписки...</p>
-    </div>
-    <div style="display: flex; gap: 8px;">
-      <input type="text" id="feedbackMessageInput" placeholder="Введите сообщение..." style="flex: 1; background: rgba(30,37,56,0.6); border: 1px solid rgba(139,92,246,0.3); border-radius: 8px; padding: 12px; color: #f1f5f9; font-size: 14px;">
-      <button onclick="sendFeedbackMessage()" style="background: linear-gradient(135deg, #a78bfa, #8b5cf6); border: none; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">
-        <i class="fas fa-paper-plane"></i>
-      </button>
-    </div>
-  `;
-  
-  modal.appendChild(content);
-  document.body.appendChild(modal);
-  
+  if (projectIdInput) projectIdInput.value = projectId;
+  if (docIdInput) docIdInput.value = docId;
+  if (deleteBtn) deleteBtn.classList.add('hidden');
+
   // Загружаем переписку
   loadFeedbackChat(docId);
 };
@@ -1840,9 +1843,27 @@ window.sendFeedbackMessage = async function() {
 
 // Функция возврата к списку
 window.backToFeedbackList = function() {
-  const chatModal = document.getElementById('feedbackModalOverlay');
-  if (chatModal) chatModal.remove();
-  openFeedbackListModal();
+  const chatModal = document.getElementById('feedbackModal');
+  const listModal = document.getElementById('feedbackListModal');
+  
+  if (chatModal) {
+    chatModal.style.display = 'none';
+    chatModal.classList.remove('active');
+  }
+  
+  if (listModal) {
+    listModal.style.display = 'flex';
+    listModal.classList.add('active');
+  }
+};
+
+// Функция закрытия чата
+window.closeFeedbackModal = function() {
+  const modal = document.getElementById('feedbackModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
 };
 
 // Функция для обновления бейджа сообщений
