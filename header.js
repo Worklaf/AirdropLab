@@ -2919,51 +2919,7 @@ function initFeedbacksListener(uid) {
     console.log('✅ Firebase exports initialized in header.js');
   };
 
-  // ═══════════════════════════════════════════════════════════
-  // УВЕДОМЛЕНИЯ
-  // ═══════════════════════════════════════════════════════════
-
-  // Функция форматирования времени
-  window.formatNotificationDate = function(date) {
-    if (!date) return '';
-    
-    const now = new Date();
-    const notifDate = date.toDate ? date.toDate() : new Date(date);
-    const diffMs = now - notifDate;
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffSecs / 60);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-    
-    if (diffSecs < 60) return 'только что';
-    if (diffMins < 60) return diffMins + ' мин. назад';
-    if (diffHours < 24) return diffHours + ' ч. назад';
-    if (diffDays < 7) return diffDays + ' д. назад';
-    
-    return notifDate.toLocaleDateString('ru-RU', { 
-      day: 'numeric', 
-      month: 'short', 
-      year: notifDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined 
-    });
-  };
-
-  // Функция обновления бейджа уведомлений
-  window.updateNotificationBadge = function() {
-    const badge = document.getElementById('notificationBadge');
-    if (!badge) return;
-    
-    const unreadCount = (window.allNotifications || []).filter(n => !n.read).length;
-    
-    if (unreadCount > 0) {
-      badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-      badge.classList.remove('hidden');
-    } else {
-      badge.classList.add('hidden');
-      badge.textContent = '0';
-    }
-  };
-
-  // Функция отображения модального окна уведомлений
+  // Функция отображения модального окна уведомлений (улучшенная версия)
   window.showNotifications = function() {
     if (!window.currentUser) { 
       if (typeof showToast === 'function') {
@@ -2980,93 +2936,108 @@ function initFeedbacksListener(uid) {
       existingModal.remove();
     }
     
+    // Создаем модальное окно уведомлений
     const modal = document.createElement('div');
     modal.id = 'notificationsModalOverlay';
     modal.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: rgba(15,23,42,0.95); z-index: 10000; 
-      display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(10px);
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(15,23,42,0.95); 
+      z-index: 10000; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
     `;
     
-    modal.innerHTML = `
-      <div style="background: linear-gradient(145deg, #1e293b, #0f172a); 
-                  border: 2px solid rgba(34,211,238,0.3); border-radius: 20px; 
-                  padding: 30px; max-width: 600px; width: 95%; max-height: 80vh; 
-                  overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <h2 style="color: #22d3ee; font-size: 24px; font-weight: bold; display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-bell"></i> Уведомления
-          </h2>
-          <button onclick="window.closeNotificationsModal()" 
-                  style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer; padding: 5px;">&times;</button>
-        </div>
-        
-        <!-- Фильтры -->
-        <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
-          <button class="filter-btn active" data-filter="all" 
-                  style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; 
-                         padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">Все</button>
-          <button class="filter-btn" data-filter="unread" 
-                  style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; 
-                         padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">Непрочитанные</button>
-          <button class="filter-btn" data-filter="jackpot_win" 
-                  style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; 
-                         padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">🏆 Джекпот</button>
-          <button class="filter-btn" data-filter="spin_result" 
-                  style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; 
-                         padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">🎰 Крутилка</button>
-          <button class="filter-btn" data-filter="system" 
-                  style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #64748b; 
-                         padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">📢 Система</button>
-        </div>
-        
-        <!-- Список уведомлений -->
-        <div id="notificationsList" style="max-height: 400px; overflow-y: auto;">
-          <div style="text-align: center; color: #64748b; padding: 40px;">
-            <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i>
-            <div>Загрузка уведомлений...</div>
-          </div>
-        </div>
-        
-        <!-- Кнопка действий -->
-        <div style="margin-top: 20px; text-align: center;">
-          <button onclick="window.markAllNotificationsAsRead()" 
-                  style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); 
-                         color: #22d3ee; padding: 8px 16px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-            Отметить все как прочитанные
+    const content = document.createElement('div');
+    content.style.cssText = `
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 2px solid rgba(34,211,238,0.3);
+      border-radius: 20px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(34,211,238,0.2);
+      max-width: 600px; 
+      width: 90%; 
+      max-height: 80vh; 
+      overflow-y: auto;
+      padding: 24px;
+    `;
+    
+    content.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="color: #22d3ee; font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-bell"></i> Уведомления
+        </h3>
+        <button onclick="window.closeNotificationsModal()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer; padding: 4px;">&times;</button>
+      </div>
+      
+      <!-- Фильтры и кнопки управления -->
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(34,211,238,0.2);">
+        <!-- Все -->
+        <div style="position: relative;">
+          <span id="unreadBadge-all" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
+          <button onclick="filterNotifications('all')" class="filter-btn active" data-filter="all" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #e2e8f0; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+            📋 Все <span id="filterCount-all" class="filter-count" style="background: rgba(255,255,255,0.15); color: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
           </button>
+        </div>
+        
+        <!-- Игры -->
+        <div style="position: relative;">
+          <span id="unreadBadge-games" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
+          <button onclick="filterNotifications('games')" class="filter-btn" data-filter="games" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+            🎮 Игры <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          </button>
+        </div>
+        
+        <!-- Джекпот -->
+        <div style="position: relative;">
+          <span id="unreadBadge-jackpot_win" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
+          <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+            🏆 Джекпот <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          </button>
+        </div>
+        
+        <!-- Админ -->
+        <div style="position: relative;">
+          <span id="unreadBadge-admin" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
+          <button onclick="filterNotifications('admin')" class="filter-btn" data-filter="admin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+            🛡️ Админ <span id="filterCount-admin" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          </button>
+        </div>
+        
+        <!-- Кнопки управления -->
+        <div style="margin-left: auto; display: flex; gap: 8px;">
+          <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+            ✓ Прочитать все
+          </button>
+          <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+            🗑️ Очистить все
+          </button>
+        </div>
+      </div>
+      
+      <!-- Список уведомлений -->
+      <div id="notificationsList" style="max-height: 400px; overflow-y: auto;">
+        <div style="text-align: center; padding: 40px; color: #94a3b8;">
+          <i class="fas fa-bell" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
+          Загрузка уведомлений...
         </div>
       </div>
     `;
     
+    modal.appendChild(content);
     document.body.appendChild(modal);
     
-    // Добавляем обработчики для фильтров
-    modal.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        modal.querySelectorAll('.filter-btn').forEach(b => {
-          b.style.background = 'rgba(34,211,238,0.1)';
-          b.style.borderColor = 'rgba(34,211,238,0.3)';
-          b.style.color = '#64748b';
-        });
-        this.style.background = 'rgba(34,211,238,0.2)';
-        this.style.borderColor = '#22d3ee';
-        this.style.color = '#22d3ee';
-        
-        window.filterNotifications(this.dataset.filter);
-      });
-    });
-    
-    // Закрытие по клику на фон
+    // Добавляем обработчик закрытия по клику на фон
     modal.addEventListener('click', function(e) {
       if (e.target === modal) {
         window.closeNotificationsModal();
       }
     });
     
-    // Закрытие по ESC
+    // Добавляем обработчик закрытия по ESC
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
         window.closeNotificationsModal();
@@ -3122,6 +3093,46 @@ function initFeedbacksListener(uid) {
     }
   };
 
+  // Функция форматирования времени
+  window.formatNotificationDate = function(date) {
+    if (!date) return '';
+    
+    const now = new Date();
+    const notifDate = date.toDate ? date.toDate() : new Date(date);
+    const diffMs = now - notifDate;
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffSecs < 60) return 'только что';
+    if (diffMins < 60) return diffMins + ' мин. назад';
+    if (diffHours < 24) return diffHours + ' ч. назад';
+    if (diffDays < 7) return diffDays + ' д. назад';
+    
+    return notifDate.toLocaleDateString('ru-RU', { 
+      day: 'numeric', 
+      month: 'short', 
+      year: notifDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined 
+    });
+  };
+
+  // Функция обновления бейджа уведомлений
+  window.updateNotificationBadge = function() {
+    const badge = document.getElementById('notificationBadge');
+    if (!badge) return;
+    
+    const unreadCount = (window.allNotifications || []).filter(n => !n.read).length;
+    
+    if (unreadCount > 0) {
+      badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+      badge.textContent = '0';
+    }
+  };
+
   // Функция рендеринга уведомлений
   window.renderNotificationsInWheel = function(notifications) {
     const listEl = document.getElementById('notificationsList');
@@ -3129,7 +3140,7 @@ function initFeedbacksListener(uid) {
 
     if (notifications.length === 0) {
       listEl.innerHTML = `
-        <div style="text-align: center; color: #64748b; padding: 40px;">
+        <div style="text-align: center; color: #94a3b8; padding: 40px;">
           <i class="fas fa-bell-slash" style="font-size: 24px; margin-bottom: 10px;"></i>
           <div>У вас пока нет уведомлений</div>
         </div>
@@ -3141,25 +3152,32 @@ function initFeedbacksListener(uid) {
       const isUnread = !notif.read;
       let typeIcon = '📢';
       let typeLabel = 'Уведомление';
+      let filterType = 'all';
       
       if (notif.type === 'jackpot_win') {
         typeIcon = '🏆';
         typeLabel = 'Джекпот';
+        filterType = 'jackpot_win';
       } else if (notif.type === 'spin_result') {
         typeIcon = '🎰';
         typeLabel = 'Крутилка';
+        filterType = 'games';
       } else if (notif.type === 'system') {
         typeIcon = '📢';
         typeLabel = 'Система';
+        filterType = 'admin';
       } else if (notif.type === 'newsletter') {
         typeIcon = '📧';
         typeLabel = 'Рассылка';
+        filterType = 'all';
       } else if (!notif.type) {
         typeIcon = '📢';
         typeLabel = 'Уведомление';
+        filterType = 'all';
       } else {
         typeIcon = '📢';
         typeLabel = notif.type.charAt(0).toUpperCase() + notif.type.slice(1);
+        filterType = 'all';
       }
       
       return `
@@ -3168,6 +3186,7 @@ function initFeedbacksListener(uid) {
                   ${isUnread ? 'border-left: 3px solid #22d3ee;' : ''} 
                   ${notif.type === 'jackpot_win' ? 'cursor: pointer; transition: all 0.3s;' : ''}" 
                   data-notif-id="${notif.id}" 
+                  data-filter-type="${filterType}"
                   ${notif.type === 'jackpot_win' ? `onclick="window.showJackpotWinnerFromNotification({id: '${notif.id}', userId: '${notif.userId || ''}', winnerName: '${notif.winnerName || ''}', amount: '${notif.amount || '0'}', message: '${notif.message || ''}'})"` : ''}>
           
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
@@ -3192,11 +3211,54 @@ function initFeedbacksListener(uid) {
     }).join('');
     
     window.updateNotificationBadge();
+    window.updateFilterCounts();
+  };
+
+  // Функция обновления счетчиков фильтров
+  window.updateFilterCounts = function() {
+    if (!window.allNotifications) return;
+    
+    const filters = ['all', 'games', 'jackpot_win', 'admin'];
+    const filterMapping = {
+      'all': () => window.allNotifications,
+      'games': () => window.allNotifications.filter(n => n.type === 'spin_result'),
+      'jackpot_win': () => window.allNotifications.filter(n => n.type === 'jackpot_win'),
+      'admin': () => window.allNotifications.filter(n => n.type === 'system')
+    };
+    
+    filters.forEach(filter => {
+      const notifications = filterMapping[filter]();
+      const count = notifications.length;
+      const unreadCount = notifications.filter(n => !n.read).length;
+      
+      const countEl = document.getElementById(`filterCount-${filter}`);
+      const badgeEl = document.getElementById(`unreadBadge-${filter}`);
+      
+      if (countEl) countEl.textContent = count;
+      if (badgeEl) {
+        badgeEl.textContent = unreadCount;
+        badgeEl.style.display = unreadCount > 0 ? 'flex' : 'none';
+      }
+    });
   };
 
   // Функция фильтрации уведомлений
   window.filterNotifications = function(filterType) {
     if (!window.allNotifications) return;
+    
+    // Обновляем активный фильтр
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.style.background = 'rgba(34,211,238,0.1)';
+      btn.style.borderColor = 'rgba(34,211,238,0.3)';
+      btn.style.color = '#94a3b8';
+    });
+    
+    const activeBtn = document.querySelector(`[data-filter="${filterType}"]`);
+    if (activeBtn) {
+      activeBtn.style.background = 'rgba(34,211,238,0.2)';
+      activeBtn.style.borderColor = '#22d3ee';
+      activeBtn.style.color = '#e2e8f0';
+    }
     
     let filtered = window.allNotifications;
     
@@ -3204,9 +3266,9 @@ function initFeedbacksListener(uid) {
       filtered = window.allNotifications.filter(n => !n.read);
     } else if (filterType === 'jackpot_win') {
       filtered = window.allNotifications.filter(n => n.type === 'jackpot_win');
-    } else if (filterType === 'spin_result') {
+    } else if (filterType === 'games') {
       filtered = window.allNotifications.filter(n => n.type === 'spin_result');
-    } else if (filterType === 'system') {
+    } else if (filterType === 'admin') {
       filtered = window.allNotifications.filter(n => n.type === 'system');
     }
     
@@ -3229,6 +3291,7 @@ function initFeedbacksListener(uid) {
       }
       
       window.updateNotificationBadge();
+      window.updateFilterCounts();
       
       const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
       window.filterNotifications(activeFilter);
@@ -3237,15 +3300,26 @@ function initFeedbacksListener(uid) {
     }
   };
 
-  // Функция отметки всех уведомлений как прочитанных
-  window.markAllNotificationsAsRead = async function() {
+  // Функция отметки отфильтрованных уведомлений как прочитанных
+  window.markFilteredNotificationsAsRead = async function() {
     if (!window.db || !window.allNotifications) return;
     
-    const unreadNotifications = window.allNotifications.filter(n => !n.read);
+    const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+    let notifications = window.allNotifications;
     
-    if (unreadNotifications.length === 0) {
+    if (activeFilter === 'unread') {
+      notifications = window.allNotifications.filter(n => !n.read);
+    } else if (activeFilter === 'jackpot_win') {
+      notifications = window.allNotifications.filter(n => n.type === 'jackpot_win' && !n.read);
+    } else if (activeFilter === 'games') {
+      notifications = window.allNotifications.filter(n => n.type === 'spin_result' && !n.read);
+    } else if (activeFilter === 'admin') {
+      notifications = window.allNotifications.filter(n => n.type === 'system' && !n.read);
+    }
+    
+    if (notifications.length === 0) {
       if (typeof showToast === 'function') {
-        showToast('Все уведомления уже прочитаны');
+        showToast('Нет непрочитанных уведомлений в этом фильтре');
       }
       return;
     }
@@ -3253,7 +3327,7 @@ function initFeedbacksListener(uid) {
     try {
       const batch = writeBatch(window.db);
       
-      unreadNotifications.forEach(notif => {
+      notifications.forEach(notif => {
         batch.update(doc(window.db, 'notifications', notif.id), {
           read: true,
           readAt: serverTimestamp()
@@ -3262,27 +3336,91 @@ function initFeedbacksListener(uid) {
       
       await batch.commit();
       
-      window.allNotifications.forEach(n => n.read = true);
+      notifications.forEach(notif => {
+        const localNotif = window.allNotifications.find(n => n.id === notif.id);
+        if (localNotif) localNotif.read = true;
+      });
+      
       window.updateNotificationBadge();
+      window.updateFilterCounts();
       
       const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
       window.filterNotifications(activeFilter);
       
       if (typeof showToast === 'function') {
-        showToast(`Отмечено ${unreadNotifications.length} уведомлений как прочитанные`);
+        showToast(`Отмечено ${notifications.length} уведомлений как прочитанные`);
       }
       
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      console.error('Error marking filtered notifications as read:', error);
       if (typeof showToast === 'function') {
         showToast('Ошибка при отметке уведомлений');
       }
     }
   };
 
-  // ═══════════════════════════════════════════════════════════
-  // МОДАЛЬНОЕ ОКНО ДЖЕКПОТА
-  // ═══════════════════════════════════════════════════════════
+  // Функция очистки отфильтрованных уведомлений
+  window.clearFilteredNotifications = async function() {
+    if (!window.db || !window.allNotifications) return;
+    
+    const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+    let notifications = window.allNotifications;
+    
+    if (activeFilter === 'jackpot_win') {
+      notifications = window.allNotifications.filter(n => n.type === 'jackpot_win');
+    } else if (activeFilter === 'games') {
+      notifications = window.allNotifications.filter(n => n.type === 'spin_result');
+    } else if (activeFilter === 'admin') {
+      notifications = window.allNotifications.filter(n => n.type === 'system');
+    } else {
+      notifications = window.allNotifications;
+    }
+    
+    if (notifications.length === 0) {
+      if (typeof showToast === 'function') {
+        showToast('Нет уведомлений для очистки');
+      }
+      return;
+    }
+    
+    if (!confirm(`Удалить ${notifications.length} уведомлений?`)) {
+      return;
+    }
+    
+    try {
+      const batch = writeBatch(window.db);
+      
+      notifications.forEach(notif => {
+        batch.delete(doc(window.db, 'notifications', notif.id));
+      });
+      
+      await batch.commit();
+      
+      // Удаляем из локального массива
+      notifications.forEach(notif => {
+        const index = window.allNotifications.findIndex(n => n.id === notif.id);
+        if (index > -1) {
+          window.allNotifications.splice(index, 1);
+        }
+      });
+      
+      window.updateNotificationBadge();
+      window.updateFilterCounts();
+      
+      const activeFilterBtn = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+      window.filterNotifications(activeFilterBtn);
+      
+      if (typeof showToast === 'function') {
+        showToast(`Удалено ${notifications.length} уведомлений`);
+      }
+      
+    } catch (error) {
+      console.error('Error clearing notifications:', error);
+      if (typeof showToast === 'function') {
+        showToast('Ошибка при удалении уведомлений');
+      }
+    }
+  };
 
   // Функция для отображения модального окна выигрыша джекпота из уведомлений
   window.showJackpotWinnerFromNotification = async function(notification) {
@@ -3358,10 +3496,6 @@ function initFeedbacksListener(uid) {
     }
   };
 
-  // ═══════════════════════════════════════════════════════════
-  // ИНИЦИАЛИЗАЦИЯ СЛУШАТЕЛЯ УВЕДОМЛЕНИЙ
-  // ═══════════════════════════════════════════════════════════
-
   // Функция инициализации слушателя уведомлений
   window.initNotificationsListener = function(userId) {
     if (!window.db) return;
@@ -3381,6 +3515,7 @@ function initFeedbacksListener(uid) {
         
         window.allNotifications = notifications;
         window.updateNotificationBadge();
+        window.updateFilterCounts();
         
         // Проверяем есть ли непрочитанные уведомления
         const unreadCount = notifications.filter(n => !n.read).length;
@@ -3395,10 +3530,6 @@ function initFeedbacksListener(uid) {
       return null;
     }
   };
-
-  // ═══════════════════════════════════════════════════════════
-  // ПОЛЬЗОВАТЕЛЬСКИЕ ДАННЫЕ
-  // ═══════════════════════════════════════════════════════════
 
   // Функция обновления пользовательского интерфейса
   window.updateUserUI = function(user) {
@@ -3422,10 +3553,6 @@ function initFeedbacksListener(uid) {
       if (mobInn) mobInn.style.display = 'none';
     }
   };
-
-  // ═══════════════════════════════════════════════════════════
-  // ВСПЛЫВАЮЩИЕ УВЕДОМЛЕНИЯ (TOASTS)
-  // ═══════════════════════════════════════════════════════════
 
   // Функция показа toast уведомления
   window.showToast = function(message, type = 'info', duration = 3000) {
@@ -3467,10 +3594,6 @@ function initFeedbacksListener(uid) {
     }, duration);
   };
 
-  // ═══════════════════════════════════════════════════════════
-  // ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
-  // ═══════════════════════════════════════════════════════════
-
   // Автоматическая инициализация при загрузке страницы
   document.addEventListener('DOMContentLoaded', function() {
     // Инициализируем слушатель уведомлений если пользователь уже авторизован
@@ -3480,5 +3603,4 @@ function initFeedbacksListener(uid) {
   });
 
   console.log('🔧 Common functions loaded in header.js!');
-
 })();
