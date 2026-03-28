@@ -1041,12 +1041,15 @@ function sendJackpotWinnerNotification(uid, amount) {
       const userSnap = await getDoc(doc(db, 'users', uid));
       const userData = userSnap.exists() ? userSnap.data() : {};
       const winnerName = userData.displayName || userData.email || uid.substring(0, 8) + '...';
+      const winnerAvatar = userData.photoURL || userData.avatarUrl || '';
       
       const isEn = (window.currentLang === 'en');
       const msg = isEn ? `🏆 Congratulations! You won the monthly jackpot: ${amount} RGT!` : `🏆 Поздравляем! Вы выиграли ежемесячный джекпот: ${amount} RGT!`;
       
+      console.log('📧 Sending jackpot notification:', { uid, winnerName, amount, hasAvatar: !!winnerAvatar });
+      
       await addDoc(collection(db, 'notifications'), {
-        userId: uid,
+        userId: uid, // Обязательно передаем userId
         type: 'jackpot_win',
         message: msg,
         winnerName: winnerName, // Добавляем имя победителя
@@ -2745,36 +2748,67 @@ window.markNotificationAsReadWheel = async function(notificationId) {
 // Функция для отображения модального окна выигрыша джекпота из уведомлений (использует существующий jackpotWinnerOverlay)
 window.showJackpotWinnerFromNotification = async function(notification) {
   try {
-    // Получаем данные пользователя если их нет в уведомлении
+    // Сначала закрываем модальное окно уведомлений чтобы оно не мешало
+    const notificationsModal = document.getElementById('notificationsModalOverlay');
+    if (notificationsModal) {
+      notificationsModal.remove();
+    }
+    
+    // Получаем данные пользователя
     let winnerName = notification.winnerName || 'Пользователь';
     let winnerAvatar = '';
     
-    if (!notification.winnerName && notification.userId) {
-      const userSnap = await getDoc(doc(db, 'users', notification.userId));
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        winnerName = userData.displayName || userData.email || notification.userId.substring(0, 8) + '...';
-        winnerAvatar = userData.photoURL || userData.avatarUrl || '';
+    // Всегда получаем свежие данные пользователя для аватарки
+    if (notification.userId) {
+      try {
+        const userSnap = await getDoc(doc(db, 'users', notification.userId));
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          winnerName = userData.displayName || userData.email || notification.userId.substring(0, 8) + '...';
+          winnerAvatar = userData.photoURL || userData.avatarUrl || '';
+          
+          // Добавляем отладочную информацию
+          console.log('👤 User data loaded:', { winnerName, winnerAvatar: winnerAvatar ? 'exists' : 'none' });
+        }
+      } catch (userError) {
+        console.warn('Error loading user data:', userError);
       }
     }
     
     // Обновляем элементы в существующем оверлее
-    document.getElementById('jwName').textContent = winnerName;
-    document.getElementById('jwAmount').textContent = (notification.amount || '0') + ' RGT';
+    const nameElement = document.getElementById('jwName');
+    const amountElement = document.getElementById('jwAmount');
+    const avatarElement = document.getElementById('jwAvatar');
     
-    if (winnerAvatar) {
-      document.getElementById('jwAvatar').src = winnerAvatar;
-      document.getElementById('jwAvatar').style.display = 'block';
-    } else {
-      document.getElementById('jwAvatar').style.display = 'none';
+    if (nameElement) nameElement.textContent = winnerName;
+    if (amountElement) amountElement.textContent = (notification.amount || '0') + ' RGT';
+    
+    if (avatarElement) {
+      if (winnerAvatar) {
+        avatarElement.src = winnerAvatar;
+        avatarElement.style.display = 'block';
+        avatarElement.onerror = function() {
+          this.style.display = 'none';
+          console.log('🖼️ Avatar failed to load, hiding');
+        };
+        console.log('🖼️ Avatar set to:', winnerAvatar);
+      } else {
+        avatarElement.style.display = 'none';
+        console.log('🖼️ No avatar, hiding element');
+      }
     }
     
-    // Показываем оверлей
-    document.getElementById('jackpotWinnerOverlay').classList.add('show');
+    // Показываем оверлей с высоким z-index
+    const overlay = document.getElementById('jackpotWinnerOverlay');
+    if (overlay) {
+      overlay.style.zIndex = '20000'; // Устанавливаем высокий z-index
+      overlay.classList.add('show');
+      console.log('🎯 Jackpot overlay shown with z-index:', overlay.style.zIndex);
+    }
     
     // Запускаем конфетти для эффекта
     if (typeof launchConfetti === 'function') {
-      launchConfetti(80);
+      setTimeout(() => launchConfetti(80), 300); // Небольшая задержка для эффекта
     }
     
     // Автоматически помечаем уведомление как прочитанное
