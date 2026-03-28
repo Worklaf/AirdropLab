@@ -2260,6 +2260,25 @@ function createFeedbackChatModal() {
 
   if (!document.getElementById('feedbackModal')) {
     document.body.insertAdjacentHTML('beforeend', chatHTML);
+    
+    // Добавляем обработчики для закрытия по клику вне области и ESC
+    const modal = document.getElementById('feedbackModal');
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          closeFeedbackModal();
+        }
+      });
+      
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          const modal = document.getElementById('feedbackModal');
+          if (modal && modal.classList.contains('active')) {
+            closeFeedbackModal();
+          }
+        }
+      });
+    }
   }
 }
 
