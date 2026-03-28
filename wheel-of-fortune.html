@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wheel of Fortune — RGT Edition | AirdropLab</title>
+  <title data-translate="wof_title">Wheel of Fortune — RGT Edition | AirdropLab</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -220,7 +220,7 @@
     </div>
     <div>
       <h1 style="font-size:26px;font-weight:900;color:white;margin:0;line-height:1.2;">
-        Wheel of Fortune &nbsp;<span style="color:#a78bfa;">RGT Edition</span>
+        <span data-translate="wof_title_main">Wheel of Fortune</span> &nbsp;<span data-translate="wof_title_edition">RGT Edition</span>
       </h1>
       <p style="font-size:13px;color:var(--text-secondary);margin:5px 0 0;" data-translate="wof_subtitle">Spin the wheel and win RGT rewards</p>
     </div>
@@ -243,7 +243,7 @@
         <!-- Spin info row -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
           <div class="stat-card">
-            <div class="stat-label" data-translate="wof_free_today">Free today</div>
+            <div class="stat-label" data-translate="wof_free_spins">Free spins</div>
             <div class="stat-val"><span id="freeLeft">3</span>/<span id="freeTot">3</span></div>
           </div>
           <div class="stat-card">
@@ -2743,7 +2743,7 @@ function renderNotificationsInModal() {
       </div>
       <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${notif.message}</p>
       <p style="color: #64748b; font-size: 11px; margin: 0;">${new Date(notif.createdAt).toLocaleString()}</p>
-      ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); renderNotificationsInModal();" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
+      ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); renderNotificationsInModal();" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">` + t('mark_as_read', 'Отметить как прочитанное') + `</button>` : ''}
     </div>
   `).join('');
 }
@@ -2880,7 +2880,7 @@ if (currentUser && db) {
 <!-- Фиксированная админ-панель -->
 <div id="fixedAdminPanel" style="position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,37,56,0.95));border-top:1px solid rgba(139,92,246,0.3);backdrop-filter:blur(10px);padding:10px 20px;z-index:1000;display:none;align-items:center;justify-content:space-between;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
   <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-    <span style="color:#a78bfa;font-size:12px;font-weight:600;"><i class="fas fa-shield" style="margin-right:6px;"></i>Admin Panel</span>
+        <span data-translate="wof_title_edition">RGT Edition</span>
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <div id="deskAdminBtns" style="display:flex;align-items:center;gap:6px;"></div>
