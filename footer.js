@@ -622,18 +622,17 @@
         }
 
         try {
-            const { collection, query, where, orderBy, limit, getDocs } = window.__firestoreExports || {};
-            if (!collection || !query || !where || !orderBy || !limit || !getDocs) {
+            const { collection, query, where, getDocs } = window.__firestoreExports || {};
+            if (!collection || !query || !where || !getDocs) {
                 console.warn('Firestore exports not available');
                 callback && callback();
                 return;
             }
 
+            // Simple query without orderBy to avoid index requirement
             const q = query(
                 collection(db, 'notifications'),
-                where('uid', '==', currentUser.uid),
-                orderBy('ts', 'desc'),
-                limit(50)
+                where('uid', '==', currentUser.uid)
             );
             
             const snapshot = await getDocs(q);
@@ -650,10 +649,18 @@
                 });
             });
             
+            // Sort by timestamp in memory (desc)
+            notifications.sort((a, b) => {
+                const aTime = a.ts && typeof a.ts.toDate === 'function' ? a.ts.toDate().getTime() : 0;
+                const bTime = b.ts && typeof b.ts.toDate === 'function' ? b.ts.toDate().getTime() : 0;
+                return bTime - aTime;
+            });
+            
             window.notifications = notifications;
             callback && callback();
         } catch(e) {
             console.warn('Failed to load notifications:', e);
+            window.notifications = [];
             callback && callback();
         }
     };
