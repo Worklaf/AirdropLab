@@ -3163,18 +3163,14 @@ function initFeedbacksListener(uid) {
         typeIcon = '🏆';
         typeLabel = 'Джекпот';
         filterType = 'jackpot_win';
-      } else if (notif.type === 'spin_result' || notif.type === 'wheel_spin') {
+      } else if (notif.type === 'wheel_spin' || notif.type === 'faucet_claim' || notif.type === 'game_reward' || (notif.type && notif.type.includes('game'))) {
         typeIcon = '🎰';
-        typeLabel = 'Крутилка';
+        typeLabel = 'Игра';
         filterType = 'games';
-      } else if (notif.type === 'system') {
+      } else if (notif.type !== 'wheel_spin' && notif.type !== 'faucet_claim' && notif.type !== 'game_reward' && notif.type !== 'jackpot_win' && (!notif.type || !notif.type.includes('game'))) {
         typeIcon = '📢';
         typeLabel = 'Система';
         filterType = 'admin';
-      } else if (notif.type === 'newsletter') {
-        typeIcon = '📧';
-        typeLabel = 'Рассылка';
-        filterType = 'all';
       } else if (!notif.type) {
         typeIcon = '📢';
         typeLabel = 'Уведомление';
@@ -3219,64 +3215,113 @@ function initFeedbacksListener(uid) {
     window.updateFilterCounts();
   };
 
-  // Функция обновления счетчиков фильтров
-  window.updateFilterCounts = function() {
-    if (!window.allNotifications) return;
-    
-    const filters = ['all', 'games', 'jackpot_win', 'admin'];
-    const filterMapping = {
-      'all': () => window.allNotifications,
-      'games': () => window.allNotifications.filter(n => n.type === 'spin_result' || n.type === 'wheel_spin'),
-      'jackpot_win': () => window.allNotifications.filter(n => n.type === 'jackpot_win'),
-      'admin': () => window.allNotifications.filter(n => n.type === 'system')
+  // Функция обновления счетчиков фильтров (100% как в wheel-of-fortune.html)
+  window.updateFilterCounts = function(notifications) {
+    const notifs = notifications || window.allNotifications || [];
+    const counts = {
+      all: notifs.length,
+      games: notifs.filter(n => n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))).length,
+      jackpot_win: notifs.filter(n => n.type === 'jackpot_win').length,
+      admin: notifs.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game'))).length
     };
     
-    filters.forEach(filter => {
-      const notifications = filterMapping[filter]();
-      const count = notifications.length;
-      const unreadCount = notifications.filter(n => !n.read).length;
-      
+    const unreadCounts = {
+      all: notifs.filter(n => !n.read).length,
+      games: notifs.filter(n => (n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))) && !n.read).length,
+      jackpot_win: notifs.filter(n => n.type === 'jackpot_win' && !n.read).length,
+      admin: notifs.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game')) && !n.read).length
+    };
+    
+    // Обновляем счетчики на кнопках
+    Object.keys(counts).forEach(filter => {
       const countEl = document.getElementById(`filterCount-${filter}`);
+      if (countEl) {
+        countEl.textContent = counts[filter];
+      }
+    });
+    
+    // Обновляем бейджи непрочитанных
+    Object.keys(unreadCounts).forEach(filter => {
       const badgeEl = document.getElementById(`unreadBadge-${filter}`);
-      
-      if (countEl) countEl.textContent = count;
       if (badgeEl) {
-        badgeEl.textContent = unreadCount;
-        badgeEl.style.display = unreadCount > 0 ? 'flex' : 'none';
+        badgeEl.textContent = unreadCounts[filter];
+        badgeEl.style.display = unreadCounts[filter] > 0 ? 'flex' : 'none';
       }
     });
   };
 
-  // Функция фильтрации уведомлений
-  window.filterNotifications = function(filterType) {
-    if (!window.allNotifications) return;
+  // Функция фильтрации уведомлений (100% как в wheel-of-fortune.html)
+  window.filterNotifications = function(type) {
+    const notifications = window.allNotifications || window.notifications || [];
+    console.log('🔍 Filter notifications:', type, 'Total notifications:', notifications.length);
+    console.log('🔍 All notifications types:', notifications.map(n => ({ id: n.id, type: n.type, message: n.message?.substring(0, 30) })));
     
-    // Обновляем активный фильтр
+    let filtered = notifications;
+    
+    if (type !== 'all') {
+      if (type === 'games') {
+        // Все игровые уведомления (колесо, краны, будущие игры)
+        filtered = notifications.filter(n => {
+          const isGame = n.type === 'wheel_spin' || 
+                        n.type === 'faucet_claim' || 
+                        n.type === 'game_reward' ||
+                        (n.type && n.type.includes('game'));
+          console.log('🎮 Game check for', n.id, n.type, '=>', isGame);
+          return isGame;
+        });
+      } else if (type === 'admin') {
+        // Все админские уведомления (рассылки, поощрения, ответы, и все что не игры и не джекпот)
+        filtered = notifications.filter(n => {
+          const isNotGame = n.type !== 'wheel_spin' && 
+                           n.type !== 'faucet_claim' && 
+                           n.type !== 'game_reward' &&
+                           n.type !== 'jackpot_win' &&
+                           (!n.type || !n.type.includes('game'));
+          console.log('🛡️ Admin check for', n.id, n.type, '=>', isNotGame);
+          return isNotGame;
+        });
+      } else {
+        // Конкретный тип
+        filtered = notifications.filter(n => n.type === type);
+        console.log('🎯 Specific type check for', type, '=>', filtered.length);
+      }
+    }
+    
+    console.log('🔍 Filtered result:', filtered.length, 'items');
+    
+    // Сохраняем текущий фильтр и отфильтрованные данные
+    window.currentFilter = type;
+    window.filteredNotifications = filtered;
+    
+    // Обновляем стили кнопок
     document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.style.background = 'rgba(34,211,238,0.1)';
-      btn.style.borderColor = 'rgba(34,211,238,0.3)';
-      btn.style.color = '#94a3b8';
+      if (btn.dataset.filter === type) {
+        btn.style.background = 'rgba(34,211,238,0.2)';
+        btn.style.borderColor = '#22d3ee';
+        btn.style.color = '#e2e8f0';
+        // Обновляем цвет счетчика
+        const countEl = btn.querySelector('.filter-count');
+        if (countEl) {
+          countEl.style.background = 'rgba(255,255,255,0.15)';
+          countEl.style.color = '#e2e8f0';
+        }
+      } else {
+        btn.style.background = 'rgba(34,211,238,0.1)';
+        btn.style.borderColor = 'rgba(34,211,238,0.3)';
+        btn.style.color = '#94a3b8';
+        // Обновляем цвет счетчика
+        const countEl = btn.querySelector('.filter-count');
+        if (countEl) {
+          countEl.style.background = 'rgba(255,255,255,0.1)';
+          countEl.style.color = '#94a3b8';
+        }
+      }
     });
     
-    const activeBtn = document.querySelector(`[data-filter="${filterType}"]`);
-    if (activeBtn) {
-      activeBtn.style.background = 'rgba(34,211,238,0.2)';
-      activeBtn.style.borderColor = '#22d3ee';
-      activeBtn.style.color = '#e2e8f0';
-    }
+    // Обновляем счетчики
+    window.updateFilterCounts(notifications);
     
-    let filtered = window.allNotifications;
-    
-    if (filterType === 'unread') {
-      filtered = window.allNotifications.filter(n => !n.read);
-    } else if (filterType === 'jackpot_win') {
-      filtered = window.allNotifications.filter(n => n.type === 'jackpot_win');
-    } else if (filterType === 'games') {
-      filtered = window.allNotifications.filter(n => n.type === 'spin_result' || n.type === 'wheel_spin');
-    } else if (filterType === 'admin') {
-      filtered = window.allNotifications.filter(n => n.type === 'system');
-    }
-    
+    // Мгновенно перерисовываем уведомления (не перезаписывая оригинальный массив)
     window.renderNotificationsInWheel(filtered);
   };
 
@@ -3309,17 +3354,17 @@ function initFeedbacksListener(uid) {
   window.markFilteredNotificationsAsRead = async function() {
     if (!window.db || !window.allNotifications) return;
     
-    const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+    const currentFilter = window.currentFilter || 'all';
     let notifications = window.allNotifications;
     
-    if (activeFilter === 'unread') {
+    if (currentFilter === 'all') {
       notifications = window.allNotifications.filter(n => !n.read);
-    } else if (activeFilter === 'jackpot_win') {
+    } else if (currentFilter === 'games') {
+      notifications = window.allNotifications.filter(n => (n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))) && !n.read);
+    } else if (currentFilter === 'jackpot_win') {
       notifications = window.allNotifications.filter(n => n.type === 'jackpot_win' && !n.read);
-    } else if (activeFilter === 'games') {
-      notifications = window.allNotifications.filter(n => (n.type === 'spin_result' || n.type === 'wheel_spin') && !n.read);
-    } else if (activeFilter === 'admin') {
-      notifications = window.allNotifications.filter(n => n.type === 'system' && !n.read);
+    } else if (currentFilter === 'admin') {
+      notifications = window.allNotifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game')) && !n.read);
     }
     
     if (notifications.length === 0) {
@@ -3349,11 +3394,11 @@ function initFeedbacksListener(uid) {
       window.updateNotificationBadge();
       window.updateFilterCounts();
       
-      const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
-      window.filterNotifications(activeFilter);
+      // Обновляем текущий фильтр
+      window.filterNotifications(currentFilter);
       
       if (typeof showToast === 'function') {
-        showToast(`Отмечено ${notifications.length} уведомлений как прочитанные`);
+        showToast(`Отмечено как прочитанные: ${notifications.length} уведомлений`);
       }
       
     } catch (error) {
@@ -3368,17 +3413,17 @@ function initFeedbacksListener(uid) {
   window.clearFilteredNotifications = async function() {
     if (!window.db || !window.allNotifications) return;
     
-    const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+    const currentFilter = window.currentFilter || 'all';
     let notifications = window.allNotifications;
     
-    if (activeFilter === 'jackpot_win') {
-      notifications = window.allNotifications.filter(n => n.type === 'jackpot_win');
-    } else if (activeFilter === 'games') {
-      notifications = window.allNotifications.filter(n => n.type === 'spin_result' || n.type === 'wheel_spin');
-    } else if (activeFilter === 'admin') {
-      notifications = window.allNotifications.filter(n => n.type === 'system');
-    } else {
+    if (currentFilter === 'all') {
       notifications = window.allNotifications;
+    } else if (currentFilter === 'games') {
+      notifications = window.allNotifications.filter(n => n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game')));
+    } else if (currentFilter === 'jackpot_win') {
+      notifications = window.allNotifications.filter(n => n.type === 'jackpot_win');
+    } else if (currentFilter === 'admin') {
+      notifications = window.allNotifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game')));
     }
     
     if (notifications.length === 0) {
@@ -3412,11 +3457,11 @@ function initFeedbacksListener(uid) {
       window.updateNotificationBadge();
       window.updateFilterCounts();
       
-      const activeFilterBtn = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
-      window.filterNotifications(activeFilterBtn);
+      // Мгновенно обновляем текущий фильтр
+      window.filterNotifications(currentFilter);
       
       if (typeof showToast === 'function') {
-        showToast(`Удалено ${notifications.length} уведомлений`);
+        showToast(`Удалено: ${notifications.length} уведомлений`);
       }
       
     } catch (error) {
@@ -3588,6 +3633,14 @@ function initFeedbacksListener(uid) {
         window.allNotifications = notifications;
         window.updateNotificationBadge();
         window.updateFilterCounts();
+        
+        // Если модальное окно открыто, обновляем его
+        if (document.getElementById('notificationsModalOverlay')) {
+          const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+          window.filterNotifications(activeFilter);
+        } else {
+          window.renderNotificationsInWheel(notifications);
+        }
         
         // Проверяем есть ли непрочитанные уведомления
         const unreadCount = notifications.filter(n => !n.read).length;
