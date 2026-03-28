@@ -1034,33 +1034,19 @@ function sendSpinNotification(reward, spent, profit) {
 
 function sendJackpotWinnerNotification(uid, amount) {
   if (!db) return;
-  
-  // Получаем данные победителя для красивого отображения
-  const getWinnerData = async () => {
-    try {
-      const userSnap = await getDoc(doc(db, 'users', uid));
-      const userData = userSnap.exists() ? userSnap.data() : {};
-      const winnerName = userData.displayName || userData.email || uid.substring(0, 8) + '...';
-      
-      const isEn = (window.currentLang === 'en');
-      const msg = isEn ? `🏆 Congratulations! You won the monthly jackpot: ${amount} RGT!` : `🏆 Поздравляем! Вы выиграли ежемесячный джекпот: ${amount} RGT!`;
-      
-      await addDoc(collection(db, 'notifications'), {
-        userId: uid,
-        type: 'jackpot_win',
-        message: msg,
-        winnerName: winnerName, // Добавляем имя победителя
-        amount: amount.toString(), // Добавляем сумму выигрыша
-        fullMessage: isEn ? 'Congratulations! The monthly jackpot has been awarded.' : 'Поздравляем! Ежемесячный джекпот был разыгран.',
-        read: false,
-        createdAt: serverTimestamp()
-      });
-    } catch (error) {
-      console.error('Error sending jackpot notification:', error);
-    }
-  };
-  
-  getWinnerData();
+  const isEn = (window.currentLang === 'en');
+  const msg = isEn ? `🏆 Congratulations! You won the monthly jackpot: ${amount} RGT!` : `🏆 Поздравляем! Вы выиграли ежемесячный джекпот: ${amount} RGT!`;
+  try {
+    addDoc(collection(db, 'notifications'), {
+      userId: uid,           // Используем userId как в index.html
+      type: 'jackpot_win',
+      message: msg,         // Используем message как в index.html
+      read: false,
+      createdAt: serverTimestamp()  // Используем createdAt как в index.html
+    });
+  } catch(e) {
+    console.error('Error sending jackpot notification:', e);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2655,17 +2641,16 @@ function renderNotificationsInWheel(notifications) {
     }
     
     return `
-      <div style="background: rgba(30,37,56,0.6); border: 1px solid ${isUnread ? 'rgba(34,211,238,0.4)' : 'rgba(34,211,238,0.2)'}; border-radius: 12px; padding: 16px; margin-bottom: 12px; ${isUnread ? 'border-left: 3px solid #22d3ee;' : ''} ${notif.type === 'jackpot_win' ? 'cursor: pointer; transition: all 0.3s;' : ''}" data-notif-id="${notif.id}" ${notif.type === 'jackpot_win' ? `onclick="window.showJackpotWinnerModal({id: '${notif.id}', winnerName: '${notif.winnerName || 'Пользователь'}', amount: '${notif.amount || '0'}', message: '${notif.fullMessage || notif.message || 'Congratulations! The monthly jackpot has been awarded.'}'})"` : ''}>
+      <div style="background: rgba(30,37,56,0.6); border: 1px solid ${isUnread ? 'rgba(34,211,238,0.4)' : 'rgba(34,211,238,0.2)'}; border-radius: 12px; padding: 16px; margin-bottom: 12px; ${isUnread ? 'border-left: 3px solid #22d3ee;' : ''}" data-notif-id="${notif.id}">
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-          <h4 style="color: ${notif.type === 'jackpot_win' ? '#22c55e' : '#22d3ee'}; font-size: 14px; font-weight: 600; margin: 0;">
+          <h4 style="color: #22d3ee; font-size: 14px; font-weight: 600; margin: 0;">
             ${typeIcon} ${typeLabel}
-            ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">🎉 Нажмите для подробностей</span>' : ''}
           </h4>
           ${isUnread ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
         </div>
         <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${messageWithLinks}</p>
         <p style="color: #64748b; font-size: 11px; margin: 0;">${formatNotificationDate(notif.createdAt)}</p>
-        ${isUnread && notif.type !== 'jackpot_win' ? `<button onclick="event.stopPropagation(); markNotificationAsReadWheel('${notif.id}')" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
+        ${isUnread ? `<button onclick="markNotificationAsReadWheel('${notif.id}')" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
       </div>
     `;
   }).join('');
@@ -2743,182 +2728,7 @@ window.markNotificationAsReadWheel = async function(notificationId) {
   }
 };
 
-// Функция для отображения модальной карточки выигрыша джекпота
-window.showJackpotWinnerModal = function(notification) {
-  // Удаляем существующее модальное окно если есть
-  const existingModal = document.getElementById('jackpotWinnerModal');
-  if (existingModal) {
-    existingModal.remove();
-  }
-  
-  const modal = document.createElement('div');
-  modal.id = 'jackpotWinnerModal';
-  modal.style.cssText = `
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    background: rgba(15,23,42,0.95); 
-    z-index: 10000; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-    backdrop-filter: blur(10px);
-  `;
-  
-  const content = document.createElement('div');
-  content.style.cssText = `
-    background: linear-gradient(145deg, #1e293b, #0f172a);
-    border: 2px solid rgba(34,211,238,0.3);
-    border-radius: 24px;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 60px rgba(34,211,238,0.3);
-    max-width: 500px; 
-    width: 90%; 
-    text-align: center;
-    padding: 40px 30px;
-    position: relative;
-    overflow: hidden;
-  `;
-  
-  // Добавляем красивый дизайн как на оригинальной картинке
-  content.innerHTML = `
-    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(45deg, rgba(34,211,238,0.1), transparent, rgba(34,197,94,0.1)); animation: shimmer 3s ease-in-out infinite;"></div>
-    
-    <div style="position: relative; z-index: 1;">
-      <!-- Большой анимированный кубок с конфетти -->
-      <div style="position: relative; margin-bottom: 30px;">
-        <div style="font-size: 100px; animation: bounce 2s ease-in-out infinite, glow 2s ease-in-out infinite alternate;">🏆</div>
-        <!-- Конфетти эффект -->
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; pointer-events: none;">
-          <div style="position: absolute; top: 20%; left: 10%; font-size: 20px; animation: fall 3s linear infinite;">🎊</div>
-          <div style="position: absolute; top: 30%; right: 15%; font-size: 16px; animation: fall 2.5s linear infinite 0.5s;">🎉</div>
-          <div style="position: absolute; bottom: 30%; left: 20%; font-size: 18px; animation: fall 3.5s linear infinite 1s;">✨</div>
-          <div style="position: absolute; top: 40%; right: 25%; font-size: 14px; animation: fall 2.8s linear infinite 0.3s;">🎈</div>
-          <div style="position: absolute; bottom: 40%; right: 10%; font-size: 16px; animation: fall 3.2s linear infinite 0.7s;">🎁</div>
-        </div>
-      </div>
-      
-      <!-- Заголовок с анимацией -->
-      <h2 style="color: #22d3ee; font-size: 36px; font-weight: bold; margin: 0 0 15px 0; text-shadow: 0 0 30px rgba(34,211,238,0.8); animation: slideInDown 1s ease-out;">
-        JACKPOT WINNER
-      </h2>
-      
-      <!-- Имя победителя -->
-      <div style="color: white; font-size: 28px; font-weight: 700; margin: 0 0 20px 0; text-shadow: 0 0 20px rgba(255,255,255,0.3); animation: fadeIn 1.5s ease-out;">
-        ${notification.winnerName || 'Пользователь'}
-      </div>
-      
-      <!-- Сумма выигрыша с красивым эффектом -->
-      <div style="background: linear-gradient(145deg, #22c55e, #16a34a, #15803d); color: white; font-size: 42px; font-weight: 800; padding: 20px 40px; border-radius: 20px; margin: 25px 0; display: inline-block; box-shadow: 0 15px 35px rgba(34,197,94,0.4), inset 0 2px 4px rgba(255,255,255,0.2); text-shadow: 0 3px 6px rgba(0,0,0,0.3); border: 2px solid rgba(34,197,94,0.3); animation: scaleIn 0.8s ease-out, pulse 2s ease-in-out infinite;">
-        ${notification.amount || '0'} RGT
-      </div>
-      
-      <!-- Поздравительное сообщение -->
-      <p style="color: #e2e8f0; font-size: 18px; margin: 25px 0; line-height: 1.6; text-shadow: 0 0 10px rgba(255,255,255,0.1); animation: fadeIn 2s ease-out;">
-        ${notification.message || 'Congratulations! The monthly jackpot has been awarded.'}
-      </p>
-      
-      <!-- Дополнительная информация -->
-      <div style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); border-radius: 12px; padding: 15px; margin: 20px 0; animation: slideInUp 1.2s ease-out;">
-        <div style="color: #22d3ee; font-size: 14px; font-weight: 600; margin-bottom: 5px;">🎰 Ежемесячный джекпот</div>
-        <div style="color: #64748b; font-size: 12px;">Поздравляем с победой в розыгрыше!</div>
-      </div>
-      
-      <!-- Кнопка закрытия -->
-      <button onclick="window.closeJackpotWinnerModal()" style="background: linear-gradient(145deg, #22d3ee, #06b6d4); border: none; color: white; padding: 18px 45px; border-radius: 15px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 25px rgba(34,211,238,0.4); margin-top: 25px; text-transform: uppercase; letter-spacing: 1px; animation: slideInUp 1.4s ease-out;">
-        Закрыть
-      </button>
-    </div>
-    
-    <style>
-      @keyframes shimmer {
-        0%, 100% { opacity: 0.3; transform: translateX(-100%); }
-        50% { opacity: 0.1; transform: translateX(100%); }
-      }
-      
-      @keyframes bounce {
-        0%, 20%, 50%, 80%, 100% { transform: translateY(0) scale(1); }
-        40% { transform: translateY(-25px) scale(1.1); }
-        60% { transform: translateY(-15px) scale(1.05); }
-      }
-      
-      @keyframes glow {
-        0% { filter: drop-shadow(0 0 20px rgba(34,211,238,0.5)); }
-        100% { filter: drop-shadow(0 0 40px rgba(34,211,238,0.8)); }
-      }
-      
-      @keyframes fall {
-        0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
-        10% { opacity: 1; }
-        90% { opacity: 1; }
-        100% { transform: translateY(100px) rotate(360deg); opacity: 0; }
-      }
-      
-      @keyframes slideInDown {
-        0% { transform: translateY(-50px); opacity: 0; }
-        100% { transform: translateY(0); opacity: 1; }
-      }
-      
-      @keyframes slideInUp {
-        0% { transform: translateY(50px); opacity: 0; }
-        100% { transform: translateY(0); opacity: 1; }
-      }
-      
-      @keyframes fadeIn {
-        0% { opacity: 0; }
-        100% { opacity: 1; }
-      }
-      
-      @keyframes scaleIn {
-        0% { transform: scale(0); }
-        100% { transform: scale(1); }
-      }
-      
-      @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-      }
-    </style>
-  `;
-  
-  modal.appendChild(content);
-  document.body.appendChild(modal);
-  
-  // Добавляем обработчик закрытия по клику на фон
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) {
-      window.closeJackpotWinnerModal();
-    }
-  });
-  
-  // Добавляем обработчик закрытия по ESC
-  const handleEscape = (e) => {
-    if (e.key === 'Escape') {
-      window.closeJackpotWinnerModal();
-      document.removeEventListener('keydown', handleEscape);
-    }
-  };
-  document.addEventListener('keydown', handleEscape);
-  
-  // Автоматически помечаем уведомление как прочитанное
-  if (notification.id && typeof markNotificationAsReadWheel === 'function') {
-    markNotificationAsReadWheel(notification.id);
-  }
-  
-  // Добавляем звуковой эффект если есть (опционально)
-  if (typeof playWinSound === 'function') {
-    playWinSound();
-  }
-};
-
-// Функция закрытия модального окна выигрыша
-window.closeJackpotWinnerModal = function() {
-  const modal = document.getElementById('jackpotWinnerModal');
-  if (modal) {
-    modal.remove();
-  }
-};
+// Функция для обновления бейджа уведомлений
 function updateNotificationBadge() {
   const badge = document.getElementById('notificationBadge');
   if (!badge) return;
