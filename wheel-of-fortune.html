@@ -458,8 +458,12 @@ try {
       db = getFirestore(app);
     }
   }
+  // Export for global use (especially footer.js account modal)
   window.wofAuth = auth;
   window.wofDb   = db;
+  // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
+  window.auth = auth;
+  window.db   = db;
   window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch };
   window.__authExports = { onAuthStateChanged, signOut };
   console.log('✅ WoF Firebase initialized');
@@ -649,6 +653,10 @@ async function handleResult(reward, isFree) {
   if (!isFree) {
     wof.rgt   = ((wof.rgt   || 0) + netProfit);
     userData.rgt = ((userData.rgt || 0) + netProfit);
+    // Также обновляем window.userProfileData для footer.js и account модали
+    if (window.userProfileData) {
+      window.userProfileData.rgt = userData.rgt;
+    }
   }
   userData.wof = wof;
 
@@ -1205,17 +1213,26 @@ if (auth) {
       try {
         const uSnap = await getDoc(doc(db, COL_USERS, user.uid));
         userData = uSnap.exists() ? uSnap.data() : {};
+        // Экспортируем userData в window для footer.js и других скриптов
+        window.userProfileData = userData;
       } catch(e) {
         userData = {};
+        window.userProfileData = {};
       }
     } else {
       userData = {};
+      window.userProfileData = {};
     }
 
     updateSpinsUI();
     updateStatsUI();
     await loadJackpot();
     await loadLeaderboard();
+    
+    // Load notifications for header
+    if (user && db && typeof window.loadNotificationsFromFirestore === 'function') {
+      await window.loadNotificationsFromFirestore();
+    }
 
     // Admin jackpot button
     const ab = document.getElementById('jackpotAdminBtn');
