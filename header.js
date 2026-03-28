@@ -3138,7 +3138,7 @@ function initFeedbacksListener(uid) {
     }
   };
 
-  // Функция рендеринга уведомлений с улучшенным отображением для разных типов игр
+  // Функция рендеринга уведомлений с улучшенным отображением для разных типов
   window.renderNotificationsInWheel = function(notifications) {
     const listEl = document.getElementById('notificationsList');
     if (!listEl) return;
@@ -3176,6 +3176,26 @@ function initFeedbacksListener(uid) {
         typeIcon = '🎰';
         typeLabel = 'Игра';
         filterType = 'games';
+      } else if (notif.type === 'info') {
+        typeIcon = 'ℹ️';
+        typeLabel = 'Информация';
+        filterType = 'admin';
+      } else if (notif.type === 'success') {
+        typeIcon = '✅';
+        typeLabel = 'Успех';
+        filterType = 'admin';
+      } else if (notif.type === 'warning') {
+        typeIcon = '⚠️';
+        typeLabel = 'Важно';
+        filterType = 'admin';
+      } else if (notif.type === 'promo') {
+        typeIcon = '🎁';
+        typeLabel = 'Акция';
+        filterType = 'admin';
+      } else if (notif.type === 'referral') {
+        typeIcon = '🔗';
+        typeLabel = 'Реферальная';
+        filterType = 'admin';
       } else if (notif.type !== 'wheel_spin' && notif.type !== 'faucet_claim' && notif.type !== 'game_reward' && notif.type !== 'jackpot_win' && (!notif.type || !notif.type.includes('game'))) {
         typeIcon = '📢';
         typeLabel = 'Система';
@@ -3200,7 +3220,7 @@ function initFeedbacksListener(uid) {
                   ${notif.type === 'jackpot_win' ? `onclick="window.showJackpotWinnerFromNotification({id: '${notif.id}', userId: '${notif.userId || ''}', winnerName: '${notif.winnerName || ''}', amount: '${notif.amount || '0'}', message: '${notif.message || ''}'})"` : ''}>
           
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-            <h4 style="color: ${notif.type === 'jackpot_win' ? '#22c55e' : '#22d3ee'}; font-size: 14px; font-weight: 600; margin: 0;">
+            <h4 style="color: ${notif.type === 'jackpot_win' ? '#22c55e' : (notif.type === 'warning' ? '#f59e0b' : (notif.type === 'success' ? '#22c55e' : '#22d3ee')}; font-size: 14px; font-weight: 600; margin: 0;">
               ${typeIcon} ${typeLabel}
               ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">🎉 Нажмите для подробностей</span>' : ''}
             </h4>
