@@ -495,6 +495,139 @@ let wheelAngle  = 0;   // radians
 let spinning    = false;
 let localHistory = [];
 
+// Загружаем историю из Firestore при загрузке страницы (оптимизированная)
+function loadLocalHistory() {
+  if (!currentUser || !window.db) {
+    console.log('📚 No user or DB, using empty history');
+    localHistory = [];
+    return;
+  }
+
+  try {
+    const { doc, onSnapshot } = window.__firestoreExports;
+    const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
+    
+    // Используем onSnapshot для real-time обновлений
+    onSnapshot(userHistoryRef, (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        
+        // Проверяем версию данных для обратной совместимости
+        if (data.version === 2 && data.spins) {
+          // Оптимизированный формат - конвертируем обратно
+          localHistory = data.spins.map(item => ({
+            reward: item.r,
+            spentRGT: item.s,
+            isFree: item.f === 1,
+            ts: new Date(item.t)
+          }));
+          console.log('📚 Loaded optimized history from Firestore:', localHistory.length, 'records');
+        } else if (data.spins) {
+          // Старый формат для обратной совместимости
+          localHistory = data.spins.map(item => ({
+            ...item,
+            ts: new Date(item.ts)
+          }));
+          console.log('📚 Loaded legacy history from Firestore:', localHistory.length, 'records');
+        } else {
+          localHistory = [];
+        }
+      } else {
+        localHistory = [];
+        console.log('📚 No history found in Firestore');
+      }
+      
+      // Обновляем интерфейс после загрузки
+      if (document.getElementById('historyList')) {
+        renderHistory();
+      }
+    });
+
+    console.log('📚 Set up optimized Firestore history listener');
+  } catch (error) {
+    console.warn('Error setting up Firestore history listener:', error);
+    localHistory = [];
+  }
+}
+
+// Функция сохранения истории в Firestore (оптимизированная)
+function saveHistoryToFirestore() {
+  if (!currentUser || !window.db || localHistory.length === 0) return;
+
+  try {
+    const { doc, setDoc } = window.__firestoreExports;
+    const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
+    
+    // Оптимизация 1: Ограничиваем последними 500 записями (вместо 1000)
+    const maxRecords = 500;
+    let historyToSave = localHistory.slice(0, maxRecords);
+    
+    // Оптимизация 2: Сжимаем данные - убираем лишние поля
+    historyToSave = historyToSave.map(item => ({
+      r: item.reward,           // reward -> r (экономия ~4 байта на запись)
+      s: item.spentRGT,         // spentRGT -> s
+      f: item.isFree ? 1 : 0,   // isFree -> f (boolean -> number)
+      t: item.ts.getTime()      // ts -> t (timestamp в ms вместо ISO строки)
+    }));
+    
+    // Оптимизация 3: Добавляем метаданные для анализа
+    const now = Date.now();
+    const stats = calculateStats(localHistory);
+    
+    setDoc(userHistoryRef, {
+      spins: historyToSave,
+      stats: {
+        totalSpins: stats.count,
+        totalProfit: stats.profit,
+        totalSpent: stats.spent,
+        lastUpdated: now,
+        recordCount: historyToSave.length
+      },
+      // Оптимизация 4: Разделяем по месяцам для быстрой загрузки
+      monthly: groupByMonth(localHistory.slice(0, maxRecords)),
+      version: 2 // для совместимости
+    }, { merge: true });
+    
+    console.log('💾 Saved optimized history to Firestore:', historyToSave.length, 'records');
+  } catch (error) {
+    console.warn('Error saving history to Firestore:', error);
+  }
+}
+
+// Оптимизация 5: Группировка по месяцам для быстрых фильтров
+function groupByMonth(history) {
+  const monthly = {};
+  history.forEach(item => {
+    const monthKey = `${item.ts.getFullYear()}-${String(item.ts.getMonth() + 1).padStart(2, '0')}`;
+    if (!monthly[monthKey]) {
+      monthly[monthKey] = {
+        count: 0,
+        profit: 0,
+        spent: 0,
+        spins: []
+      };
+    }
+    monthly[monthKey].count++;
+    monthly[monthKey].profit += (item.reward - item.spentRGT);
+    monthly[monthKey].spent += item.spentRGT;
+    monthly[monthKey].spins.push({
+      r: item.reward,
+      s: item.spentRGT,
+      f: item.isFree ? 1 : 0,
+      t: item.ts.getTime()
+    });
+  });
+  return monthly;
+}
+
+// Загружаем историю сразу после авторизации
+// loadLocalHistory(); // Убираем отсюда, будем вызывать в onAuthStateChanged
+
+// Отображаем историю после загрузки
+if (document.getElementById('historyList')) {
+  renderHistory();
+}
+
 // ═══════════════════════════════════════════════════════════
 // CANVAS WHEEL
 // ═══════════════════════════════════════════════════════════
@@ -721,6 +854,15 @@ async function handleResult(reward, isFree) {
 
   // Local history
   localHistory.unshift({ reward, spentRGT, isFree, ts: new Date() });
+  
+  // Ограничиваем размер истории
+  if (localHistory.length > 1000) {
+    localHistory = localHistory.slice(0, 1000);
+  }
+  
+  // Сохраняем в Firestore для синхронизации
+  saveHistoryToFirestore();
+  
   renderHistory();
 
   // Send notification to user
@@ -1180,6 +1322,9 @@ function renderHistory() {
         <option value="losses">💸 Только проигрыши</option>
         <option value="free">🆓 Бесплатные</option>
       </select>
+      <button onclick="clearSpinHistory()" style="background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-left: auto;">
+        🗑️ Очистить историю
+      </button>
     </div>
     
     <!-- Список истории -->
@@ -1324,6 +1469,35 @@ window.renderHistoryPage = function() {
   }
 };
 
+// Функция очистки истории
+window.clearSpinHistory = function() {
+  if (!confirm('Вы уверены, что хотите очистить всю историю прокруток? Это действие нельзя отменить.')) return;
+  
+  try {
+    // Очищаем локальную историю
+    localHistory = [];
+    
+    // Очищаем в Firestore
+    if (currentUser && window.db) {
+      const { doc, deleteDoc } = window.__firestoreExports;
+      const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
+      deleteDoc(userHistoryRef);
+    }
+    
+    // Обновляем интерфейс
+    renderHistory();
+    
+    if (typeof showToast === 'function') {
+      showToast('История прокруток очищена на всех устройствах');
+    }
+  } catch (error) {
+    console.error('Error clearing history:', error);
+    if (typeof showToast === 'function') {
+      showToast('Ошибка при очистке истории');
+    }
+  }
+};
+
 // Функция смены страницы
 window.changeHistoryPage = function(page) {
   window.currentHistoryPage = page;
@@ -1453,6 +1627,9 @@ if (auth) {
     updateStatsUI();
     await loadJackpot();
     await loadLeaderboard();
+    
+    // Загружаем историю прокруток из Firestore
+    loadLocalHistory();
     
     // Load notifications for header
     if (user && db && window.__firestoreExports) {
