@@ -1590,32 +1590,41 @@ window.showNotifications = function() {
 // Функция фильтрации уведомлений
 window.filterNotifications = function(type) {
   const notifications = window.notifications || [];
+  console.log('🔍 Filter notifications:', type, 'Total notifications:', notifications.length);
+  console.log('🔍 All notifications types:', notifications.map(n => ({ id: n.id, type: n.type, message: n.message?.substring(0, 30) })));
+  
   let filtered = notifications;
   
   if (type !== 'all') {
     if (type === 'games') {
       // Все игровые уведомления (колесо, краны, будущие игры)
-      filtered = notifications.filter(n => 
-        n.type === 'wheel_spin' || 
-        n.type === 'faucet_claim' || 
-        n.type === 'game_reward' ||
-        (n.type && n.type.includes('game'))
-      );
+      filtered = notifications.filter(n => {
+        const isGame = n.type === 'wheel_spin' || 
+                      n.type === 'faucet_claim' || 
+                      n.type === 'game_reward' ||
+                      (n.type && n.type.includes('game'));
+        console.log('🎮 Game check for', n.id, n.type, '=>', isGame);
+        return isGame;
+      });
     } else if (type === 'admin') {
-      // Все админские уведомления (рассылки, поощрения, ответы)
-      filtered = notifications.filter(n => 
-        n.type === 'feedback_reply' || 
-        n.type === 'admin' || 
-        n.type === 'broadcast' ||
-        n.type === 'reward' ||
-        n.type === 'announcement' ||
-        (n.type && n.type.includes('admin'))
-      );
+      // Все админские уведомления (рассылки, поощрения, ответы, и все что не игры)
+      filtered = notifications.filter(n => {
+        const isNotGame = n.type !== 'wheel_spin' && 
+                         n.type !== 'faucet_claim' && 
+                         n.type !== 'game_reward' &&
+                         n.type !== 'jackpot_win' &&
+                         (!n.type || !n.type.includes('game'));
+        console.log('🛡️ Admin check for', n.id, n.type, '=>', isNotGame);
+        return isNotGame;
+      });
     } else {
       // Конкретный тип
       filtered = notifications.filter(n => n.type === type);
+      console.log('🎯 Specific type check for', type, '=>', filtered.length);
     }
   }
+  
+  console.log('🔍 Filtered result:', filtered.length, 'items');
   
   // Обновляем стили кнопок
   document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -1704,21 +1713,26 @@ async function loadNotificationsForWheel() {
   }
   
   try {
-    const { collection, query, where, orderBy, getDocs } = window.__firestoreExports || {};
-    if (collection && query && where && orderBy && getDocs) {
-      const snapshot = await getDocs(query(collection(window.db, "notifications"), 
-        where("userId", "==", currentUser.uid),
-        orderBy("createdAt", "desc")
-      ));
+    const { collection, query, where, orderBy, onSnapshot } = window.__firestoreExports;
+    const q = query(
+      collection(window.db, "notifications"),
+      where("userId", "==", currentUser.uid),
+      orderBy("createdAt", "desc")
+    );
+    
+    onSnapshot(q, (snapshot) => {
+      const notifications = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        data.id = doc.id;
+        notifications.push(data);
+        console.log('📨 Loaded notification:', { id: data.id, type: data.type, message: data.message?.substring(0, 50) });
+      });
       
-      const notifications = snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data(), 
-        createdAt: doc.data().createdAt?.toDate() || new Date() 
-      })).sort((a, b) => b.createdAt - a.createdAt);
-      
+      console.log('📨 Total loaded notifications:', notifications.length);
+      window.notifications = notifications;
       renderNotificationsInWheel(notifications);
-    }
+    });
   } catch (error) {
     console.error('Error loading notifications:', error);
     const listEl = document.getElementById('notificationsList');
@@ -1746,6 +1760,8 @@ function renderNotificationsInWheel(notifications) {
     let typeIcon = '📢';
     let typeLabel = 'Уведомление';
     
+    console.log('🏷️ Processing notification type:', notif.type, 'for ID:', notif.id);
+    
     if (notif.type === 'wheel_spin') {
       typeIcon = '🎰';
       typeLabel = 'Колесо фортуны';
@@ -1767,6 +1783,16 @@ function renderNotificationsInWheel(notifications) {
     } else if (notif.type === 'reward') {
       typeIcon = '🎁';
       typeLabel = 'Поощрение';
+    } else if (notif.type === 'newsletter' || notif.type === 'subscription') {
+      typeIcon = '📧';
+      typeLabel = 'Рассылка';
+    } else if (!notif.type) {
+      typeIcon = '📢';
+      typeLabel = 'Уведомление';
+    } else {
+      // Для всех остальных типов
+      typeIcon = '📢';
+      typeLabel = notif.type.charAt(0).toUpperCase() + notif.type.slice(1);
     }
     
     return `
