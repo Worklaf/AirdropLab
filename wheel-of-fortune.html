@@ -491,7 +491,9 @@ import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-  getAuth, onAuthStateChanged, signOut
+  getAuth, onAuthStateChanged, signOut, signInWithPopup, 
+  GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   getFirestore, initializeFirestore,
@@ -2192,6 +2194,81 @@ window.logout = async function() {
   if (auth && typeof signOut === 'function') await signOut(auth);
 };
 
+// Expose login functions globally
+window.loginGoogle = async function() { 
+  try { 
+    await signInWithPopup(auth, new GoogleAuthProvider()); 
+    closeLoginModal(); 
+    if (typeof showToast === 'function') {
+      showToast('Вход: Google'); 
+    }
+  } catch(e) { 
+    if (typeof showToast === 'function') {
+      showToast(e.message); 
+    }
+  } 
+};
+
+window.loginTwitter = async function() { 
+  try { 
+    await signInWithPopup(auth, new TwitterAuthProvider()); 
+    closeLoginModal(); 
+    if (typeof showToast === 'function') {
+      showToast('Вход: Twitter'); 
+    }
+  } catch(e) { 
+    if (typeof showToast === 'function') {
+      showToast(e.message); 
+    }
+  } 
+};
+
+window.handleEmailAuth = async function(e) { 
+  e.preventDefault(); 
+  const email = document.getElementById('emailInput').value; 
+  const pass = document.getElementById('passInput').value; 
+  try { 
+    await signInWithEmailAndPassword(auth, email, pass); 
+    closeLoginModal(); 
+    if (typeof showToast === 'function') {
+      showToast('Вход выполнен'); 
+    }
+  } catch(e) { 
+    if (typeof showToast === 'function') {
+      showToast(e.message); 
+    }
+  } 
+};
+
+window.handleRegister = async function() { 
+  const email = document.getElementById('emailInput').value; 
+  const pass = document.getElementById('passInput').value; 
+  try { 
+    await createUserWithEmailAndPassword(auth, email, pass); 
+    closeLoginModal(); 
+    if (typeof showToast === 'function') {
+      showToast('Аккаунт создан!'); 
+    }
+  } catch(e) { 
+    if (typeof showToast === 'function') {
+      showToast(e.message); 
+    }
+  } 
+};
+
+window.toggleRegisterMode = function() {
+  const submitBtn = document.querySelector('#loginModal button[type="submit"]');
+  const toggleBtn = document.querySelector('#loginModal button[onclick="toggleRegisterMode()"]');
+  
+  if (submitBtn.textContent.includes('Войти')) {
+    submitBtn.innerHTML = '<span data-translate="register_btn">Зарегистрироваться</span>';
+    toggleBtn.innerHTML = '<span data-translate="has_account">Уже есть аккаунт?</span> <span data-translate="login">Войти</span>';
+  } else {
+    submitBtn.innerHTML = '<span data-translate="login_btn">Войти</span>';
+    toggleBtn.innerHTML = '<span data-translate="no_account">Нет аккаунта?</span> <span data-translate="register">Зарегистрироваться</span>';
+  }
+};
+
 // Also wire up header login modal trigger
 window.openLoginModal = window.openLoginModal || function() { 
   console.log('🔐 Opening login modal...');
@@ -3099,6 +3176,18 @@ if (currentUser && db) {
 // Ensure login functions are available after DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🔐 Setting up login functions...');
+  
+  // Make Firebase Auth functions available globally
+  if (window.auth && typeof window.auth !== 'undefined') {
+    window.signInWithPopup = signInWithPopup;
+    window.GoogleAuthProvider = GoogleAuthProvider;
+    window.TwitterAuthProvider = TwitterAuthProvider;
+    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+    console.log('🔐 Firebase Auth functions made global');
+  } else {
+    console.error('🔐 Firebase Auth not available');
+  }
   
   // Override login functions to ensure they work
   window.openLoginModal = function() { 
