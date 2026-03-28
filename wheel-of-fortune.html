@@ -1013,11 +1013,11 @@ function sendSpinNotification(reward, spent, profit) {
   const isEn = (window.currentLang === 'en');
   let msg = '';
   if (profit > 0) {
-    msg = isEn ? `🎉 You won ${reward} RGT on the wheel!` : `🎉 Вы выиграли ${reward} RGT на колесе!`;
+    msg = isEn ? `🎉 ${t('you_won_wheel', 'You won %s RGT on the wheel!').replace('%s', reward)}` : `🎉 ${t('you_won_wheel', 'Вы выиграли %s RGT на колесе!').replace('%s', reward)}`;
   } else if (profit === 0) {
-    msg = isEn ? `🤝 Wheel: even! Got back ${reward} RGT.` : `🤝 Колесо: в ноль! Вернули ${reward} RGT.`;
+    msg = isEn ? `🤝 ${t('wheel_even', 'Wheel: even! Got back %s RGT.').replace('%s', reward)}` : `🤝 ${t('wheel_even', 'Колесо: в ноль! Вернули %s RGT.').replace('%s', reward)}`;
   } else {
-    msg = isEn ? `😓 Wheel: won ${reward} RGT / spent ${spent} RGT.` : `😓 Колесо: выиграли ${reward} RGT / потратили ${spent} RGT.`;
+    msg = isEn ? `😓 ${t('wheel_won_lost', 'Wheel: won %s RGT / spent %s RGT.').replace('%s', reward).replace('%s', spent)}` : `😓 ${t('wheel_won_lost', 'Колесо: выиграли %s RGT / потратили %s RGT.').replace('%s', reward).replace('%s', spent)}`;
   }
   try {
     addDoc(collection(db, 'notifications'), {
@@ -1044,7 +1044,7 @@ function sendJackpotWinnerNotification(uid, amount) {
       const winnerAvatar = userData.photoURL || userData.avatarUrl || '';
       
       const isEn = (window.currentLang === 'en');
-      const msg = isEn ? `🏆 Congratulations! You won the monthly jackpot: ${amount} RGT!` : `🏆 Поздравляем! Вы выиграли ежемесячный джекпот: ${amount} RGT!`;
+      const msg = isEn ? `🏆 ${t('congratulations_jackpot', 'Congratulations! You won the monthly jackpot: %s RGT!').replace('%s', amount)}` : `🏆 ${t('congratulations_jackpot', 'Поздравляем! Вы выиграли ежемесячный джекпот: %s RGT!').replace('%s', amount)}`;
       
       console.log('📧 Sending jackpot notification:', { uid, winnerName, amount, hasAvatar: !!winnerAvatar });
       
@@ -2139,9 +2139,9 @@ document.addEventListener('languageChanged', () => {
 window.showNotifications = function() {
   if (!currentUser) { 
     if (typeof showToast === 'function') {
-      showToast('Войдите'); 
+      showToast(t('login', 'Войдите')); 
     } else {
-      alert('Войдите');
+      alert(t('login', 'Войдите'));
     }
     return; 
   }
@@ -2184,7 +2184,7 @@ window.showNotifications = function() {
   content.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <h3 style="color: #22d3ee; font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-        <i class="fas fa-bell"></i> Уведомления
+        <i class="fas fa-bell"></i> ${t('notifications', 'Уведомления')}
       </h3>
       <button onclick="window.closeNotificationsModal()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer; padding: 4px;">&times;</button>
     </div>
@@ -2195,7 +2195,7 @@ window.showNotifications = function() {
       <div style="position: relative;">
         <span id="unreadBadge-all" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
         <button onclick="filterNotifications('all')" class="filter-btn active" data-filter="all" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #e2e8f0; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          📋 Все <span id="filterCount-all" class="filter-count" style="background: rgba(255,255,255,0.15); color: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          📋 ${t('all', 'Все')} <span id="filterCount-all" class="filter-count" style="background: rgba(255,255,255,0.15); color: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
         </button>
       </div>
       
@@ -2203,7 +2203,7 @@ window.showNotifications = function() {
       <div style="position: relative;">
         <span id="unreadBadge-games" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
         <button onclick="filterNotifications('games')" class="filter-btn" data-filter="games" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          🎮 Игры <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          🎮 ${t('games', 'Игры')} <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
         </button>
       </div>
       
@@ -2211,7 +2211,7 @@ window.showNotifications = function() {
       <div style="position: relative;">
         <span id="unreadBadge-jackpot_win" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
         <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          🏆 Джекпот <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          🏆 ${t('jackpot_win', 'Джекпот')} <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
         </button>
       </div>
       
@@ -2219,17 +2219,17 @@ window.showNotifications = function() {
       <div style="position: relative;">
         <span id="unreadBadge-admin" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
         <button onclick="filterNotifications('admin')" class="filter-btn" data-filter="admin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          🛡️ Админ <span id="filterCount-admin" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          🛡️ ${t('admin_broadcast', 'Администрация')} <span id="filterCount-admin" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
         </button>
       </div>
       
       <!-- Кнопки управления -->
       <div style="margin-left: auto; display: flex; gap: 8px;">
         <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          ✓ Прочитать все
+          ✓ ${t('mark_all_as_read', 'Прочитать все')}
         </button>
         <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          🗑️ Очистить все
+          🗑️ ${t('clear_all', 'Очистить все')}
         </button>
       </div>
     </div>
@@ -2238,7 +2238,7 @@ window.showNotifications = function() {
     <div id="notificationsList" style="max-height: 400px; overflow-y: auto;">
       <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
         <i class="fas fa-bell" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
-        Загрузка уведомлений...
+        ${t('loading_notifications', 'Загрузка уведомлений...')}
       </div>
     </div>
   `;
@@ -2289,10 +2289,10 @@ function formatNotificationDate(timestamp) {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
   
-  if (seconds < 60) return 'только что';
-  if (minutes < 60) return `${minutes} мин. назад`;
-  if (hours < 24) return `${hours} ч. назад`;
-  if (days < 7) return `${days} д. назад`;
+  if (seconds < 60) return t('just_now', 'только что');
+  if (minutes < 60) return t('minutes_ago', '%s мин. назад').replace('%s', minutes);
+  if (hours < 24) return t('hours_ago', '%s ч. назад').replace('%s', hours);
+  if (days < 7) return t('days_ago', '%s д. назад').replace('%s', days);
   
   return date.toLocaleDateString('ru-RU');
 }
@@ -2418,7 +2418,7 @@ window.markFilteredNotificationsAsRead = async function() {
   
   if (unreadFiltered.length === 0) {
     if (typeof showToast === 'function') {
-      showToast('Нет непрочитанных уведомлений в текущем фильтре');
+      showToast(t('no_unread_in_filter', 'Нет непрочитанных уведомлений в текущем фильтре'));
     }
     return;
   }
@@ -2442,12 +2442,12 @@ window.markFilteredNotificationsAsRead = async function() {
     filterNotifications(currentFilter);
     
     if (typeof showToast === 'function') {
-      showToast(`Отмечено как прочитанные: ${unreadFiltered.length} уведомлений`);
+      showToast(t('marked_as_read', 'Отмечено как прочитанные: %s уведомлений').replace('%s', unreadFiltered.length));
     }
   } catch (error) {
     console.error('Error marking filtered notifications as read:', error);
     if (typeof showToast === 'function') {
-      showToast('Ошибка при отметке уведомлений');
+      showToast(t('error_marking_notifications', 'Ошибка при отметке уведомлений'));
     }
   }
 };
@@ -2458,13 +2458,13 @@ window.clearFilteredNotifications = async function() {
   
   if (filtered.length === 0) {
     if (typeof showToast === 'function') {
-      showToast('Нет уведомлений в текущем фильтре');
+      showToast(t('no_notifications_in_filter', 'Нет уведомлений в текущем фильтре'));
     }
     return;
   }
   
-  const filterName = window.currentFilter === 'all' ? 'все уведомления' : 'уведомления из текущего фильтра';
-  if (!confirm(`Вы уверены, что хотите удалить ${filtered.length} ${filterName}?`)) return;
+  const filterName = window.currentFilter === 'all' ? t('all_notifications', 'все уведомления') : t('notifications_from_filter', 'уведомления из текущего фильтра');
+  if (!confirm(t('are_you_sure', 'Вы уверены') + ` ${t('delete_notifications', 'удалить')} ${filtered.length} ${filterName}?`)) return;
   
   try {
     const { deleteDoc, doc } = window.__firestoreExports;
@@ -2472,7 +2472,7 @@ window.clearFilteredNotifications = async function() {
     if (!deleteDoc || !doc) {
       console.error('Firestore deleteDoc or doc function not available');
       if (typeof showToast === 'function') {
-        showToast('Ошибка: функции Firestore недоступны');
+        showToast(t('firestore_functions_unavailable', 'Ошибка: функции Firestore недоступны'));
       }
       return;
     }
@@ -2494,12 +2494,12 @@ window.clearFilteredNotifications = async function() {
     filterNotifications(currentFilter);
     
     if (typeof showToast === 'function') {
-      showToast(`Удалено: ${filtered.length} уведомлений`);
+      showToast(t('deleted_count', 'Удалено: %s уведомлений').replace('%s', filtered.length));
     }
   } catch (error) {
     console.error('Error clearing filtered notifications:', error);
     if (typeof showToast === 'function') {
-      showToast('Ошибка при удалении уведомлений');
+      showToast(t('error_clearing_notifications', 'Ошибка при очистке уведомлений'));
     }
   }
 };
@@ -2528,19 +2528,19 @@ window.markAllNotificationsAsRead = async function() {
     filterNotifications(activeFilter);
     
     if (typeof showToast === 'function') {
-      showToast('Все уведомления отмечены как прочитанные');
+      showToast(t('all_notifications_marked', 'Все уведомления отмечены как прочитанные'));
     }
   } catch (error) {
     console.error('Error marking all notifications as read:', error);
     if (typeof showToast === 'function') {
-      showToast('Ошибка при отметке уведомлений');
+      showToast(t('error_marking_notifications', 'Ошибка при отметке уведомлений'));
     }
   }
 };
 
 // Функция очистки всех уведомлений
 window.clearAllNotifications = async function() {
-  if (!confirm('Вы уверены, что хотите удалить все уведомления?')) return;
+  if (!confirm(t('are_you_sure', 'Вы уверены') + `, что хотите ${t('delete_notifications', 'удалить')} ${t('all_notifications', 'все уведомления')}?`)) return;
   
   try {
     const { deleteDoc, doc } = window.__firestoreExports;
@@ -2550,7 +2550,7 @@ window.clearAllNotifications = async function() {
     }
     
     if (typeof showToast === 'function') {
-      showToast('Все уведомления удалены');
+      showToast(t('all_notifications', 'Все уведомления удалены'));
     }
     
     // Перезагружаем уведомления
@@ -2558,7 +2558,7 @@ window.clearAllNotifications = async function() {
   } catch (error) {
     console.error('Error clearing notifications:', error);
     if (typeof showToast === 'function') {
-      showToast('Ошибка при удалении уведомлений');
+      showToast(t('error_clearing_notifications', 'Ошибка при очистке уведомлений'));
     }
   }
 };
@@ -2568,7 +2568,7 @@ async function loadNotificationsForWheel() {
   if (!window.db || !currentUser) {
     const listEl = document.getElementById('notificationsList');
     if (listEl) {
-      listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Недоступно без авторизации</p>';
+      listEl.innerHTML = `<p style="color: #64748b; text-align: center; padding: 20px;">${t('login', 'Недоступно без авторизации')}</p>`;
     }
     return;
   }
@@ -2587,7 +2587,7 @@ async function loadNotificationsForWheel() {
       console.error('Required Firestore functions not available:', { collection, query, where, orderBy, onSnapshot });
       const listEl = document.getElementById('notificationsList');
       if (listEl) {
-        listEl.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка: функции Firestore недоступны</p>';
+        listEl.innerHTML = `<p style="color: #ef4444; text-align: center; padding: 20px;">${t('firestore_functions_unavailable', 'Ошибка: функции Firestore недоступны')}</p>`;
       }
       return;
     }
@@ -2642,7 +2642,7 @@ function renderNotificationsInWheel(notifications) {
   if (!listEl) return;
   
   if (notifications.length === 0) {
-    listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Нет уведомлений</p>';
+    listEl.innerHTML = `<p style="color: #64748b; text-align: center; padding: 20px;">${t('no_notifications', 'Нет уведомлений')}</p>`;
     return;
   }
   
@@ -2652,34 +2652,34 @@ function renderNotificationsInWheel(notifications) {
     
     // Определяем тип и иконку
     let typeIcon = '📢';
-    let typeLabel = 'Уведомление';
+    let typeLabel = t('notifications', 'Уведомление');
     
     console.log('🏷️ Processing notification type:', notif.type, 'for ID:', notif.id);
     
     if (notif.type === 'wheel_spin') {
       typeIcon = '🎰';
-      typeLabel = 'Колесо фортуны';
+      typeLabel = t('wheel_spin', 'Колесо фортуны');
     } else if (notif.type === 'jackpot_win') {
       typeIcon = '🏆';
-      typeLabel = 'Джекпот';
+      typeLabel = t('jackpot_win', 'Джекпот');
     } else if (notif.type === 'faucet_claim') {
       typeIcon = '🚰';
-      typeLabel = 'Кран';
+      typeLabel = t('faucet_claim', 'Кран');
     } else if (notif.type === 'game_reward') {
       typeIcon = '🎮';
-      typeLabel = 'Игра';
+      typeLabel = t('game_reward', 'Игра');
     } else if (notif.type === 'feedback_reply') {
       typeIcon = '💬';
-      typeLabel = 'Ответ на сообщение';
+      typeLabel = t('feedback_reply', 'Ответ на сообщение');
     } else if (notif.type === 'admin' || notif.type === 'broadcast' || notif.type === 'announcement') {
       typeIcon = '🛡️';
-      typeLabel = 'Администрация';
+      typeLabel = t('admin_broadcast', 'Администрация');
     } else if (notif.type === 'reward') {
       typeIcon = '🎁';
-      typeLabel = 'Поощрение';
+      typeLabel = t('reward_type', 'Поощрение');
     } else if (notif.type === 'newsletter' || notif.type === 'subscription') {
       typeIcon = '📧';
-      typeLabel = 'Рассылка';
+      typeLabel = t('newsletter', 'Рассылка');
     } else if (!notif.type) {
       typeIcon = '📢';
       typeLabel = 'Уведомление';
@@ -2694,13 +2694,13 @@ function renderNotificationsInWheel(notifications) {
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
           <h4 style="color: ${notif.type === 'jackpot_win' ? '#22c55e' : '#22d3ee'}; font-size: 14px; font-weight: 600; margin: 0;">
             ${typeIcon} ${typeLabel}
-            ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">🎉 Нажмите для подробностей</span>' : ''}
+            ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">' + t('click_for_details', 'Нажмите для подробностей') + '</span>' : ''}
           </h4>
           ${isUnread ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
         </div>
         <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${messageWithLinks}</p>
         <p style="color: #64748b; font-size: 11px; margin: 0;">${formatNotificationDate(notif.createdAt)}</p>
-        ${isUnread && notif.type !== 'jackpot_win' ? `<button onclick="event.stopPropagation(); markNotificationAsReadWheel('${notif.id}')" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
+        ${isUnread && notif.type !== 'jackpot_win' ? `<button onclick="event.stopPropagation(); markNotificationAsReadWheel('${notif.id}')" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">${t('mark_as_read', 'Отметить как прочитанное')}</button>` : ''}
       </div>
     `;
   }).join('');
@@ -2731,14 +2731,14 @@ function renderNotificationsInModal() {
   const notifications = window.notifications || [];
   
   if (notifications.length === 0) {
-    listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Нет уведомлений</p>';
+    listEl.innerHTML = `<p style="color: #64748b; text-align: center; padding: 20px;">${t('no_notifications', 'Нет уведомлений')}</p>`;
     return;
   }
   
   listEl.innerHTML = notifications.map(notif => `
     <div style="background: rgba(30,37,56,0.6); border: 1px solid rgba(34,211,238,0.2); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
       <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-        <h4 style="color: #22d3ee; font-size: 14px; font-weight: 600; margin: 0;">${notif.title || 'Уведомление'}</h4>
+        <h4 style="color: #22d3ee; font-size: 14px; font-weight: 600; margin: 0;">${notif.title || t('notifications', 'Уведомление')}</h4>
         ${!notif.read ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
       </div>
       <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${notif.message}</p>
