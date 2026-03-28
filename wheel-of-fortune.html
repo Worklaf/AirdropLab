@@ -1267,6 +1267,9 @@ if (auth) {
         // Обновляем бейдж после загрузки
         updateNotificationBadge();
       });
+      
+      // Инициализация слушателя сообщений (как в header.js)
+      initFeedbacksListener(user.uid);
     }
 
     // Admin jackpot button
@@ -1993,7 +1996,7 @@ if (document.readyState === 'loading') {
   createFeedbackChatModal();
 }
 
-// Инициализация слушателя сообщений при загрузке страницы
+// Инициализация слушателя сообщений при загрузке страницы (только если пользователь уже авторизован)
 if (currentUser && db) {
   initFeedbacksListener(currentUser.uid);
 }
