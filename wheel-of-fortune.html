@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-translate="wof_title">Wheel of Fortune — RGT Edition | AirdropLab</title>
+  <title>Wheel of Fortune — RGT Edition | AirdropLab</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -220,7 +220,7 @@
     </div>
     <div>
       <h1 style="font-size:26px;font-weight:900;color:white;margin:0;line-height:1.2;">
-        <span data-translate="wof_title_main">Wheel of Fortune</span> &nbsp;<span data-translate="wof_title_edition">RGT Edition</span>
+        Wheel of Fortune &nbsp;<span style="color:#a78bfa;">RGT Edition</span>
       </h1>
       <p style="font-size:13px;color:var(--text-secondary);margin:5px 0 0;" data-translate="wof_subtitle">Spin the wheel and win RGT rewards</p>
     </div>
@@ -243,7 +243,7 @@
         <!-- Spin info row -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
           <div class="stat-card">
-            <div class="stat-label" data-translate="wof_free_spins">Free spins</div>
+            <div class="stat-label" data-translate="wof_free_today">Free today</div>
             <div class="stat-val"><span id="freeLeft">3</span>/<span id="freeTot">3</span></div>
           </div>
           <div class="stat-card">
@@ -1013,11 +1013,11 @@ function sendSpinNotification(reward, spent, profit) {
   const isEn = (window.currentLang === 'en');
   let msg = '';
   if (profit > 0) {
-    msg = isEn ? `🎉 ${t('you_won_wheel', 'You won %s RGT on the wheel!').replace('%s', reward)}` : `🎉 ${t('you_won_wheel', 'Вы выиграли %s RGT на колесе!').replace('%s', reward)}`;
+    msg = isEn ? `🎉 You won ${reward} RGT on the wheel!` : `🎉 Вы выиграли ${reward} RGT на колесе!`;
   } else if (profit === 0) {
-    msg = isEn ? `🤝 ${t('wheel_even', 'Wheel: even! Got back %s RGT.').replace('%s', reward)}` : `🤝 ${t('wheel_even', 'Колесо: в ноль! Вернули %s RGT.').replace('%s', reward)}`;
+    msg = isEn ? `🤝 Wheel: even! Got back ${reward} RGT.` : `🤝 Колесо: в ноль! Вернули ${reward} RGT.`;
   } else {
-    msg = isEn ? `😓 ${t('wheel_won_lost', 'Wheel: won %s RGT / spent %s RGT.').replace('%s', reward).replace('%s', spent)}` : `😓 ${t('wheel_won_lost', 'Колесо: выиграли %s RGT / потратили %s RGT.').replace('%s', reward).replace('%s', spent)}`;
+    msg = isEn ? `😓 Wheel: won ${reward} RGT / spent ${spent} RGT.` : `😓 Колесо: выиграли ${reward} RGT / потратили ${spent} RGT.`;
   }
   try {
     addDoc(collection(db, 'notifications'), {
@@ -1038,13 +1038,13 @@ function sendJackpotWinnerNotification(uid, amount) {
   // Получаем данные победителя для красивого отображения
   const getWinnerData = async () => {
     try {
-      const userSnap = await getDoc(doc(db, COL_USERS, uid));
+      const userSnap = await getDoc(doc(db, 'users', uid));
       const userData = userSnap.exists() ? userSnap.data() : {};
       const winnerName = userData.displayName || userData.email || uid.substring(0, 8) + '...';
       const winnerAvatar = userData.photoURL || userData.avatarUrl || '';
       
       const isEn = (window.currentLang === 'en');
-      const msg = isEn ? `🏆 ${t('congratulations_jackpot', 'Congratulations! You won the monthly jackpot: %s RGT!').replace('%s', amount)}` : `🏆 ${t('congratulations_jackpot', 'Поздравляем! Вы выиграли ежемесячный джекпот: %s RGT!').replace('%s', amount)}`;
+      const msg = isEn ? `🏆 Congratulations! You won the monthly jackpot: ${amount} RGT!` : `🏆 Поздравляем! Вы выиграли ежемесячный джекпот: ${amount} RGT!`;
       
       console.log('📧 Sending jackpot notification:', { uid, winnerName, amount, hasAvatar: !!winnerAvatar });
       
@@ -1148,7 +1148,7 @@ window.openJackpotSpin = async function() {
   } catch(e) {
     console.error('Jackpot spin error:', e);
     if (typeof showToast === 'function') {
-      showToast(t('error_loading_jackpot', 'Ошибка при загрузке джекпота'));
+      showToast('Ошибка при загрузке джекпота');
     }
   }
 };
@@ -1168,7 +1168,7 @@ function createJackpotSpinModal(players, total, month, data) {
       <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid rgba(34,211,238,0.3); border-radius: 20px; padding: 30px; max-width: 1200px; width: 95%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
           <h2 style="color: #22d3ee; font-size: 24px; font-weight: bold; display: flex; align-items: center; gap: 12px;">
-            <i class="fas fa-trophy"></i> <span data-translate="wof_jackpot_draw_title">Розыгрыш Джекпота</span>
+            <i class="fas fa-trophy"></i> Розыгрыш Джекпота
           </h2>
           <button onclick="closeJackpotModal()" style="background: none; border: none; color: #64748b; font-size: 28px; cursor: pointer; padding: 5px;">&times;</button>
         </div>
@@ -1176,21 +1176,21 @@ function createJackpotSpinModal(players, total, month, data) {
         <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; align-items: start;">
           <!-- Таблица участников -->
           <div>
-            <h3 style="color: #e2e8f0; font-size: 16px; margin-bottom: 15px;" data-translate="wof_participants_title">📋 Участники и шансы</h3>
+            <h3 style="color: #e2e8f0; font-size: 16px; margin-bottom: 15px;">📋 Участники и шансы</h3>
             <div id="jackpotParticipants" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(148,163,184,0.2); border-radius: 12px; padding: 15px; max-height: 400px; overflow-y: auto;">
               <!-- Участники будут добавлены через JavaScript -->
             </div>
             
             <div style="margin-top: 15px; padding: 15px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px;">
-              <div style="color: #22c55e; font-size: 14px; font-weight: 600; margin-bottom: 8px;" data-translate="wof_jackpot_bank">💰 Общий банк джекпота</div>
+              <div style="color: #22c55e; font-size: 14px; font-weight: 600; margin-bottom: 8px;">💰 Общий банк джекпота</div>
               <div id="jackpotTotalAmount" style="color: white; font-size: 20px; font-weight: 700;">${total} RGT</div>
-              <div id="jackpotTotalPlayers" style="color: #64748b; font-size: 12px; margin-top: 4px;">${Object.keys(players).length} <span data-translate="wof_participants_count">участников</span></div>
+              <div id="jackpotTotalPlayers" style="color: #64748b; font-size: 12px; margin-top: 4px;">${Object.keys(players).length} участников</div>
             </div>
           </div>
           
           <!-- Адаптивное колесо -->
           <div style="display: flex; flex-direction: column; align-items: center;">
-            <h3 style="color: #e2e8f0; font-size: 16px; margin-bottom: 15px;" data-translate="wof_wheel_title">🎯 Колесо фортуны</h3>
+            <h3 style="color: #e2e8f0; font-size: 16px; margin-bottom: 15px;">🎯 Колесо фортуны</h3>
             <div style="position: relative; width: 400px; height: 400px;">
               <canvas id="jackpotWheelCanvas" width="400" height="400" style="border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"></canvas>
               <!-- Стрелка -->
@@ -1198,7 +1198,7 @@ function createJackpotSpinModal(players, total, month, data) {
             </div>
             
             <button id="jackpotSpinBtn" onclick="spinJackpotWheel()" style="margin-top: 25px; background: linear-gradient(145deg, #ef4444, #dc2626); border: none; color: white; padding: 15px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(239,68,68,0.3);">
-              <span data-translate="wof_spin_jackpot_btn">🎰 Крутить колесо</span>
+              🎰 Крутить колесо
             </button>
             
             <div id="jackpotSpinResult" style="margin-top: 20px; text-align: center; display: none;">
@@ -1280,7 +1280,7 @@ async function populateJackpotParticipants(players, total) {
         </div>
         <div style="text-align: right;">
           <div style="color: ${player.color}; font-size: 16px; font-weight: 700;">${player.percentage}%</div>
-          <div style="color: #64748b; font-size: 11px;" data-translate="wof_win_chance">шанс победы</div>
+          <div style="color: #64748b; font-size: 11px;">шанс победы</div>
         </div>
       </div>
     `).join('');
@@ -1292,7 +1292,7 @@ async function populateJackpotParticipants(players, total) {
 
   } catch (error) {
     console.error('Error populating participants:', error);
-    container.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 20px;">' + t('error_loading_participants', 'Ошибка загрузки участников') + '</div>';
+    container.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 20px;">Ошибка загрузки участников</div>';
   }
 }
 
@@ -1746,48 +1746,46 @@ function renderHistory() {
     <!-- Панель статистики -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
       <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 12px;">
-        <div style="color: #22c55e; font-size: 11px; font-weight: 600; margin-bottom: 4px;" data-translate="wof_week_stats">📅 За неделю</div>
-        <div style="color: white; font-size: 13px; font-weight: 700;" data-translate="wof_earned">Заработано:</div> +${weekStats.profit} RGT
-        <div style="color: #64748b; font-size: 11px;" data-translate="wof_spent">Потрачено:</div> ${weekStats.spent} RGT
-        <div style="color: #64748b; font-size: 11px;" data-translate="wof_spins_count">Прокруток:</div> ${weekStats.count}
+        <div style="color: #22c55e; font-size: 11px; font-weight: 600; margin-bottom: 4px;">📅 За неделю</div>
+        <div style="color: white; font-size: 13px; font-weight: 700;">Заработано: +${weekStats.profit} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Потрачено: ${weekStats.spent} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Прокруток: ${weekStats.count}</div>
       </div>
       <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 12px;">
-        <div style="color: #3b82f6; font-size: 11px; font-weight: 600; margin-bottom: 4px;" data-translate="wof_month_stats">📅 За месяц</div>
-        <div style="color: white; font-size: 13px; font-weight: 700;" data-translate="wof_earned">Заработано:</div> +${monthStats.profit} RGT
-        <div style="color: #64748b; font-size: 11px;" data-translate="wof_spent">Потрачено:</div> ${monthStats.spent} RGT
-        <div style="color: #64748b; font-size: 11px;" data-translate="wof_spins_count">Прокруток:</div> ${monthStats.count}
+        <div style="color: #3b82f6; font-size: 11px; font-weight: 600; margin-bottom: 4px;">📅 За месяц</div>
+        <div style="color: white; font-size: 13px; font-weight: 700;">Заработано: +${monthStats.profit} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Потрачено: ${monthStats.spent} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Прокруток: ${monthStats.count}</div>
       </div>
       <div style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3); border-radius: 12px; padding: 12px;">
-        <div style="color: #a855f7; font-size: 11px; font-weight: 600; margin-bottom: 4px;" data-translate="wof_all_time_stats">📅 За все время</div>
-        <div style="color: white; font-size: 13px; font-weight: 700;" data-translate="wof_earned">Заработано:</div> +${allStats.profit} RGT
-        <div style="color: #64748b; font-size: 11px;" data-translate="wof_spent">Потрачено:</div> ${allStats.spent} RGT
-        <div style="color: #64748b; font-size: 11px;" data-translate="wof_spins_count">Прокруток:</div> ${allStats.count}
+        <div style="color: #a855f7; font-size: 11px; font-weight: 600; margin-bottom: 4px;">📅 За все время</div>
+        <div style="color: white; font-size: 13px; font-weight: 700;">Заработано: +${allStats.profit} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Потрачено: ${allStats.spent} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Прокруток: ${allStats.count}</div>
       </div>
     </div>
     
     <!-- Фильтры и сортировка -->
     <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(139,92,246,0.2);">
       <select id="timeFilter" onchange="filterHistory()" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">
-        <option value="all" data-translate="wof_all_time">📅 Все время</option>
-        <option value="week" data-translate="wof_week">📅 За неделю</option>
-        <option value="month" data-translate="wof_month">📅 За месяц</option>
+        <option value="all">📅 Все время</option>
+        <option value="week">📅 За неделю</option>
+        <option value="month">📅 За месяц</option>
       </select>
       <select id="sortFilter" onchange="filterHistory()" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">
-        <option value="newest" data-translate="wof_newest">🆕 Новые</option>
-        <option value="oldest" data-translate="wof_oldest">📜 Старые</option>
-        <option value="profit" data-translate="wof_profit">💰 По выигрышу</option>
-        <option value="loss" data-translate="wof_loss">💸 По проигрышу</option>
+        <option value="newest">🆕 Новые</option>
+        <option value="oldest">📜 Старые</option>
+        <option value="profit">💰 По выигрышу</option>
+        <option value="loss">💸 По проигрышу</option>
       </select>
       <select id="typeFilter" onchange="filterHistory()" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">
-        <option value="all" data-translate="wof_all">🎲 Все</option>
-        <option value="wins" data-translate="wof_wins">🏆 Только выигрыши</option>
-        <option value="losses" data-translate="wof_losses">💸 Только проигрыши</option>
+        <option value="all">🎲 Все</option>
         <option value="wins">🏆 Только выигрыши</option>
         <option value="losses">💸 Только проигрыши</option>
-        <option value="free" data-translate="wof_free">🆓 Бесплатные</option>
+        <option value="free">🆓 Бесплатные</option>
       </select>
       <button onclick="clearSpinHistory()" style="background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-left: auto;">
-        <span data-translate="wof_clear_history">🗑️ Очистить историю</span>
+        🗑️ Очистить историю
       </button>
     </div>
     
@@ -1935,7 +1933,7 @@ window.renderHistoryPage = function() {
 
 // Функция очистки истории
 window.clearSpinHistory = function() {
-  if (!confirm(t('wof_clear_history_confirm', 'Вы уверены, что хотите очистить всю историю прокруток? Это действие нельзя отменить.'))) return;
+  if (!confirm('Вы уверены, что хотите очистить всю историю прокруток? Это действие нельзя отменить.')) return;
   
   try {
     // Очищаем локальную историю
@@ -1952,7 +1950,7 @@ window.clearSpinHistory = function() {
     renderHistory();
     
     if (typeof showToast === 'function') {
-      showToast(t('wof_history_cleared', 'История прокруток очищена на всех устройствах'));
+      showToast('История прокруток очищена на всех устройствах');
     }
   } catch (error) {
     console.error('Error clearing history:', error);
@@ -2141,9 +2139,9 @@ document.addEventListener('languageChanged', () => {
 window.showNotifications = function() {
   if (!currentUser) { 
     if (typeof showToast === 'function') {
-      showToast(t('login', 'Войдите')); 
+      showToast('Войдите'); 
     } else {
-      alert(t('login', 'Войдите'));
+      alert('Войдите');
     }
     return; 
   }
@@ -2186,7 +2184,7 @@ window.showNotifications = function() {
   content.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <h3 style="color: #22d3ee; font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-        <i class="fas fa-bell"></i> ${t('notifications', 'Уведомления')}
+        <i class="fas fa-bell"></i> Уведомления
       </h3>
       <button onclick="window.closeNotificationsModal()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer; padding: 4px;">&times;</button>
     </div>
@@ -2197,7 +2195,7 @@ window.showNotifications = function() {
       <div style="position: relative;">
         <span id="unreadBadge-all" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
         <button onclick="filterNotifications('all')" class="filter-btn active" data-filter="all" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #e2e8f0; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          📋 ${t('all', 'Все')} <span id="filterCount-all" class="filter-count" style="background: rgba(255,255,255,0.15); color: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          📋 Все <span id="filterCount-all" class="filter-count" style="background: rgba(255,255,255,0.15); color: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
         </button>
       </div>
       
@@ -2205,7 +2203,7 @@ window.showNotifications = function() {
       <div style="position: relative;">
         <span id="unreadBadge-games" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
         <button onclick="filterNotifications('games')" class="filter-btn" data-filter="games" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          🎮 ${t('games', 'Игры')} <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          🎮 Игры <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
         </button>
       </div>
       
@@ -2213,7 +2211,7 @@ window.showNotifications = function() {
       <div style="position: relative;">
         <span id="unreadBadge-jackpot_win" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
         <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          🏆 ${t('jackpot_win', 'Джекпот')} <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          🏆 Джекпот <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
         </button>
       </div>
       
@@ -2221,17 +2219,17 @@ window.showNotifications = function() {
       <div style="position: relative;">
         <span id="unreadBadge-admin" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
         <button onclick="filterNotifications('admin')" class="filter-btn" data-filter="admin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          🛡️ ${t('admin_broadcast', 'Администрация')} <span id="filterCount-admin" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          🛡️ Админ <span id="filterCount-admin" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
         </button>
       </div>
       
       <!-- Кнопки управления -->
       <div style="margin-left: auto; display: flex; gap: 8px;">
         <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          ✓ ${t('mark_all_as_read', 'Прочитать все')}
+          ✓ Прочитать все
         </button>
         <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          🗑️ ${t('clear_all', 'Очистить все')}
+          🗑️ Очистить все
         </button>
       </div>
     </div>
@@ -2240,7 +2238,7 @@ window.showNotifications = function() {
     <div id="notificationsList" style="max-height: 400px; overflow-y: auto;">
       <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
         <i class="fas fa-bell" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
-        ${t('loading_notifications', 'Загрузка уведомлений...')}
+        Загрузка уведомлений...
       </div>
     </div>
   `;
@@ -2291,10 +2289,10 @@ function formatNotificationDate(timestamp) {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
   
-  if (seconds < 60) return t('just_now', 'только что');
-  if (minutes < 60) return t('minutes_ago', '%s мин. назад').replace('%s', minutes);
-  if (hours < 24) return t('hours_ago', '%s ч. назад').replace('%s', hours);
-  if (days < 7) return t('days_ago', '%s д. назад').replace('%s', days);
+  if (seconds < 60) return 'только что';
+  if (minutes < 60) return `${minutes} мин. назад`;
+  if (hours < 24) return `${hours} ч. назад`;
+  if (days < 7) return `${days} д. назад`;
   
   return date.toLocaleDateString('ru-RU');
 }
@@ -2420,7 +2418,7 @@ window.markFilteredNotificationsAsRead = async function() {
   
   if (unreadFiltered.length === 0) {
     if (typeof showToast === 'function') {
-      showToast(t('no_unread_in_filter', 'Нет непрочитанных уведомлений в текущем фильтре'));
+      showToast('Нет непрочитанных уведомлений в текущем фильтре');
     }
     return;
   }
@@ -2444,12 +2442,12 @@ window.markFilteredNotificationsAsRead = async function() {
     filterNotifications(currentFilter);
     
     if (typeof showToast === 'function') {
-      showToast(t('marked_as_read', 'Отмечено как прочитанные: %s уведомлений').replace('%s', unreadFiltered.length));
+      showToast(`Отмечено как прочитанные: ${unreadFiltered.length} уведомлений`);
     }
   } catch (error) {
     console.error('Error marking filtered notifications as read:', error);
     if (typeof showToast === 'function') {
-      showToast(t('error_marking_notifications', 'Ошибка при отметке уведомлений'));
+      showToast('Ошибка при отметке уведомлений');
     }
   }
 };
@@ -2460,13 +2458,13 @@ window.clearFilteredNotifications = async function() {
   
   if (filtered.length === 0) {
     if (typeof showToast === 'function') {
-      showToast(t('no_notifications_in_filter', 'Нет уведомлений в текущем фильтре'));
+      showToast('Нет уведомлений в текущем фильтре');
     }
     return;
   }
   
-  const filterName = window.currentFilter === 'all' ? t('all_notifications', 'все уведомления') : t('notifications_from_filter', 'уведомления из текущего фильтра');
-  if (!confirm(t('are_you_sure', 'Вы уверены') + ` ${t('delete_notifications', 'удалить')} ${filtered.length} ${filterName}?`)) return;
+  const filterName = window.currentFilter === 'all' ? 'все уведомления' : 'уведомления из текущего фильтра';
+  if (!confirm(`Вы уверены, что хотите удалить ${filtered.length} ${filterName}?`)) return;
   
   try {
     const { deleteDoc, doc } = window.__firestoreExports;
@@ -2474,7 +2472,7 @@ window.clearFilteredNotifications = async function() {
     if (!deleteDoc || !doc) {
       console.error('Firestore deleteDoc or doc function not available');
       if (typeof showToast === 'function') {
-        showToast(t('firestore_functions_unavailable', 'Ошибка: функции Firestore недоступны'));
+        showToast('Ошибка: функции Firestore недоступны');
       }
       return;
     }
@@ -2496,12 +2494,12 @@ window.clearFilteredNotifications = async function() {
     filterNotifications(currentFilter);
     
     if (typeof showToast === 'function') {
-      showToast(t('deleted_count', 'Удалено: %s уведомлений').replace('%s', filtered.length));
+      showToast(`Удалено: ${filtered.length} уведомлений`);
     }
   } catch (error) {
     console.error('Error clearing filtered notifications:', error);
     if (typeof showToast === 'function') {
-      showToast(t('error_clearing_notifications', 'Ошибка при очистке уведомлений'));
+      showToast('Ошибка при удалении уведомлений');
     }
   }
 };
@@ -2530,19 +2528,19 @@ window.markAllNotificationsAsRead = async function() {
     filterNotifications(activeFilter);
     
     if (typeof showToast === 'function') {
-      showToast(t('all_notifications_marked', 'Все уведомления отмечены как прочитанные'));
+      showToast('Все уведомления отмечены как прочитанные');
     }
   } catch (error) {
     console.error('Error marking all notifications as read:', error);
     if (typeof showToast === 'function') {
-      showToast(t('error_marking_notifications', 'Ошибка при отметке уведомлений'));
+      showToast('Ошибка при отметке уведомлений');
     }
   }
 };
 
 // Функция очистки всех уведомлений
 window.clearAllNotifications = async function() {
-  if (!confirm(t('are_you_sure', 'Вы уверены') + `, что хотите ${t('delete_notifications', 'удалить')} ${t('all_notifications', 'все уведомления')}?`)) return;
+  if (!confirm('Вы уверены, что хотите удалить все уведомления?')) return;
   
   try {
     const { deleteDoc, doc } = window.__firestoreExports;
@@ -2552,7 +2550,7 @@ window.clearAllNotifications = async function() {
     }
     
     if (typeof showToast === 'function') {
-      showToast(t('all_notifications', 'Все уведомления удалены'));
+      showToast('Все уведомления удалены');
     }
     
     // Перезагружаем уведомления
@@ -2560,7 +2558,7 @@ window.clearAllNotifications = async function() {
   } catch (error) {
     console.error('Error clearing notifications:', error);
     if (typeof showToast === 'function') {
-      showToast(t('error_clearing_notifications', 'Ошибка при очистке уведомлений'));
+      showToast('Ошибка при удалении уведомлений');
     }
   }
 };
@@ -2570,7 +2568,7 @@ async function loadNotificationsForWheel() {
   if (!window.db || !currentUser) {
     const listEl = document.getElementById('notificationsList');
     if (listEl) {
-      listEl.innerHTML = `<p style="color: #64748b; text-align: center; padding: 20px;">${t('login', 'Недоступно без авторизации')}</p>`;
+      listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Недоступно без авторизации</p>';
     }
     return;
   }
@@ -2589,7 +2587,7 @@ async function loadNotificationsForWheel() {
       console.error('Required Firestore functions not available:', { collection, query, where, orderBy, onSnapshot });
       const listEl = document.getElementById('notificationsList');
       if (listEl) {
-        listEl.innerHTML = `<p style="color: #ef4444; text-align: center; padding: 20px;">${t('firestore_functions_unavailable', 'Ошибка: функции Firestore недоступны')}</p>`;
+        listEl.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка: функции Firestore недоступны</p>';
       }
       return;
     }
@@ -2644,7 +2642,7 @@ function renderNotificationsInWheel(notifications) {
   if (!listEl) return;
   
   if (notifications.length === 0) {
-    listEl.innerHTML = `<p style="color: #64748b; text-align: center; padding: 20px;">${t('no_notifications', 'Нет уведомлений')}</p>`;
+    listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Нет уведомлений</p>';
     return;
   }
   
@@ -2654,34 +2652,34 @@ function renderNotificationsInWheel(notifications) {
     
     // Определяем тип и иконку
     let typeIcon = '📢';
-    let typeLabel = t('notifications', 'Уведомление');
+    let typeLabel = 'Уведомление';
     
     console.log('🏷️ Processing notification type:', notif.type, 'for ID:', notif.id);
     
     if (notif.type === 'wheel_spin') {
       typeIcon = '🎰';
-      typeLabel = t('wheel_spin', 'Колесо фортуны');
+      typeLabel = 'Колесо фортуны';
     } else if (notif.type === 'jackpot_win') {
       typeIcon = '🏆';
-      typeLabel = t('jackpot_win', 'Джекпот');
+      typeLabel = 'Джекпот';
     } else if (notif.type === 'faucet_claim') {
       typeIcon = '🚰';
-      typeLabel = t('faucet_claim', 'Кран');
+      typeLabel = 'Кран';
     } else if (notif.type === 'game_reward') {
       typeIcon = '🎮';
-      typeLabel = t('game_reward', 'Игра');
+      typeLabel = 'Игра';
     } else if (notif.type === 'feedback_reply') {
       typeIcon = '💬';
-      typeLabel = t('feedback_reply', 'Ответ на сообщение');
+      typeLabel = 'Ответ на сообщение';
     } else if (notif.type === 'admin' || notif.type === 'broadcast' || notif.type === 'announcement') {
       typeIcon = '🛡️';
-      typeLabel = t('admin_broadcast', 'Администрация');
+      typeLabel = 'Администрация';
     } else if (notif.type === 'reward') {
       typeIcon = '🎁';
-      typeLabel = t('reward_type', 'Поощрение');
+      typeLabel = 'Поощрение';
     } else if (notif.type === 'newsletter' || notif.type === 'subscription') {
       typeIcon = '📧';
-      typeLabel = t('newsletter', 'Рассылка');
+      typeLabel = 'Рассылка';
     } else if (!notif.type) {
       typeIcon = '📢';
       typeLabel = 'Уведомление';
@@ -2696,13 +2694,13 @@ function renderNotificationsInWheel(notifications) {
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
           <h4 style="color: ${notif.type === 'jackpot_win' ? '#22c55e' : '#22d3ee'}; font-size: 14px; font-weight: 600; margin: 0;">
             ${typeIcon} ${typeLabel}
-            ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">' + t('click_for_details', 'Нажмите для подробностей') + '</span>' : ''}
+            ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">🎉 Нажмите для подробностей</span>' : ''}
           </h4>
           ${isUnread ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
         </div>
         <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${messageWithLinks}</p>
         <p style="color: #64748b; font-size: 11px; margin: 0;">${formatNotificationDate(notif.createdAt)}</p>
-        ${isUnread && notif.type !== 'jackpot_win' ? `<button onclick="event.stopPropagation(); markNotificationAsReadWheel('${notif.id}')" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">${t('mark_as_read', 'Отметить как прочитанное')}</button>` : ''}
+        ${isUnread && notif.type !== 'jackpot_win' ? `<button onclick="event.stopPropagation(); markNotificationAsReadWheel('${notif.id}')" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
       </div>
     `;
   }).join('');
@@ -2733,19 +2731,19 @@ function renderNotificationsInModal() {
   const notifications = window.notifications || [];
   
   if (notifications.length === 0) {
-    listEl.innerHTML = `<p style="color: #64748b; text-align: center; padding: 20px;">${t('no_notifications', 'Нет уведомлений')}</p>`;
+    listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Нет уведомлений</p>';
     return;
   }
   
   listEl.innerHTML = notifications.map(notif => `
     <div style="background: rgba(30,37,56,0.6); border: 1px solid rgba(34,211,238,0.2); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
       <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-        <h4 style="color: #22d3ee; font-size: 14px; font-weight: 600; margin: 0;">${notif.title || t('notifications', 'Уведомление')}</h4>
+        <h4 style="color: #22d3ee; font-size: 14px; font-weight: 600; margin: 0;">${notif.title || 'Уведомление'}</h4>
         ${!notif.read ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
       </div>
       <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${notif.message}</p>
       <p style="color: #64748b; font-size: 11px; margin: 0;">${new Date(notif.createdAt).toLocaleString()}</p>
-      ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); renderNotificationsInModal();" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">` + t('mark_as_read', 'Отметить как прочитанное') + `</button>` : ''}
+      ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); renderNotificationsInModal();" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
     </div>
   `).join('');
 }
@@ -2796,7 +2794,7 @@ window.showJackpotWinnerFromNotification = async function(notification) {
     // Всегда получаем свежие данные пользователя для аватарки
     if (notification.userId) {
       try {
-        const userSnap = await getDoc(doc(db, COL_USERS, notification.userId));
+        const userSnap = await getDoc(doc(db, 'users', notification.userId));
         if (userSnap.exists()) {
           const userData = userSnap.data();
           winnerName = userData.displayName || userData.email || notification.userId.substring(0, 8) + '...';
@@ -2882,7 +2880,7 @@ if (currentUser && db) {
 <!-- Фиксированная админ-панель -->
 <div id="fixedAdminPanel" style="position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,37,56,0.95));border-top:1px solid rgba(139,92,246,0.3);backdrop-filter:blur(10px);padding:10px 20px;z-index:1000;display:none;align-items:center;justify-content:space-between;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
   <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-        <span data-translate="wof_title_edition">RGT Edition</span>
+    <span style="color:#a78bfa;font-size:12px;font-weight:600;"><i class="fas fa-shield" style="margin-right:6px;"></i>Admin Panel</span>
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <div id="deskAdminBtns" style="display:flex;align-items:center;gap:6px;"></div>
