@@ -608,7 +608,7 @@ window.doSpin = async function() {
   const usedToday = wof.lastSpinDate === today ? (wof.freeUsed || 0) : 0;
   const freeLeft  = Math.max(0, DAILY_FREE - usedToday);
 
-  if (freeLeft === 0 && (wof.rgt || userData.rgt || 0) < PAID_COST) {
+  if (freeLeft === 0 && (userData.reagents || 0) < PAID_COST) {
     showToastLocal('wof_not_enough', `Not enough RGT. Need ${PAID_COST} RGT`);
     return;
   }
@@ -665,11 +665,10 @@ async function handleResult(reward, isFree) {
   wof.freeUsed    = isFree ? usedToday + 1 : (wof.freeUsed || 0);
   wof.lastSpinDate = today;
   if (!isFree) {
-    wof.rgt   = ((wof.rgt   || 0) + netProfit);
-    userData.rgt = ((userData.rgt || 0) + netProfit);
+    userData.reagents = ((userData.reagents || 0) + netProfit);
     // Также обновляем window.userProfileData для footer.js и account модали
     if (window.userProfileData) {
-      window.userProfileData.rgt = userData.rgt;
+      window.userProfileData.reagents = userData.reagents;
     }
   }
   userData.wof = wof;
@@ -692,7 +691,7 @@ async function handleResult(reward, isFree) {
         'wof.lastSpinDate': wof.lastSpinDate,
       };
       if (!isFree) {
-        updates['rgt'] = increment(netProfit);
+        updates['reagents'] = increment(netProfit);
       }
       await updateDoc(uRef, updates);
 
@@ -975,7 +974,7 @@ async function finalizeJackpot(winnerUid, amount, month, jpData) {
       winnerAvatar = d.photoURL || d.avatarUrl || '';
     }
     // Award RGT to winner
-    await updateDoc(doc(db, COL_USERS, winnerUid), { rgt: increment(amount) });
+    await updateDoc(doc(db, COL_USERS, winnerUid), { reagents: increment(amount) });
   } catch(e) {}
 
   // Mark jackpot as drawn
