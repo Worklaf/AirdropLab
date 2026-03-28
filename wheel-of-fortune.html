@@ -1640,31 +1640,63 @@ window.renderFeedbackList = function() {
     
     console.log('Rendering message:', { id: msg.id, projectName: msg.projectName, isUnread, lastMsg: lastMsg.text });
     
-    return `
-      <div onclick="openFeedbackFromList('${msg.id}', '${msg.projectId || ''}', '${msg.projectName || 'Support'}')" 
-           style="background: rgba(30,37,56,0.6); border: 1px solid rgba(139,92,246,0.2); border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer; position: relative; transition: all 0.2s;"
-           onmouseover="this.style.background='rgba(139,92,246,0.1)'" 
-           onmouseout="this.style.background='rgba(30,37,56,0.6)'">
-        ${isUnread ? '<div style="position: absolute; top: 12px; right: 12px; width: 10px; height: 10px; background: #a78bfa; border-radius: 50%; animation: pulse 2s infinite;"></div>' : ''}
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-          <div style="flex: 1; min-width: 0;">
-            <div style="color: #a78bfa; font-size: 14px; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${msg.projectName || 'Support'}
-            </div>
-            <div style="color: #64748b; font-size: 11px; margin-top: 2px;">
-              от ${msg.userName || 'Пользователь'}
-            </div>
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-            <span style="color: #64748b; font-size: 11px;">${formatTimeAgoWheel(date)}</span>
-            ${isUnread ? '<span style="background: #a78bfa; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
-          </div>
-        </div>
-        <div style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0;">
-          ${lastMsg.text || 'Нет текста'}
-        </div>
-      </div>
-    `;
+    // Создаем элемент с помощью createElement чтобы избежать проблем с кавычками
+    const messageDiv = document.createElement('div');
+    messageDiv.style.cssText = 'background: rgba(30,37,56,0.6); border: 1px solid rgba(139,92,246,0.2); border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer; position: relative; transition: all 0.2s;';
+    messageDiv.onclick = () => openFeedbackFromList(msg.id, msg.projectId || '', msg.projectName || 'Support');
+    messageDiv.onmouseover = () => messageDiv.style.background = 'rgba(139,92,246,0.1)';
+    messageDiv.onmouseout = () => messageDiv.style.background = 'rgba(30,37,56,0.6)';
+    
+    if (isUnread) {
+      const unreadDot = document.createElement('div');
+      unreadDot.style.cssText = 'position: absolute; top: 12px; right: 12px; width: 10px; height: 10px; background: #a78bfa; border-radius: 50%; animation: pulse 2s infinite;';
+      messageDiv.appendChild(unreadDot);
+    }
+    
+    const headerDiv = document.createElement('div');
+    headerDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;';
+    
+    const titleDiv = document.createElement('div');
+    titleDiv.style.cssText = 'flex: 1; min-width: 0;';
+    
+    const projectNameDiv = document.createElement('div');
+    projectNameDiv.style.cssText = 'color: #a78bfa; font-size: 14px; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+    projectNameDiv.textContent = msg.projectName || 'Support';
+    
+    const userDiv = document.createElement('div');
+    userDiv.style.cssText = 'color: #64748b; font-size: 11px; margin-top: 2px;';
+    userDiv.textContent = 'от ' + (msg.userName || 'Пользователь');
+    
+    titleDiv.appendChild(projectNameDiv);
+    titleDiv.appendChild(userDiv);
+    
+    const metaDiv = document.createElement('div');
+    metaDiv.style.cssText = 'display: flex; align-items: center; gap: 8px; flex-shrink: 0;';
+    
+    const timeSpan = document.createElement('span');
+    timeSpan.style.cssText = 'color: #64748b; font-size: 11px;';
+    timeSpan.textContent = formatTimeAgoWheel(date);
+    
+    metaDiv.appendChild(timeSpan);
+    
+    if (isUnread) {
+      const newBadge = document.createElement('span');
+      newBadge.style.cssText = 'background: #a78bfa; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;';
+      newBadge.textContent = 'NEW';
+      metaDiv.appendChild(newBadge);
+    }
+    
+    headerDiv.appendChild(titleDiv);
+    headerDiv.appendChild(metaDiv);
+    
+    const messageText = document.createElement('div');
+    messageText.style.cssText = 'color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0;';
+    messageText.textContent = lastMsg.text || 'Нет текста';
+    
+    messageDiv.appendChild(headerDiv);
+    messageDiv.appendChild(messageText);
+    
+    return messageDiv.outerHTML;
   }).join('');
   
   console.log('Render complete');
