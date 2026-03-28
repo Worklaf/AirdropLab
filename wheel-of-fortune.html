@@ -1561,17 +1561,24 @@ function loadFeedbackMessages() {
     return;
   }
   
-  // Загружаем сообщения из Firebase
-  const { collection, query, where, orderBy, getDocs } = window.__firestoreExports || {};
-  if (collection && query && where && orderBy && getDocs) {
+  // Загружаем сообщения из Firebase без orderBy чтобы избежать ошибки индекса
+  const { collection, query, where, getDocs } = window.__firestoreExports || {};
+  if (collection && query && where && getDocs) {
     getDocs(query(collection(window.db, 'feedbacks'), 
-      where('userId', '==', currentUser.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', currentUser.uid)
     )).then(snapshot => {
       const messages = [];
       snapshot.forEach(doc => {
-        messages.push({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        messages.push({ 
+          id: doc.id, 
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date()
+        });
       });
+      
+      // Сортируем в памяти вместо orderBy в запросе
+      messages.sort((a, b) => b.createdAt - a.createdAt);
       
       if (messages.length === 0) {
         listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Нет сообщений</p>';
@@ -1582,7 +1589,7 @@ function loadFeedbackMessages() {
         <div style="background: rgba(30,37,56,0.6); border: 1px solid rgba(139,92,246,0.2); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
             <h4 style="color: #a78bfa; font-size: 14px; font-weight: 600; margin: 0;">${msg.subject || 'Сообщение'}</h4>
-            <span style="color: #64748b; font-size: 11px;">${new Date(msg.createdAt).toLocaleString()}</span>
+            <span style="color: #64748b; font-size: 11px;">${msg.createdAt.toLocaleString()}</span>
           </div>
           <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0;">${msg.message}</p>
           ${msg.reply ? `<div style="background: rgba(34,211,238,0.1); border-left: 3px solid #22d3ee; padding: 8px; margin-top: 8px; border-radius: 4px;"><p style="color: #22d3ee; font-size: 12px; margin: 0;"><strong>Ответ:</strong> ${msg.reply}</p></div>` : ''}
