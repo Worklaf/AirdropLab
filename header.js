@@ -3158,7 +3158,7 @@ function initFeedbacksListener(uid) {
         typeIcon = '🏆';
         typeLabel = 'Джекпот';
         filterType = 'jackpot_win';
-      } else if (notif.type === 'spin_result') {
+      } else if (notif.type === 'spin_result' || notif.type === 'wheel_spin') {
         typeIcon = '🎰';
         typeLabel = 'Крутилка';
         filterType = 'games';
@@ -3221,7 +3221,7 @@ function initFeedbacksListener(uid) {
     const filters = ['all', 'games', 'jackpot_win', 'admin'];
     const filterMapping = {
       'all': () => window.allNotifications,
-      'games': () => window.allNotifications.filter(n => n.type === 'spin_result'),
+      'games': () => window.allNotifications.filter(n => n.type === 'spin_result' || n.type === 'wheel_spin'),
       'jackpot_win': () => window.allNotifications.filter(n => n.type === 'jackpot_win'),
       'admin': () => window.allNotifications.filter(n => n.type === 'system')
     };
@@ -3267,7 +3267,7 @@ function initFeedbacksListener(uid) {
     } else if (filterType === 'jackpot_win') {
       filtered = window.allNotifications.filter(n => n.type === 'jackpot_win');
     } else if (filterType === 'games') {
-      filtered = window.allNotifications.filter(n => n.type === 'spin_result');
+      filtered = window.allNotifications.filter(n => n.type === 'spin_result' || n.type === 'wheel_spin');
     } else if (filterType === 'admin') {
       filtered = window.allNotifications.filter(n => n.type === 'system');
     }
@@ -3312,7 +3312,7 @@ function initFeedbacksListener(uid) {
     } else if (activeFilter === 'jackpot_win') {
       notifications = window.allNotifications.filter(n => n.type === 'jackpot_win' && !n.read);
     } else if (activeFilter === 'games') {
-      notifications = window.allNotifications.filter(n => n.type === 'spin_result' && !n.read);
+      notifications = window.allNotifications.filter(n => (n.type === 'spin_result' || n.type === 'wheel_spin') && !n.read);
     } else if (activeFilter === 'admin') {
       notifications = window.allNotifications.filter(n => n.type === 'system' && !n.read);
     }
@@ -3369,7 +3369,7 @@ function initFeedbacksListener(uid) {
     if (activeFilter === 'jackpot_win') {
       notifications = window.allNotifications.filter(n => n.type === 'jackpot_win');
     } else if (activeFilter === 'games') {
-      notifications = window.allNotifications.filter(n => n.type === 'spin_result');
+      notifications = window.allNotifications.filter(n => n.type === 'spin_result' || n.type === 'wheel_spin');
     } else if (activeFilter === 'admin') {
       notifications = window.allNotifications.filter(n => n.type === 'system');
     } else {
@@ -3450,7 +3450,40 @@ function initFeedbacksListener(uid) {
         }
       }
       
-      // Обновляем элементы в существующем оверлее
+      // Проверяем есть ли элемент jackpotWinnerOverlay на странице
+      let overlay = document.getElementById('jackpotWinnerOverlay');
+      
+      // Если нет оверлея, создаем его
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'jackpotWinnerOverlay';
+        overlay.className = 'jackpot-winner-overlay';
+        overlay.style.cssText = `
+          display: none; position: fixed; inset: 0; z-index: 20000;
+          background: rgba(0,0,0,.92); backdrop-filter: blur(14px);
+          align-items: center; justify-content: center; padding: 20px;
+        `;
+        
+        overlay.innerHTML = `
+          <div class="jackpot-winner-card" style="
+            width: 100%; max-width: 500px; border-radius: 28px; padding: 40px 32px; text-align: center;
+            background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid rgba(236,72,153,.3);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,.5);
+          ">
+            <div style="font-size:60px;margin-bottom:10px;">🏆</div>
+            <div style="font-size:13px;color:#ec4899;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">JACKPOT WINNER</div>
+            <img id="jwAvatar" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ec4899;margin:0 auto 12px;display:block;" onerror="this.style.display='none'">
+            <div style="font-size:22px;font-weight:900;color:white;margin-bottom:6px;" id="jwName">—</div>
+            <div style="font-size:38px;font-weight:900;background:linear-gradient(135deg,#ec4899,#8b5cf6);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px;" id="jwAmount">0 RGT</div>
+            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 20px;">Congratulations! The monthly jackpot has been awarded.</p>
+            <button onclick="this.closest('.jackpot-winner-overlay').classList.remove('show')" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Close</button>
+          </div>
+        `;
+        
+        document.body.appendChild(overlay);
+      }
+      
+      // Обновляем элементы
       const nameElement = document.getElementById('jwName');
       const amountElement = document.getElementById('jwAmount');
       const avatarElement = document.getElementById('jwAvatar');
@@ -3473,13 +3506,10 @@ function initFeedbacksListener(uid) {
         }
       }
       
-      // Показываем оверлей с высоким z-index
-      const overlay = document.getElementById('jackpotWinnerOverlay');
-      if (overlay) {
-        overlay.style.zIndex = '20000';
-        overlay.classList.add('show');
-        console.log('🎯 Jackpot overlay shown with z-index:', overlay.style.zIndex);
-      }
+      // Показываем оверлей
+      overlay.style.display = 'flex';
+      overlay.classList.add('show');
+      console.log('🎯 Jackpot overlay shown');
       
       // Запускаем конфетти
       if (typeof launchConfetti === 'function') {
