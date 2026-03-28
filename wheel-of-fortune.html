@@ -1455,12 +1455,9 @@ if (auth) {
     await loadLeaderboard();
     
     // Load notifications for header
-    if (user && db) {
+    if (user && db && window.__firestoreExports) {
       // Загружаем уведомления для колеса
-      loadNotificationsForWheel().then(() => {
-        // Обновляем бейдж после загрузки
-        updateNotificationBadge();
-      });
+      loadNotificationsForWheel();
     }
     
     // Обновляем бейдж уведомлений сразу при загрузке
@@ -1603,7 +1600,11 @@ window.showNotifications = function() {
   });
   
   // Загружаем уведомления как в index.html
-  loadNotificationsForWheel();
+  if (window.__firestoreExports) {
+    loadNotificationsForWheel();
+  } else {
+    console.warn('Firestore not ready, notifications will load when ready');
+  }
 };
 
 // Функция фильтрации уведомлений
@@ -1882,8 +1883,25 @@ async function loadNotificationsForWheel() {
     return;
   }
   
+  // Проверяем доступность Firestore функций
+  if (!window.__firestoreExports) {
+    console.warn('Firestore exports not ready, retrying in 500ms...');
+    setTimeout(loadNotificationsForWheel, 500);
+    return;
+  }
+  
   try {
     const { collection, query, where, orderBy, onSnapshot } = window.__firestoreExports;
+    
+    if (!collection || !query || !where || !orderBy || !onSnapshot) {
+      console.error('Required Firestore functions not available:', { collection, query, where, orderBy, onSnapshot });
+      const listEl = document.getElementById('notificationsList');
+      if (listEl) {
+        listEl.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка: функции Firestore недоступны</p>';
+      }
+      return;
+    }
+    
     const q = query(
       collection(window.db, "notifications"),
       where("userId", "==", currentUser.uid),
