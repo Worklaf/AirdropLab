@@ -595,74 +595,12 @@
         switch(page) {
             case 'faq':    html = getFAQContent();    break;
             case 'guides': html = getGuidesContent(); break;
-            case 'notifications': html = getNotificationsContent(); break;
             default:       html = `<p class="text-center text-slate-400 p-8">${lang('in_work') || 'В разработке'}</p>`;
         }
 
         content.innerHTML = html;
         modal.classList.add('active');
         if (page === 'faq') initFAQ();
-    };
-
-    window.showNotifications = function() {
-        // Load fresh notifications from Firestore before opening modal
-        window.loadPageNotifications(() => {
-            window.openPageModal('notifications');
-        });
-    };
-
-    // Load notifications from Firestore for any page
-    window.loadPageNotifications = async function(callback) {
-        const db = window.db;
-        const currentUser = window.currentUser;
-        
-        if (!db || !currentUser) {
-            callback && callback();
-            return;
-        }
-
-        try {
-            const { collection, query, where, getDocs } = window.__firestoreExports || {};
-            if (!collection || !query || !where || !getDocs) {
-                console.warn('Firestore exports not available');
-                callback && callback();
-                return;
-            }
-
-            // Simple query without orderBy to avoid index requirement
-            const q = query(
-                collection(db, 'notifications'),
-                where('uid', '==', currentUser.uid)
-            );
-            
-            const snapshot = await getDocs(q);
-            const notifications = [];
-            
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                notifications.push({
-                    id: doc.id,
-                    type: data.type || 'info',
-                    msg: data.msg || '',
-                    read: data.read || false,
-                    ts: data.ts
-                });
-            });
-            
-            // Sort by timestamp in memory (desc)
-            notifications.sort((a, b) => {
-                const aTime = a.ts && typeof a.ts.toDate === 'function' ? a.ts.toDate().getTime() : 0;
-                const bTime = b.ts && typeof b.ts.toDate === 'function' ? b.ts.toDate().getTime() : 0;
-                return bTime - aTime;
-            });
-            
-            window.notifications = notifications;
-            callback && callback();
-        } catch(e) {
-            console.warn('Failed to load notifications:', e);
-            window.notifications = [];
-            callback && callback();
-        }
     };
 
     window.closePageModal = function() {
@@ -796,60 +734,6 @@
                         ${lang('footer_guide_lock')}
                     </p>
                 </div>
-            </div>
-        `;
-    }
-
-    // ============ NOTIFICATIONS CONTENT ============
-
-    function getNotificationsContent() {
-        const lang = typeof window.t === 'function' ? window.t : (k) => k;
-        const notificationsList = (typeof window.notifications !== 'undefined') ? window.notifications : [];
-
-        return `
-            <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-6 border-b border-slate-700">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-2xl font-bold text-white flex items-center gap-3">
-                        <i class="fas fa-bell text-cyan-400"></i>
-                        ${lang('notifications') || 'Уведомления'}
-                    </h2>
-                    ${notificationsList.length > 0
-                        ? `<button onclick="if(typeof window.markAllNotificationsRead==='function')window.markAllNotificationsRead(); setTimeout(()=>window.closePageModal(),200);" class="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-colors">
-                            <i class="fas fa-check-double mr-1"></i> ${lang('notif_clear_all') || 'Отметить все'}</button>`
-                        : ''}
-                </div>
-                <p class="text-slate-400 mt-2">${notificationsList.length} ${lang('notifications') || 'уведомлений'}</p>
-            </div>
-            <div class="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                ${notificationsList.length > 0
-                    ? notificationsList.map(notif => {
-                        const tsDisplay = notif.ts && typeof notif.ts.toDate === 'function' 
-                            ? notif.ts.toDate().toLocaleString() 
-                            : (notif.ts ? new Date(notif.ts).toLocaleString() : 'недавно');
-                        return `
-                        <div class="notification-item p-4 border border-slate-700/50 rounded-lg mb-3 ${notif.read ? 'opacity-60' : 'bg-slate-800/30'} hover:border-cyan-500/50 transition-colors"
-                             onclick="if(typeof window.markNotificationRead==='function')window.markNotificationRead('${notif.id}')">
-                            <div class="flex items-start gap-3 cursor-pointer">
-                                <div class="text-lg mt-1 flex-shrink-0">
-                                    ${notif.type === 'wheel_spin' ? '🎡' :
-                                      notif.type === 'jackpot_win' ? '🏆' :
-                                      notif.type === 'claim' ? '🎁' :
-                                      notif.type === 'reward' ? '✨' :
-                                      '📢'}
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-white text-sm font-medium break-words">${notif.msg || ''}</p>
-                                    <p class="text-slate-500 text-xs mt-1">${tsDisplay}</p>
-                                </div>
-                                ${!notif.read ? '<span class="w-2 h-2 bg-cyan-400 rounded-full flex-shrink-0 mt-1.5"></span>' : ''}
-                            </div>
-                        </div>
-                    `}).join('')
-                    : `<div class="text-center py-12 text-slate-400">
-                        <i class="fas fa-inbox text-4xl mb-4 opacity-30 block"></i>
-                        <p>${lang('notif_empty_title') || 'Нет уведомлений'}</p>
-                        <p class="text-xs mt-2">${lang('notif_empty_desc') || 'Уведомления появятся здесь'}</p>
-                    </div>`}
             </div>
         `;
     }
@@ -1864,51 +1748,13 @@ function initAccountPage() {
         if (typeof window.markNotificationAsRead === 'function') {
             await window.markNotificationAsRead(notifId);
         }
-        // Reload notifications after marking as read
-        window.loadPageNotifications(() => {
-            // Modal will update automatically
-        });
-    };
-
-    window.markAllNotificationsRead = async function() {
-        const db = window.db;
-        const currentUser = window.currentUser;
-        
-        if (!db || !currentUser) return;
-        
-        try {
-            const { collection, query, where, getDocs, writeBatch, doc } = window.__firestoreExports || {};
-            if (!collection || !query || !where || !getDocs || !writeBatch || !doc) return;
-
-            const q = query(
-                collection(db, 'notifications'),
-                where('uid', '==', currentUser.uid),
-                where('read', '==', false)
-            );
-            
-            const snapshot = await getDocs(q);
-            if (snapshot.empty) return;
-
-            const batch = writeBatch(db);
-            snapshot.forEach(docSnap => {
-                batch.update(doc(db, 'notifications', docSnap.id), { read: true });
-            });
-            
-            await batch.commit();
-            
-            // Reload and update modal
-            window.loadPageNotifications(() => {
-                // Modal will refresh
-            });
-        } catch(e) {
-            console.warn('Error marking all notifications as read:', e);
-        }
+        openNotificationsModal();
     };
 
     window.clearAllNotifications = function() {
         localStorage.setItem('notifications', '[]');
         window.notifications = [];
-        window.openPageModal('notifications');
+        openNotificationsModal();
     };
 
     function formatTimeAgo(date) {
@@ -2388,18 +2234,10 @@ function initAccountPage() {
         const projectEl = document.getElementById('footerProjectCount');
 
         // 1. Обновление проектов
-        if (projectEl) {
-            let projectCount = 0;
-            
-            // Проверяем разные источники проектов
-            if (typeof window.projects !== 'undefined' && Array.isArray(window.projects)) {
-                projectCount = window.projects.filter(p => !p.deleted).length;
-            } else if (typeof window.faucets !== 'undefined' && Array.isArray(window.faucets)) {
-                // Fallback для faucet страницы
-                projectCount = window.faucets.filter(f => !f.deleted).length;
-            }
-            
-            projectEl.textContent = projectCount;
+        if (projectEl && typeof window.projects !== 'undefined') {
+            projectEl.textContent = Array.isArray(window.projects) 
+                ? window.projects.filter(p => !p.deleted).length 
+                : 0;
             projectEl.classList.add('text-cyan-400');
         }
 
@@ -2415,29 +2253,13 @@ function initAccountPage() {
                     exp.doc(db, 'config', 'stats'),
                     function(snap) {
                         if (snap.exists()) {
-                            // Базовое значение из Firebase config
-                            const baseCount = snap.data().userCount || 12321;
-                            
-                            // Получаем реальное количество пользователей
-                            exp.getDocs(exp.collection(db, 'users')).then(usersSnap => {
-                                const realUsersCount = usersSnap.size;
-                                const totalCount = baseCount + realUsersCount;
-                                
-                                userEl.textContent = totalCount;
-                                userEl.classList.toggle('text-emerald-400', totalCount > 0);
-                                userEl.classList.toggle('text-slate-400',   totalCount <= 0);
-                            }).catch(err => {
-                                // Если не удалось получить реальных пользователей, показываем базовое значение
-                                userEl.textContent = baseCount;
-                                console.warn('Failed to get real users count:', err);
-                            });
+                            const count = snap.data().userCount || 0;
+                            userEl.textContent = count;
+                            userEl.classList.toggle('text-emerald-400', count > 0);
+                            userEl.classList.toggle('text-slate-400',   count <= 0);
                         }
                     }
                 );
-            } else {
-                // Fallback если Firebase недоступен
-                userEl.textContent = '12321';
-                console.warn('Firebase not available for user count');
             }
         }
     }   // ← ЕДИНСТВЕННАЯ закрывающая скобка функции
