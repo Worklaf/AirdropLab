@@ -498,19 +498,38 @@ let localHistory = [];
 // Загружаем историю из Firestore при загрузке страницы (оптимизированная)
 function loadLocalHistory() {
   if (!currentUser || !window.db) {
-    console.log('📚 No user or DB, using empty history');
-    localHistory = [];
+    console.log('📚 No user or DB, will retry in 500ms');
+    setTimeout(loadLocalHistory, 500);
+    return;
+  }
+
+  // Проверяем доступность Firestore функций
+  if (!window.__firestoreExports) {
+    console.log('📚 Firestore exports not ready, will retry in 500ms');
+    setTimeout(loadLocalHistory, 500);
     return;
   }
 
   try {
     const { doc, onSnapshot } = window.__firestoreExports;
+    
+    if (!doc || !onSnapshot) {
+      console.log('📚 Firestore functions not available, will retry in 500ms');
+      setTimeout(loadLocalHistory, 500);
+      return;
+    }
+    
     const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
+    
+    console.log('📚 Setting up Firestore history listener for user:', currentUser.uid);
     
     // Используем onSnapshot для real-time обновлений
     onSnapshot(userHistoryRef, (docSnapshot) => {
+      console.log('📚 Firestore history snapshot received');
+      
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
+        console.log('📚 Firestore data found, version:', data.version);
         
         // Проверяем версию данных для обратной совместимости
         if (data.version === 2 && data.spins) {
@@ -531,22 +550,33 @@ function loadLocalHistory() {
           console.log('📚 Loaded legacy history from Firestore:', localHistory.length, 'records');
         } else {
           localHistory = [];
+          console.log('📚 No spins data found in Firestore');
         }
       } else {
         localHistory = [];
-        console.log('📚 No history found in Firestore');
+        console.log('📚 No history document found in Firestore');
       }
       
       // Обновляем интерфейс после загрузки
+      if (document.getElementById('historyList')) {
+        console.log('📚 Rendering history with', localHistory.length, 'records');
+        renderHistory();
+      }
+    }, (error) => {
+      console.error('📚 Firestore history listener error:', error);
+      localHistory = [];
       if (document.getElementById('historyList')) {
         renderHistory();
       }
     });
 
-    console.log('📚 Set up optimized Firestore history listener');
+    console.log('📚 Set up optimized Firestore history listener successfully');
   } catch (error) {
-    console.warn('Error setting up Firestore history listener:', error);
+    console.warn('📚 Error setting up Firestore history listener:', error);
     localHistory = [];
+    if (document.getElementById('historyList')) {
+      renderHistory();
+    }
   }
 }
 
@@ -623,10 +653,10 @@ function groupByMonth(history) {
 // Загружаем историю сразу после авторизации
 // loadLocalHistory(); // Убираем отсюда, будем вызывать в onAuthStateChanged
 
-// Отображаем историю после загрузки
-if (document.getElementById('historyList')) {
-  renderHistory();
-}
+// НЕ вызываем renderHistory здесь - история еще не загружена
+// if (document.getElementById('historyList')) {
+//   renderHistory();
+// }
 
 // ═══════════════════════════════════════════════════════════
 // CANVAS WHEEL
