@@ -1166,15 +1166,9 @@ function createJackpotSpinModal(players, total, month, data) {
             </div>
             
             <div style="margin-top: 15px; padding: 15px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px;">
-              <div style="color: #22c55e; font-size: 14px; font-weight: 600; margin-bottom: 8px;">💰 Банк джекпота (проигрыши)</div>
+              <div style="color: #22c55e; font-size: 14px; font-weight: 600; margin-bottom: 8px;">💰 Общий банк джекпота</div>
               <div id="jackpotTotalAmount" style="color: white; font-size: 20px; font-weight: 700;">${total} RGT</div>
               <div id="jackpotTotalPlayers" style="color: #64748b; font-size: 12px; margin-top: 4px;">${Object.keys(players).length} участников</div>
-            </div>
-            
-            <div style="margin-top: 10px; padding: 12px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px;">
-              <div style="color: #3b82f6; font-size: 12px; font-weight: 600; margin-bottom: 4px;">🎯 Общие вложения (шансы)</div>
-              <div id="jackpotTotalSpent" style="color: white; font-size: 16px; font-weight: 700;">0 RGT</div>
-              <div style="color: #64748b; font-size: 11px;">всего вложено участниками</div>
             </div>
           </div>
           
@@ -1228,23 +1222,15 @@ async function populateJackpotParticipants(players, total) {
   if (!container) return;
 
   try {
-    // Получаем информацию о пользователях и их полных вложениях
+    // Получаем информацию о пользователях
     const playerEntries = Object.entries(players);
     const playersWithInfo = [];
 
-    for (const [uid, loss] of playerEntries) {
+    for (const [uid, contribution] of playerEntries) {
       try {
         const userSnap = await getDoc(doc(db, COL_USERS, uid));
         const userData = userSnap.exists() ? userSnap.data() : {};
-        
-        // Получаем полную статистику пользователя
-        const wofData = userData.wof || {};
-        const totalSpent = wofData.totalSpent || 0; // ВСЕ вложения (включая выигрыши)
-        const totalLost = loss; // Только проигрыши (это то что в банке)
-        
-        // Для шансов используем ВСЕ вложения, а не только проигрыши
-        const contributionForChances = totalSpent;
-        const percentage = total > 0 ? ((contributionForChances / total) * 100).toFixed(2) : '0.00';
+        const percentage = ((contribution / total) * 100).toFixed(2);
         
         // Генерируем цвет для пользователя
         const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
@@ -1253,30 +1239,27 @@ async function populateJackpotParticipants(players, total) {
 
         playersWithInfo.push({
           uid,
-          contribution: contributionForChances, // Для шансов - все вложения
-          loss: totalLost, // Для банка - только проигрыши
+          contribution,
           percentage,
           name: userData.displayName || userData.email || uid.substring(0, 8) + '...',
-          color,
-          totalSpent,
-          totalLost
+          color
         });
       } catch (error) {
         console.warn('Error loading user data for:', uid);
       }
     }
 
-    // Сортируем по вкладу в шансы (убывание)
+    // Сортируем по вкладу (убывание)
     playersWithInfo.sort((a, b) => b.contribution - a.contribution);
 
-    // Создаем HTML таблицы с правильным отображением
+    // Создаем HTML таблицы
     const tableHTML = playersWithInfo.map(player => `
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; margin-bottom: 8px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 4px solid ${player.color};">
         <div style="display: flex; align-items: center; gap: 10px;">
           <div style="width: 12px; height: 12px; background: ${player.color}; border-radius: 50%;"></div>
           <div>
             <div style="color: white; font-size: 14px; font-weight: 500;">${player.name}</div>
-            <div style="color: #64748b; font-size: 12px;">Вложено: ${player.totalSpent} RGT | Проигрыш: ${player.totalLost} RGT</div>
+            <div style="color: #64748b; font-size: 12px;">${player.contribution} RGT</div>
           </div>
         </div>
         <div style="text-align: right;">
@@ -1287,13 +1270,6 @@ async function populateJackpotParticipants(players, total) {
     `).join('');
 
     container.innerHTML = tableHTML;
-
-    // Обновляем общие вложения
-    const totalSpentElement = document.getElementById('jackpotTotalSpent');
-    if (totalSpentElement) {
-      const totalSpent = playersWithInfo.reduce((sum, player) => sum + player.totalSpent, 0);
-      totalSpentElement.textContent = `${totalSpent} RGT`;
-    }
 
     // Сохраняем информацию об участниках для колеса
     window.jackpotPlayers = playersWithInfo;
@@ -1317,27 +1293,21 @@ function drawJackpotWheel(players, total) {
   // Очищаем canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Создаем сегменты пропорционально ШАНСАМ (полные вложения), а не только проигрышам
+  // Создаем сегменты пропорционально вкладам
   const segments = [];
   let currentAngle = -Math.PI / 2; // Начинаем сверху
 
-  // Используем данные из window.jackpotPlayers где уже правильно рассчитаны шансы
-  const playersWithChances = window.jackpotPlayers || [];
-  
-  // Рассчитываем общую сумму для шансов (все вложения)
-  const totalForChances = playersWithChances.reduce((sum, player) => sum + player.contribution, 0);
-
-  playersWithChances.forEach((player, index) => {
-    const percentage = totalForChances > 0 ? (player.contribution / totalForChances) : 0;
+  Object.entries(players).forEach(([uid, contribution], index) => {
+    const percentage = contribution / total;
     const segmentAngle = percentage * Math.PI * 2;
     
-    // Используем сохраненный цвет игрока
-    const color = player.color || '#ef4444';
+    // Цвет для сегмента
+    const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+    const color = colors[index % colors.length];
 
     segments.push({
-      uid: player.uid,
-      contribution: player.contribution, // Полные вложения для шансов
-      loss: player.loss, // Проигрыши для банка
+      uid,
+      contribution,
       percentage,
       color,
       startAngle: currentAngle,
@@ -1421,23 +1391,19 @@ window.spinJackpotWheel = function() {
   spinBtn.textContent = '🎰 Крутится...';
   resultDiv.style.display = 'none';
 
-  // Выбираем победителя на основе ШАНСОВ (полные вложения), а не только проигрышей
-  const playersWithChances = window.jackpotPlayers || [];
-  const totalForChances = playersWithChances.reduce((sum, player) => sum + player.contribution, 0);
+  // Выбираем победителя на основе вкладов
+  const { players, total, month, data } = window.jackpotData;
+  const entries = Object.entries(players);
+  let rand = Math.random() * total;
+  let winnerUid = entries[entries.length - 1][0];
   
-  // Взвешенный случайный выбор на основе полных вложений
-  let rand = Math.random() * totalForChances;
-  let winnerPlayer = playersWithChances[playersWithChances.length - 1];
-  
-  for (const player of playersWithChances) {
-    rand -= player.contribution;
+  for (const [uid, loss] of entries) {
+    rand -= loss;
     if (rand <= 0) { 
-      winnerPlayer = player; 
+      winnerUid = uid; 
       break; 
     }
   }
-
-  const winnerUid = winnerPlayer.uid;
 
   // Находим сегмент победителя
   const winnerSegment = window.jackpotSegments.find(seg => seg.uid === winnerUid);
@@ -1527,10 +1493,10 @@ window.spinJackpotWheel = function() {
       spinBtn.textContent = '🎰 Крутить колесо';
       
       // Показываем результат
-      showJackpotWinner(winnerUid, window.jackpotData.total);
+      showJackpotWinner(winnerUid, total);
       
       // Завершаем розыгрыш
-      finalizeJackpot(winnerUid, window.jackpotData.total, window.jackpotData.month, window.jackpotData.data);
+      finalizeJackpot(winnerUid, total, month, data);
     }
   }
 
