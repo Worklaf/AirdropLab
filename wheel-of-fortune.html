@@ -589,6 +589,20 @@ window.doSpin = async function() {
     showToastLocal('wof_need_login', 'Please log in to play');
     return;
   }
+
+  // IMPORTANT: Fresh load of userData before balance check
+  if (db) {
+    try {
+      const freshSnap = await getDoc(doc(db, COL_USERS, currentUser.uid));
+      if (freshSnap.exists()) {
+        userData = freshSnap.data();
+        window.userProfileData = userData;
+      }
+    } catch(e) {
+      console.warn('Failed to refresh userData before spin:', e);
+    }
+  }
+
   const today = new Date().toDateString();
   const wof   = userData.wof || {};
   const usedToday = wof.lastSpinDate === today ? (wof.freeUsed || 0) : 0;
