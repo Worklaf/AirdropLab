@@ -1619,21 +1619,26 @@ window.renderFeedbackList = function() {
   const messages = window.adminFeedbacks || [];
   console.log('Rendering feedback list, messages count:', messages.length);
   
+  // Очищаем контейнер
+  container.innerHTML = '';
+  
   if (messages.length === 0) {
     console.log('No messages to display');
-    container.innerHTML = `
-      <div style="text-align: center; padding: 40px; color: #64748b;">
-        <div style="background: rgba(139,92,246,0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-          <i class="fas fa-inbox text-2xl" style="color: #a78bfa;"></i>
-        </div>
-        <p>Нет сообщений</p>
-      </div>`;
+    const emptyDiv = document.createElement('div');
+    emptyDiv.style.cssText = 'text-align: center; padding: 40px; color: #64748b;';
+    emptyDiv.innerHTML = `
+      <div style="background: rgba(139,92,246,0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+        <i class="fas fa-inbox text-2xl" style="color: #a78bfa;"></i>
+      </div>
+      <p>Нет сообщений</p>
+    `;
+    container.appendChild(emptyDiv);
     return;
   }
   
   console.log('Rendering messages:', messages);
   
-  container.innerHTML = messages.map(msg => {
+  messages.forEach(msg => {
     const isUnread = !msg.userRead;
     const lastMsg = msg.messages && msg.messages.length > 0 ? msg.messages[msg.messages.length - 1] : {};
     const date = msg.createdAt;
@@ -1696,10 +1701,10 @@ window.renderFeedbackList = function() {
     messageDiv.appendChild(headerDiv);
     messageDiv.appendChild(messageText);
     
-    return messageDiv.outerHTML;
-  }).join('');
+    container.appendChild(messageDiv);
+  });
   
-  console.log('Render complete');
+  console.log('Render complete, container children count:', container.children.length);
 }
 
 // Функция открытия конкретного сообщения (как в index.html)
