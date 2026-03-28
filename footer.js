@@ -595,12 +595,17 @@
         switch(page) {
             case 'faq':    html = getFAQContent();    break;
             case 'guides': html = getGuidesContent(); break;
+            case 'notifications': html = getNotificationsContent(); break;
             default:       html = `<p class="text-center text-slate-400 p-8">${lang('in_work') || 'В разработке'}</p>`;
         }
 
         content.innerHTML = html;
         modal.classList.add('active');
         if (page === 'faq') initFAQ();
+    };
+
+    window.showNotifications = function() {
+        window.openPageModal('notifications');
     };
 
     window.closePageModal = function() {
@@ -734,6 +739,55 @@
                         ${lang('footer_guide_lock')}
                     </p>
                 </div>
+            </div>
+        `;
+    }
+
+    // ============ NOTIFICATIONS CONTENT ============
+
+    function getNotificationsContent() {
+        const lang = typeof window.t === 'function' ? window.t : (k) => k;
+        const notificationsList = (typeof window.notifications !== 'undefined') ? window.notifications : [];
+
+        return `
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-6 border-b border-slate-700">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                        <i class="fas fa-bell text-cyan-400"></i>
+                        ${lang('notifications') || 'Уведомления'}
+                    </h2>
+                    ${notificationsList.length > 0
+                        ? `<button onclick="if(typeof window.clearAllNotifications==='function')window.clearAllNotifications(); document.getElementById('pageModal').classList.remove('active');" class="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-colors">
+                            <i class="fas fa-trash-alt mr-1"></i> ${lang('notif_clear_all') || 'Очистить'}</button>`
+                        : ''}
+                </div>
+                <p class="text-slate-400 mt-2">${notificationsList.length} ${lang('notifications') || 'уведомлений'}</p>
+            </div>
+            <div class="p-6 max-h-[70vh] overflow-y-auto">
+                ${notificationsList.length > 0
+                    ? notificationsList.map(notif => `
+                        <div class="notification-item p-4 border border-slate-700/50 rounded-lg mb-3 ${notif.read ? 'opacity-60' : 'bg-slate-800/30'} hover:border-cyan-500/50 transition-colors cursor-pointer"
+                             onclick="if(typeof window.markNotificationRead==='function')window.markNotificationRead('${notif.id}')">
+                            <div class="flex items-start gap-3">
+                                <div class="text-lg mt-1">
+                                    ${notif.type === 'wheel_spin' ? '🎡' :
+                                      notif.type === 'jackpot_win' ? '🏆' :
+                                      notif.type === 'claim_bonus' ? '🎁' :
+                                      '📢'}
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-white text-sm font-medium">${notif.msg || ''}</p>
+                                    <p class="text-slate-500 text-xs mt-1">${notif.ts ? new Date(notif.ts.toDate()).toLocaleString() : 'только что'}</p>
+                                </div>
+                                ${!notif.read ? '<span class="w-2 h-2 bg-cyan-400 rounded-full flex-shrink-0 mt-1.5"></span>' : ''}
+                            </div>
+                        </div>
+                    `).join('')
+                    : `<div class="text-center py-12 text-slate-400">
+                        <i class="fas fa-inbox text-4xl mb-4 opacity-30 block"></i>
+                        <p>${lang('notif_empty_title') || 'Нет уведомлений'}</p>
+                        <p class="text-xs mt-2">${lang('notif_empty_desc') || 'Уведомления появятся здесь'}</p>
+                    </div>`}
             </div>
         `;
     }
