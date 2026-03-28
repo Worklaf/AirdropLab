@@ -1096,52 +1096,435 @@ window.openJackpotSpin = async function() {
 
   try {
     const snap = await getDoc(doc(db, COL_JACKPOT, month));
-    if (!snap.exists()) { alert('No jackpot data for this month'); return; }
+    if (!snap.exists()) { 
+      if (typeof showToast === 'function') {
+        showToast('Нет данных джекпота за этот месяц');
+      } else {
+        alert('No jackpot data for this month');
+      }
+      return; 
+    }
     const data = snap.data();
-    if (data.drawn) { alert('Jackpot already drawn this month'); return; }
+    if (data.drawn) { 
+      if (typeof showToast === 'function') {
+        showToast('Джекпот уже разыгран в этом месяце');
+      } else {
+        alert('Jackpot already drawn this month');
+      }
+      return; 
+    }
 
     const total   = data.total || 0;
     const players = data.players || {};
 
     if (total === 0 || Object.keys(players).length === 0) {
-      alert('Jackpot pool is empty'); return;
-    }
-
-    // Weighted random draw
-    const entries = Object.entries(players);
-    let rand = Math.random() * total;
-    let winnerUid = entries[entries.length - 1][0];
-    for (const [uid, loss] of entries) {
-      rand -= loss;
-      if (rand <= 0) { winnerUid = uid; break; }
-    }
-
-    // Animate wheel spin for visual proof
-    spinning = true;
-    document.getElementById('spinBtn').disabled = true;
-    const extraRot = Math.PI * 2 * (8 + Math.floor(Math.random() * 4));
-    const startA   = wheelAngle;
-    const startT   = performance.now();
-
-    function animateJP(now2) {
-      const t = Math.min((now2 - startT) / 6000, 1);
-      const e = 1 - Math.pow(1 - t, 4);
-      wheelAngle = startA + extraRot * e;
-      drawWheel();
-      if (t < 1) requestAnimationFrame(animateJP);
-      else {
-        spinning = false;
-        document.getElementById('spinBtn').disabled = false;
-        finalizeJackpot(winnerUid, total, month, data);
+      if (typeof showToast === 'function') {
+        showToast('Банк джекпота пуст');
+      } else {
+        alert('Jackpot pool is empty');
       }
+      return;
     }
-    requestAnimationFrame(animateJP);
+
+    // Создаем модальное окно для розыгрыша джекпота
+    createJackpotSpinModal(players, total, month, data);
 
   } catch(e) {
     console.error('Jackpot spin error:', e);
-    alert('Error: ' + e.message);
+    if (typeof showToast === 'function') {
+      showToast('Ошибка при загрузке джекпота');
+    }
   }
 };
+
+// Функция создания модального окна для розыгрыша джекпота
+function createJackpotSpinModal(players, total, month, data) {
+  // Удаляем существующее модальное окно если есть
+  const existingModal = document.getElementById('jackpotSpinModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'jackpotSpinModal';
+  modal.innerHTML = `
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.95); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+      <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid rgba(34,211,238,0.3); border-radius: 20px; padding: 30px; max-width: 1200px; width: 95%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+          <h2 style="color: #22d3ee; font-size: 24px; font-weight: bold; display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-trophy"></i> Розыгрыш Джекпота
+          </h2>
+          <button onclick="closeJackpotModal()" style="background: none; border: none; color: #64748b; font-size: 28px; cursor: pointer; padding: 5px;">&times;</button>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; align-items: start;">
+          <!-- Таблица участников -->
+          <div>
+            <h3 style="color: #e2e8f0; font-size: 16px; margin-bottom: 15px;">📋 Участники и шансы</h3>
+            <div id="jackpotParticipants" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(148,163,184,0.2); border-radius: 12px; padding: 15px; max-height: 400px; overflow-y: auto;">
+              <!-- Участники будут добавлены через JavaScript -->
+            </div>
+            
+            <div style="margin-top: 15px; padding: 15px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px;">
+              <div style="color: #22c55e; font-size: 14px; font-weight: 600; margin-bottom: 8px;">💰 Общий банк джекпота</div>
+              <div id="jackpotTotalAmount" style="color: white; font-size: 20px; font-weight: 700;">${total} RGT</div>
+              <div id="jackpotTotalPlayers" style="color: #64748b; font-size: 12px; margin-top: 4px;">${Object.keys(players).length} участников</div>
+            </div>
+          </div>
+          
+          <!-- Адаптивное колесо -->
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <h3 style="color: #e2e8f0; font-size: 16px; margin-bottom: 15px;">🎯 Колесо фортуны</h3>
+            <div style="position: relative; width: 400px; height: 400px;">
+              <canvas id="jackpotWheelCanvas" width="400" height="400" style="border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"></canvas>
+              <!-- Стрелка -->
+              <div style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 40px solid #ef4444; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></div>
+            </div>
+            
+            <button id="jackpotSpinBtn" onclick="spinJackpotWheel()" style="margin-top: 25px; background: linear-gradient(145deg, #ef4444, #dc2626); border: none; color: white; padding: 15px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(239,68,68,0.3);">
+              🎰 Крутить колесо
+            </button>
+            
+            <div id="jackpotSpinResult" style="margin-top: 20px; text-align: center; display: none;">
+              <div style="color: #22d3ee; font-size: 18px; font-weight: 600; margin-bottom: 10px;">🏆 Победитель определен!</div>
+              <div id="jackpotWinnerInfo" style="color: white; font-size: 16px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Сохраняем данные для розыгрыша
+  window.jackpotData = { players, total, month, data };
+
+  // Заполняем таблицу участников
+  populateJackpotParticipants(players, total);
+
+  // Рисуем адаптивное колесо
+  drawJackpotWheel(players, total);
+
+  // Добавляем обработчик закрытия по ESC
+  const handleEscape = (e) => {
+    if (e.key === 'Escape') {
+      closeJackpotModal();
+      document.removeEventListener('keydown', handleEscape);
+    }
+  };
+  document.addEventListener('keydown', handleEscape);
+}
+
+// Функция заполнения таблицы участников
+async function populateJackpotParticipants(players, total) {
+  const container = document.getElementById('jackpotParticipants');
+  if (!container) return;
+
+  try {
+    // Получаем информацию о пользователях
+    const playerEntries = Object.entries(players);
+    const playersWithInfo = [];
+
+    for (const [uid, contribution] of playerEntries) {
+      try {
+        const userSnap = await getDoc(doc(db, COL_USERS, uid));
+        const userData = userSnap.exists() ? userSnap.data() : {};
+        const percentage = ((contribution / total) * 100).toFixed(2);
+        
+        // Генерируем цвет для пользователя
+        const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+        const colorIndex = playersWithInfo.length % colors.length;
+        const color = colors[colorIndex];
+
+        playersWithInfo.push({
+          uid,
+          contribution,
+          percentage,
+          name: userData.displayName || userData.email || uid.substring(0, 8) + '...',
+          color
+        });
+      } catch (error) {
+        console.warn('Error loading user data for:', uid);
+      }
+    }
+
+    // Сортируем по вкладу (убывание)
+    playersWithInfo.sort((a, b) => b.contribution - a.contribution);
+
+    // Создаем HTML таблицы
+    const tableHTML = playersWithInfo.map(player => `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; margin-bottom: 8px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 4px solid ${player.color};">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 12px; height: 12px; background: ${player.color}; border-radius: 50%;"></div>
+          <div>
+            <div style="color: white; font-size: 14px; font-weight: 500;">${player.name}</div>
+            <div style="color: #64748b; font-size: 12px;">${player.contribution} RGT</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="color: ${player.color}; font-size: 16px; font-weight: 700;">${player.percentage}%</div>
+          <div style="color: #64748b; font-size: 11px;">шанс победы</div>
+        </div>
+      </div>
+    `).join('');
+
+    container.innerHTML = tableHTML;
+
+    // Сохраняем информацию об участниках для колеса
+    window.jackpotPlayers = playersWithInfo;
+
+  } catch (error) {
+    console.error('Error populating participants:', error);
+    container.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 20px;">Ошибка загрузки участников</div>';
+  }
+}
+
+// Функция отрисовки адаптивного колеса джекпота
+function drawJackpotWheel(players, total) {
+  const canvas = document.getElementById('jackpotWheelCanvas');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = 180;
+
+  // Очищаем canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Создаем сегменты пропорционально вкладам
+  const segments = [];
+  let currentAngle = -Math.PI / 2; // Начинаем сверху
+
+  Object.entries(players).forEach(([uid, contribution], index) => {
+    const percentage = contribution / total;
+    const segmentAngle = percentage * Math.PI * 2;
+    
+    // Цвет для сегмента
+    const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+    const color = colors[index % colors.length];
+
+    segments.push({
+      uid,
+      contribution,
+      percentage,
+      color,
+      startAngle: currentAngle,
+      endAngle: currentAngle + segmentAngle
+    });
+
+    // Рисуем сегмент
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + segmentAngle);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Рисуем границу сегмента
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Добавляем текст с процентом если сегмент достаточно большой
+    if (segmentAngle > 0.2) {
+      const textAngle = currentAngle + segmentAngle / 2;
+      const textX = centerX + Math.cos(textAngle) * (radius * 0.7);
+      const textY = centerY + Math.sin(textAngle) * (radius * 0.7);
+      
+      ctx.save();
+      ctx.translate(textX, textY);
+      ctx.rotate(textAngle + Math.PI / 2);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${(percentage * 100).toFixed(1)}%`, 0, 0);
+      ctx.restore();
+    }
+
+    currentAngle += segmentAngle;
+  });
+
+  // Рисуем центральный круг
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+  ctx.fillStyle = '#1e293b';
+  ctx.fill();
+  ctx.strokeStyle = '#22d3ee';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Добавляем текст в центре
+  ctx.fillStyle = '#22d3ee';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('JACKPOT', centerX, centerY);
+
+  // Сохраняем сегменты для анимации
+  window.jackpotSegments = segments;
+}
+
+// Функция закрытия модального окна
+window.closeJackpotModal = function() {
+  const modal = document.getElementById('jackpotSpinModal');
+  if (modal) {
+    modal.remove();
+  }
+  window.jackpotData = null;
+  window.jackpotPlayers = null;
+  window.jackpotSegments = null;
+};
+
+// Функция прокрутки колеса джекпота
+window.spinJackpotWheel = function() {
+  if (!window.jackpotData || !window.jackpotSegments) return;
+
+  const spinBtn = document.getElementById('jackpotSpinBtn');
+  const resultDiv = document.getElementById('jackpotSpinResult');
+  const winnerInfo = document.getElementById('jackpotWinnerInfo');
+
+  // Блокируем кнопку
+  spinBtn.disabled = true;
+  spinBtn.textContent = '🎰 Крутится...';
+  resultDiv.style.display = 'none';
+
+  // Выбираем победителя на основе вкладов
+  const { players, total, month, data } = window.jackpotData;
+  const entries = Object.entries(players);
+  let rand = Math.random() * total;
+  let winnerUid = entries[entries.length - 1][0];
+  
+  for (const [uid, loss] of entries) {
+    rand -= loss;
+    if (rand <= 0) { 
+      winnerUid = uid; 
+      break; 
+    }
+  }
+
+  // Находим сегмент победителя
+  const winnerSegment = window.jackpotSegments.find(seg => seg.uid === winnerUid);
+  if (!winnerSegment) return;
+
+  // Анимация прокрутки (медленнее для интриги)
+  const canvas = document.getElementById('jackpotWheelCanvas');
+  const ctx = canvas.getContext('2d');
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  
+  let currentRotation = 0;
+  const targetRotation = Math.PI * 2 * (8 + Math.random() * 4); // 8-12 полных оборотов
+  const finalAngle = winnerSegment.startAngle + (winnerSegment.endAngle - winnerSegment.startAngle) / 2;
+  const totalRotation = targetRotation + (finalAngle + Math.PI / 2); // Выравниваем победителя с верхом
+  
+  const startTime = performance.now();
+  const duration = 8000; // 8 секунд для интриги
+
+  function animate(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Плавное замедление
+    const easeOut = 1 - Math.pow(1 - progress, 3);
+    currentRotation = totalRotation * easeOut;
+
+    // Перерисовываем колесо с поворотом
+    ctx.save();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(centerX, centerY);
+    ctx.rotate(currentRotation);
+    ctx.translate(-centerX, -centerY);
+    
+    // Перерисовываем сегменты
+    window.jackpotSegments.forEach(segment => {
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, 180, segment.startAngle, segment.endAngle);
+      ctx.closePath();
+      ctx.fillStyle = segment.color;
+      ctx.fill();
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Текст с процентами
+      if ((segment.endAngle - segment.startAngle) > 0.2) {
+        const textAngle = segment.startAngle + (segment.endAngle - segment.startAngle) / 2;
+        const textX = centerX + Math.cos(textAngle) * (180 * 0.7);
+        const textY = centerY + Math.sin(textAngle) * (180 * 0.7);
+        
+        ctx.save();
+        ctx.translate(textX, textY);
+        ctx.rotate(textAngle + Math.PI / 2);
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${(segment.percentage * 100).toFixed(1)}%`, 0, 0);
+        ctx.restore();
+      }
+    });
+
+    // Центральный круг
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+    ctx.fillStyle = '#1e293b';
+    ctx.fill();
+    ctx.strokeStyle = '#22d3ee';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.fillStyle = '#22d3ee';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('JACKPOT', centerX, centerY);
+
+    ctx.restore();
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      // Анимация завершена
+      spinBtn.disabled = false;
+      spinBtn.textContent = '🎰 Крутить колесо';
+      
+      // Показываем результат
+      showJackpotWinner(winnerUid, total);
+      
+      // Завершаем розыгрыш
+      finalizeJackpot(winnerUid, total, month, data);
+    }
+  }
+
+  requestAnimationFrame(animate);
+};
+
+// Функция отображения победителя
+async function showJackpotWinner(winnerUid, amount) {
+  const resultDiv = document.getElementById('jackpotSpinResult');
+  const winnerInfo = document.getElementById('jackpotWinnerInfo');
+
+  try {
+    const userSnap = await getDoc(doc(db, COL_USERS, winnerUid));
+    const userData = userSnap.exists() ? userSnap.data() : {};
+    const winnerName = userData.displayName || userData.email || winnerUid.substring(0, 8) + '...';
+
+    winnerInfo.innerHTML = `
+      <div style="font-size: 20px; font-weight: 700; color: #22d3ee; margin-bottom: 8px;">🏆 ${winnerName}</div>
+      <div style="font-size: 16px; color: #22c55e;">Выиграл: ${amount} RGT</div>
+    `;
+
+    resultDiv.style.display = 'block';
+  } catch (error) {
+    console.error('Error showing winner:', error);
+    winnerInfo.textContent = 'Ошибка определения победителя';
+    resultDiv.style.display = 'block';
+  }
+}
 
 async function finalizeJackpot(winnerUid, amount, month, jpData) {
   // Get winner info
@@ -1714,13 +2097,26 @@ window.showNotifications = function() {
     return; 
   }
   
-  // Используем ту же логику что и в index.html
+  // Удаляем существующее модальное окно если есть
+  const existingModal = document.getElementById('notificationsModalOverlay');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  // Создаем модальное окно уведомлений
   const modal = document.createElement('div');
   modal.id = 'notificationsModalOverlay';
   modal.style.cssText = `
-    position: fixed; inset: 0; z-index: 99999;
-    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
-    display: flex; align-items: center; justify-content: center; padding: 20px;
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(15,23,42,0.95); 
+    z-index: 10000; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
   `;
   
   const content = document.createElement('div');
@@ -1729,7 +2125,10 @@ window.showNotifications = function() {
     border: 2px solid rgba(34,211,238,0.3);
     border-radius: 20px;
     box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(34,211,238,0.2);
-    max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto;
+    max-width: 600px; 
+    width: 90%; 
+    max-height: 80vh; 
+    overflow-y: auto;
     padding: 24px;
   `;
   
@@ -1738,7 +2137,7 @@ window.showNotifications = function() {
       <h3 style="color: #22d3ee; font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
         <i class="fas fa-bell"></i> Уведомления
       </h3>
-      <button onclick="this.closest('#notificationsModalOverlay').remove()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer;">&times;</button>
+      <button onclick="window.closeNotificationsModal()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer; padding: 4px;">&times;</button>
     </div>
     
     <!-- Фильтры и кнопки управления -->
@@ -1775,44 +2174,79 @@ window.showNotifications = function() {
         </button>
       </div>
       
-      <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
-        <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid #22c55e; color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+      <!-- Кнопки управления -->
+      <div style="margin-left: auto; display: flex; gap: 8px;">
+        <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
           ✓ Прочитать все
         </button>
-        <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+        <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
           🗑️ Очистить все
         </button>
       </div>
     </div>
     
-    <div id="notificationsList">
-      <p style="color: #64748b; text-align: center; padding: 20px;">Загрузка уведомлений...</p>
+    <!-- Список уведомлений -->
+    <div id="notificationsList" style="max-height: 400px; overflow-y: auto;">
+      <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+        <i class="fas fa-bell" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
+        Загрузка уведомлений...
+      </div>
     </div>
   `;
   
   modal.appendChild(content);
   document.body.appendChild(modal);
   
-  // Добавляем обработчики для закрытия по клику вне области и ESC
+  // Добавляем обработчик закрытия по клику на фон
   modal.addEventListener('click', function(e) {
     if (e.target === modal) {
-      modal.remove();
+      window.closeNotificationsModal();
     }
   });
   
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && document.getElementById('notificationsModalOverlay')) {
-      document.getElementById('notificationsModalOverlay').remove();
+  // Добавляем обработчик закрытия по ESC
+  const handleEscape = (e) => {
+    if (e.key === 'Escape') {
+      window.closeNotificationsModal();
+      document.removeEventListener('keydown', handleEscape);
     }
-  });
+  };
+  document.addEventListener('keydown', handleEscape);
   
-  // Загружаем уведомления как в index.html
-  if (window.__firestoreExports) {
+  // Загружаем уведомления
+  if (typeof loadNotificationsForWheel === 'function') {
     loadNotificationsForWheel();
-  } else {
-    console.warn('Firestore not ready, notifications will load when ready');
   }
 };
+
+// Функция закрытия модального окна уведомлений
+window.closeNotificationsModal = function() {
+  const modal = document.getElementById('notificationsModalOverlay');
+  if (modal) {
+    modal.remove();
+  }
+};
+
+// Функция форматирования даты для уведомлений
+function formatNotificationDate(timestamp) {
+  if (!timestamp) return '';
+  
+  const now = new Date();
+  const date = timestamp instanceof Date ? timestamp : timestamp.toDate();
+  const diff = now - date;
+  
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  
+  if (seconds < 60) return 'только что';
+  if (minutes < 60) return `${minutes} мин. назад`;
+  if (hours < 24) return `${hours} ч. назад`;
+  if (days < 7) return `${days} д. назад`;
+  
+  return date.toLocaleDateString('ru-RU');
+}
 
 // Функция фильтрации уведомлений
 window.filterNotifications = function(type) {
@@ -2215,7 +2649,7 @@ function renderNotificationsInWheel(notifications) {
           ${isUnread ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
         </div>
         <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${messageWithLinks}</p>
-        <p style="color: #64748b; font-size: 11px; margin: 0;">${formatTimeAgoWheel(notif.createdAt)}</p>
+        <p style="color: #64748b; font-size: 11px; margin: 0;">${formatNotificationDate(notif.createdAt)}</p>
         ${isUnread ? `<button onclick="markNotificationAsReadWheel('${notif.id}')" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
       </div>
     `;
