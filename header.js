@@ -3463,7 +3463,7 @@ function initFeedbacksListener(uid) {
         overlay = document.createElement('div');
         overlay.id = 'jackpotWinnerOverlay';
         overlay.className = 'jackpot-winner-overlay';
-        overlay.setAttribute('onclick', 'if(event.target===this)window.closeJackpotWinner()');
+        overlay.setAttribute('onclick', 'if(event.target===this)closeJackpotWinner()');
         
         // Добавляем CSS стили как в wheel-of-fortune.html
         const style = document.createElement('style');
@@ -3472,7 +3472,7 @@ function initFeedbacksListener(uid) {
             display: none; 
             position: fixed; 
             inset: 0; 
-            z-index: 30000;
+            z-index: 9000;
             background: rgba(0,0,0,.92); 
             backdrop-filter: blur(14px);
             align-items: center; 
@@ -3519,7 +3519,7 @@ function initFeedbacksListener(uid) {
             <div style="font-size:22px;font-weight:900;color:white;margin-bottom:6px;" id="jwName">—</div>
             <div style="font-size:38px;font-weight:900;background:linear-gradient(135deg,#ec4899,#8b5cf6);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px;" id="jwAmount">0 RGT</div>
             <p style="font-size:12px;color:var(--text-secondary);margin:0 0 20px;">Congratulations! The monthly jackpot has been awarded.</p>
-            <button onclick="window.closeJackpotWinner()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Close</button>
+            <button onclick="closeJackpotWinner()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Close</button>
           </div>
         `;
         
@@ -3549,10 +3549,9 @@ function initFeedbacksListener(uid) {
         }
       }
       
-      // Показываем оверлей с высоким z-index как в wheel-of-fortune.html
-      overlay.style.zIndex = '30000'; // Такой же как в wheel-of-fortune.html
+      // Показываем оверлей с z-index как в wheel-of-fortune.html
       overlay.classList.add('show');
-      console.log('🎯 Jackpot overlay shown with z-index:', overlay.style.zIndex);
+      console.log('🎯 Jackpot overlay shown with z-index: 9000');
       
       // Запускаем конфетти
       if (typeof launchConfetti === 'function') {
