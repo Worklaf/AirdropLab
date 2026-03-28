@@ -2272,12 +2272,7 @@ if (document.readyState === 'loading') {
 // Feedback chat API (ported from index.html)
 window.closeFeedbackModal = function() {
   const modal = document.getElementById('feedbackModal');
-  if (modal) {
-    modal.classList.remove('active');
-    // Удаляем все обработчики событий с модального окна
-    const clonedModal = modal.cloneNode(true);
-    modal.parentNode.replaceChild(clonedModal, modal);
-  }
+  if (modal) modal.classList.remove('active');
 };
 
 window.closeFeedbackChat = function() {
@@ -2891,4 +2886,885 @@ function initFeedbacksListener(uid) {
     tries++;
     if (tryInit() || tries >= maxTries) clearInterval(t);
   }, 250);
+
+  // ═══════════════════════════════════════════════════════════
+  // COMMON FUNCTIONS - Общие функции для всех страниц
+  // ═══════════════════════════════════════════════════════════
+
+  // Импортируем Firebase функции (если еще не импортированы)
+  if (typeof window.collection === 'undefined') {
+    // Firebase функции будут доступны после инициализации в основном файле
+    console.log('🔧 Waiting for Firebase initialization...');
+  }
+
+  // Глобальные переменные для Firebase (будут установлены в основном файле)
+  let collection, query, where, orderBy, limit, doc, getDoc, getDocs, addDoc, updateDoc, writeBatch, serverTimestamp, onSnapshot;
+
+  // Функция инициализации Firebase экспортов
+  window.initFirebaseExports = function(firebaseExports) {
+    collection = firebaseExports.collection;
+    query = firebaseExports.query;
+    where = firebaseExports.where;
+    orderBy = firebaseExports.orderBy;
+    limit = firebaseExports.limit;
+    doc = firebaseExports.doc;
+    getDoc = firebaseExports.getDoc;
+    getDocs = firebaseExports.getDocs;
+    addDoc = firebaseExports.addDoc;
+    updateDoc = firebaseExports.updateDoc;
+    writeBatch = firebaseExports.writeBatch;
+    serverTimestamp = firebaseExports.serverTimestamp;
+    onSnapshot = firebaseExports.onSnapshot;
+    
+    console.log('✅ Firebase exports initialized in header.js');
+  };
+
+  // Функция закрытия модального окна джекпота (как в wheel-of-fortune.html)
+  window.closeJackpotWinner = function() {
+    document.getElementById('jackpotWinnerOverlay').classList.remove('show');
+  };
+
+  // Функция отображения модального окна уведомлений (улучшенная версия)
+  window.showNotifications = function() {
+    if (!window.currentUser) { 
+      if (typeof showToast === 'function') {
+        showToast('Войдите'); 
+      } else {
+        alert('Войдите');
+      }
+      return; 
+    }
+    
+    // Удаляем существующее модальное окно если есть
+    const existingModal = document.getElementById('notificationsModalOverlay');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    // Создаем модальное окно уведомлений
+    const modal = document.createElement('div');
+    modal.id = 'notificationsModalOverlay';
+    modal.style.cssText = `
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(15,23,42,0.95); 
+      z-index: 10000; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+    `;
+    
+    const content = document.createElement('div');
+    content.style.cssText = `
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 2px solid rgba(34,211,238,0.3);
+      border-radius: 20px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(34,211,238,0.2);
+      max-width: 600px; 
+      width: 90%; 
+      max-height: 80vh; 
+      overflow-y: auto;
+      padding: 24px;
+    `;
+    
+    content.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="color: #22d3ee; font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-bell"></i> Уведомления
+        </h3>
+        <button onclick="window.closeNotificationsModal()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer; padding: 4px;">&times;</button>
+      </div>
+      
+      <!-- Фильтры и кнопки управления -->
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(34,211,238,0.2);">
+        <!-- Все -->
+        <div style="position: relative;">
+          <span id="unreadBadge-all" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
+          <button onclick="filterNotifications('all')" class="filter-btn active" data-filter="all" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #e2e8f0; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+            📋 Все <span id="filterCount-all" class="filter-count" style="background: rgba(255,255,255,0.15); color: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          </button>
+        </div>
+        
+        <!-- Игры -->
+        <div style="position: relative;">
+          <span id="unreadBadge-games" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
+          <button onclick="filterNotifications('games')" class="filter-btn" data-filter="games" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+            🎮 Игры <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          </button>
+        </div>
+        
+        <!-- Джекпот -->
+        <div style="position: relative;">
+          <span id="unreadBadge-jackpot_win" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
+          <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+            🏆 Джекпот <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          </button>
+        </div>
+        
+        <!-- Админ -->
+        <div style="position: relative;">
+          <span id="unreadBadge-admin" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
+          <button onclick="filterNotifications('admin')" class="filter-btn" data-filter="admin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+            🛡️ Админ <span id="filterCount-admin" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+          </button>
+        </div>
+        
+        <!-- Кнопки управления -->
+        <div style="margin-left: auto; display: flex; gap: 8px;">
+          <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+            ✓ Прочитать все
+          </button>
+          <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
+            🗑️ Очистить все
+          </button>
+        </div>
+      </div>
+      
+      <!-- Список уведомлений -->
+      <div id="notificationsList" style="max-height: 400px; overflow-y: auto;">
+        <div style="text-align: center; padding: 40px; color: #94a3b8;">
+          <i class="fas fa-bell" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
+          Загрузка уведомлений...
+        </div>
+      </div>
+    `;
+    
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    
+    // Добавляем обработчик закрытия по клику на фон
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        window.closeNotificationsModal();
+      }
+    });
+    
+    // Добавляем обработчик закрытия по ESC
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        window.closeNotificationsModal();
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    
+    // Загружаем уведомления
+    window.loadNotifications();
+  };
+
+  // Функция закрытия модального окна уведомлений
+  window.closeNotificationsModal = function() {
+    const modal = document.getElementById('notificationsModalOverlay');
+    if (modal) {
+      modal.remove();
+    }
+  };
+
+  // Функция загрузки уведомлений
+  window.loadNotifications = async function() {
+    if (!window.db || !window.currentUser) return;
+    
+    try {
+      const notificationsCol = collection(window.db, 'notifications');
+      const q = query(notificationsCol, 
+                     where('userId', '==', window.currentUser.uid),
+                     orderBy('createdAt', 'desc'),
+                     limit(50));
+      
+      const querySnapshot = await getDocs(q);
+      const notifications = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      window.allNotifications = notifications;
+      window.renderNotificationsInWheel(notifications);
+      window.updateNotificationBadge();
+      
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      const listEl = document.getElementById('notificationsList');
+      if (listEl) {
+        listEl.innerHTML = `
+          <div style="text-align: center; color: #ef4444; padding: 40px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px;"></i>
+            <div>Ошибка загрузки уведомлений</div>
+          </div>
+        `;
+      }
+    }
+  };
+
+  // Функция форматирования времени
+  window.formatNotificationDate = function(date) {
+    if (!date) return '';
+    
+    const now = new Date();
+    const notifDate = date.toDate ? date.toDate() : new Date(date);
+    const diffMs = now - notifDate;
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffSecs < 60) return 'только что';
+    if (diffMins < 60) return diffMins + ' мин. назад';
+    if (diffHours < 24) return diffHours + ' ч. назад';
+    if (diffDays < 7) return diffDays + ' д. назад';
+    
+    return notifDate.toLocaleDateString('ru-RU', { 
+      day: 'numeric', 
+      month: 'short', 
+      year: notifDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined 
+    });
+  };
+
+  // Функция обновления бейджа уведомлений
+  window.updateNotificationBadge = function() {
+    const badge = document.getElementById('notificationBadge');
+    if (!badge) return;
+    
+    const unreadCount = (window.allNotifications || []).filter(n => !n.read).length;
+    
+    if (unreadCount > 0) {
+      badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+      badge.textContent = '0';
+    }
+  };
+
+  // Функция рендеринга уведомлений с улучшенным отображением для разных типов
+  window.renderNotificationsInWheel = function(notifications) {
+    const listEl = document.getElementById('notificationsList');
+    if (!listEl) return;
+
+    if (notifications.length === 0) {
+      listEl.innerHTML = `
+        <div style="text-align: center; color: #94a3b8; padding: 40px;">
+          <i class="fas fa-bell-slash" style="font-size: 24px; margin-bottom: 10px;"></i>
+          <div>У вас пока нет уведомлений</div>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = notifications.map(notif => {
+      const isUnread = !notif.read;
+      let typeIcon = '📢';
+      let typeLabel = 'Уведомление';
+      let filterType = 'all';
+      
+      // Улучшенная логика отображения с конкретными названиями для разных типов
+      if (notif.type === 'jackpot_win') {
+        typeIcon = '🏆';
+        typeLabel = 'Джекпот';
+        filterType = 'jackpot_win';
+      } else if (notif.type === 'wheel_spin') {
+        typeIcon = '🎡';
+        typeLabel = 'Колесо фортуны';
+        filterType = 'games';
+      } else if (notif.type === 'faucet_claim') {
+        typeIcon = '💰';
+        typeLabel = 'Кран';
+        filterType = 'games';
+      } else if (notif.type === 'game_reward' || (notif.type && notif.type.includes('game'))) {
+        typeIcon = '🎰';
+        typeLabel = 'Игра';
+        filterType = 'games';
+      } else if (notif.type === 'info') {
+        typeIcon = 'ℹ️';
+        typeLabel = 'Информация';
+        filterType = 'admin';
+      } else if (notif.type === 'success') {
+        typeIcon = '✅';
+        typeLabel = 'Успех';
+        filterType = 'admin';
+      } else if (notif.type === 'warning') {
+        typeIcon = '⚠️';
+        typeLabel = 'Важно';
+        filterType = 'admin';
+      } else if (notif.type === 'promo') {
+        typeIcon = '🎁';
+        typeLabel = 'Акция';
+        filterType = 'admin';
+      } else if (notif.type === 'referral') {
+        typeIcon = '🔗';
+        typeLabel = 'Реферальная';
+        filterType = 'admin';
+      } else if (notif.type !== 'wheel_spin' && notif.type !== 'faucet_claim' && notif.type !== 'game_reward' && notif.type !== 'jackpot_win' && (!notif.type || !notif.type.includes('game'))) {
+        typeIcon = '📢';
+        typeLabel = 'Система';
+        filterType = 'admin';
+      } else if (!notif.type) {
+        typeIcon = '📢';
+        typeLabel = 'Уведомление';
+        filterType = 'all';
+      } else {
+        typeIcon = '📢';
+        typeLabel = notif.type.charAt(0).toUpperCase() + notif.type.slice(1);
+        filterType = 'all';
+      }
+      
+      // Определяем цвет заголовка с исправленным синтаксисом
+      let headerColor = '#22d3ee'; // синий по умолчанию
+      if (notif.type === 'jackpot_win') {
+        headerColor = '#22c55e'; // зеленый
+      } else if (notif.type === 'warning') {
+        headerColor = '#f59e0b'; // оранжевый
+      } else if (notif.type === 'success') {
+        headerColor = '#22c55e'; // зеленый
+      }
+      
+      return `
+        <div style="background: rgba(30,37,56,0.6); border: 1px solid ${isUnread ? 'rgba(34,211,238,0.4)' : 'rgba(34,211,238,0.2)'}; 
+                  border-radius: 12px; padding: 16px; margin-bottom: 12px; 
+                  ${isUnread ? 'border-left: 3px solid #22d3ee;' : ''} 
+                  ${notif.type === 'jackpot_win' ? 'cursor: pointer; transition: all 0.3s;' : ''}" 
+                  data-notif-id="${notif.id}" 
+                  data-filter-type="${filterType}"
+                  ${notif.type === 'jackpot_win' ? `onclick="window.showJackpotWinnerFromNotification({id: '${notif.id}', userId: '${notif.userId || ''}', winnerName: '${notif.winnerName || ''}', amount: '${notif.amount || '0'}', message: '${notif.message || ''}'})"` : ''}>
+          
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+            <h4 style="color: ${headerColor}; font-size: 14px; font-weight: 600; margin: 0;">
+              ${typeIcon} ${typeLabel}
+              ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">🎉 Нажмите для подробностей</span>' : ''}
+            </h4>
+            ${isUnread ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
+          </div>
+          
+          <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${notif.message}</p>
+          <p style="color: #64748b; font-size: 11px; margin: 0;">${window.formatNotificationDate(notif.createdAt)}</p>
+          
+          ${isUnread && notif.type !== 'jackpot_win' ? 
+            `<button onclick="event.stopPropagation(); window.markNotificationAsReadWheel('${notif.id}')" 
+                     style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; 
+                            cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">
+              Отметить как прочитанное
+            </button>` : ''}
+        </div>
+      `;
+    }).join('');
+    
+    window.updateNotificationBadge();
+    window.updateFilterCounts();
+  };
+
+  // Функция обновления счетчиков фильтров (100% как в wheel-of-fortune.html)
+  window.updateFilterCounts = function(notifications) {
+    const notifs = notifications || window.allNotifications || [];
+    const counts = {
+      all: notifs.length,
+      games: notifs.filter(n => n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))).length,
+      jackpot_win: notifs.filter(n => n.type === 'jackpot_win').length,
+      admin: notifs.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game'))).length
+    };
+    
+    const unreadCounts = {
+      all: notifs.filter(n => !n.read).length,
+      games: notifs.filter(n => (n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))) && !n.read).length,
+      jackpot_win: notifs.filter(n => n.type === 'jackpot_win' && !n.read).length,
+      admin: notifs.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game')) && !n.read).length
+    };
+    
+    // Обновляем счетчики на кнопках
+    Object.keys(counts).forEach(filter => {
+      const countEl = document.getElementById(`filterCount-${filter}`);
+      if (countEl) {
+        countEl.textContent = counts[filter];
+      }
+    });
+    
+    // Обновляем бейджи непрочитанных
+    Object.keys(unreadCounts).forEach(filter => {
+      const badgeEl = document.getElementById(`unreadBadge-${filter}`);
+      if (badgeEl) {
+        badgeEl.textContent = unreadCounts[filter];
+        badgeEl.style.display = unreadCounts[filter] > 0 ? 'flex' : 'none';
+      }
+    });
+  };
+
+  // Функция фильтрации уведомлений (100% как в wheel-of-fortune.html)
+  window.filterNotifications = function(type) {
+    const notifications = window.allNotifications || window.notifications || [];
+    console.log('🔍 Filter notifications:', type, 'Total notifications:', notifications.length);
+    console.log('🔍 All notifications types:', notifications.map(n => ({ id: n.id, type: n.type, message: n.message?.substring(0, 30) })));
+    
+    let filtered = notifications;
+    
+    if (type !== 'all') {
+      if (type === 'games') {
+        // Все игровые уведомления (колесо, краны, будущие игры)
+        filtered = notifications.filter(n => {
+          const isGame = n.type === 'wheel_spin' || 
+                        n.type === 'faucet_claim' || 
+                        n.type === 'game_reward' ||
+                        (n.type && n.type.includes('game'));
+          console.log('🎮 Game check for', n.id, n.type, '=>', isGame);
+          return isGame;
+        });
+      } else if (type === 'admin') {
+        // Все админские уведомления (рассылки, поощрения, ответы, и все что не игры и не джекпот)
+        filtered = notifications.filter(n => {
+          const isNotGame = n.type !== 'wheel_spin' && 
+                           n.type !== 'faucet_claim' && 
+                           n.type !== 'game_reward' &&
+                           n.type !== 'jackpot_win' &&
+                           (!n.type || !n.type.includes('game'));
+          console.log('🛡️ Admin check for', n.id, n.type, '=>', isNotGame);
+          return isNotGame;
+        });
+      } else {
+        // Конкретный тип
+        filtered = notifications.filter(n => n.type === type);
+        console.log('🎯 Specific type check for', type, '=>', filtered.length);
+      }
+    }
+    
+    console.log('🔍 Filtered result:', filtered.length, 'items');
+    
+    // Сохраняем текущий фильтр и отфильтрованные данные
+    window.currentFilter = type;
+    window.filteredNotifications = filtered;
+    
+    // Обновляем стили кнопок
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      if (btn.dataset.filter === type) {
+        btn.style.background = 'rgba(34,211,238,0.2)';
+        btn.style.borderColor = '#22d3ee';
+        btn.style.color = '#e2e8f0';
+        // Обновляем цвет счетчика
+        const countEl = btn.querySelector('.filter-count');
+        if (countEl) {
+          countEl.style.background = 'rgba(255,255,255,0.15)';
+          countEl.style.color = '#e2e8f0';
+        }
+      } else {
+        btn.style.background = 'rgba(34,211,238,0.1)';
+        btn.style.borderColor = 'rgba(34,211,238,0.3)';
+        btn.style.color = '#94a3b8';
+        // Обновляем цвет счетчика
+        const countEl = btn.querySelector('.filter-count');
+        if (countEl) {
+          countEl.style.background = 'rgba(255,255,255,0.1)';
+          countEl.style.color = '#94a3b8';
+        }
+      }
+    });
+    
+    // Обновляем счетчики
+    window.updateFilterCounts(notifications);
+    
+    // Мгновенно перерисовываем уведомления (не перезаписывая оригинальный массив)
+    window.renderNotificationsInWheel(filtered);
+  };
+
+  // Функция отметки уведомления как прочитанного
+  window.markNotificationAsReadWheel = async function(notificationId) {
+    if (!window.db) return;
+    
+    try {
+      await updateDoc(doc(window.db, 'notifications', notificationId), {
+        read: true,
+        readAt: serverTimestamp()
+      });
+      
+      if (window.allNotifications) {
+        const notif = window.allNotifications.find(n => n.id === notificationId);
+        if (notif) notif.read = true;
+      }
+      
+      window.updateNotificationBadge();
+      window.updateFilterCounts();
+      
+      const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+      window.filterNotifications(activeFilter);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  // Функция отметки отфильтрованных уведомлений как прочитанных
+  window.markFilteredNotificationsAsRead = async function() {
+    if (!window.db || !window.allNotifications) return;
+    
+    const currentFilter = window.currentFilter || 'all';
+    let notifications = window.allNotifications;
+    
+    if (currentFilter === 'all') {
+      notifications = window.allNotifications.filter(n => !n.read);
+    } else if (currentFilter === 'games') {
+      notifications = window.allNotifications.filter(n => (n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))) && !n.read);
+    } else if (currentFilter === 'jackpot_win') {
+      notifications = window.allNotifications.filter(n => n.type === 'jackpot_win' && !n.read);
+    } else if (currentFilter === 'admin') {
+      notifications = window.allNotifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game')) && !n.read);
+    }
+    
+    if (notifications.length === 0) {
+      if (typeof showToast === 'function') {
+        showToast('Нет непрочитанных уведомлений в этом фильтре');
+      }
+      return;
+    }
+    
+    try {
+      const batch = writeBatch(window.db);
+      
+      notifications.forEach(notif => {
+        batch.update(doc(window.db, 'notifications', notif.id), {
+          read: true,
+          readAt: serverTimestamp()
+        });
+      });
+      
+      await batch.commit();
+      
+      notifications.forEach(notif => {
+        const localNotif = window.allNotifications.find(n => n.id === notif.id);
+        if (localNotif) localNotif.read = true;
+      });
+      
+      window.updateNotificationBadge();
+      window.updateFilterCounts();
+      
+      // Обновляем текущий фильтр
+      window.filterNotifications(currentFilter);
+      
+      if (typeof showToast === 'function') {
+        showToast(`Отмечено как прочитанные: ${notifications.length} уведомлений`);
+      }
+      
+    } catch (error) {
+      console.error('Error marking filtered notifications as read:', error);
+      if (typeof showToast === 'function') {
+        showToast('Ошибка при отметке уведомлений');
+      }
+    }
+  };
+
+  // Функция очистки отфильтрованных уведомлений
+  window.clearFilteredNotifications = async function() {
+    if (!window.db || !window.allNotifications) return;
+    
+    const currentFilter = window.currentFilter || 'all';
+    let notifications = window.allNotifications;
+    
+    if (currentFilter === 'all') {
+      notifications = window.allNotifications;
+    } else if (currentFilter === 'games') {
+      notifications = window.allNotifications.filter(n => n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game')));
+    } else if (currentFilter === 'jackpot_win') {
+      notifications = window.allNotifications.filter(n => n.type === 'jackpot_win');
+    } else if (currentFilter === 'admin') {
+      notifications = window.allNotifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game')));
+    }
+    
+    if (notifications.length === 0) {
+      if (typeof showToast === 'function') {
+        showToast('Нет уведомлений для очистки');
+      }
+      return;
+    }
+    
+    if (!confirm(`Удалить ${notifications.length} уведомлений?`)) {
+      return;
+    }
+    
+    try {
+      const batch = writeBatch(window.db);
+      
+      notifications.forEach(notif => {
+        batch.delete(doc(window.db, 'notifications', notif.id));
+      });
+      
+      await batch.commit();
+      
+      // Удаляем из локального массива
+      notifications.forEach(notif => {
+        const index = window.allNotifications.findIndex(n => n.id === notif.id);
+        if (index > -1) {
+          window.allNotifications.splice(index, 1);
+        }
+      });
+      
+      window.updateNotificationBadge();
+      window.updateFilterCounts();
+      
+      // Мгновенно обновляем текущий фильтр
+      window.filterNotifications(currentFilter);
+      
+      if (typeof showToast === 'function') {
+        showToast(`Удалено: ${notifications.length} уведомлений`);
+      }
+      
+    } catch (error) {
+      console.error('Error clearing notifications:', error);
+      if (typeof showToast === 'function') {
+        showToast('Ошибка при удалении уведомлений');
+      }
+    }
+  };
+
+  // Функция для отображения модального окна выигрыша джекпота из уведомлений (100% как в wheel-of-fortune.html)
+  window.showJackpotWinnerFromNotification = async function(notification) {
+    try {
+      // Сначала закрываем модальное окно уведомлений
+      const notificationsModal = document.getElementById('notificationsModalOverlay');
+      if (notificationsModal) {
+        notificationsModal.remove();
+      }
+      
+      // Получаем данные пользователя
+      let winnerName = notification.winnerName || 'Пользователь';
+      let winnerAvatar = '';
+      
+      if (notification.userId) {
+        try {
+          const userSnap = await getDoc(doc(window.db, 'users', notification.userId));
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            winnerName = userData.displayName || userData.email || notification.userId.substring(0, 8) + '...';
+            winnerAvatar = userData.photoURL || userData.avatarUrl || '';
+            
+            console.log('👤 User data loaded:', { winnerName, winnerAvatar: winnerAvatar ? 'exists' : 'none' });
+          }
+        } catch (userError) {
+          console.warn('Error loading user data:', userError);
+        }
+      }
+      
+      // Проверяем есть ли элемент jackpotWinnerOverlay на странице
+      let overlay = document.getElementById('jackpotWinnerOverlay');
+      
+      // Если нет оверлея, создаем его как в wheel-of-fortune.html
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'jackpotWinnerOverlay';
+        overlay.className = 'jackpot-winner-overlay';
+        overlay.setAttribute('onclick', 'if(event.target===this)closeJackpotWinner()');
+        
+        // Добавляем CSS стили как в wheel-of-fortune.html
+        const style = document.createElement('style');
+        style.textContent = `
+          .jackpot-winner-overlay {
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            z-index: 9000;
+            background: rgba(0,0,0,.92); 
+            backdrop-filter: blur(14px);
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px;
+          }
+          .jackpot-winner-overlay.show { 
+            display: flex; 
+            animation: fadeIn .5s; 
+          }
+          @keyframes fadeIn { 
+            from { opacity: 0; } 
+            to { opacity: 1; } 
+          }
+          .jackpot-winner-card {
+            width: 100%; 
+            max-width: 500px; 
+            border-radius: 28px; 
+            padding: 40px 32px; 
+            text-align: center;
+            background: linear-gradient(145deg, rgba(236,72,153,.2), rgba(139,92,246,.2));
+            border: 2px solid rgba(236,72,153,.7);
+            animation: jackpotPopIn .6s cubic-bezier(.34,1.56,.64,1);
+          }
+          @keyframes jackpotPopIn { 
+            from { 
+              transform: scale(.6) rotate(-5deg); 
+              opacity: 0; 
+            } 
+            to { 
+              transform: scale(1) rotate(0deg); 
+              opacity: 1; 
+            } 
+          }
+        `;
+        document.head.appendChild(style);
+        
+        // HTML как в wheel-of-fortune.html
+        overlay.innerHTML = `
+          <div class="jackpot-winner-card">
+            <div style="font-size:60px;margin-bottom:10px;">🏆</div>
+            <div style="font-size:13px;color:#ec4899;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">JACKPOT WINNER</div>
+            <img id="jwAvatar" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ec4899;margin:0 auto 12px;display:block;" onerror="this.style.display='none'">
+            <div style="font-size:22px;font-weight:900;color:white;margin-bottom:6px;" id="jwName">—</div>
+            <div style="font-size:38px;font-weight:900;background:linear-gradient(135deg,#ec4899,#8b5cf6);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px;" id="jwAmount">0 RGT</div>
+            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 20px;">Congratulations! The monthly jackpot has been awarded.</p>
+            <button onclick="closeJackpotWinner()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Close</button>
+          </div>
+        `;
+        
+        document.body.appendChild(overlay);
+      }
+      
+      // Обновляем элементы
+      const nameElement = document.getElementById('jwName');
+      const amountElement = document.getElementById('jwAmount');
+      const avatarElement = document.getElementById('jwAvatar');
+      
+      if (nameElement) nameElement.textContent = winnerName;
+      if (amountElement) amountElement.textContent = (notification.amount || '0') + ' RGT';
+      
+      if (avatarElement) {
+        if (winnerAvatar) {
+          avatarElement.src = winnerAvatar;
+          avatarElement.style.display = 'block';
+          avatarElement.onerror = function() {
+            this.style.display = 'none';
+            console.log('🖼️ Avatar failed to load, hiding');
+          };
+          console.log('🖼️ Avatar set to:', winnerAvatar);
+        } else {
+          avatarElement.style.display = 'none';
+          console.log('🖼️ No avatar, hiding element');
+        }
+      }
+      
+      // Показываем оверлей с z-index как в wheel-of-fortune.html
+      overlay.classList.add('show');
+      console.log('🎯 Jackpot overlay shown with z-index: 9000');
+      
+      // Запускаем конфетти
+      if (typeof launchConfetti === 'function') {
+        setTimeout(() => launchConfetti(80), 300);
+      }
+      
+      // Автоматически помечаем уведомление как прочитанное
+      if (notification.id && typeof window.markNotificationAsReadWheel === 'function') {
+        window.markNotificationAsReadWheel(notification.id);
+      }
+      
+    } catch (error) {
+      console.error('Error showing jackpot winner from notification:', error);
+    }
+  };
+
+  // Функция инициализации слушателя уведомлений
+  window.initNotificationsListener = function(userId) {
+    if (!window.db) return;
+    
+    try {
+      const notificationsCol = collection(window.db, 'notifications');
+      const q = query(notificationsCol, 
+                     where('userId', '==', userId),
+                     orderBy('createdAt', 'desc'),
+                     limit(50));
+      
+      return onSnapshot(q, (snapshot) => {
+        const notifications = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        window.allNotifications = notifications;
+        window.updateNotificationBadge();
+        window.updateFilterCounts();
+        
+        // Если модальное окно открыто, обновляем его
+        if (document.getElementById('notificationsModalOverlay')) {
+          const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+          window.filterNotifications(activeFilter);
+        } else {
+          window.renderNotificationsInWheel(notifications);
+        }
+        
+        // Проверяем есть ли непрочитанные уведомления
+        const unreadCount = notifications.filter(n => !n.read).length;
+        if (unreadCount > 0) {
+          console.log(`🔔 У вас ${unreadCount} непрочитанных уведомлений`);
+        }
+      }, (error) => {
+        console.error('Error listening to notifications:', error);
+      });
+    } catch (error) {
+      console.error('Error initializing notifications listener:', error);
+      return null;
+    }
+  };
+
+  // Функция обновления пользовательского интерфейса
+  window.updateUserUI = function(user) {
+    const ava = document.getElementById('userAvatar');
+    const name = document.getElementById('userName');
+    const mobAva = document.getElementById('mobUserAvatar');
+    const mobOut = document.getElementById('mobLoggedOutView');
+    const mobInn = document.getElementById('mobLoggedInView');
+    
+    if (user) {
+      if (ava) ava.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+      if (name) name.textContent = user.displayName || (user.email ? user.email.split('@')[0] : 'Researcher');
+      if (mobAva) mobAva.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+      if (mobOut) mobOut.style.display = 'none';
+      if (mobInn) mobInn.style.display = 'flex';
+    } else {
+      if (ava) ava.src = 'https://www.gravatar.com/avatar/?d=mp';
+      if (name) name.textContent = 'Guest';
+      if (mobAva) mobAva.src = 'https://www.gravatar.com/avatar/?d=mp';
+      if (mobOut) mobOut.style.display = 'flex';
+      if (mobInn) mobInn.style.display = 'none';
+    }
+  };
+
+  // Функция показа toast уведомления
+  window.showToast = function(message, type = 'info', duration = 3000) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed; bottom: 20px; right: 20px; z-index: 30000;
+      padding: 12px 20px; border-radius: 8px; color: white;
+      font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transform: translateX(100%); transition: transform 0.3s ease;
+      max-width: 300px; word-wrap: break-word;
+    `;
+    
+    // Цвета в зависимости от типа
+    const colors = {
+      success: 'linear-gradient(135deg, #22c55e, #16a34a)',
+      error: 'linear-gradient(135deg, #ef4444, #dc2626)',
+      warning: 'linear-gradient(135deg, #f59e0b, #d97706)',
+      info: 'linear-gradient(135deg, #22d3ee, #06b6d4)'
+    };
+    
+    toast.style.background = colors[type] || colors.info;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    // Анимация появления
+    setTimeout(() => {
+      toast.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Автоматическое скрытие
+    setTimeout(() => {
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
+    }, duration);
+  };
+
+  // Автоматическая инициализация при загрузке страницы
+  document.addEventListener('DOMContentLoaded', function() {
+    // Инициализируем слушатель уведомлений если пользователь уже авторизован
+    if (window.currentUser && window.db) {
+      window.initNotificationsListener(window.currentUser.uid);
+    }
+  });
+
+  console.log('🔧 Common functions loaded in header.js!');
 })();
