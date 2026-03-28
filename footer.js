@@ -605,7 +605,57 @@
     };
 
     window.showNotifications = function() {
-        window.openPageModal('notifications');
+        // Load fresh notifications from Firestore before opening modal
+        window.loadPageNotifications(() => {
+            window.openPageModal('notifications');
+        });
+    };
+
+    // Load notifications from Firestore for any page
+    window.loadPageNotifications = async function(callback) {
+        const db = window.db;
+        const currentUser = window.currentUser;
+        
+        if (!db || !currentUser) {
+            callback && callback();
+            return;
+        }
+
+        try {
+            const { collection, query, where, orderBy, limit, getDocs } = window.__firestoreExports || {};
+            if (!collection || !query || !where || !orderBy || !limit || !getDocs) {
+                console.warn('Firestore exports not available');
+                callback && callback();
+                return;
+            }
+
+            const q = query(
+                collection(db, 'notifications'),
+                where('uid', '==', currentUser.uid),
+                orderBy('ts', 'desc'),
+                limit(50)
+            );
+            
+            const snapshot = await getDocs(q);
+            const notifications = [];
+            
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                notifications.push({
+                    id: doc.id,
+                    type: data.type || 'info',
+                    msg: data.msg || '',
+                    read: data.read || false,
+                    ts: data.ts
+                });
+            });
+            
+            window.notifications = notifications;
+            callback && callback();
+        } catch(e) {
+            console.warn('Failed to load notifications:', e);
+            callback && callback();
+        }
     };
 
     window.closePageModal = function() {
@@ -757,32 +807,37 @@
                         ${lang('notifications') || 'Уведомления'}
                     </h2>
                     ${notificationsList.length > 0
-                        ? `<button onclick="if(typeof window.clearAllNotifications==='function')window.clearAllNotifications(); document.getElementById('pageModal').classList.remove('active');" class="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-colors">
-                            <i class="fas fa-trash-alt mr-1"></i> ${lang('notif_clear_all') || 'Очистить'}</button>`
+                        ? `<button onclick="if(typeof window.markAllNotificationsRead==='function')window.markAllNotificationsRead(); setTimeout(()=>window.closePageModal(),200);" class="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-colors">
+                            <i class="fas fa-check-double mr-1"></i> ${lang('notif_clear_all') || 'Отметить все'}</button>`
                         : ''}
                 </div>
                 <p class="text-slate-400 mt-2">${notificationsList.length} ${lang('notifications') || 'уведомлений'}</p>
             </div>
-            <div class="p-6 max-h-[70vh] overflow-y-auto">
+            <div class="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
                 ${notificationsList.length > 0
-                    ? notificationsList.map(notif => `
-                        <div class="notification-item p-4 border border-slate-700/50 rounded-lg mb-3 ${notif.read ? 'opacity-60' : 'bg-slate-800/30'} hover:border-cyan-500/50 transition-colors cursor-pointer"
+                    ? notificationsList.map(notif => {
+                        const tsDisplay = notif.ts && typeof notif.ts.toDate === 'function' 
+                            ? notif.ts.toDate().toLocaleString() 
+                            : (notif.ts ? new Date(notif.ts).toLocaleString() : 'недавно');
+                        return `
+                        <div class="notification-item p-4 border border-slate-700/50 rounded-lg mb-3 ${notif.read ? 'opacity-60' : 'bg-slate-800/30'} hover:border-cyan-500/50 transition-colors"
                              onclick="if(typeof window.markNotificationRead==='function')window.markNotificationRead('${notif.id}')">
-                            <div class="flex items-start gap-3">
-                                <div class="text-lg mt-1">
+                            <div class="flex items-start gap-3 cursor-pointer">
+                                <div class="text-lg mt-1 flex-shrink-0">
                                     ${notif.type === 'wheel_spin' ? '🎡' :
                                       notif.type === 'jackpot_win' ? '🏆' :
-                                      notif.type === 'claim_bonus' ? '🎁' :
+                                      notif.type === 'claim' ? '🎁' :
+                                      notif.type === 'reward' ? '✨' :
                                       '📢'}
                                 </div>
-                                <div class="flex-1">
-                                    <p class="text-white text-sm font-medium">${notif.msg || ''}</p>
-                                    <p class="text-slate-500 text-xs mt-1">${notif.ts ? new Date(notif.ts.toDate()).toLocaleString() : 'только что'}</p>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-white text-sm font-medium break-words">${notif.msg || ''}</p>
+                                    <p class="text-slate-500 text-xs mt-1">${tsDisplay}</p>
                                 </div>
                                 ${!notif.read ? '<span class="w-2 h-2 bg-cyan-400 rounded-full flex-shrink-0 mt-1.5"></span>' : ''}
                             </div>
                         </div>
-                    `).join('')
+                    `}).join('')
                     : `<div class="text-center py-12 text-slate-400">
                         <i class="fas fa-inbox text-4xl mb-4 opacity-30 block"></i>
                         <p>${lang('notif_empty_title') || 'Нет уведомлений'}</p>
@@ -1802,13 +1857,51 @@ function initAccountPage() {
         if (typeof window.markNotificationAsRead === 'function') {
             await window.markNotificationAsRead(notifId);
         }
-        openNotificationsModal();
+        // Reload notifications after marking as read
+        window.loadPageNotifications(() => {
+            // Modal will update automatically
+        });
+    };
+
+    window.markAllNotificationsRead = async function() {
+        const db = window.db;
+        const currentUser = window.currentUser;
+        
+        if (!db || !currentUser) return;
+        
+        try {
+            const { collection, query, where, getDocs, writeBatch, doc } = window.__firestoreExports || {};
+            if (!collection || !query || !where || !getDocs || !writeBatch || !doc) return;
+
+            const q = query(
+                collection(db, 'notifications'),
+                where('uid', '==', currentUser.uid),
+                where('read', '==', false)
+            );
+            
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) return;
+
+            const batch = writeBatch(db);
+            snapshot.forEach(docSnap => {
+                batch.update(doc(db, 'notifications', docSnap.id), { read: true });
+            });
+            
+            await batch.commit();
+            
+            // Reload and update modal
+            window.loadPageNotifications(() => {
+                // Modal will refresh
+            });
+        } catch(e) {
+            console.warn('Error marking all notifications as read:', e);
+        }
     };
 
     window.clearAllNotifications = function() {
         localStorage.setItem('notifications', '[]');
         window.notifications = [];
-        openNotificationsModal();
+        window.openPageModal('notifications');
     };
 
     function formatTimeAgo(date) {
