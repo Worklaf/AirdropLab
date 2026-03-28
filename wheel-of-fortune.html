@@ -1629,10 +1629,6 @@ async function finalizeJackpot(winnerUid, amount, month, jpData) {
   sendJackpotWinnerNotification(winnerUid, amount);
 }
 
-window.closeJackpotWinner = function() {
-  document.getElementById('jackpotWinnerOverlay').classList.remove('show');
-};
-
 // ═══════════════════════════════════════════════════════════
 // LEADERBOARD
 // ═══════════════════════════════════════════════════════════
@@ -2135,620 +2131,172 @@ document.addEventListener('languageChanged', () => {
   }
 });
 
-// Функции для уведомлений (улучшенная версия с фильтрами)
-window.showNotifications = function() {
-  if (!currentUser) { 
-    if (typeof showToast === 'function') {
-      showToast('Войдите'); 
-    } else {
-      alert('Войдите');
-    }
-    return; 
-  }
-  
-  // Удаляем существующее модальное окно если есть
-  const existingModal = document.getElementById('notificationsModalOverlay');
-  if (existingModal) {
-    existingModal.remove();
-  }
-  
-  // Создаем модальное окно уведомлений
-  const modal = document.createElement('div');
-  modal.id = 'notificationsModalOverlay';
-  modal.style.cssText = `
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    background: rgba(15,23,42,0.95); 
-    z-index: 10000; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-  `;
-  
-  const content = document.createElement('div');
-  content.style.cssText = `
-    background: linear-gradient(135deg, #1e293b, #0f172a);
-    border: 2px solid rgba(34,211,238,0.3);
-    border-radius: 20px;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(34,211,238,0.2);
-    max-width: 600px; 
-    width: 90%; 
-    max-height: 80vh; 
-    overflow-y: auto;
-    padding: 24px;
-  `;
-  
-  content.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h3 style="color: #22d3ee; font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-        <i class="fas fa-bell"></i> Уведомления
-      </h3>
-      <button onclick="window.closeNotificationsModal()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer; padding: 4px;">&times;</button>
-    </div>
-    
-    <!-- Фильтры и кнопки управления -->
-    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(34,211,238,0.2);">
-      <!-- Все -->
-      <div style="position: relative;">
-        <span id="unreadBadge-all" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
-        <button onclick="filterNotifications('all')" class="filter-btn active" data-filter="all" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #e2e8f0; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          📋 Все <span id="filterCount-all" class="filter-count" style="background: rgba(255,255,255,0.15); color: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
-        </button>
-      </div>
-      
-      <!-- Игры -->
-      <div style="position: relative;">
-        <span id="unreadBadge-games" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
-        <button onclick="filterNotifications('games')" class="filter-btn" data-filter="games" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          🎮 Игры <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
-        </button>
-      </div>
-      
-      <!-- Джекпот -->
-      <div style="position: relative;">
-        <span id="unreadBadge-jackpot_win" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
-        <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          🏆 Джекпот <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
-        </button>
-      </div>
-      
-      <!-- Админ -->
-      <div style="position: relative;">
-        <span id="unreadBadge-admin" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
-        <button onclick="filterNotifications('admin')" class="filter-btn" data-filter="admin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          🛡️ Админ <span id="filterCount-admin" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
-        </button>
-      </div>
-      
-      <!-- Кнопки управления -->
-      <div style="margin-left: auto; display: flex; gap: 8px;">
-        <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          ✓ Прочитать все
-        </button>
-        <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-          🗑️ Очистить все
-        </button>
-      </div>
-    </div>
-    
-    <!-- Список уведомлений -->
-    <div id="notificationsList" style="max-height: 400px; overflow-y: auto;">
-      <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-        <i class="fas fa-bell" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
-        Загрузка уведомлений...
-      </div>
-    </div>
-  `;
-  
-  modal.appendChild(content);
-  document.body.appendChild(modal);
-  
-  // Добавляем обработчик закрытия по клику на фон
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) {
-      window.closeNotificationsModal();
-    }
-  });
-  
-  // Добавляем обработчик закрытия по ESC
-  const handleEscape = (e) => {
-    if (e.key === 'Escape') {
-      window.closeNotificationsModal();
-      document.removeEventListener('keydown', handleEscape);
-    }
-  };
-  document.addEventListener('keydown', handleEscape);
-  
-  // Загружаем уведомления
-  if (typeof loadNotificationsForWheel === 'function') {
-    loadNotificationsForWheel();
-  }
-};
+// Функции уведомлений теперь находятся в header.js
 
-// Функция закрытия модального окна уведомлений
-window.closeNotificationsModal = function() {
-  const modal = document.getElementById('notificationsModalOverlay');
-  if (modal) {
-    modal.remove();
-  }
-};
-
-// Функция форматирования даты для уведомлений
-function formatNotificationDate(timestamp) {
-  if (!timestamp) return '';
-  
-  const now = new Date();
-  const date = timestamp instanceof Date ? timestamp : timestamp.toDate();
-  const diff = now - date;
-  
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  
-  if (seconds < 60) return 'только что';
-  if (minutes < 60) return `${minutes} мин. назад`;
-  if (hours < 24) return `${hours} ч. назад`;
-  if (days < 7) return `${days} д. назад`;
-  
-  return date.toLocaleDateString('ru-RU');
-}
-
-// Функция фильтрации уведомлений
-window.filterNotifications = function(type) {
-  const notifications = window.allNotifications || window.notifications || [];
-  console.log('🔍 Filter notifications:', type, 'Total notifications:', notifications.length);
-  console.log('🔍 All notifications types:', notifications.map(n => ({ id: n.id, type: n.type, message: n.message?.substring(0, 30) })));
-  
-  let filtered = notifications;
-  
-  if (type !== 'all') {
-    if (type === 'games') {
-      // Все игровые уведомления (колесо, краны, будущие игры)
-      filtered = notifications.filter(n => {
-        const isGame = n.type === 'wheel_spin' || 
-                      n.type === 'faucet_claim' || 
-                      n.type === 'game_reward' ||
-                      (n.type && n.type.includes('game'));
-        console.log('🎮 Game check for', n.id, n.type, '=>', isGame);
-        return isGame;
-      });
-    } else if (type === 'admin') {
-      // Все админские уведомления (рассылки, поощрения, ответы, и все что не игры и не джекпот)
-      filtered = notifications.filter(n => {
-        const isNotGame = n.type !== 'wheel_spin' && 
-                         n.type !== 'faucet_claim' && 
-                         n.type !== 'game_reward' &&
-                         n.type !== 'jackpot_win' &&
-                         (!n.type || !n.type.includes('game'));
-        console.log('🛡️ Admin check for', n.id, n.type, '=>', isNotGame);
-        return isNotGame;
-      });
-    } else {
-      // Конкретный тип
-      filtered = notifications.filter(n => n.type === type);
-      console.log('🎯 Specific type check for', type, '=>', filtered.length);
-    }
-  }
-  
-  console.log('🔍 Filtered result:', filtered.length, 'items');
-  
-  // Сохраняем текущий фильтр и отфильтрованные данные
-  window.currentFilter = type;
-  window.filteredNotifications = filtered;
-  
-  // Обновляем стили кнопок
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    if (btn.dataset.filter === type) {
-      btn.style.background = 'rgba(34,211,238,0.2)';
-      btn.style.borderColor = '#22d3ee';
-      btn.style.color = '#e2e8f0';
-      // Обновляем цвет счетчика
-      const countEl = btn.querySelector('.filter-count');
-      if (countEl) {
-        countEl.style.background = 'rgba(255,255,255,0.15)';
-        countEl.style.color = '#e2e8f0';
-      }
-    } else {
-      btn.style.background = 'rgba(34,211,238,0.1)';
-      btn.style.borderColor = 'rgba(34,211,238,0.3)';
-      btn.style.color = '#94a3b8';
-      // Обновляем цвет счетчика
-      const countEl = btn.querySelector('.filter-count');
-      if (countEl) {
-        countEl.style.background = 'rgba(255,255,255,0.1)';
-        countEl.style.color = '#94a3b8';
-      }
-    }
-  });
-  
-  // Обновляем счетчики
-  updateFilterCounts(notifications);
-  
-  // Мгновенно перерисовываем уведомления (не перезаписывая оригинальный массив)
-  renderNotificationsInWheel(filtered);
-};
-
-// Функция обновления счетчиков фильтров
-function updateFilterCounts(notifications) {
-  const counts = {
-    all: notifications.length,
-    games: notifications.filter(n => n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))).length,
-    jackpot_win: notifications.filter(n => n.type === 'jackpot_win').length,
-    admin: notifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game'))).length
-  };
-  
-  const unreadCounts = {
-    all: notifications.filter(n => !n.read).length,
-    games: notifications.filter(n => (n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))) && !n.read).length,
-    jackpot_win: notifications.filter(n => n.type === 'jackpot_win' && !n.read).length,
-    admin: notifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game')) && !n.read).length
-  };
-  
-  // Обновляем счетчики на кнопках
-  Object.keys(counts).forEach(filter => {
-    const countEl = document.getElementById(`filterCount-${filter}`);
-    if (countEl) {
-      countEl.textContent = counts[filter];
-    }
-  });
-  
-  // Обновляем бейджи непрочитанных
-  Object.keys(unreadCounts).forEach(filter => {
-    const badgeEl = document.getElementById(`unreadBadge-${filter}`);
-    if (badgeEl) {
-      const count = unreadCounts[filter];
-      if (count > 0) {
-        badgeEl.textContent = count > 99 ? '99+' : count;
-        badgeEl.style.display = 'flex';
-      } else {
-        badgeEl.style.display = 'none';
-      }
-    }
-  });
-}
-
-// Функция отметки отфильтрованных уведомлений как прочитанные
-window.markFilteredNotificationsAsRead = async function() {
-  const filtered = window.filteredNotifications || [];
-  const unreadFiltered = filtered.filter(n => !n.read);
-  
-  if (unreadFiltered.length === 0) {
-    if (typeof showToast === 'function') {
-      showToast('Нет непрочитанных уведомлений в текущем фильтре');
-    }
-    return;
-  }
-  
-  try {
-    const { updateDoc, doc } = window.__firestoreExports;
-    
-    for (const notif of unreadFiltered) {
-      await updateDoc(doc(window.db, "notifications", notif.id), {
-        read: true
-      });
-      // Мгновенно обновляем локальный массив
-      notif.read = true;
-    }
-    
-    // Обновляем бейдж
-    updateNotificationBadge();
-    
-    // Обновляем текущий фильтр
-    const currentFilter = window.currentFilter || 'all';
-    filterNotifications(currentFilter);
-    
-    if (typeof showToast === 'function') {
-      showToast(`Отмечено как прочитанные: ${unreadFiltered.length} уведомлений`);
-    }
-  } catch (error) {
-    console.error('Error marking filtered notifications as read:', error);
-    if (typeof showToast === 'function') {
-      showToast('Ошибка при отметке уведомлений');
-    }
-  }
-};
-
-// Функция очистки отфильтрованных уведомлений
-window.clearFilteredNotifications = async function() {
-  const filtered = window.filteredNotifications || [];
-  
-  if (filtered.length === 0) {
-    if (typeof showToast === 'function') {
-      showToast('Нет уведомлений в текущем фильтре');
-    }
-    return;
-  }
-  
-  const filterName = window.currentFilter === 'all' ? 'все уведомления' : 'уведомления из текущего фильтра';
-  if (!confirm(`Вы уверены, что хотите удалить ${filtered.length} ${filterName}?`)) return;
-  
-  try {
-    const { deleteDoc, doc } = window.__firestoreExports;
-    
-    if (!deleteDoc || !doc) {
-      console.error('Firestore deleteDoc or doc function not available');
-      if (typeof showToast === 'function') {
-        showToast('Ошибка: функции Firestore недоступны');
-      }
-      return;
-    }
-    
-    for (const notif of filtered) {
-      await deleteDoc(doc(window.db, "notifications", notif.id));
-      // Удаляем из локального массива
-      const index = window.allNotifications.findIndex(n => n.id === notif.id);
-      if (index > -1) {
-        window.allNotifications.splice(index, 1);
-      }
-    }
-    
-    // Обновляем бейдж
-    updateNotificationBadge();
-    
-    // Обновляем текущий фильтр
-    const currentFilter = window.currentFilter || 'all';
-    filterNotifications(currentFilter);
-    
-    if (typeof showToast === 'function') {
-      showToast(`Удалено: ${filtered.length} уведомлений`);
-    }
-  } catch (error) {
-    console.error('Error clearing filtered notifications:', error);
-    if (typeof showToast === 'function') {
-      showToast('Ошибка при удалении уведомлений');
-    }
-  }
-};
-
-// Функция отметки всех уведомлений как прочитанные
-window.markAllNotificationsAsRead = async function() {
-  if (!window.allNotifications || window.allNotifications.length === 0) return;
-  
-  try {
-    const { updateDoc, doc } = window.__firestoreExports;
-    const unreadNotifications = window.allNotifications.filter(n => !n.read);
-    
-    for (const notif of unreadNotifications) {
-      await updateDoc(doc(window.db, "notifications", notif.id), {
-        read: true
-      });
-      // Мгновенно обновляем локальный массив
-      notif.read = true;
-    }
-    
-    // Обновляем бейдж
-    updateNotificationBadge();
-    
-    // Мгновенно перерисовываем текущий фильтр
-    const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
-    filterNotifications(activeFilter);
-    
-    if (typeof showToast === 'function') {
-      showToast('Все уведомления отмечены как прочитанные');
-    }
-  } catch (error) {
-    console.error('Error marking all notifications as read:', error);
-    if (typeof showToast === 'function') {
-      showToast('Ошибка при отметке уведомлений');
-    }
-  }
-};
-
-// Функция очистки всех уведомлений
-window.clearAllNotifications = async function() {
-  if (!confirm('Вы уверены, что хотите удалить все уведомления?')) return;
-  
-  try {
-    const { deleteDoc, doc } = window.__firestoreExports;
-    
-    for (const notif of window.notifications || []) {
-      await deleteDoc(doc(window.db, "notifications", notif.id));
-    }
-    
-    if (typeof showToast === 'function') {
-      showToast('Все уведомления удалены');
-    }
-    
-    // Перезагружаем уведомления
-    loadNotificationsForWheel();
-  } catch (error) {
-    console.error('Error clearing notifications:', error);
-    if (typeof showToast === 'function') {
-      showToast('Ошибка при удалении уведомлений');
-    }
-  }
-};
-
-// Функция загрузки уведомлений для колеса
+// Функция загрузки уведомлений для колеса (специфичная для wheel)
 async function loadNotificationsForWheel() {
-  if (!window.db || !currentUser) {
-    const listEl = document.getElementById('notificationsList');
-    if (listEl) {
-      listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Недоступно без авторизации</p>';
-    }
-    return;
-  }
-  
-  // Проверяем доступность Firestore функций
-  if (!window.__firestoreExports) {
-    console.warn('Firestore exports not ready, retrying in 500ms...');
-    setTimeout(loadNotificationsForWheel, 500);
-    return;
-  }
+  if (!window.db || !currentUser) return;
   
   try {
-    const { collection, query, where, orderBy, onSnapshot } = window.__firestoreExports;
+    const { collection, query, where, orderBy, limit, getDocs } = window.__firestoreExports;
+    const notificationsCol = collection(window.db, 'notifications');
+    const q = query(notificationsCol, where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc'), limit(50));
+    const querySnapshot = await getDocs(q);
+    const notifications = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     
-    if (!collection || !query || !where || !orderBy || !onSnapshot) {
-      console.error('Required Firestore functions not available:', { collection, query, where, orderBy, onSnapshot });
-      const listEl = document.getElementById('notificationsList');
-      if (listEl) {
-        listEl.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка: функции Firestore недоступны</p>';
-      }
-      return;
+    window.allNotifications = notifications;
+    window.notifications = notifications;
+    
+    if (typeof window.updateNotificationBadge === 'function') {
+      window.updateNotificationBadge();
     }
-    
-    const q = query(
-      collection(window.db, "notifications"),
-      where("userId", "==", currentUser.uid),
-      orderBy("createdAt", "desc")
-    );
-    
-    onSnapshot(q, (snapshot) => {
-      const notifications = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        data.id = doc.id;
-        notifications.push(data);
-        console.log('📨 Loaded notification:', { id: data.id, type: data.type, message: data.message?.substring(0, 50) });
-      });
-      
-      console.log('📨 Total loaded notifications:', notifications.length);
-      window.allNotifications = notifications; // Сохраняем полный массив
-      window.notifications = notifications; // Для совместимости
-      
-      // Автоматически обновляем бейдж при изменениях
-      updateNotificationBadge();
-      
-      // Если модальное окно открыто, обновляем его
-      if (document.getElementById('notificationsModalOverlay')) {
-        const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
-        filterNotifications(activeFilter);
-      } else {
-        renderNotificationsInWheel(notifications);
-      }
-      
-      // Обновляем счетчики если модальное окно открыто
-      if (document.getElementById('notificationsModalOverlay')) {
-        updateFilterCounts(notifications);
-      }
-    });
   } catch (error) {
     console.error('Error loading notifications:', error);
-    const listEl = document.getElementById('notificationsList');
-    if (listEl) {
-      listEl.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка загрузки уведомлений</p>';
-    }
   }
 }
 
-// Функция отображения уведомлений для колеса
-function renderNotificationsInWheel(notifications) {
-  const listEl = document.getElementById('notificationsList');
-  if (!listEl) return;
-  
-  if (notifications.length === 0) {
-    listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Нет уведомлений</p>';
-    return;
-  }
-  
-  listEl.innerHTML = notifications.map(notif => {
-    const messageWithLinks = (notif.message || notif.msg || '').replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #60a5fa; text-decoration: underline;">$1</a>');
-    const isUnread = !notif.read;
-    
-    // Определяем тип и иконку
-    let typeIcon = '📢';
-    let typeLabel = 'Уведомление';
-    
-    console.log('🏷️ Processing notification type:', notif.type, 'for ID:', notif.id);
-    
-    if (notif.type === 'wheel_spin') {
-      typeIcon = '🎰';
-      typeLabel = 'Колесо фортуны';
-    } else if (notif.type === 'jackpot_win') {
-      typeIcon = '🏆';
-      typeLabel = 'Джекпот';
-    } else if (notif.type === 'faucet_claim') {
-      typeIcon = '🚰';
-      typeLabel = 'Кран';
-    } else if (notif.type === 'game_reward') {
-      typeIcon = '🎮';
-      typeLabel = 'Игра';
-    } else if (notif.type === 'feedback_reply') {
-      typeIcon = '💬';
-      typeLabel = 'Ответ на сообщение';
-    } else if (notif.type === 'admin' || notif.type === 'broadcast' || notif.type === 'announcement') {
-      typeIcon = '🛡️';
-      typeLabel = 'Администрация';
-    } else if (notif.type === 'reward') {
-      typeIcon = '🎁';
-      typeLabel = 'Поощрение';
-    } else if (notif.type === 'newsletter' || notif.type === 'subscription') {
-      typeIcon = '📧';
-      typeLabel = 'Рассылка';
-    } else if (!notif.type) {
-      typeIcon = '📢';
-      typeLabel = 'Уведомление';
-    } else {
-      // Для всех остальных типов
-      typeIcon = '📢';
-      typeLabel = notif.type.charAt(0).toUpperCase() + notif.type.slice(1);
+// Уникальные функции для wheel-of-fortune.html
+
+// Функция отображения модального окна выигрыша джекпота из уведомлений
+window.showJackpotWinnerFromNotification = async function(notification) {
+  try {
+    // Сначала закрываем модальное окно уведомлений
+    const notificationsModal = document.getElementById('notificationsModalOverlay');
+    if (notificationsModal) {
+      notificationsModal.remove();
     }
     
-    return `
-      <div style="background: rgba(30,37,56,0.6); border: 1px solid ${isUnread ? 'rgba(34,211,238,0.4)' : 'rgba(34,211,238,0.2)'}; border-radius: 12px; padding: 16px; margin-bottom: 12px; ${isUnread ? 'border-left: 3px solid #22d3ee;' : ''} ${notif.type === 'jackpot_win' ? 'cursor: pointer; transition: all 0.3s;' : ''}" data-notif-id="${notif.id}" ${notif.type === 'jackpot_win' ? `onclick="window.showJackpotWinnerFromNotification({id: '${notif.id}', userId: '${notif.userId || ''}', winnerName: '${notif.winnerName || ''}', amount: '${notif.amount || '0'}', message: '${notif.message || ''}'})"` : ''}>
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-          <h4 style="color: ${notif.type === 'jackpot_win' ? '#22c55e' : '#22d3ee'}; font-size: 14px; font-weight: 600; margin: 0;">
-            ${typeIcon} ${typeLabel}
-            ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">🎉 Нажмите для подробностей</span>' : ''}
-          </h4>
-          ${isUnread ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
+    // Получаем данные пользователя
+    let winnerName = notification.winnerName || 'Пользователь';
+    let winnerAvatar = '';
+    
+    if (notification.userId) {
+      try {
+        const { getDoc, doc } = window.__firestoreExports;
+        const userSnap = await getDoc(doc(window.db, 'users', notification.userId));
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          winnerName = userData.displayName || userData.email || notification.userId.substring(0, 8) + '...';
+          winnerAvatar = userData.photoURL || userData.avatarUrl || '';
+        }
+      } catch (userError) {
+        console.warn('Error loading user data:', userError);
+      }
+    }
+    
+    // Проверяем есть ли элемент jackpotWinnerOverlay на странице
+    let overlay = document.getElementById('jackpotWinnerOverlay');
+    
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'jackpotWinnerOverlay';
+      overlay.className = 'jackpot-winner-overlay';
+      overlay.setAttribute('onclick', 'if(event.target===this)closeJackpotWinner()');
+      
+      // Добавляем CSS стили
+      const style = document.createElement('style');
+      style.textContent = `
+        .jackpot-winner-overlay {
+          display: none; 
+          position: fixed; 
+          inset: 0; 
+          z-index: 9000;
+          background: rgba(0,0,0,.92); 
+          backdrop-filter: blur(14px);
+          align-items: center; 
+          justify-content: center; 
+          padding: 20px;
+        }
+        .jackpot-winner-overlay.show { 
+          display: flex; 
+          animation: fadeIn .5s; 
+        }
+        @keyframes fadeIn { 
+          from { opacity: 0; } 
+          to { opacity: 1; } 
+        }
+        .jackpot-winner-card {
+          width: 100%; 
+          max-width: 500px; 
+          border-radius: 28px; 
+          padding: 40px 32px; 
+          text-align: center;
+          background: linear-gradient(145deg, rgba(236,72,153,.2), rgba(139,92,246,.2));
+          border: 2px solid rgba(236,72,153,.7);
+          animation: jackpotPopIn .6s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes jackpotPopIn { 
+          from { 
+            transform: scale(.6) rotate(-5deg); 
+            opacity: 0; 
+          } 
+          to { 
+            transform: scale(1) rotate(0deg); 
+            opacity: 1; 
+          } 
+        }
+      `;
+      document.head.appendChild(style);
+      
+      overlay.innerHTML = `
+        <div class="jackpot-winner-card">
+          <div style="font-size:60px;margin-bottom:10px;">🏆</div>
+          <div style="font-size:13px;color:#ec4899;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">JACKPOT WINNER</div>
+          <img id="jwAvatar" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ec4899;margin:0 auto 12px;display:block;" onerror="this.style.display='none'">
+          <div style="font-size:22px;font-weight:900;color:white;margin-bottom:6px;" id="jwName">—</div>
+          <div style="font-size:38px;font-weight:900;background:linear-gradient(135deg,#ec4899,#8b5cf6);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px;" id="jwAmount">0 RGT</div>
+          <p style="font-size:12px;color:var(--text-secondary);margin:0 0 20px;">Congratulations! The monthly jackpot has been awarded.</p>
+          <button onclick="closeJackpotWinner()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Close</button>
         </div>
-        <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${messageWithLinks}</p>
-        <p style="color: #64748b; font-size: 11px; margin: 0;">${formatNotificationDate(notif.createdAt)}</p>
-        ${isUnread && notif.type !== 'jackpot_win' ? `<button onclick="event.stopPropagation(); markNotificationAsReadWheel('${notif.id}')" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
-      </div>
-    `;
-  }).join('');
-  
-  // Сохраняем уведомления глобально для обновления бейджа
-  window.notifications = notifications;
-  updateNotificationBadge();
-}
-
-// Функция форматирования времени как в index.html
-function formatTimeAgoWheel(date) {
-  if (!date) return '';
-  const seconds = Math.floor((new Date() - date) / 1000);
-  if (seconds < 60) return 'только что';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return minutes + ' мин. назад';
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return hours + ' ч. назад';
-  const days = Math.floor(hours / 24);
-  return days + ' д. назад';
-}
-
-// Функция для отображения уведомлений в модальном окне
-function renderNotificationsInModal() {
-  const listEl = document.getElementById('notificationsList');
-  if (!listEl) return;
-  
-  const notifications = window.notifications || [];
-  
-  if (notifications.length === 0) {
-    listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Нет уведомлений</p>';
-    return;
+      `;
+      
+      document.body.appendChild(overlay);
+    }
+    
+    // Обновляем элементы
+    const nameElement = document.getElementById('jwName');
+    const amountElement = document.getElementById('jwAmount');
+    const avatarElement = document.getElementById('jwAvatar');
+    
+    if (nameElement) nameElement.textContent = winnerName;
+    if (amountElement) amountElement.textContent = (notification.amount || '0') + ' RGT';
+    
+    if (avatarElement) {
+      if (winnerAvatar) {
+        avatarElement.src = winnerAvatar;
+        avatarElement.style.display = 'block';
+        avatarElement.onerror = function() {
+          this.style.display = 'none';
+        };
+      } else {
+        avatarElement.style.display = 'none';
+      }
+    }
+    
+    // Показываем оверлей
+    overlay.classList.add('show');
+    
+    // Запускаем конфетти
+    if (typeof launchConfetti === 'function') {
+      setTimeout(() => launchConfetti(80), 300);
+    }
+    
+    // Автоматически помечаем уведомление как прочитанное
+    if (notification.id && typeof window.markNotificationAsReadWheel === 'function') {
+      window.markNotificationAsReadWheel(notification.id);
+    }
+    
+  } catch (error) {
+    console.error('Error showing jackpot winner from notification:', error);
   }
-  
-  listEl.innerHTML = notifications.map(notif => `
-    <div style="background: rgba(30,37,56,0.6); border: 1px solid rgba(34,211,238,0.2); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
-      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-        <h4 style="color: #22d3ee; font-size: 14px; font-weight: 600; margin: 0;">${notif.title || 'Уведомление'}</h4>
-        ${!notif.read ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
-      </div>
-      <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${notif.message}</p>
-      <p style="color: #64748b; font-size: 11px; margin: 0;">${new Date(notif.createdAt).toLocaleString()}</p>
-      ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); renderNotificationsInModal();" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
-    </div>
-  `).join('');
-}
+};
 
-// Функция для отметки уведомления как прочитанного (как в index.html)
+// Функция закрытия модального окна джекпота
+window.closeJackpotWinner = function() {
+  document.getElementById('jackpotWinnerOverlay').classList.remove('show');
+};
+
+// Функция отметки уведомления как прочитанного (уникальная для wheel)
 window.markNotificationAsReadWheel = async function(notificationId) {
   if (!window.db || !currentUser) return;
   
@@ -2767,125 +2315,15 @@ window.markNotificationAsReadWheel = async function(notificationId) {
       }
       
       // Обновляем бейдж
-      updateNotificationBadge();
-      
-      // Мгновенно обновляем текущий фильтр
-      const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
-      filterNotifications(activeFilter);
+      if (typeof window.updateNotificationBadge === 'function') {
+        window.updateNotificationBadge();
+      }
     }
   } catch (error) {
     console.error('Error marking notification as read:', error);
   }
 };
 
-// Функция для отображения модального окна выигрыша джекпота из уведомлений (использует существующий jackpotWinnerOverlay)
-window.showJackpotWinnerFromNotification = async function(notification) {
-  try {
-    // Сначала закрываем модальное окно уведомлений чтобы оно не мешало
-    const notificationsModal = document.getElementById('notificationsModalOverlay');
-    if (notificationsModal) {
-      notificationsModal.remove();
-    }
-    
-    // Получаем данные пользователя
-    let winnerName = notification.winnerName || 'Пользователь';
-    let winnerAvatar = '';
-    
-    // Всегда получаем свежие данные пользователя для аватарки
-    if (notification.userId) {
-      try {
-        const userSnap = await getDoc(doc(db, 'users', notification.userId));
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          winnerName = userData.displayName || userData.email || notification.userId.substring(0, 8) + '...';
-          winnerAvatar = userData.photoURL || userData.avatarUrl || '';
-          
-          // Добавляем отладочную информацию
-          console.log('👤 User data loaded:', { winnerName, winnerAvatar: winnerAvatar ? 'exists' : 'none' });
-        }
-      } catch (userError) {
-        console.warn('Error loading user data:', userError);
-      }
-    }
-    
-    // Обновляем элементы в существующем оверлее
-    const nameElement = document.getElementById('jwName');
-    const amountElement = document.getElementById('jwAmount');
-    const avatarElement = document.getElementById('jwAvatar');
-    
-    if (nameElement) nameElement.textContent = winnerName;
-    if (amountElement) amountElement.textContent = (notification.amount || '0') + ' RGT';
-    
-    if (avatarElement) {
-      if (winnerAvatar) {
-        avatarElement.src = winnerAvatar;
-        avatarElement.style.display = 'block';
-        avatarElement.onerror = function() {
-          this.style.display = 'none';
-          console.log('🖼️ Avatar failed to load, hiding');
-        };
-        console.log('🖼️ Avatar set to:', winnerAvatar);
-      } else {
-        avatarElement.style.display = 'none';
-        console.log('🖼️ No avatar, hiding element');
-      }
-    }
-    
-    // Показываем оверлей с высоким z-index
-    const overlay = document.getElementById('jackpotWinnerOverlay');
-    if (overlay) {
-      overlay.style.zIndex = '20000'; // Устанавливаем высокий z-index
-      overlay.classList.add('show');
-      console.log('🎯 Jackpot overlay shown with z-index:', overlay.style.zIndex);
-    }
-    
-    // Запускаем конфетти для эффекта
-    if (typeof launchConfetti === 'function') {
-      setTimeout(() => launchConfetti(80), 300); // Небольшая задержка для эффекта
-    }
-    
-    // Автоматически помечаем уведомление как прочитанное
-    if (notification.id && typeof markNotificationAsReadWheel === 'function') {
-      markNotificationAsReadWheel(notification.id);
-    }
-    
-  } catch (error) {
-    console.error('Error showing jackpot winner from notification:', error);
-  }
-};
-function updateNotificationBadge() {
-  const badge = document.getElementById('notificationBadge');
-  if (!badge) return;
-  
-  const unreadCount = (window.allNotifications || []).filter(n => !n.read).length;
-  
-  if (unreadCount > 0) {
-    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-    badge.classList.remove('hidden');
-  } else {
-    badge.classList.add('hidden');
-    badge.textContent = '0';
-  }
-}
-
-// Инициализация слушателя сообщений при загрузке страницы (только если пользователь уже авторизован)
-if (currentUser && db) {
-  // Используем функцию из header.js
-  if (typeof initFeedbacksListener === 'function') {
-    initFeedbacksListener(currentUser.uid);
-  }
-}
 </script>
-
-<!-- Фиксированная админ-панель -->
-<div id="fixedAdminPanel" style="position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,37,56,0.95));border-top:1px solid rgba(139,92,246,0.3);backdrop-filter:blur(10px);padding:10px 20px;z-index:1000;display:none;align-items:center;justify-content:space-between;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
-  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-    <span style="color:#a78bfa;font-size:12px;font-weight:600;"><i class="fas fa-shield" style="margin-right:6px;"></i>Admin Panel</span>
-  </div>
-  <div style="display:flex;align-items:center;gap:12px;">
-    <div id="deskAdminBtns" style="display:flex;align-items:center;gap:6px;"></div>
-  </div>
-</div>
-
 </body>
 </html>
