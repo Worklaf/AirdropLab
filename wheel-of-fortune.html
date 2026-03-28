@@ -1585,16 +1585,26 @@ function loadFeedbackMessages() {
         return;
       }
       
-      listEl.innerHTML = messages.map(msg => `
+      listEl.innerHTML = messages.map(msg => {
+        // Получаем текст сообщения из массива messages
+        const messageText = msg.messages && msg.messages.length > 0 
+          ? msg.messages[0].text 
+          : (msg.message || 'Нет текста');
+        
+        // Получаем тему из subject или из первого сообщения
+        const subject = msg.subject || (messageText.length > 50 ? messageText.substring(0, 50) + '...' : messageText);
+        
+        return `
         <div style="background: rgba(30,37,56,0.6); border: 1px solid rgba(139,92,246,0.2); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-            <h4 style="color: #a78bfa; font-size: 14px; font-weight: 600; margin: 0;">${msg.subject || 'Сообщение'}</h4>
+            <h4 style="color: #a78bfa; font-size: 14px; font-weight: 600; margin: 0;">${subject}</h4>
             <span style="color: #64748b; font-size: 11px;">${msg.createdAt.toLocaleString()}</span>
           </div>
-          <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0;">${msg.message}</p>
+          <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0;">${messageText}</p>
           ${msg.reply ? `<div style="background: rgba(34,211,238,0.1); border-left: 3px solid #22d3ee; padding: 8px; margin-top: 8px; border-radius: 4px;"><p style="color: #22d3ee; font-size: 12px; margin: 0;"><strong>Ответ:</strong> ${msg.reply}</p></div>` : ''}
         </div>
-      `).join('');
+      `;
+    }).join('');
     }).catch(error => {
       console.error('Error loading feedback messages:', error);
       listEl.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка загрузки сообщений</p>';
