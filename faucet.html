@@ -1055,22 +1055,21 @@ if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === "test
   window.__authExports = { onAuthStateChanged, signOut };
 }
 
-// Provide globals for other modules (reagents.js expects these)
-window.db = db;
-window.auth = auth;
-window.__firestoreExports = {
-  collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, onSnapshot, serverTimestamp, increment, runTransaction, arrayUnion
-};
-window.__authExports = { onAuthStateChanged, signOut };
+  // Provide globals for other modules (reagents.js expects these)
+  window.db = db;
+  window.auth = auth;
+  window.__firestoreExports = {
+    collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+    query, where, orderBy, limit, writeBatch, serverTimestamp, onSnapshot
+  };
 
-function toast(msg) {
-  // Minimal toast fallback
-  try {
-    if (typeof window.showToast === 'function') return window.showToast(msg);
-  } catch(_) {}
-  console.log(msg);
-}
+  // Инициализируем Firebase экспорты для common.js
+  if (typeof window.initFirebaseExports === 'function') {
+    window.initFirebaseExports({
+      collection, doc, getDoc, getDocs, addDoc, updateDoc,
+      query, where, orderBy, limit, writeBatch, serverTimestamp, onSnapshot
+    });
+  }
 
 function normalizeUrl(u) {
   if (!u) return '';
