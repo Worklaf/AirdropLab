@@ -2,6 +2,34 @@
 // COMMON FUNCTIONS - Общие функции для всех страниц
 // ═══════════════════════════════════════════════════════════
 
+// Импортируем Firebase функции (если еще не импортированы)
+if (typeof window.collection === 'undefined') {
+  // Firebase функции будут доступны после инициализации в основном файле
+  console.log('🔧 Waiting for Firebase initialization...');
+}
+
+// Глобальные переменные для Firebase (будут установлены в основном файле)
+let collection, query, where, orderBy, limit, doc, getDoc, getDocs, addDoc, updateDoc, writeBatch, serverTimestamp, onSnapshot;
+
+// Функция инициализации Firebase экспортов
+window.initFirebaseExports = function(firebaseExports) {
+  collection = firebaseExports.collection;
+  query = firebaseExports.query;
+  where = firebaseExports.where;
+  orderBy = firebaseExports.orderBy;
+  limit = firebaseExports.limit;
+  doc = firebaseExports.doc;
+  getDoc = firebaseExports.getDoc;
+  getDocs = firebaseExports.getDocs;
+  addDoc = firebaseExports.addDoc;
+  updateDoc = firebaseExports.updateDoc;
+  writeBatch = firebaseExports.writeBatch;
+  serverTimestamp = firebaseExports.serverTimestamp;
+  onSnapshot = firebaseExports.onSnapshot;
+  
+  console.log('✅ Firebase exports initialized in common.js');
+};
+
 // ═══════════════════════════════════════════════════════════
 // УВЕДОМЛЕНИЯ
 // ═══════════════════════════════════════════════════════════
