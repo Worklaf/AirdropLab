@@ -420,7 +420,7 @@ import {
   getFirestore, initializeFirestore,
   collection, doc, getDoc, setDoc, getDocs,
   updateDoc, addDoc, query, orderBy, limit, where,
-  serverTimestamp, increment, runTransaction, writeBatch
+  serverTimestamp, increment, runTransaction, writeBatch, arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Wait for firebase-config.js to set window.firebaseConfig
@@ -464,7 +464,7 @@ try {
   // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
   window.auth = auth;
   window.db   = db;
-  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch };
+  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion };
   window.__authExports = { onAuthStateChanged, signOut };
   console.log('✅ WoF Firebase initialized');
 } catch(e) {
@@ -1556,21 +1556,30 @@ async function loadFeedbackMessagesForList() {
   const container = document.getElementById('feedbacksContainer');
   if (!container) return;
   
+  console.log('Loading feedback messages for wheel...');
+  
   if (!window.db || !currentUser) {
+    console.log('No db or current user');
     container.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Недоступно без авторизации</p>';
     return;
   }
   
   try {
     const { collection, query, where, getDocs } = window.__firestoreExports || {};
+    console.log('Firestore exports:', !!collection, !!query, !!where, !!getDocs);
+    
     if (collection && query && where && getDocs) {
+      console.log('Querying feedbacks for userId:', currentUser.uid);
       const snapshot = await getDocs(query(collection(window.db, 'feedbacks'), 
         where('userId', '==', currentUser.uid)
       ));
       
+      console.log('Snapshot docs count:', snapshot.docs.length);
+      
       const messages = [];
       snapshot.forEach(doc => {
         const data = doc.data();
+        console.log('Doc data:', data);
         if (!data.userDeleted) {
           messages.push({ 
             id: doc.id, 
@@ -1580,6 +1589,8 @@ async function loadFeedbackMessagesForList() {
         }
       });
       
+      console.log('Messages loaded:', messages.length);
+      
       // Сортируем в памяти
       messages.sort((a, b) => b.createdAt - a.createdAt);
       
@@ -1587,21 +1598,29 @@ async function loadFeedbackMessagesForList() {
       window.adminFeedbacks = messages;
       
       renderFeedbackList();
+    } else {
+      console.log('Missing Firestore exports');
+      container.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Firestore недоступен</p>';
     }
   } catch (error) {
     console.error('Error loading feedback messages:', error);
-    container.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка загрузки сообщений</p>';
+    container.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка загрузки: ' + error.message + '</p>';
   }
 }
 
 // Функция отображения списка сообщений (как в index.html)
 window.renderFeedbackList = function() {
   const container = document.getElementById('feedbacksContainer');
-  if (!container) return;
+  if (!container) {
+    console.log('No feedbacksContainer found');
+    return;
+  }
   
   const messages = window.adminFeedbacks || [];
+  console.log('Rendering feedback list, messages count:', messages.length);
   
   if (messages.length === 0) {
+    console.log('No messages to display');
     container.innerHTML = `
       <div style="text-align: center; padding: 40px; color: #64748b;">
         <div style="background: rgba(139,92,246,0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
@@ -1612,10 +1631,14 @@ window.renderFeedbackList = function() {
     return;
   }
   
+  console.log('Rendering messages:', messages);
+  
   container.innerHTML = messages.map(msg => {
     const isUnread = !msg.userRead;
     const lastMsg = msg.messages && msg.messages.length > 0 ? msg.messages[msg.messages.length - 1] : {};
     const date = msg.createdAt;
+    
+    console.log('Rendering message:', { id: msg.id, projectName: msg.projectName, isUnread, lastMsg: lastMsg.text });
     
     return `
       <div onclick="openFeedbackFromList('${msg.id}', '${msg.projectId || ''}', '${msg.projectName || 'Support'}')" 
@@ -1643,6 +1666,8 @@ window.renderFeedbackList = function() {
       </div>
     `;
   }).join('');
+  
+  console.log('Render complete');
 }
 
 // Функция открытия конкретного сообщения (как в index.html)
