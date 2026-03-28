@@ -23,8 +23,9 @@
       justify-content: center;
     }
     
-    .modal.active {
-      display: flex;
+    .modal.active,
+    .modal[style*="flex"] {
+      display: flex !important;
     }
     
     .modal-content {
@@ -2193,11 +2194,24 @@ window.logout = async function() {
 
 // Also wire up header login modal trigger
 window.openLoginModal = window.openLoginModal || function() { 
-  document.getElementById('loginModal').classList.add('active'); 
+  console.log('🔐 Opening login modal...');
+  const modal = document.getElementById('loginModal');
+  if (modal) {
+    console.log('🔐 Modal element found, showing...');
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+    console.log('🔐 Modal should be visible now');
+  } else {
+    console.error('🔐 Login modal element not found!');
+  }
 };
 
 window.closeLoginModal = function() { 
-  document.getElementById('loginModal').classList.remove('active'); 
+  const modal = document.getElementById('loginModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
 };
 
 window.loginGoogle = async function() { 
@@ -3080,6 +3094,37 @@ if (currentUser && db) {
     </div>
   </div>
 </div>
+
+<script>
+// Ensure login functions are available after DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔐 Setting up login functions...');
+  
+  // Override login functions to ensure they work
+  window.openLoginModal = function() { 
+    console.log('🔐 Opening login modal...');
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+      console.log('🔐 Modal element found, showing...');
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+      console.log('🔐 Modal should be visible now');
+    } else {
+      console.error('🔐 Login modal element not found!');
+    }
+  };
+
+  window.closeLoginModal = function() { 
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('active');
+    }
+  };
+  
+  console.log('🔐 Login functions setup complete');
+});
+</script>
 
 </body>
 </html>
