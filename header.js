@@ -644,8 +644,8 @@
         .cs-ring {
           position:absolute; top:50%; left:50%;
           transform:translate(-50%,-50%);
-          border-radius:50%;
           border:1px solid rgba(34,211,238,0.35);
+          border-radius:50%;
           animation:csRingPulse 2.4s ease-out infinite;
           pointer-events:none;
         }
@@ -666,8 +666,7 @@
           display: inline-flex; align-items: center; gap: 6px;
           padding: 9px 14px; background: transparent; border: none;
           color: #94a3b8; font-size: 13px; font-weight: 500;
-          cursor: pointer; white-space: nowrap;
-          transition: color 0.2s, background 0.2s;
+          cursor: pointer; border-radius: 8px; transition: all 0.15s;
           font-family: 'Inter', sans-serif;
           vertical-align: top;
           position: relative;
