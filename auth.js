@@ -5,6 +5,13 @@
 // Подключается: <script src="auth.js"></script>
 // ═══════════════════════════════════════════════════════════════
 
+// Импорт Firebase Auth функций
+import {
+  getAuth, onAuthStateChanged, signOut, signInWithPopup,
+  GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 // Глобальные переменные для аутентификации
 let auth = null;
 let currentUser = null;
@@ -14,15 +21,24 @@ let isAdmin = false;
 async function initAuth() {
   console.log('🔐 Initializing centralized auth system...');
   
-  // Ждем загрузки Firebase из index.html
-  while (!window.auth || !window.firebaseApp) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-  
   try {
-    // Используем глобальные переменные Firebase из index.html
-    auth = window.auth;
-    
+    // Используем существующий Firebase app или создаем новый
+    if (window.firebaseApp) {
+      auth = getAuth(window.firebaseApp);
+    } else if (window.firebaseConfig) {
+      const app = initializeApp(window.firebaseConfig);
+      auth = getAuth(app);
+      window.firebaseApp = app;
+    } else {
+      console.warn('🔐 No Firebase config available');
+      return;
+    }
+
+    // Делаем доступным глобально
+    window.auth = auth;
+    window.currentUser = currentUser;
+    window.isAdmin = isAdmin;
+
     // Проверяем текущего пользователя
     const immediateUser = auth.currentUser;
     if (immediateUser) {
@@ -30,18 +46,24 @@ async function initAuth() {
       currentUser = immediateUser;
       window.currentUser = immediateUser;
       isAdmin = immediateUser.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
+      updateAuthUI();
     }
 
     // Отслеживаем изменения состояния аутентификации
-    window.onAuthStateChanged(auth, async user => {
+    onAuthStateChanged(auth, async user => {
       currentUser = user;
       window.currentUser = user;
       isAdmin = user && user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
       
       console.log('🔐 Auth state changed:', { user: user?.uid, isAdmin });
       
+      // Обновляем UI на всех страницах
+      updateAuthUI();
+      
       // Генерируем событие для других скриптов
-      document.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user, isAdmin } }));
+      if (typeof window.onAuthStateChanged === 'function') {
+        window.onAuthStateChanged(user);
+      }
     });
 
     console.log('✅ Centralized auth system initialized');
@@ -50,68 +72,24 @@ async function initAuth() {
   }
 }
 
-// Функции аутентификации
-window.loginGoogle = async function() {
-  if (!auth) {
-    console.error('🔐 Auth not initialized');
-    return;
-  }
+// Обновление UI элементов аутентификации
+function updateAuthUI() {
+  // Обновляем кнопки входа/выхода
+  const loggedOutElements = document.querySelectorAll('.auth-logged-out');
+  const loggedInElements = document.querySelectorAll('.auth-logged-in');
   
-  try {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    console.log('🔐 Google login successful');
-  } catch (error) {
-    console.error('🔐 Google login error:', error);
+  if (currentUser) {
+    // Пользователь вошел - скрываем кнопки входа, показываем профиль
+    loggedOutElements.forEach(el => el.style.display = 'none');
+    loggedInElements.forEach(el => el.style.display = 'flex');
+    
+    // Обновляем информацию о пользователе
+    updateUserInfo();
+  } else {
+    // Пользователь не вошел - показываем кнопки входа, скрываем профиль
+    loggedOutElements.forEach(el => el.style.display = 'flex');
+    loggedInElements.forEach(el => el.style.display = 'none');
   }
-};
-
-window.loginTwitter = async function() {
-  if (!auth) {
-    console.error('🔐 Auth not initialized');
-    return;
-  }
-  
-  try {
-    const provider = new TwitterAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    console.log('🔐 Twitter login successful');
-  } catch (error) {
-    console.error('🔐 Twitter login error:', error);
-  }
-};
-
-window.logout = async function() {
-  if (!auth) {
-    console.error('🔐 Auth not initialized');
-    return;
-  }
-  
-  try {
-    await signOut(auth);
-    console.log('🔐 Logout successful');
-  } catch (error) {
-    console.error('🔐 Logout error:', error);
-  }
-};
-
-window.isLoggedIn = function() {
-  return !!currentUser;
-};
-
-window.getCurrentUser = function() {
-  return currentUser;
-};
-
-window.isAdminUser = function() {
-  return isAdmin;
-};
-
-// Инициализация при загрузке
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initAuth);
-} else {
-  initAuth();
 }
 
 // Обновление информации о пользователе
