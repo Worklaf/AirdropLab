@@ -491,6 +491,17 @@
   </div>
 </div>
 
+<!-- Notifications Modal -->
+<div id="notificationsModal" class="modal">
+  <div class="modal-content modal-sm p-6 relative">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-bell text-blue-400"></i><span data-translate="notifications">Уведомления</span></h2>
+      <button onclick="closeNotificationsModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+    </div>
+    <div id="notificationsList" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2"><p class="text-slate-500 text-center py-8" data-translate="no_notifications">Нет уведомлений</p></div>
+  </div>
+</div>
+
 <!-- Feedback Modal -->
 <div id="feedbackModal" class="modal">
   <div class="modal-content modal-lg relative overflow-hidden">
@@ -633,10 +644,7 @@ import {
     serverTimestamp, 
     arrayUnion, 
     getCountFromServer,
-    increment,
-    limit,
-    writeBatch,
-    runTransaction
+    increment
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = window.firebaseConfig;
@@ -684,12 +692,9 @@ window.__firestoreExports = {
     query, 
     where,
     orderBy,
-    limit,
     serverTimestamp,
     arrayUnion,
-    increment,
-    writeBatch,
-    runTransaction
+    increment
 };
 
 // ✅ Auth функции с updateProfile
@@ -1398,27 +1403,30 @@ function updateNotificationBadge() {
   }
 }
 
-// Функция-обертка для вызова из index.html
-window.showNotificationsFromIndex = function() {
-  // Используем централизованную функцию из header.js
-  if (typeof window.loadNotifications === 'function') {
-    window.loadNotifications();
+// Функции-обертки для вызова из index.html
+window.showNotifications = function() {
+  if (typeof window.showNotifications === 'function') {
+    // Вызываем функцию из header.js
+    const headerFn = window.showNotifications;
+    delete window.showNotifications;
+    headerFn();
+    window.showNotifications = arguments.callee;
   } else {
     showToast('Уведомления загружаются...');
   }
 };
 
-// Для совместимости со старыми вызовами
-window.showNotifications = window.showNotificationsFromIndex;
-
 window.closeNotificationsModal = function() {
-  if (typeof window.closeNotificationsModalWheel === 'function') {
-    window.closeNotificationsModalWheel();
+  if (typeof window.closeNotificationsModal === 'function') {
+    // Вызываем функцию из header.js
+    const headerFn = window.closeNotificationsModal;
+    delete window.closeNotificationsModal;
+    headerFn();
+    window.closeNotificationsModal = arguments.callee;
   }
 };
 
 window.markNotificationAsRead = async function(notifId) {
-  // Используем централизованную функцию из header.js
   if (typeof window.markNotificationAsReadWheel === 'function') {
     await window.markNotificationAsReadWheel(notifId);
   } else {
@@ -1517,7 +1525,7 @@ onAuthStateChanged(auth, async function(user) {
         document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
 
         initUserSync(user.uid);
-        // Уведомления инициализируются централизованно через header.js
+        initNotificationsListener(user.uid);
 
         // ✅ Загружаем состояние hero из Firestore
         await loadHeroStateFromFirestore(user.uid);
