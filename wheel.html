@@ -2685,7 +2685,7 @@ if (currentUser && db) {
 
 <!-- Login Modal создается централизованно через auth-modal.js -->
 
-<script>
+  <script>
 // Ensure login functions are available after DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🔐 Setting up login functions...');
@@ -2695,6 +2695,12 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🔐 Firebase Auth functions available from auth.js');
   } else {
     console.error('🔐 Firebase Auth not available');
+  }
+  
+  // Инициализируем модальное окно если доступна функция
+  if (typeof window.initLoginModal === 'function') {
+    console.log('🎨 Initializing login modal...');
+    window.initLoginModal();
   }
   
   // Ждем загрузки модулей и проверяем функцию входа
@@ -2716,6 +2722,66 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 1000); // Даем 1 секунду на загрузку модулей
   
   // Функции аутентификации доступны из централизованной системы auth.js
+  
+  // Простые функции для модального окна
+  window.closeLoginModal = function() {
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('active');
+    }
+  };
+  
+  window.showLoginTab = function(tab) {
+    const emailForm = document.getElementById('emailLoginForm');
+    const googleForm = document.getElementById('googleLoginForm');
+    const emailTab = document.getElementById('emailLoginTab');
+    const googleTab = document.getElementById('googleLoginTab');
+    
+    if (tab === 'email') {
+      emailForm.style.display = 'block';
+      googleForm.style.display = 'none';
+      emailTab.classList.add('active');
+      googleTab.classList.remove('active');
+    } else {
+      emailForm.style.display = 'none';
+      googleForm.style.display = 'block';
+      emailTab.classList.remove('active');
+      googleTab.classList.add('active');
+    }
+  };
+  
+  window.loginWithEmail = function() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+      if (typeof showToast === 'function') {
+        showToast('Please enter email and password', 'warning');
+      }
+      return;
+    }
+    
+    // Здесь будет логика входа через email
+    console.log('🔐 Email login:', email);
+    if (typeof showToast === 'function') {
+      showToast('Email login functionality coming soon...', 'info');
+    }
+  };
+  
+  window.loginWithGoogle = function() {
+    // Здесь будет логика входа через Google
+    console.log('🔐 Google login requested');
+    if (typeof showToast === 'function') {
+      showToast('Google login functionality coming soon...', 'info');
+    }
+  };
+  
+  window.showRegisterModal = function() {
+    if (typeof showToast === 'function') {
+      showToast('Registration functionality coming soon...', 'info');
+    }
+  };
 });
 </script>
 
