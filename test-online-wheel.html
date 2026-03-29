@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Online Wheel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-white p-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-center">🎮 Test Online Wheel</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Test Controls -->
+      <div class="bg-gray-800 p-6 rounded-lg">
+        <h2 class="text-xl font-bold mb-4">🎛️ Test Controls</h2>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-2">Test User Balance:</label>
+            <input type="number" id="testBalance" value="1000" 
+                   class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium mb-2">Test User Name:</label>
+            <input type="text" id="testUserName" value="TestUser" 
+                   class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white">
+          </div>
+          
+          <button onclick="setupTestUser()" 
+                  class="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-user-plus mr-2"></i>Setup Test User
+          </button>
+          
+          <button onclick="simulateBetting()" 
+                  class="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-coins mr-2"></i>Simulate Betting
+          </button>
+          
+          <button onclick="simulateSpin()" 
+                  class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-dharmachakra mr-2"></i>Simulate Spin
+          </button>
+        </div>
+      </div>
+      
+      <!-- Test Results -->
+      <div class="bg-gray-800 p-6 rounded-lg">
+        <h2 class="text-xl font-bold mb-4">📊 Test Results</h2>
+        
+        <div id="testResults" class="space-y-2 text-sm">
+          <div class="text-gray-400">Click test buttons to see results...</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Instructions -->
+    <div class="mt-8 bg-gray-800 p-6 rounded-lg">
+      <h2 class="text-xl font-bold mb-4">📋 How to Test</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-300">
+        <li>Open wheel-of-fortune.html in browser</li>
+        <li>Switch to Online mode</li>
+        <li>Use this test page to simulate user data</li>
+        <li>Test betting functionality</li>
+        <li>Check console for errors</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    // Функция для установки тестового пользователя
+    function setupTestUser() {
+      const balance = document.getElementById('testBalance').value;
+      const userName = document.getElementById('testUserName').value;
+      
+      // Устанавливаем тестовые данные в window
+      window.userBalance = parseInt(balance) || 1000;
+      window.currentUser = {
+        uid: 'test-user-123',
+        displayName: userName,
+        email: 'test@example.com',
+        photoURL: 'https://www.gravatar.com/avatar/?d=mp'
+      };
+      
+      // Обновляем результаты
+      updateResults(`✅ Test user setup: ${userName} with ${balance} RGT balance`);
+      
+      // Если колесо открыто, обновляем баланс
+      if (window.location.href.includes('wheel-of-fortune.html')) {
+        if (typeof updateUserBalance === 'function') {
+          updateUserBalance();
+        }
+      }
+    }
+    
+    // Функция для симуляции ставок
+    function simulateBetting() {
+      if (!window.currentUser) {
+        updateResults('❌ Please setup test user first');
+        return;
+      }
+      
+      // Симулируем несколько участников
+      const participants = [
+        { userId: 'test-user-123', userName: 'TestUser', betAmount: 100 },
+        { userId: 'user-456', userName: 'Alice', betAmount: 50 },
+        { userId: 'user-789', userName: 'Bob', betAmount: 200 }
+      ];
+      
+      updateResults(`🎯 Simulated ${participants.length} participants`);
+      updateResults(`💰 Total prize pool: ${participants.reduce((sum, p) => sum + p.betAmount, 0)} RGT`);
+      
+      // Рассчитываем шансы
+      const totalBets = participants.reduce((sum, p) => sum + p.betAmount, 0);
+      participants.forEach(p => {
+        const chance = ((p.betAmount / totalBets) * 100).toFixed(1);
+        updateResults(`📊 ${p.userName}: ${p.betAmount} RGT (${chance}% chance)`);
+      });
+    }
+    
+    // Функция для симуляции вращения
+    function simulateSpin() {
+      if (!window.currentUser) {
+        updateResults('❌ Please setup test user first');
+        return;
+      }
+      
+      // Симулируем выбор победителя
+      const winner = Math.random() > 0.5 ? 'TestUser' : 'Alice';
+      const prizeAmount = Math.floor(Math.random() * 500) + 100;
+      
+      updateResults(`🎉 Winner: ${winner}`);
+      updateResults(`💎 Prize: ${prizeAmount} RGT`);
+      updateResults(`✅ Simulation completed successfully`);
+    }
+    
+    // Функция обновления результатов
+    function updateResults(message) {
+      const resultsDiv = document.getElementById('testResults');
+      const timestamp = new Date().toLocaleTimeString();
+      
+      resultsDiv.innerHTML += `
+        <div class="p-2 bg-gray-700 rounded">
+          <span class="text-gray-400">[${timestamp}]</span> ${message}
+        </div>
+      `;
+      
+      // Прокручиваем вниз
+      resultsDiv.scrollTop = resultsDiv.scrollHeight;
+    }
+    
+    // Автоматическая установка при загрузке
+    window.addEventListener('load', function() {
+      updateResults('🚀 Test page loaded. Ready for testing!');
+    });
+  </script>
+</body>
+</html>
