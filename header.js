@@ -2891,6 +2891,11 @@ function initFeedbacksListener(uid) {
         initFeedbacksListener(user.uid);
       }
       
+      // Обновляем бейдж уведомлений при изменении авторизации
+      if (typeof window.updateNotificationBadge === 'function') {
+        window.updateNotificationBadge();
+      }
+      
       // Обновляем мобильную авторизацию при изменении состояния
       if (typeof window.syncAuth === 'function') {
         window.syncAuth();
