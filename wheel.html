@@ -1685,6 +1685,20 @@ document.addEventListener('DOMContentLoaded', function() {
   loadData(); 
   setupSearchListener();
   
+  // Принудительно обновляем бейдж уведомлений после загрузки
+  setTimeout(() => {
+    if (typeof window.updateNotificationBadge === 'function') {
+      window.updateNotificationBadge();
+    }
+  }, 1000);
+  
+  // Добавляем интервал для периодического обновления бейджа
+  setInterval(() => {
+    if (typeof window.updateNotificationBadge === 'function' && window.currentUser) {
+      window.updateNotificationBadge();
+    }
+  }, 5000);
+  
   const richDescTextarea = document.getElementById('actRichDesc');
   if (richDescTextarea) {
     richDescTextarea.addEventListener('scroll', function() {
@@ -1697,12 +1711,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-
-setTimeout(() => {
-  if (projects.length > 0) {
-    applyFilters();
-  }
-}, 1500);
 
   const searchDeletedInput = document.getElementById('searchDeletedInput');
   if (searchDeletedInput) {
