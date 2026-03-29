@@ -2886,6 +2886,16 @@ function initFeedbacksListener(uid) {
         window.adminFeedbacks = [];
         updateFeedbackBadge();
         if (adminFeedbacksUnsubscribe) { adminFeedbacksUnsubscribe(); adminFeedbacksUnsubscribe = null; }
+        
+        // Отписываемся от слушателя уведомлений при выходе
+        if (window.notificationsUnsubscribe) {
+          window.notificationsUnsubscribe();
+          window.notificationsUnsubscribe = null;
+        }
+        window.allNotifications = [];
+        if (typeof window.updateNotificationBadge === 'function') {
+          window.updateNotificationBadge();
+        }
       } else {
         if (deskFP) deskFP.classList.remove('hidden');
         initFeedbacksListener(user.uid);
@@ -3092,6 +3102,68 @@ function initFeedbacksListener(uid) {
     
     // Загружаем уведомления
     window.loadNotifications();
+  };
+
+  // Функция инициализации слушателя уведомлений в реальном времени
+  window.initNotificationsListener = function(uid) {
+    if (!window.db) return;
+    
+    // Используем window.__firestoreExports как в других функциях
+    const fx = window.__firestoreExports;
+    if (!fx || !fx.collection || !fx.query || !fx.where || !fx.orderBy || !fx.limit || !fx.onSnapshot) {
+      console.error('Firestore functions not available for notifications listener');
+      return;
+    }
+    
+    // Отписываемся от предыдущего слушателя если есть
+    if (window.notificationsUnsubscribe) {
+      window.notificationsUnsubscribe();
+      window.notificationsUnsubscribe = null;
+    }
+    
+    const isAdmin = uid === "SAkz4mdW9reDaIsvqigCNZhEKJR2";
+    
+    try {
+      let q;
+      if (isAdmin) {
+        q = fx.query(fx.collection(window.db, "notifications"), 
+                     fx.orderBy('createdAt', 'desc'),
+                     fx.limit(50));
+      } else {
+        q = fx.query(fx.collection(window.db, "notifications"), 
+                     fx.where('userId', '==', uid),
+                     fx.orderBy('createdAt', 'desc'),
+                     fx.limit(50));
+      }
+
+      window.notificationsUnsubscribe = fx.onSnapshot(q, (snapshot) => {
+        const items = [];
+        snapshot.forEach((d) => {
+          items.push({ id: d.id, ...d.data() });
+        });
+
+        items.sort((a, b) => (b.createdAt?.toDate() || new Date(b.createdAt || 0)) - (a.createdAt?.toDate() || new Date(a.createdAt || 0)));
+        window.allNotifications = items;
+
+        // Обновляем бейдж в реальном времени
+        if (typeof window.updateNotificationBadge === 'function') {
+          window.updateNotificationBadge();
+        }
+
+        // Обновляем рендер если модалка открыта
+        if (typeof window.renderNotificationsInWheel === 'function') {
+          window.renderNotificationsInWheel(items);
+        }
+      }, (err) => {
+        console.error('Notifications listener error:', err);
+        window.allNotifications = [];
+        if (typeof window.updateNotificationBadge === 'function') {
+          window.updateNotificationBadge();
+        }
+      });
+    } catch(e) {
+      console.error('Error init notifications listener:', e);
+    }
   };
 
   // Функция загрузки уведомлений
