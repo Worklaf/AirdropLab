@@ -131,7 +131,7 @@
     <!-- Кнопки вставляет JS -->
   </div>
   <span class="px-2.5 py-1 bg-gradient-to-r from-cyan-600 to-cyan-500 rounded-md text-[10px] font-black text-white uppercase">
-    <i class="fas fa-user-shield mr-1"></i>Admin
+    <i class="fas fa-user-shield mr-1"></i><span data-translate="admin_badge_label">Admin</span>
   </span>
 </div>
 
@@ -145,7 +145,7 @@
                 </div>
                 <div id="loggedInView" class="hidden flex items-center gap-3">
                   <div class="text-right hidden sm:block cursor-pointer" id="userNameWrapper">
-                    <div id="userName" class="text-xs font-bold text-white hover:text-cyan-400 transition-colors">Researcher</div>
+                    <div id="userName" class="text-xs font-bold text-white hover:text-cyan-400 transition-colors" data-translate="default_user_name">Researcher</div>
                     <div class="text-[10px] text-emerald-400 flex items-center justify-end gap-1.5">
                       <span class="relative flex h-1.5 w-1.5">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -194,7 +194,7 @@
               </div>
               <div id="mobLoggedInView" style="display:none;align-items:center;gap:6px;" class="flex">
                 <div style="position:relative;flex-shrink:0;cursor:pointer;"
-                  onclick="var d=document.getElementById('userAvatarWrapper');if(d)d.click();" title="Профиль">
+                  onclick="var d=document.getElementById('userAvatarWrapper');if(d)d.click();" data-translate-title="profile_tooltip">
                   <div style="position:absolute;inset:-2px;background:linear-gradient(135deg,#22d3ee,#3b82f6);border-radius:50%;filter:blur(4px);opacity:0.5;"
                        onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.5'"></div>
                   <img id="mobUserAvatar" src="" style="position:relative;width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(34,211,238,0.5);">
@@ -433,8 +433,8 @@
                 </button>
                 <div class="al-nav-dropdown">
                   <a href="wheel-of-fortune.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-dharmachakra"></i>Wheel of Fortune (RGT)</a>
-                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-dice-d20"></i>t('lucky_draw_soon')</a>
-                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-card-diamonds"></i>t('card_game_soon')</a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-dice-d20"></i>Lucky Draw (скоро)</a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-card-diamonds"></i>Card Game (скоро)</a>
                 </div>
               </div>
 
@@ -644,8 +644,8 @@
         .cs-ring {
           position:absolute; top:50%; left:50%;
           transform:translate(-50%,-50%);
-          border:1px solid rgba(34,211,238,0.35);
           border-radius:50%;
+          border:1px solid rgba(34,211,238,0.35);
           animation:csRingPulse 2.4s ease-out infinite;
           pointer-events:none;
         }
@@ -666,7 +666,8 @@
           display: inline-flex; align-items: center; gap: 6px;
           padding: 9px 14px; background: transparent; border: none;
           color: #94a3b8; font-size: 13px; font-weight: 500;
-          cursor: pointer; border-radius: 8px; transition: all 0.15s;
+          cursor: pointer; white-space: nowrap;
+          transition: color 0.2s, background 0.2s;
           font-family: 'Inter', sans-serif;
           vertical-align: top;
           position: relative;
@@ -741,9 +742,11 @@
       var currentLang = localStorage.getItem('airdropLabLang') || 'ru';
       
       if (subscribed) {
-        var subscribedText = currentLang === 'en' 
-          ? 'You are subscribed — we will notify you at launch!'
-          : 'Вы подписаны — уведомим при запуске!';
+        var subscribedText = typeof t === 'function' 
+          ? t('notify_subscribed_text')
+          : (currentLang === 'en' 
+            ? 'You are subscribed — we will notify you at launch!'
+            : 'Вы подписаны — уведомим при запуске!');
         area.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;'
           + 'padding:12px;border-radius:12px;background:rgba(52,211,153,0.08);'
           + 'border:1px solid rgba(52,211,153,0.2);">'
@@ -751,9 +754,11 @@
           + '<span style="color:#34d399;font-size:13px;font-weight:600;">' + subscribedText + '</span>'
           + '</div>';
       } else {
-        var notifyText = currentLang === 'en' 
-          ? 'Notify me on launch'
-          : 'Уведомить меня о запуске';
+        var notifyText = typeof t === 'function'
+          ? t('notify_me_on_launch')
+          : (currentLang === 'en' 
+            ? 'Notify me on launch'
+            : 'Уведомить меня о запуске');
         area.innerHTML = '<button id="csNotifyBtn" onclick="window.csRequestNotify()"'
           + ' style="width:100%;padding:13px;border-radius:12px;cursor:pointer;'
           + 'background:linear-gradient(135deg,rgba(34,211,238,0.15),rgba(139,92,246,0.15));'
@@ -774,7 +779,9 @@
       var btn = document.getElementById('csNotifyBtn');
       if (btn) {
         var currentLang = localStorage.getItem('airdropLabLang') || 'ru';
-        var connectingText = currentLang === 'en' ? 'Connecting...' : 'Подключаемся...';
+        var connectingText = typeof t === 'function'
+          ? t('connecting_status')
+          : (currentLang === 'en' ? 'Connecting...' : 'Подключаемся...');
         btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#22d3ee;"></i><span>' + connectingText + '</span>';
         btn.disabled = true;
       }
@@ -787,9 +794,11 @@
           if (p === 'granted') {
             var currentLang = localStorage.getItem('airdropLabLang') || 'ru';
             var notificationTitle = 'AirdropLab';
-            var notificationBody = currentLang === 'en' 
-              ? 'You are subscribed! We will notify you when the section launches 🚀'
-              : 'Вы подписаны! Уведомим при запуске раздела 🚀';
+            var notificationBody = typeof t === 'function'
+              ? t('notify_subscribed_notification')
+              : (currentLang === 'en' 
+                ? 'You are subscribed! We will notify you when the section launches 🚀'
+                : 'Вы подписаны! Уведомим при запуске раздела 🚀');
             new Notification(notificationTitle, {
               body: notificationBody,
               icon: '/favicon.ico'
@@ -959,13 +968,13 @@
           || txt.toLowerCase().includes('сброс')
           || txt.toLowerCase().includes('reset');
         if (isClaimed) {
-          var lbl = (window.currentLang === 'en') ? 'Claimed' : 'Готово';
+          var lbl = (window.currentLang === 'en') ? (typeof t === 'function' ? t('claimed_label') : 'Claimed') : (typeof t === 'function' ? t('claimed_label') : 'Готово');
           mobClaim.innerHTML = '🔒 <span style="font-size:11px;">' + lbl + '</span>';
           mobClaim.style.background   = 'rgba(71,85,105,0.2)';
           mobClaim.style.borderColor  = 'rgba(71,85,105,0.35)';
           mobClaim.style.color        = '#64748b';
         } else {
-          var lbl = (window.currentLang === 'en') ? 'Claim' : 'Клейм';
+          var lbl = (window.currentLang === 'en') ? (typeof t === 'function' ? t('claim_label') : 'Claim') : (typeof t === 'function' ? t('claim_label') : 'Клейм');
           mobClaim.innerHTML = '🧪 <span style="font-size:11px;">' + lbl + '</span>';
           mobClaim.style.background   = 'rgba(8,145,178,0.2)';
           mobClaim.style.borderColor  = 'rgba(34,211,238,0.3)';
@@ -1061,41 +1070,70 @@ window.updateMobileAdminButtons = function() {
     if (deskAddBtn) deskAddBtn.style.display = 'flex';
     if (mobAddBtn) mobAddBtn.style.display = 'flex';
 
-    addDesktopButton("<button onclick=\"typeof openStats==='function'&&openStats()\" class=\"admin-action-btn admin-btn-orange\"><i class=\"fas fa-chart-pie text-base\"></i></button>");
-    addDesktopButton("<button onclick=\"typeof migrateToFirestore==='function'&&migrateToFirestore()\" class=\"admin-action-btn admin-btn-purple\"><i class=\"fas fa-cloud-upload-alt text-base\"></i></button>");
-    addDesktopButton("<button onclick=\"typeof exportAllData==='function'&&exportAllData()\" class=\"admin-action-btn admin-btn-emerald\"><i class=\"fas fa-file-export text-base\"></i></button>");
-    addDesktopButton("<button onclick=\"typeof openDeletedProjects==='function'&&openDeletedProjects()\" class=\"admin-action-btn admin-btn-red\"><i class=\"fas fa-trash-restore text-base\"></i></button>");
-    addDesktopButton("<button onclick=\"typeof importAllData==='function'&&importAllData()\" class=\"admin-action-btn admin-btn-purple\"><i class=\"fas fa-file-import text-base\"></i></button>");
+    addDesktopButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange"><i class="fas fa-chart-pie text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple"><i class="fas fa-cloud-upload-alt text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald"><i class="fas fa-file-export text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red"><i class="fas fa-trash-restore text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof importAllData===\'function\'&&importAllData()" class="admin-action-btn admin-btn-purple"><i class="fas fa-file-import text-base"></i></button>');
     
-    addMobileButton("<button onclick=\"typeof openStats==='function'&&openStats()\" class=\"admin-action-btn admin-btn-orange\" " + btnStyle + " title=\"" + t('statistics_title') + "\"><i class=\"fas fa-chart-pie\"></i></button>");
-    addMobileButton("<button onclick=\"typeof migrateToFirestore==='function'&&migrateToFirestore()\" class=\"admin-action-btn admin-btn-purple\" " + btnStyle + " title=\"" + t('upload_title') + "\"><i class=\"fas fa-cloud-upload-alt\"></i></button>");
-    addMobileButton("<button onclick=\"typeof exportAllData==='function'&&exportAllData()\" class=\"admin-action-btn admin-btn-emerald\" " + btnStyle + " title=\"" + t('export_title') + "\"><i class=\"fas fa-file-export\"></i></button>");
-    addMobileButton("<button onclick=\"typeof openDeletedProjects==='function'&&openDeletedProjects()\" class=\"admin-action-btn admin-btn-red\" " + btnStyle + " title=\"" + t('deleted_title') + "\"><i class=\"fas fa-trash-restore\"></i></button>");
+    addMobileButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" ' + btnStyle + ' title="Статистика"><i class="fas fa-chart-pie"></i></button>');
+    addMobileButton('<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Загрузить"><i class="fas fa-cloud-upload-alt"></i></button>');
+    addMobileButton('<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт"><i class="fas fa-file-export"></i></button>');
+    addMobileButton('<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" ' + btnStyle + ' title="Удалённые"><i class="fas fa-trash-restore"></i></button>');
 
   } else if (isFaucetPage) {
     if (deskAddBtn) deskAddBtn.style.display = 'flex';
     if (mobAddBtn) mobAddBtn.style.display = 'flex';
 
     // Кнопки для кранов
-    addDesktopButton("<button onclick=\"typeof toggleEditMode==='function'&&toggleEditMode()\" class=\"admin-action-btn admin-btn-purple\" title=\"" + t('edit_mode') + "\"><i id=\"editModeIcon\" class=\"fas fa-pen text-base\"></i></button>");
-    addDesktopButton("<button onclick=\"typeof showAllHiddenFaucets==='function'&&showAllHiddenFaucets()\" class=\"admin-action-btn admin-btn-red\" title=\"" + t('show_hidden_title') + "\"><i class=\"fas fa-eye-slash text-base\"></i></button>");
-    addDesktopButton("<button onclick=\"typeof openStats==='function'&&openStats()\" class=\"admin-action-btn admin-btn-orange\" title=\"" + t('statistics_title') + "\"><i class=\"fas fa-chart-pie text-base\"></i></button>");
-    addDesktopButton("<button onclick=\"window.exportFaucetData()\" class=\"admin-action-btn admin-btn-emerald\" title=\"" + t('export_faucets_title') + "\"><i class=\"fas fa-file-export text-base\"></i></button>");
-    addDesktopButton("<button onclick=\"window.importFaucetData()\" class=\"admin-action-btn admin-btn-purple\" title=\"" + t('import_faucets_title') + "\"><i class=\"fas fa-file-import text-base\"></i></button>");
+    addDesktopButton('<button onclick="typeof toggleEditMode===\'function\'&&toggleEditMode()" class="admin-action-btn admin-btn-purple" title="Режим редактирования"><i id="editModeIcon" class="fas fa-pen text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof showAllHiddenFaucets===\'function\'&&showAllHiddenFaucets()" class="admin-action-btn admin-btn-red" title="Показать скрытые"><i class="fas fa-eye-slash text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" title="Статистика"><i class="fas fa-chart-pie text-base"></i></button>');
+    addDesktopButton('<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" title="Экспорт кранов"><i class="fas fa-file-export text-base"></i></button>');
+    addDesktopButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" title="Импорт кранов"><i class="fas fa-file-import text-base"></i></button>');
 
-    addMobileButton("<button onclick=\"typeof toggleEditMode==='function'&&toggleEditMode()\" class=\"admin-action-btn admin-btn-purple\" " + btnStyle + " title=\"" + t('edit_mode') + "\"><i class=\"fas fa-pen\"></i></button>");
-    addMobileButton("<button onclick=\"typeof openStats==='function'&&openStats()\" class=\"admin-action-btn admin-btn-orange\" " + btnStyle + " title=\"" + t('statistics_title') + "\"><i class=\"fas fa-chart-pie\"></i></button>");
-    addMobileButton("<button onclick=\"window.exportFaucetData()\" class=\"admin-action-btn admin-btn-emerald\" " + btnStyle + " title=\"" + t('export_faucets_title') + "\"><i class=\"fas fa-file-export\"></i></button>");
-    addMobileButton("<button onclick=\"window.importFaucetData()\" class=\"admin-action-btn admin-btn-purple\" " + btnStyle + " title=\"" + t('import_faucets_title') + "\"><i class=\"fas fa-file-import\"></i></button>");
+    addMobileButton('<button onclick="typeof toggleEditMode===\'function\'&&toggleEditMode()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Режим"><i class="fas fa-pen"></i></button>');
+    addMobileButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" ' + btnStyle + ' title="Статистика"><i class="fas fa-chart-pie"></i></button>');
+    addMobileButton('<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт"><i class="fas fa-file-export"></i></button>');
+    addMobileButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Импорт"><i class="fas fa-file-import"></i></button>');
+  }
 
   deskAdminBtns.innerHTML = buttonsHTML;
   mobAdminBtns.innerHTML = mobButtonsHTML;
+  
+  // Update button titles with translations
+  const updateButtonTitles = () => {
+    const lang = typeof window.t === 'function' ? window.t : (k) => k;
+    const titleMap = {
+      'Статистика': lang('btn_statistics'),
+      'Загрузить': lang('btn_upload'),
+      'Экспорт': lang('btn_export'),
+      'Экспорт кранов': lang('btn_export_faucets'),
+      'Импорт кранов': lang('btn_import_faucets'),
+      'Удалённые': lang('btn_deleted'),
+      'Режим редактирования': lang('btn_edit_mode'),
+      'Показать скрытые': lang('btn_show_hidden'),
+      'Импорт': lang('btn_import'),
+      'Режим': lang('btn_mode'),
+      'Удалить': lang('delete_btn')
+    };
+    
+    document.querySelectorAll('[title]').forEach(btn => {
+      const title = btn.getAttribute('title');
+      if (titleMap[title]) {
+        btn.setAttribute('title', titleMap[title]);
+      }
+    });
+  };
+  
+  setTimeout(updateButtonTitles, 10);
 };
 
 // Функции для экспорта/импорта данных
 window.exportFaucetData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
+    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
+    if (typeof showToast === 'function') showToast(msg); else alert(msg);
     return;
   }
   
@@ -1120,9 +1158,9 @@ window.exportFaucetData = function() {
       URL.revokeObjectURL(url);
       
       if (typeof showToast === 'function') {
-        showToast(`Экспортировано ${faucetsData.length} кранов!`);
+        showToast(typeof t === 'function' ? t('faucets_exported').replace('{count}', faucetsData.length) : `Экспортировано ${faucetsData.length} кранов!`);
       } else {
-        alert(`Экспортировано ${faucetsData.length} кранов!`);
+        alert(typeof t === 'function' ? t('faucets_exported').replace('{count}', faucetsData.length) : `Экспортировано ${faucetsData.length} кранов!`);
       }
     };
     
@@ -1165,7 +1203,7 @@ window.exportFaucetData = function() {
               console.log('Using localStorage fallback');
               exportData(JSON.parse(storedData));
             } else {
-              throw new Error('Нет данных для экспорта ни в Firebase, ни в localStorage');
+              throw new Error(typeof t === 'function' ? t('no_faucet_export_data') : 'Нет данных для экспорта ни в Firebase, ни в localStorage');
             }
           });
         return;
@@ -1178,22 +1216,23 @@ window.exportFaucetData = function() {
       console.log('Using localStorage data');
       exportData(JSON.parse(storedData));
     } else {
-      throw new Error('Нет данных для экспорта');
+      throw new Error(typeof t === 'function' ? t('no_export_data') : 'Нет данных для экспорта');
     }
     
   } catch (error) {
     console.error('Ошибка экспорта кранов:', error);
     if (typeof showToast === 'function') {
-      showToast('Ошибка экспорта: ' + error.message);
+      showToast((typeof t === 'function' ? t('export_error') : 'Ошибка экспорта: ') + error.message);
     } else {
-      alert('Ошибка экспорта: ' + error.message);
+      alert((typeof t === 'function' ? t('export_error') : 'Ошибка экспорта: ') + error.message);
     }
   }
 };
 
 window.importFaucetData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
+    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
+    if (typeof showToast === 'function') showToast(msg); else alert(msg);
     return;
   }
   
@@ -1218,7 +1257,7 @@ window.importFaucetData = function() {
         
         // Проверяем структуру данных
         if (!Array.isArray(faucetsData)) {
-          throw new Error('Некорректный формат данных - ожидается массив кранов');
+          throw new Error(typeof t === 'function' ? t('invalid_faucet_format') : 'Некорректный формат данных - ожидается массив кранов');
         }
         
         // Сохраняем в localStorage как бэкап
@@ -1277,10 +1316,11 @@ window.importFaucetData = function() {
             batch.commit().then(() => {
               console.log(`✅ Сохранено ${faucetsData.length} кранов в Firebase`);
               
+              const msg = typeof t === 'function' ? t('faucets_imported_firebase').replace('{count}', faucetsData.length) : `Импортировано ${faucetsData.length} кранов в Firebase!`;
               if (typeof showToast === 'function') {
-                showToast(`Импортировано ${faucetsData.length} кранов в Firebase!`);
+                showToast(msg);
               } else {
-                alert(`Импортировано ${faucetsData.length} кранов в Firebase!`);
+                alert(msg);
               }
               
               // Если на faucet.html, перезагружаем данные
@@ -1291,37 +1331,41 @@ window.importFaucetData = function() {
               }
             }).catch(error => {
               console.error('Ошибка сохранения в Firebase:', error);
+              const msg = typeof t === 'function' ? t('faucets_saved_local_firebase_error').replace('{count}', faucetsData.length).replace('{error}', error.message) : `Сохранено локально ${faucetsData.length} кранов. Ошибка Firebase: ${error.message}`;
               if (typeof showToast === 'function') {
-                showToast(`Сохранено локально ${faucetsData.length} кранов. Ошибка Firebase: ${error.message}`);
+                showToast(msg);
               } else {
-                alert(`Сохранено локально ${faucetsData.length} кранов. Ошибка Firebase: ${error.message}`);
+                alert(msg);
               }
             });
           } else {
             // Firebase доступен но функции не готовы
             console.log('Firebase available but functions not ready');
+            const msg = typeof t === 'function' ? t('faucets_imported_local').replace('{count}', faucetsData.length) : `Импортировано ${faucetsData.length} кранов локально`;
             if (typeof showToast === 'function') {
-              showToast(`Импортировано ${faucetsData.length} кранов локально`);
+              showToast(msg);
             } else {
-              alert(`Импортировано ${faucetsData.length} кранов локально`);
+              alert(msg);
             }
           }
         } else {
           // Firebase недоступен
           console.log('Firebase not available, using localStorage only');
+          const msg = typeof t === 'function' ? t('faucets_imported_localstorage').replace('{count}', faucetsData.length) : `Импортировано ${faucetsData.length} кранов в localStorage`;
           if (typeof showToast === 'function') {
-            showToast(`Импортировано ${faucetsData.length} кранов в localStorage`);
+            showToast(msg);
           } else {
-            alert(`Импортировано ${faucetsData.length} кранов в localStorage`);
+            alert(msg);
           }
         }
         
       } catch (error) {
         console.error('Ошибка импорта кранов:', error);
+        const msg = typeof t === 'function' ? t('import_error').replace('{error}', error.message) : 'Ошибка импорта: ' + error.message;
         if (typeof showToast === 'function') {
-          showToast('Ошибка импорта: ' + error.message);
+          showToast(msg);
         } else {
-          alert('Ошибка импорта: ' + error.message);
+          alert(msg);
         }
       }
     };
@@ -1374,27 +1418,31 @@ async function saveFaucetsToFirebase(faucetsData) {
 
 window.exportGuidesData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
+    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
+    if (typeof showToast === 'function') showToast(msg); else alert(msg);
     return;
   }
   // Здесь будет логика экспорта данных по гайдам
+  const msg = typeof t === 'function' ? t('guides_export_message') : 'Экспорт данных гайдов...';
   if (typeof showToast === 'function') {
-    showToast('Экспорт данных гайдов...');
+    showToast(msg);
   } else {
-    alert('Экспорт данных гайдов...');
+    alert(msg);
   }
 };
 
 window.importGuidesData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
+    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
+    if (typeof showToast === 'function') showToast(msg); else alert(msg);
     return;
   }
   // Здесь будет логика импорта данных по гайдам
+  const msg = typeof t === 'function' ? t('guides_import_message') : 'Импорт данных гайдов...';
   if (typeof showToast === 'function') {
-    showToast('Импорт данных гайдов...');
+    showToast(msg);
   } else {
-    alert('Импорт данных гайдов...');
+    alert(msg);
   }
 };
 
@@ -1407,8 +1455,9 @@ window.importGuidesData = function() {
 // ================================================
 window.importAllData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    if (typeof showToast === 'function') showToast('Нет доступа'); 
-    else alert('Нет доступа');
+    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
+    if (typeof showToast === 'function') showToast(msg); 
+    else alert(msg);
     return;
   }
   
@@ -1433,20 +1482,21 @@ window.importAllData = function() {
         } else if (raw.data && Array.isArray(raw.data)) {
           projectsToImport = raw.data;
         } else {
-          throw new Error('Неверный формат JSON. Ожидается массив проектов или объект с полем "projects"');
+          throw new Error(typeof t === 'function' ? t('invalid_json_format') : 'Неверный формат JSON. Ожидается массив проектов или объект с полем "projects"');
         }
 
         if (projectsToImport.length === 0) {
-          throw new Error('В файле нет проектов');
+          throw new Error(typeof t === 'function' ? t('no_projects_in_file') : 'В файле нет проектов');
         }
 
         if (!window.db || !window.__firestoreExports) {
-          throw new Error('Firebase не инициализирован');
+          throw new Error(typeof t === 'function' ? t('firebase_not_initialized') : 'Firebase не инициализирован');
         }
 
         const { collection, doc, setDoc, serverTimestamp } = window.__firestoreExports;
         
-        showToast(`Загрузка ${projectsToImport.length} проектов...`);
+        const loadMsg = typeof t === 'function' ? t('loading_projects_modal').replace('{count}', projectsToImport.length) : `Загрузка ${projectsToImport.length} проектов...`;
+        if (typeof showToast === 'function') showToast(loadMsg);
 
         for (const p of projectsToImport) {
           const id = p.id || ('project_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));
@@ -1459,13 +1509,14 @@ window.importAllData = function() {
           }, { merge: true });
         }
 
-        showToast(`✅ Успешно импортировано ${projectsToImport.length} проектов!`);
+        const successMsg = typeof t === 'function' ? t('projects_imported_success').replace('{count}', projectsToImport.length) : `✅ Успешно импортировано ${projectsToImport.length} проектов!`;
+        if (typeof showToast === 'function') showToast(successMsg);
         setTimeout(() => location.reload(), 1500);
 
       } catch (error) {
         console.error('Ошибка импорта проектов:', error);
         if (typeof showToast === 'function') {
-          showToast('Ошибка: ' + error.message);
+          showToast((typeof t === 'function' ? 'Ошибка: ' : 'Ошибка: ') + error.message);
         } else {
           alert('Ошибка: ' + error.message);
         }
@@ -1543,18 +1594,20 @@ if (typeof window !== 'undefined') {
 // ════════════════════════════════════════════════════
 window.openStats = function() { 
   if (!currentUser) { 
+    const msg = typeof t === 'function' ? t('login_prompt') : 'Войдите';
     if (typeof showToast === 'function') {
-      showToast('Войдите'); 
+      showToast(msg); 
     } else {
-      alert('Войдите');
+      alert(msg);
     }
     return; 
   } 
   if (currentUser.uid !== ADMIN_UID) { 
+    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
     if (typeof showToast === 'function') {
-      showToast('Нет доступа'); 
+      showToast(msg); 
     } else {
-      alert('Нет доступа');
+      alert(msg);
     }
     return; 
   } 
@@ -1563,10 +1616,11 @@ window.openStats = function() {
 
 window.openDeletedProjects = function() { 
   if (!isAdminMode) { 
+    const msg = typeof t === 'function' ? t('only_admin') : 'Только для админа';
     if (typeof showToast === 'function') {
-      showToast('Только для админа'); 
+      showToast(msg); 
     } else {
-      alert('Только для админа');
+      alert(msg);
     }
     return; 
   }
@@ -1581,18 +1635,20 @@ window.openDeletedProjects = function() {
 
 window.migrateToFirestore = function() { 
   if (!currentUser) { 
+    const msg = typeof t === 'function' ? t('login_prompt') : 'Войдите';
     if (typeof showToast === 'function') {
-      showToast('Войдите'); 
+      showToast(msg); 
     } else {
-      alert('Войдите');
+      alert(msg);
     }
     return; 
   }
   if (currentUser.uid !== ADMIN_UID) { 
+    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
     if (typeof showToast === 'function') {
-      showToast('Нет доступа'); 
+      showToast(msg); 
     } else {
-      alert('Нет доступа');
+      alert(msg);
     }
     return; 
   }
@@ -1630,8 +1686,9 @@ window.migrateToFirestore = function() {
           
           batch.commit().then(() => {
             console.log(`✅ Мигрировано ${projects.length} проектов в Firebase`);
+            const msg = typeof t === 'function' ? t('projects_migrated_firebase').replace('{count}', projects.length) : `Мигрировано ${projects.length} проектов в Firebase!`;
             if (typeof showToast === 'function') {
-              showToast(`Мигрировано ${projects.length} проектов в Firebase!`);
+              showToast(msg);
             }
           }).catch(error => {
             console.error('Migration error:', error);
@@ -1640,13 +1697,15 @@ window.migrateToFirestore = function() {
             }
           });
         } else {
+          const msg = typeof t === 'function' ? t('firebase_functions_unavailable') : 'Firebase функции недоступны';
           if (typeof showToast === 'function') {
-            showToast('Firebase функции недоступны');
+            showToast(msg);
           }
         }
       } else {
+        const msg = typeof t === 'function' ? t('migrating_projects').replace('{count}', projects.length) : `Миграция ${projects.length} проектов...`;
         if (typeof showToast === 'function') {
-          showToast(`Миграция ${projects.length} проектов...`);
+          showToast(msg);
         }
       }
     } catch (error) {
@@ -1656,26 +1715,29 @@ window.migrateToFirestore = function() {
       }
     }
   } else {
+    const msg = typeof t === 'function' ? t('no_migration_data') : 'Нет данных для миграции';
     if (typeof showToast === 'function') {
-      showToast('Нет данных для миграции');
+      showToast(msg);
     }
   }
 };
 
 window.exportAllData = function() { 
   if (!currentUser) { 
+    const msg = typeof t === 'function' ? t('login_prompt') : 'Войдите';
     if (typeof showToast === 'function') {
-      showToast('Войдите'); 
+      showToast(msg); 
     } else {
-      alert('Войдите');
+      alert(msg);
     }
     return; 
   }
   if (currentUser.uid !== ADMIN_UID) { 
+    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
     if (typeof showToast === 'function') {
-      showToast('Нет доступа'); 
+      showToast(msg); 
     } else {
-      alert('Нет доступа');
+      alert(msg);
     }
     return; 
   }
@@ -1696,8 +1758,9 @@ window.exportAllData = function() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
+      const msg = typeof t === 'function' ? t('projects_exported').replace('{count}', projects.length) : `Экспортировано ${projects.length} проектов`;
       if (typeof showToast === 'function') {
-        showToast(`Экспортировано ${projects.length} проектов`);
+        showToast(msg);
       }
     } catch (error) {
       console.error('Export error:', error);
@@ -1706,8 +1769,9 @@ window.exportAllData = function() {
       }
     }
   } else {
+    const msg = typeof t === 'function' ? t('no_export_data') : 'Нет данных для экспорта';
     if (typeof showToast === 'function') {
-      showToast('Нет данных для экспорта');
+      showToast(msg);
     }
   }
 };
@@ -1902,10 +1966,11 @@ window.openFeedbackListModal = function() {
   }
   
   if (!window.currentUser) { 
+    const msg = typeof t === 'function' ? t('login_prompt') : 'Войдите';
     if (typeof showToast === 'function') {
-      showToast('Войдите');
+      showToast(msg);
     } else if (typeof toast === 'function') {
-      toast('Войдите');
+      toast(msg);
     }
     if (typeof openLoginModal === 'function') openLoginModal(); 
     return; 
@@ -3018,7 +3083,7 @@ function initFeedbacksListener(uid) {
     content.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h3 style="color: #22d3ee; font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-          <i class="fas fa-bell"></i> ' + t('notifications') + '
+          <i class="fas fa-bell"></i> Уведомления
         </h3>
         <button onclick="window.closeNotificationsModal()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer; padding: 4px;">&times;</button>
       </div>
@@ -3037,7 +3102,7 @@ function initFeedbacksListener(uid) {
         <div style="position: relative;">
           <span id="unreadBadge-games" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
           <button onclick="filterNotifications('games')" class="filter-btn" data-filter="games" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            🎮 ' + t('games') + ' <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+            🎮 Игры <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
           </button>
         </div>
         
@@ -3045,7 +3110,7 @@ function initFeedbacksListener(uid) {
         <div style="position: relative;">
           <span id="unreadBadge-jackpot_win" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
           <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            🏆 ' + t('jackpot') + ' <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+            🏆 Джекпот <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
           </button>
         </div>
         
@@ -3060,10 +3125,10 @@ function initFeedbacksListener(uid) {
         <!-- Кнопки управления -->
         <div style="margin-left: auto; display: flex; gap: 8px;">
           <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            ✓ ' + t('notif_mark_all_read') + '
+            ✓ Прочитать все
           </button>
           <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            🗑️ ' + t('notif_clear_all') + '
+            🗑️ Очистить все
           </button>
         </div>
       </div>
@@ -3072,7 +3137,7 @@ function initFeedbacksListener(uid) {
       <div id="notificationsList" style="max-height: 400px; overflow-y: auto;">
         <div style="text-align: center; padding: 40px; color: #94a3b8;">
           <i class="fas fa-bell" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
-          ' + t('notif_loading') + '
+          Загрузка уведомлений...
         </div>
       </div>
     `;
@@ -3299,7 +3364,7 @@ function initFeedbacksListener(uid) {
       listEl.innerHTML = `
         <div style="text-align: center; color: #94a3b8; padding: 40px;">
           <i class="fas fa-bell-slash" style="font-size: 24px; margin-bottom: 10px;"></i>
-          <div>' + t('no_notifications') + '</div>
+          <div>У вас пока нет уведомлений</div>
         </div>
       `;
       return;
@@ -3308,53 +3373,53 @@ function initFeedbacksListener(uid) {
     listEl.innerHTML = notifications.map(notif => {
       const isUnread = !notif.read;
       let typeIcon = '📢';
-      let typeLabel = t('notifications');
+      let typeLabel = 'Уведомление';
       let filterType = 'all';
       
       // Улучшенная логика отображения с конкретными названиями для разных типов
       if (notif.type === 'jackpot_win') {
         typeIcon = '🏆';
-        typeLabel = t('jackpot');
+        typeLabel = 'Джекпот';
         filterType = 'jackpot_win';
       } else if (notif.type === 'wheel_spin') {
         typeIcon = '🎡';
-        typeLabel = t('wheel_fortune_type');
+        typeLabel = 'Колесо фортуны';
         filterType = 'games';
       } else if (notif.type === 'faucet_claim') {
         typeIcon = '💰';
-        typeLabel = t('faucet_type');
+        typeLabel = 'Кран';
         filterType = 'games';
       } else if (notif.type === 'game_reward' || (notif.type && notif.type.includes('game'))) {
         typeIcon = '🎰';
-        typeLabel = t('game_type');
+        typeLabel = 'Игра';
         filterType = 'games';
       } else if (notif.type === 'info') {
         typeIcon = 'ℹ️';
-        typeLabel = t('info_type');
+        typeLabel = 'Информация';
         filterType = 'admin';
       } else if (notif.type === 'success') {
         typeIcon = '✅';
-        typeLabel = t('success_type');
+        typeLabel = 'Успех';
         filterType = 'admin';
       } else if (notif.type === 'warning') {
         typeIcon = '⚠️';
-        typeLabel = t('warning_type');
+        typeLabel = 'Важно';
         filterType = 'admin';
       } else if (notif.type === 'promo') {
         typeIcon = '🎁';
-        typeLabel = t('promo_type');
+        typeLabel = 'Акция';
         filterType = 'admin';
       } else if (notif.type === 'referral') {
         typeIcon = '🔗';
-        typeLabel = t('referral_type');
+        typeLabel = 'Реферальная';
         filterType = 'admin';
       } else if (notif.type !== 'wheel_spin' && notif.type !== 'faucet_claim' && notif.type !== 'game_reward' && notif.type !== 'jackpot_win' && (!notif.type || !notif.type.includes('game'))) {
         typeIcon = '📢';
-        typeLabel = t('system');
+        typeLabel = 'Система';
         filterType = 'admin';
       } else if (!notif.type) {
         typeIcon = '📢';
-        typeLabel = t('notifications');
+        typeLabel = 'Уведомление';
         filterType = 'all';
       } else {
         typeIcon = '📢';
@@ -3720,7 +3785,7 @@ function initFeedbacksListener(uid) {
       }
       
       // Получаем данные пользователя
-      let winnerName = notification.winnerName || t('jackpot_default_user');
+      let winnerName = notification.winnerName || 'Пользователь';
       let winnerAvatar = '';
       
       if (notification.userId) {
@@ -3797,12 +3862,12 @@ function initFeedbacksListener(uid) {
         overlay.innerHTML = `
           <div class="jackpot-winner-card">
             <div style="font-size:60px;margin-bottom:10px;">🏆</div>
-            <div style="font-size:13px;color:#ec4899;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">' + t('jackpot_winner_title') + '</div>
+            <div style="font-size:13px;color:#ec4899;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">JACKPOT WINNER</div>
             <img id="jwAvatar" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ec4899;margin:0 auto 12px;display:block;" onerror="this.style.display='none'">
             <div style="font-size:22px;font-weight:900;color:white;margin-bottom:6px;" id="jwName">—</div>
             <div style="font-size:38px;font-weight:900;background:linear-gradient(135deg,#ec4899,#8b5cf6);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px;" id="jwAmount">0 RGT</div>
-            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 20px;">' + t('jackpot_congratulations') + '</p>
-            <button onclick="closeJackpotWinner()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">' + t('jackpot_close_button') + '</button>
+            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 20px;">Congratulations! The monthly jackpot has been awarded.</p>
+            <button onclick="closeJackpotWinner()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Close</button>
           </div>
         `;
         
@@ -3904,7 +3969,7 @@ function initFeedbacksListener(uid) {
     
     if (user) {
       if (ava) ava.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
-      if (name) name.textContent = user.displayName || (user.email ? user.email.split('@')[0] : 'Researcher');
+      if (name) name.textContent = user.displayName || (user.email ? user.email.split('@')[0] : (typeof window.t === 'function' ? window.t('default_user_name') : 'Researcher'));
       if (mobAva) mobAva.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
       if (mobOut) mobOut.style.display = 'none';
       if (mobInn) mobInn.style.display = 'flex';
