@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Краны (Faucets) — AirdropLab</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="alternate icon" href="assets/favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- 📦 CENTRALIZED AUTHENTICATION SYSTEM -->
+  <script src="auth.js"></script>
+  <script src="auth-modal.js"></script>
+  
+  <link rel="stylesheet" href="styles.css">
+  <script src="languages.js"></script>
+  <script src="header.js"></script>
+  <script src="assets/reagents.js"></script>
+  
+  <style>
+    /* z-index fix — nav dropdown поверх всего */
+    #site-nav { position: relative; z-index: 999 !important; }
+    .al-nav-dropdown { z-index: 1000 !important; }
+
+    .faucet-card {
+      background: rgba(30, 37, 56, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .faucet-card:hover { transform: translateY(-2px); }
+    .faucet-card.free:hover   { border-color: rgba(52,211,153,0.45); box-shadow: 0 8px 24px rgba(16,185,129,0.12); }
+    .faucet-card.paid:hover   { border-color: rgba(251,191,36,0.45); box-shadow: 0 8px 24px rgba(245,158,11,0.12); }
+    .faucet-card.testnet:hover  { border-color: rgba(96,165,250,0.45); box-shadow: 0 8px 24px rgba(59,130,246,0.12); }
+    .faucet-card.mainnet:hover  { border-color: rgba(167,139,250,0.45); box-shadow: 0 8px 24px rgba(139,92,246,0.12); }
+
+    .badge { padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .badge-free    { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-paid    { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+    .badge-testnet { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+    .badge-mainnet { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+    .badge-hot     { background: rgba(239,68,68,0.15);  color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-airdrop { background: rgba(34,211,238,0.15); color: #22d3ee; border: 1px solid rgba(34,211,238,0.3); }
+    .badge-multi   { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+
+    .faucet-link {
+      display: flex; align-items: center; gap: 7px;
+      padding: 10px 14px; border-radius: 10px;
+      background: rgba(34,211,238,0.08); border: 1px solid rgba(34,211,238,0.25);
+      color: #e2e8f0; font-weight: 700; text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .faucet-link:hover {
+      background: rgba(34,211,238,0.15); border-color: rgba(34,211,238,0.45);
+      transform: translateY(-1px); box-shadow: 0 4px 12px rgba(34,211,238,0.2);
+    }
+    .faucet-link i { font-size: 14px; }
+  </style>
+</head>
+<body class="antialiased bg-slate-900 text-white">
+
+<div id="site-header"></div>
+
+<main class="max-w-7xl mx-auto px-4 py-6">
+  <!-- Заголовок страницы -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent" data-translate="faucets_title">Краны (Faucets)</h1>
+    <p class="text-slate-400" data-translate="faucets_subtitle">Получите бесплатные токены на тестнеты и мейннеты</p>
+  </div>
+
+  <!-- Фильтры -->
+  <div class="mb-6 flex flex-wrap gap-3">
+    <button onclick="filterFaucets('all')" class="filter-btn px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-cyan-500 transition-colors" data-filter="all" data-translate="all_faucets">Все краны</button>
+    <button onclick="filterFaucets('free')" class="filter-btn px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-cyan-500 transition-colors" data-filter="free" data-translate="free_faucets">Бесплатные</button>
+    <button onclick="filterFaucets('paid')" class="filter-btn px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-cyan-500 transition-colors" data-filter="paid" data-translate="paid_faucets">Платные</button>
+    <button onclick="filterFaucets('testnet')" class="filter-btn px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-cyan-500 transition-colors" data-filter="testnet" data-translate="testnet_faucets">Тестнет</button>
+    <button onclick="filterFaucets('mainnet')" class="filter-btn px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-cyan-500 transition-colors" data-filter="mainnet" data-translate="mainnet_faucets">Мейннет</button>
+  </div>
+
+  <!-- Список кранов -->
+  <div id="faucetsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Краны будут загружены через JavaScript -->
+  </div>
+
+  <!-- Пустое состояние -->
+  <div id="emptyState" class="text-center py-12 hidden">
+    <i class="fas fa-faucet text-6xl text-slate-600 mb-4"></i>
+    <p class="text-slate-400" data-translate="no_faucets_found">Краны не найдены</p>
+  </div>
+</main>
+
+<!-- Модальное окно предложения крана -->
+<div id="suggestModal" class="fixed inset-0 z-[10002] items-center justify-center p-4" style="display:none;background:rgba(0,0,0,0.82);backdrop-filter:blur(10px);">
+  <div class="modal-box" style="max-width:500px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h2 style="font-size:16px;font-weight:800;color:#f1f5f9;" data-translate="suggest_faucet">Предложить кран</h2>
+      <button onclick="closeSuggestModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;">&times;</button>
+    </div>
+    <form onsubmit="submitSuggestion(event)" style="display:flex;flex-direction:column;gap:12px;">
+      <input type="text" id="suggest_name" placeholder="Название крана" required style="padding:10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;">
+      <input type="text" id="suggest_token" placeholder="Токен (например, ETH, BNB)" required style="padding:10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;">
+      <input type="url" id="suggest_url" placeholder="URL крана" required style="padding:10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;">
+      <textarea id="suggest_description" placeholder="Описание" rows="3" style="padding:10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;resize:none;"></textarea>
+      <button type="submit" style="padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#22d3ee,#3b82f6);color:white;font-weight:800;cursor:pointer;">
+        <span data-translate="submit_suggestion">Отправить предложение</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Кнопка предложения крана -->
+<button onclick="openSuggestModal()" style="position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:25px;border:none;background:linear-gradient(135deg,#22d3ee,#3b82f6);color:white;font-weight:800;cursor:pointer;z-index:1000;box-shadow:0 4px 12px rgba(34,211,238,0.3);">
+  <i class="fas fa-plus"></i> <span data-translate="suggest_faucet_btn">Предложить кран</span>
+</button>
+
+<script>
+// ═════════════════════════════════════════════════════════
+// 🚰 FAUCETS PAGE - ОЧИЩЕННАЯ ВЕРСИЯ
+// ═══════════════════════════════════════════════════════════════
+
+// Глобальные переменные
+let faucets = [];
+let currentFilter = 'all';
+
+// Инициализация страницы
+document.addEventListener('DOMContentLoaded', async function() {
+  console.log('🚰 Initializing faucets page...');
+  
+  // Ждем загрузки централизованной системы аутентификации
+  if (typeof window.initAuth === 'function') {
+    await window.initAuth();
+  }
+  
+  // Ждем загрузки модального окна
+  if (typeof window.initLoginModal === 'function') {
+    await window.initLoginModal();
+  }
+  
+  // Загружаем краны
+  await loadFaucets();
+  
+  console.log('🚰 Faucets page initialized');
+});
+
+// Загрузка кранов
+async function loadFaucets() {
+  try {
+    // Здесь будет логика загрузки кранов из Firestore
+    // Пока используем моковые данные
+    faucets = [
+      {
+        id: '1',
+        name: 'Sepolia Faucet',
+        token: 'ETH',
+        network: 'testnet',
+        type: 'free',
+        url: 'https://sepoliafaucet.com',
+        description: 'Бесплатный Sepolia ETH',
+        hot: true
+      },
+      {
+        id: '2', 
+        name: 'BSC Testnet Faucet',
+        token: 'BNB',
+        network: 'testnet',
+        type: 'free',
+        url: 'https://testnet.binance.org/faucet',
+        description: 'Бесплатный BNB на тестнет'
+      }
+    ];
+    
+    renderFaucets();
+  } catch (error) {
+    console.error('Error loading faucets:', error);
+  }
+}
+
+// Отрисовка кранов
+function renderFaucets() {
+  const container = document.getElementById('faucetsList');
+  const emptyState = document.getElementById('emptyState');
+  
+  const filteredFaucets = currentFilter === 'all' 
+    ? faucets 
+    : faucets.filter(f => f.type === currentFilter || f.network === currentFilter);
+  
+  if (filteredFaucets.length === 0) {
+    container.innerHTML = '';
+    emptyState.classList.remove('hidden');
+    return;
+  }
+  
+  emptyState.classList.add('hidden');
+  container.innerHTML = filteredFaucets.map(faucet => `
+    <div class="faucet-card ${faucet.type} ${faucet.network} p-6">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h3 class="text-lg font-bold text-white mb-1">${faucet.name}</h3>
+          <p class="text-slate-400 text-sm">${faucet.description}</p>
+        </div>
+        <div class="flex gap-2">
+          <span class="badge badge-${faucet.type}">${faucet.type}</span>
+          <span class="badge badge-${faucet.network}">${faucet.network}</span>
+          ${faucet.hot ? '<span class="badge badge-hot">HOT</span>' : ''}
+        </div>
+      </div>
+      
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-coins text-cyan-400"></i>
+          <span class="font-bold">${faucet.token}</span>
+        </div>
+        <a href="${faucet.url}" target="_blank" class="faucet-link">
+          <i class="fas fa-external-link-alt"></i>
+          <span data-translate="visit_faucet">Перейти</span>
+        </a>
+      </div>
+      
+      <div class="mt-4 pt-4 border-t border-slate-700 flex gap-2">
+        <button onclick="rateFaucet('${faucet.id}')" class="text-xs text-cyan-400 hover:text-cyan-300">
+          <i class="fas fa-star"></i> <span data-translate="rate">Оценить</span>
+        </button>
+        <button onclick="addToFavorites('${faucet.id}')" class="text-xs text-cyan-400 hover:text-cyan-300">
+          <i class="fas fa-heart"></i> <span data-translate="add_to_favorites">В избранное</span>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Фильтрация кранов
+function filterFaucets(filter) {
+  currentFilter = filter;
+  
+  // Обновляем активную кнопку
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('bg-cyan-600', 'border-cyan-500');
+    btn.classList.add('bg-slate-800', 'border-slate-700');
+  });
+  
+  const activeBtn = document.querySelector(`[data-filter="${filter}"]`);
+  if (activeBtn) {
+    activeBtn.classList.remove('bg-slate-800', 'border-slate-700');
+    activeBtn.classList.add('bg-cyan-600', 'border-cyan-500');
+  }
+  
+  renderFaucets();
+}
+
+// Оценка крана
+function rateFaucet(faucetId) {
+  // Проверяем авторизацию через централизованную систему
+  if (!window.currentUser) {
+    window.openLoginModal();
+    return;
+  }
+  
+  // Логика оценки крана
+  console.log('Rate faucet:', faucetId);
+}
+
+// Добавление в избранное
+function addToFavorites(faucetId) {
+  // Проверяем авторизацию через централизованную систему
+  if (!window.currentUser) {
+    window.openLoginModal();
+    return;
+  }
+  
+  // Логика добавления в избранное
+  console.log('Add to favorites:', faucetId);
+}
+
+// Модальное окно предложения
+function openSuggestModal() {
+  // Проверяем авторизацию через централизованную систему
+  if (!window.currentUser) {
+    window.openLoginModal();
+    return;
+  }
+  
+  document.getElementById('suggestModal').style.display = 'flex';
+}
+
+function closeSuggestModal() {
+  document.getElementById('suggestModal').style.display = 'none';
+}
+
+// Отправка предложения
+async function submitSuggestion(event) {
+  event.preventDefault();
+  
+  // Проверяем авторизацию через централизованную систему
+  if (!window.currentUser) {
+    window.openLoginModal();
+    return;
+  }
+  
+  const name = document.getElementById('suggest_name').value.trim();
+  const token = document.getElementById('suggest_token').value.trim();
+  const url = document.getElementById('suggest_url').value.trim();
+  const description = document.getElementById('suggest_description').value.trim();
+  
+  try {
+    // Логика отправки предложения в Firestore
+    console.log('Submit suggestion:', { name, token, url, description });
+    
+    // Закрываем модальное окно
+    closeSuggestModal();
+    
+    // Показываем уведомление об успехе
+    if (typeof window.showToast === 'function') {
+      window.showToast('Предложение отправлено на модерацию', 'success');
+    }
+    
+    // Очищаем форму
+    event.target.reset();
+  } catch (error) {
+    console.error('Error submitting suggestion:', error);
+    if (typeof window.showToast === 'function') {
+      window.showToast('Ошибка при отправке предложения', 'error');
+    }
+  }
+}
+
+// Закрытие модальных окон по клику на фон
+document.getElementById('suggestModal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeSuggestModal();
+});
+
+// Применение переводов
+function applyTranslations() {
+  if (typeof window.t === 'function') {
+    document.querySelectorAll('[data-translate]').forEach(element => {
+      const key = element.getAttribute('data-translate');
+      element.textContent = window.t(key, element.textContent);
+    });
+  }
+}
+
+// Применяем переводы при загрузке
+applyTranslations();
+
+// Слушаем изменение языка
+if (typeof window.onLanguageChange === 'function') {
+  window.onLanguageChange(applyTranslations);
+}
+</script>
+
+</body>
+</html>
