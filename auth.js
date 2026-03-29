@@ -9,7 +9,7 @@
 import {
   getAuth, onAuthStateChanged, signOut, signInWithPopup,
   GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword, initializeApp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // Глобальные переменные для аутентификации
