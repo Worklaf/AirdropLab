@@ -692,6 +692,11 @@ window.__firestoreExports = {
     runTransaction
 };
 
+// Инициализируем Firebase экспорты для header.js
+if (typeof window.initFirebaseExports === 'function') {
+  window.initFirebaseExports(window.__firestoreExports);
+}
+
 // ✅ Auth функции с updateProfile
 window.__authExports = {
     updateProfile,
@@ -1514,10 +1519,12 @@ onAuthStateChanged(auth, async function(user) {
         initUserSync(user.uid);
         initNotificationsListener(user.uid);
 
-        // Обновляем бейдж уведомлений при загрузке
-        if (typeof window.updateNotificationBadge === 'function') {
-          window.updateNotificationBadge();
-        }
+        // Обновляем бейдж уведомлений при загрузке с задержкой для header.js
+        setTimeout(() => {
+          if (typeof window.updateNotificationBadge === 'function') {
+            window.updateNotificationBadge();
+          }
+        }, 500);
 
         // ✅ Загружаем состояние hero из Firestore
         await loadHeroStateFromFirestore(user.uid);
