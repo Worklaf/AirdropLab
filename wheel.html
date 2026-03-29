@@ -1396,10 +1396,17 @@ window.openFeedbackFromList = function(docId, projectId, projectName) {
 function initNotificationsListener(uid) {
   console.log('🔔 Notifications initialized via header.js for user:', uid);
   
-  // Сразу обновляем бейдж после инициализации
-  if (typeof window.updateNotificationBadge === 'function') {
-    window.updateNotificationBadge();
+  // Вызываем реальный слушатель из header.js
+  if (typeof window.initNotificationsListener === 'function') {
+    window.initNotificationsListener(uid);
   }
+  
+  // Сразу обновляем бейдж после инициализации
+  setTimeout(() => {
+    if (typeof window.updateNotificationBadge === 'function') {
+      window.updateNotificationBadge();
+    }
+  }, 100);
 }
 
 function updateNotificationBadge() {
