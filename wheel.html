@@ -416,6 +416,111 @@
     </div>
   </div>
 
+  <!-- ONLINE MODE CONTAINER -->
+  <div id="onlineModeContainer" style="display:none;background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);border-radius:18px;padding:24px;margin-bottom:32px;">
+    <div style="text-align:center;margin-bottom:24px;">
+      <h2 style="font-size:24px;font-weight:900;color:white;margin:0;display:flex;align-items:center;justify-content:center;gap:12px;">
+        <i class="fas fa-users" style="color:#a78bfa;"></i>
+        <span>Online Wheel of Fortune</span>
+      </h2>
+      <p style="color:var(--text-secondary);margin:8px 0 0;font-size:14px;">Play with other players in real-time!</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;">
+      <!-- LEFT: ONLINE WHEEL -->
+      <div>
+        <div class="wheel-wrap">
+          <div class="wheel-pointer"></div>
+          <canvas id="onlineWheelCanvas"></canvas>
+        </div>
+
+        <!-- Online Game Info -->
+        <div style="text-align:center;margin-top:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+              <div style="font-size:12px;color:var(--text-secondary);">Prize Pool</div>
+              <div style="font-size:20px;font-weight:900;color:#f59e0b;" id="onlinePrizePool">0 RGT</div>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-secondary);">Time Left</div>
+              <div style="font-size:20px;font-weight:900;color:#22d3ee;" id="onlineTimeLeft">--:--</div>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-secondary);">Round</div>
+              <div style="font-size:20px;font-weight:900;color:#8b5cf6;" id="onlineRound">0</div>
+            </div>
+          </div>
+
+          <!-- Betting Controls -->
+          <div class="betting-controls" id="onlineBettingControls">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <span style="font-size:14px;font-weight:600;color:white;">Your Bet:</span>
+              <span style="font-size:14px;color:#a78bfa;" id="onlineUserBalance">Balance: 0 RGT</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <input type="number" id="onlineBetAmount" placeholder="Enter amount" min="1" step="1" style="flex:1;padding:10px;background:rgba(15,23,42,0.8);border:1px solid rgba(139,92,246,.3);border-radius:8px;color:white;font-size:14px;">
+              <button onclick="addToOnlineBet(10)" style="padding:10px 16px;background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);border-radius:8px;color:#a78bfa;font-weight:600;cursor:pointer;">+10</button>
+              <button onclick="addToOnlineBet(50)" style="padding:10px 16px;background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);border-radius:8px;color:#a78bfa;font-weight:600;cursor:pointer;">+50</button>
+              <button onclick="addToOnlineBet(100)" style="padding:10px 16px;background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);border-radius:8px;color:#a78bfa;font-weight:600;cursor:pointer;">+100</button>
+              <button onclick="setMaxOnlineBet()" style="padding:10px 16px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">MAX</button>
+            </div>
+            <button onclick="placeOnlineBet()" id="placeOnlineBetBtn" style="width:100%;padding:12px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:10px;color:white;font-weight:700;font-size:15px;cursor:pointer;transition:all .2s;">
+              <i class="fas fa-coins" style="margin-right:8px;"></i>
+              PLACE BET
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: PARTICIPANTS & STATS -->
+      <div style="display:flex;flex-direction:column;gap:24px;">
+        <!-- Participants -->
+        <div style="background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.15);border-radius:16px;padding:20px;">
+          <h3 style="font-size:16px;font-weight:800;color:white;margin:0 0 16px;display:flex;align-items:center;gap:8px;">
+            <i class="fas fa-users" style="color:#a78bfa;"></i>
+            Participants (<span id="onlineParticipantCount">0</span>)
+          </h3>
+          <div id="onlineParticipantsList" style="max-height:200px;overflow-y:auto;">
+            <div style="text-align:center;padding:20px;color:var(--text-secondary);">
+              <i class="fas fa-user-friends" style="font-size:24px;opacity:0.3;margin-bottom:8px;"></i>
+              <div>No participants yet</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Online Stats -->
+        <div style="background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.15);border-radius:16px;padding:20px;">
+          <h3 style="font-size:16px;font-weight:800;color:white;margin:0 0 16px;display:flex;align-items:center;gap:8px;">
+            <i class="fas fa-chart-line" style="color:#a78bfa;"></i>
+            Online Stats
+          </h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:10px;padding:12px;">
+              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Total Bets</div>
+              <div style="font-size:18px;font-weight:900;color:#a78bfa;" id="onlineTotalBets">0</div>
+            </div>
+            <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:10px;padding:12px;">
+              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Active Players</div>
+              <div style="font-size:18px;font-weight:900;color:#22d3ee;" id="onlineActivePlayers">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Status -->
+        <div style="background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.15);border-radius:16px;padding:20px;">
+          <h3 style="font-size:16px;font-weight:800;color:white;margin:0 0 16px;display:flex;align-items:center;gap:8px;">
+            <i class="fas fa-gamepad" style="color:#22d3ee;"></i>
+            Game Status
+          </h3>
+          <div id="onlineGameStatus" style="text-align:center;">
+            <div style="font-size:14px;color:#22d3ee;font-weight:600;margin-bottom:8px;">Waiting for players...</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Betting will start soon!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- JACKPOT BANNER -->
   <div class="jackpot-banner" id="jackpotBanner">
     <div class="jackpot-glow"></div>
@@ -2686,6 +2791,342 @@ if (currentUser && db) {
 <!-- Login Modal создается централизованно через auth-modal.js -->
 
   <script>
+// ═══════════════════════════════════════════════════════
+// 🎮 ONLINE WHEEL OF FORTUNE FUNCTIONS
+// ═══════════════════════════════════════════════════════
+
+// Глобальные переменные для онлайн-режима
+let currentGameMode = 'solo';
+let onlineGame = {
+  participants: [],
+  prizePool: 0,
+  timeLeft: 0,
+  bettingOpen: false,
+  currentRound: 0
+};
+
+// Функции переключения режимов
+function switchToSolo() {
+  console.log('🔄 Switching to solo mode...');
+  currentGameMode = 'solo';
+  
+  // Скрываем онлайн-контейнер
+  const onlineContainer = document.getElementById('onlineModeContainer');
+  if (onlineContainer) {
+    onlineContainer.style.display = 'none';
+  }
+  
+  // Показываем основной контейнер
+  const mainGrid = document.querySelector('.main-grid');
+  if (mainGrid) {
+    mainGrid.style.display = 'grid';
+  }
+  
+  // Показываем баннер джекпота
+  const jackpotBanner = document.getElementById('jackpotBanner');
+  if (jackpotBanner) {
+    jackpotBanner.style.display = 'block';
+  }
+  
+  if (typeof showToast === 'function') {
+    showToast('Switched to Solo Mode', 'success');
+  }
+}
+
+function switchToOnline() {
+  console.log('🔄 Switching to online mode...');
+  currentGameMode = 'online';
+  
+  // Скрываем основной контейнер
+  const mainGrid = document.querySelector('.main-grid');
+  if (mainGrid) {
+    mainGrid.style.display = 'none';
+  }
+  
+  // Скрываем баннер джекпота
+  const jackpotBanner = document.getElementById('jackpotBanner');
+  if (jackpotBanner) {
+    jackpotBanner.style.display = 'none';
+  }
+  
+  // Показываем онлайн-контейнер
+  const onlineContainer = document.getElementById('onlineModeContainer');
+  if (onlineContainer) {
+    onlineContainer.style.display = 'block';
+  }
+  
+  // Инициализируем онлайн-игру
+  initOnlineGame();
+  
+  if (typeof showToast === 'function') {
+    showToast('Switched to Online Mode', 'success');
+  }
+}
+
+// Инициализация онлайн-игры
+function initOnlineGame() {
+  console.log('🎮 Initializing online game...');
+  
+  // Инициализация онлайн-колеса
+  initOnlineWheel();
+  
+  // Обновление UI
+  updateOnlineUI();
+  
+  // Симуляция данных для демонстрации
+  setTimeout(() => {
+    // Добавляем тестового участника
+    onlineGame.participants.push({
+      uid: 'demo1',
+      displayName: 'Demo Player',
+      bet: 50,
+      photoURL: null
+    });
+    
+    // Устанавливаем призовой пул
+    onlineGame.prizePool = 150;
+    onlineGame.currentRound = 1;
+    onlineGame.timeLeft = 45;
+    
+    updateOnlineUI();
+  }, 1000);
+}
+
+// Инициализация онлайн-колеса
+function initOnlineWheel() {
+  const canvas = document.getElementById('onlineWheelCanvas');
+  if (!canvas) {
+    console.warn('⚠️ Online wheel canvas not found');
+    return;
+  }
+  
+  const ctx = canvas.getContext('2d');
+  canvas.width = 400;
+  canvas.height = 400;
+  
+  // Сектора для онлайн-колеса
+  const sectors = [
+    { label: '1 RGT', value: 1, color: '#10b981' },
+    { label: '2 RGT', value: 2, color: '#22d3ee' },
+    { label: '3 RGT', value: 3, color: '#8b5cf6' },
+    { label: '4 RGT', value: 4, color: '#ec4899' },
+    { label: '10 RGT', value: 10, color: '#f59e0b' },
+    { label: '20 RGT', value: 20, color: '#ef4444' },
+    { label: '50 RGT', value: 50, color: '#a855f7' },
+    { label: '100 RGT', value: 100, color: '#fbbf24' }
+  ];
+  
+  drawOnlineWheel(ctx, canvas.width, canvas.height, sectors);
+}
+
+// Рисование онлайн-колеса
+function drawOnlineWheel(ctx, width, height, sectors) {
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = Math.min(width, height) / 2 - 10;
+  
+  // Очистка canvas
+  ctx.clearRect(0, 0, width, height);
+  
+  // Рисование секторов
+  const anglePerSector = (Math.PI * 2) / sectors.length;
+  
+  sectors.forEach((sector, index) => {
+    const startAngle = index * anglePerSector - Math.PI / 2;
+    const endAngle = (index + 1) * anglePerSector - Math.PI / 2;
+    
+    // Создание градиента
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, sector.color + 'cc');
+    gradient.addColorStop(1, sector.color);
+    
+    // Рисование сектора
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    // Рисование границы
+    ctx.strokeStyle = '#1e2538';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Рисование текста
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(startAngle + anglePerSector / 2);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px Arial';
+    ctx.fillText(sector.label, radius / 2, 0);
+    ctx.restore();
+  });
+  
+  // Рисование центральной окружности
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+  ctx.fillStyle = '#1e2538';
+  ctx.fill();
+  ctx.strokeStyle = '#8b5cf6';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  
+  // Рисование текста в центре
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 16px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('SPIN', centerX, centerY);
+}
+
+// Обновление онлайн UI
+function updateOnlineUI() {
+  // Обновление призового пула
+  const prizePoolEl = document.getElementById('onlinePrizePool');
+  if (prizePoolEl) {
+    prizePoolEl.textContent = `${onlineGame.prizePool} RGT`;
+  }
+  
+  // Обновление времени
+  const timeLeftEl = document.getElementById('onlineTimeLeft');
+  if (timeLeftEl) {
+    if (onlineGame.timeLeft > 0) {
+      const minutes = Math.floor(onlineGame.timeLeft / 60);
+      const seconds = onlineGame.timeLeft % 60;
+      timeLeftEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    } else {
+      timeLeftEl.textContent = '--:--';
+    }
+  }
+  
+  // Обновление раунда
+  const roundEl = document.getElementById('onlineRound');
+  if (roundEl) {
+    roundEl.textContent = onlineGame.currentRound;
+  }
+  
+  // Обновление списка участников
+  updateParticipantsList();
+  
+  // Обновление статистики
+  updateOnlineStats();
+}
+
+// Обновление списка участников
+function updateParticipantsList() {
+  const participantsList = document.getElementById('onlineParticipantsList');
+  const participantCount = document.getElementById('onlineParticipantCount');
+  
+  if (!participantsList) return;
+  
+  participantCount.textContent = onlineGame.participants.length;
+  
+  if (onlineGame.participants.length === 0) {
+    participantsList.innerHTML = `
+      <div style="text-align:center;padding:20px;color:var(--text-secondary);">
+        <i class="fas fa-user-friends" style="font-size:24px;opacity:0.3;margin-bottom:8px;"></i>
+        <div>No participants yet</div>
+      </div>
+    `;
+    return;
+  }
+  
+  participantsList.innerHTML = onlineGame.participants.map(participant => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:rgba(139,92,246,.05);border-radius:8px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">
+          ${participant.displayName ? participant.displayName.charAt(0).toUpperCase() : 'A'}
+        </div>
+        <div>
+          <div style="font-size:14px;color:white;font-weight:600;">${participant.displayName || 'Anonymous'}</div>
+          <div style="font-size:12px;color:var(--text-secondary);">Bet: ${participant.bet} RGT</div>
+        </div>
+      </div>
+      <div style="font-size:14px;color:#f59e0b;font-weight:600;">${participant.bet} RGT</div>
+    </div>
+  `).join('');
+}
+
+// Обновление онлайн статистики
+function updateOnlineStats() {
+  const totalBetsEl = document.getElementById('onlineTotalBets');
+  const activePlayersEl = document.getElementById('onlineActivePlayers');
+  
+  if (totalBetsEl) {
+    const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+    totalBetsEl.textContent = totalBets;
+  }
+  
+  if (activePlayersEl) {
+    activePlayersEl.textContent = onlineGame.participants.length;
+  }
+}
+
+// Функции для ставок
+function addToOnlineBet(amount) {
+  const betInput = document.getElementById('onlineBetAmount');
+  if (betInput) {
+    const currentBet = parseInt(betInput.value) || 0;
+    betInput.value = currentBet + amount;
+  }
+}
+
+function setMaxOnlineBet() {
+  const betInput = document.getElementById('onlineBetAmount');
+  const balanceEl = document.getElementById('onlineUserBalance');
+  
+  if (betInput && balanceEl) {
+    // Получаем баланс из текста (например, "Balance: 1000 RGT")
+    const balanceText = balanceEl.textContent;
+    const balance = parseInt(balanceText.match(/\d+/)?.[0] || 0);
+    betInput.value = balance;
+  }
+}
+
+function placeOnlineBet() {
+  const betInput = document.getElementById('onlineBetAmount');
+  if (!betInput) return;
+  
+  const betAmount = parseInt(betInput.value);
+  if (!betAmount || betAmount <= 0) {
+    if (typeof showToast === 'function') {
+      showToast('Please enter a valid bet amount', 'warning');
+    }
+    return;
+  }
+  
+  // Симуляция размещения ставки
+  const currentUser = window.currentUser;
+  if (currentUser) {
+    // Добавляем участника в игру
+    onlineGame.participants.push({
+      uid: currentUser.uid,
+      displayName: currentUser.displayName || 'You',
+      bet: betAmount,
+      photoURL: currentUser.photoURL
+    });
+    
+    // Обновляем призовой пул
+    onlineGame.prizePool += betAmount;
+    
+    // Обновляем UI
+    updateOnlineUI();
+    
+    // Очищаем поле ставки
+    betInput.value = '';
+    
+    if (typeof showToast === 'function') {
+      showToast(`Bet placed: ${betAmount} RGT`, 'success');
+    }
+  } else {
+    if (typeof showToast === 'function') {
+      showToast('Please login to place bets', 'warning');
+    }
+  }
+}
+
 // Ensure login functions are available after DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🔐 Setting up login functions...');
