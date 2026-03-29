@@ -2190,8 +2190,10 @@ if (auth) {
     
     // Load notifications for header
     if (user && db && window.__firestoreExports) {
-      // Загружаем уведомления для колеса
-      loadNotificationsForWheel();
+      // Используем централизованную систему уведомлений из header.js
+      if (typeof window.loadNotifications === 'function') {
+        window.loadNotifications();
+      }
     }
     
     // Обновляем бейдж уведомлений сразу при загрузке
@@ -2446,8 +2448,10 @@ window.clearAllNotifications = async function() {
       showToast('Все уведомления удалены');
     }
     
-    // Перезагружаем уведомления
-    loadNotificationsForWheel();
+    // Перезагружаем уведомления через централизованную систему
+    if (typeof window.loadNotifications === 'function') {
+      window.loadNotifications();
+    }
   } catch (error) {
     console.error('Error clearing notifications:', error);
     if (typeof showToast === 'function') {
@@ -2456,220 +2460,9 @@ window.clearAllNotifications = async function() {
   }
 };
 
-// Функция загрузки уведомлений для колеса
-async function loadNotificationsForWheel() {
-  if (!window.db || !currentUser) {
-    const listEl = document.getElementById('notificationsList');
-    if (listEl) {
-      listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Недоступно без авторизации</p>';
-    }
-    return;
-  }
-  
-  // Проверяем доступность Firestore функций
-  if (!window.__firestoreExports) {
-    console.warn('Firestore exports not ready, retrying in 500ms...');
-    setTimeout(loadNotificationsForWheel, 500);
-    return;
-  }
-  
-  try {
-    const { collection, query, where, orderBy, onSnapshot } = window.__firestoreExports;
-    
-    if (!collection || !query || !where || !orderBy || !onSnapshot) {
-      console.error('Required Firestore functions not available:', { collection, query, where, orderBy, onSnapshot });
-      const listEl = document.getElementById('notificationsList');
-      if (listEl) {
-        listEl.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка: функции Firestore недоступны</p>';
-      }
-      return;
-    }
-    
-    const q = query(
-      collection(window.db, "notifications"),
-      where("userId", "==", currentUser.uid),
-      orderBy("createdAt", "desc")
-    );
-    
-    onSnapshot(q, (snapshot) => {
-      const notifications = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        data.id = doc.id;
-        notifications.push(data);
-        console.log('📨 Loaded notification:', { id: data.id, type: data.type, message: data.message?.substring(0, 50) });
-      });
-      
-      console.log('📨 Total loaded notifications:', notifications.length);
-      window.allNotifications = notifications; // Сохраняем полный массив
-      window.notifications = notifications; // Для совместимости
-      
-      // Автоматически обновляем бейдж при изменениях
-      updateNotificationBadge();
-      
-      // Если модальное окно открыто, обновляем его
-      if (document.getElementById('notificationsModalOverlay')) {
-        const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
-        filterNotifications(activeFilter);
-      } else {
-        renderNotificationsInWheel(notifications);
-      }
-      
-      // Обновляем счетчики если модальное окно открыто
-      if (document.getElementById('notificationsModalOverlay')) {
-        updateFilterCounts(notifications);
-      }
-    });
-  } catch (error) {
-    console.error('Error loading notifications:', error);
-    const listEl = document.getElementById('notificationsList');
-    if (listEl) {
-      listEl.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка загрузки уведомлений</p>';
-    }
-  }
-}
+// Функции уведомлений доступны из централизованной системы header.js
 
-// Функция отображения уведомлений для колеса
-function renderNotificationsInWheel(notifications) {
-  const listEl = document.getElementById('notificationsList');
-  if (!listEl) return;
-  
-  if (notifications.length === 0) {
-    listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Нет уведомлений</p>';
-    return;
-  }
-  
-  listEl.innerHTML = notifications.map(notif => {
-    const messageWithLinks = (notif.message || notif.msg || '').replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #60a5fa; text-decoration: underline;">$1</a>');
-    const isUnread = !notif.read;
-    
-    // Определяем тип и иконку
-    let typeIcon = '📢';
-    let typeLabel = 'Уведомление';
-    
-    console.log('🏷️ Processing notification type:', notif.type, 'for ID:', notif.id);
-    
-    if (notif.type === 'wheel_spin') {
-      typeIcon = '🎰';
-      typeLabel = 'Колесо фортуны';
-    } else if (notif.type === 'jackpot_win') {
-      typeIcon = '🏆';
-      typeLabel = 'Джекпот';
-    } else if (notif.type === 'faucet_claim') {
-      typeIcon = '🚰';
-      typeLabel = 'Кран';
-    } else if (notif.type === 'game_reward') {
-      typeIcon = '🎮';
-      typeLabel = 'Игра';
-    } else if (notif.type === 'feedback_reply') {
-      typeIcon = '💬';
-      typeLabel = 'Ответ на сообщение';
-    } else if (notif.type === 'admin' || notif.type === 'broadcast' || notif.type === 'announcement') {
-      typeIcon = '🛡️';
-      typeLabel = 'Администрация';
-    } else if (notif.type === 'reward') {
-      typeIcon = '🎁';
-      typeLabel = 'Поощрение';
-    } else if (notif.type === 'newsletter' || notif.type === 'subscription') {
-      typeIcon = '📧';
-      typeLabel = 'Рассылка';
-    } else if (!notif.type) {
-      typeIcon = '📢';
-      typeLabel = 'Уведомление';
-    } else {
-      // Для всех остальных типов
-      typeIcon = '📢';
-      typeLabel = notif.type.charAt(0).toUpperCase() + notif.type.slice(1);
-    }
-    
-    return `
-      <div style="background: rgba(30,37,56,0.6); border: 1px solid ${isUnread ? 'rgba(34,211,238,0.4)' : 'rgba(34,211,238,0.2)'}; border-radius: 12px; padding: 16px; margin-bottom: 12px; ${isUnread ? 'border-left: 3px solid #22d3ee;' : ''} ${notif.type === 'jackpot_win' ? 'cursor: pointer; transition: all 0.3s;' : ''}" data-notif-id="${notif.id}" ${notif.type === 'jackpot_win' ? `onclick="window.showJackpotWinnerFromNotification({id: '${notif.id}', userId: '${notif.userId || ''}', winnerName: '${notif.winnerName || ''}', amount: '${notif.amount || '0'}', message: '${notif.message || ''}'})"` : ''}>
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-          <h4 style="color: ${notif.type === 'jackpot_win' ? '#22c55e' : '#22d3ee'}; font-size: 14px; font-weight: 600; margin: 0;">
-            ${typeIcon} ${typeLabel}
-            ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">🎉 Нажмите для подробностей</span>' : ''}
-          </h4>
-          ${isUnread ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
-        </div>
-        <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${messageWithLinks}</p>
-        <p style="color: #64748b; font-size: 11px; margin: 0;">${formatNotificationDate(notif.createdAt)}</p>
-        ${isUnread && notif.type !== 'jackpot_win' ? `<button onclick="event.stopPropagation(); markNotificationAsReadWheel('${notif.id}')" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
-      </div>
-    `;
-  }).join('');
-  
-  // Сохраняем уведомления глобально для обновления бейджа
-  window.notifications = notifications;
-  updateNotificationBadge();
-}
-
-// Функция форматирования времени как в index.html
-function formatTimeAgoWheel(date) {
-  if (!date) return '';
-  const seconds = Math.floor((new Date() - date) / 1000);
-  if (seconds < 60) return 'только что';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return minutes + ' мин. назад';
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return hours + ' ч. назад';
-  const days = Math.floor(hours / 24);
-  return days + ' д. назад';
-}
-
-// Функция для отображения уведомлений в модальном окне
-function renderNotificationsInModal() {
-  const listEl = document.getElementById('notificationsList');
-  if (!listEl) return;
-  
-  const notifications = window.notifications || [];
-  
-  if (notifications.length === 0) {
-    listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Нет уведомлений</p>';
-    return;
-  }
-  
-  listEl.innerHTML = notifications.map(notif => `
-    <div style="background: rgba(30,37,56,0.6); border: 1px solid rgba(34,211,238,0.2); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
-      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-        <h4 style="color: #22d3ee; font-size: 14px; font-weight: 600; margin: 0;">${notif.title || 'Уведомление'}</h4>
-        ${!notif.read ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
-      </div>
-      <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${notif.message}</p>
-      <p style="color: #64748b; font-size: 11px; margin: 0;">${new Date(notif.createdAt).toLocaleString()}</p>
-      ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); renderNotificationsInModal();" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
-    </div>
-  `).join('');
-}
-
-// Функция для отметки уведомления как прочитанного (как в index.html)
-window.markNotificationAsReadWheel = async function(notificationId) {
-  if (!window.db || !currentUser) return;
-  
-  try {
-    const { doc, updateDoc, serverTimestamp } = window.__firestoreExports || {};
-    if (doc && updateDoc) {
-      await updateDoc(doc(window.db, 'notifications', notificationId), {
-        read: true,
-        readAt: serverTimestamp()
-      });
-      
-      // Обновляем локальный массив
-      if (window.allNotifications) {
-        const notif = window.allNotifications.find(n => n.id === notificationId);
-        if (notif) notif.read = true;
-      }
-      
-      // Обновляем бейдж
-      updateNotificationBadge();
-      
-      // Мгновенно обновляем текущий фильтр
-      const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
-      filterNotifications(activeFilter);
-    }
-  } catch (error) {
-    console.error('Error marking notification as read:', error);
-  }
-};
+// Функции уведомлений доступны из централизованной системы header.js
 
 // Функция для отображения модального окна выигрыша джекпота из уведомлений (использует существующий jackpotWinnerOverlay)
 window.showJackpotWinnerFromNotification = async function(notification) {
