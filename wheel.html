@@ -472,21 +472,6 @@
   </div>
 </div>
 
-<!-- Notifications Modal -->
-<div id="notificationsModal" class="modal">
-  <div class="modal-content modal-sm p-6 relative">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-bell text-blue-400"></i><span data-translate="notifications">Уведомления</span></h2>
-      <button onclick="closeNotificationsModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-    </div>
-    <div id="notificationsList" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2"><p class="text-slate-500 text-center py-8" data-translate="no_notifications">Нет уведомлений</p></div>
-  </div>
-</div>
-
-<div id="toast" class="fixed bottom-4 right-4 bg-slate-800 border border-slate-700 text-white px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
-  <i class="fas fa-check-circle text-emerald-400"></i><span id="toastMessage">Действие выполнено</span>
-</div>
-
 <!-- Prompt Modal -->
 <div id="promptModal" class="modal">
   <div class="modal-content modal-sm p-6 relative">
@@ -644,9 +629,6 @@ let tempCustomCategories = [];
 let newActivitiesData = JSON.parse(localStorage.getItem(NEW_ACTIVITIES_KEY)) || {};
 let viewedActivitiesData = JSON.parse(localStorage.getItem(VIEWED_ACTIVITIES_KEY)) || {};
 
-let notifications = [];
-let unreadNotificationsCount = 0;
-let notificationsUnsubscribe = null;
 let currentImageIndex = 0;
 let currentImages = [];
 let itemsPerPage = parseInt(localStorage.getItem('itemsPerPage')) || 10;
@@ -1290,44 +1272,9 @@ window.openFeedbackFromList = function(docId, projectId, projectName) {
   modal.classList.add('active');
 };
 
-function initNotificationsListener(uid) {
-  if (notificationsUnsubscribe) notificationsUnsubscribe();
-  const notifQuery = query(collection(db, "notifications"), where("userId", "==", uid));
-  notificationsUnsubscribe = onSnapshot(notifQuery, function(snapshot) {
-    notifications = snapshot.docs.map(function(doc) { return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate() || new Date() }; }).sort(function(a, b) { return b.createdAt - a.createdAt; });
-    unreadNotificationsCount = notifications.filter(function(n) { return !n.read; }).length;
-    updateNotificationBadge();
-  });
-}
+// Функции уведомлений доступны из централизованной системы header.js
 
-function updateNotificationBadge() {
-  const badge = document.getElementById('notificationBadge');
-  if (badge) { if (unreadNotificationsCount > 0) { badge.textContent = unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); } }
-}
-
-window.showNotifications = function() {
-  if (!currentUser) { showToast('Войдите'); return; }
-  const modal = document.getElementById('notificationsModal');
-  const list = document.getElementById('notificationsList');
-  if (notifications.length === 0) list.innerHTML = '<p class="text-slate-500 text-center py-8"><i class="fas fa-bell-slash text-4xl mb-3"></i><br>' + t('no_notifications') + '</p>';
-  else {
-    list.innerHTML = notifications.map(function(notif) {
-      const messageWithLinks = notif.message.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-400 hover:underline break-all">$1</a>');
-      const typeIcons = { info: 'fa-info-circle text-blue-400', success: 'fa-check-circle text-green-400', warning: 'fa-exclamation-triangle text-yellow-400', promo: 'fa-gift text-pink-400', referral: 'fa-link text-purple-400' };
-      const typeIcon = typeIcons[notif.type] || 'fa-bell text-slate-400';
-      const unreadClass = !notif.read ? 'unread' : '';
-      return '<div class="notification-item p-3 bg-slate-800/50 rounded-lg ' + unreadClass + '" data-id="' + notif.id + '"><div class="flex items-start gap-3"><div class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0"><i class="fas ' + typeIcon + '"></i></div><div class="flex-1 min-w-0"><div class="text-sm text-slate-300">' + messageWithLinks + '</div><div class="flex items-center justify-between mt-2"><span class="text-xs text-slate-500">' + formatTimeAgo(notif.createdAt) + '</span>' + (!notif.read ? '<button onclick="markNotificationAsRead(\'' + notif.id + '\')" class="text-xs text-blue-400">Отметить</button>' : '') + '</div></div></div></div>';
-    }).join('');
-  }
-  modal.classList.add('active');
-};
-
-window.closeNotificationsModal = function() { document.getElementById('notificationsModal').classList.remove('active'); };
-
-window.markNotificationAsRead = async function(notifId) {
-  try { await updateDoc(doc(db, "notifications", notifId), { read: true }); const notif = notifications.find(function(n) { return n.id === notifId; }); if (notif) { notif.read = true; unreadNotificationsCount = Math.max(0, unreadNotificationsCount - 1); updateNotificationBadge(); const item = document.querySelector('[data-id="' + notifId + '"]'); if (item) { item.classList.remove('unread'); const btn = item.querySelector('button'); if (btn) btn.remove(); } } } catch (e) { console.error(e); }
-};
-
+// Вспомогательная функция для форматирования времени (используется в feedback)
 function formatTimeAgo(date) {
   if (!date) return '';
   const now = new Date();
@@ -1419,7 +1366,7 @@ onAuthStateChanged(auth, async function(user) {
         document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
 
         initUserSync(user.uid);
-        initNotificationsListener(user.uid);
+        // Уведомления инициализируются централизованно через header.js
 
         // ✅ Загружаем состояние hero из Firestore
         await loadHeroStateFromFirestore(user.uid);
@@ -1440,10 +1387,7 @@ onAuthStateChanged(auth, async function(user) {
         userCompleted = [];
 
         document.getElementById('generalFeedbackPanel').classList.add('hidden');
-        if (notificationsUnsubscribe)   { notificationsUnsubscribe();   notificationsUnsubscribe   = null; }
-        if (adminFeedbacksUnsubscribe)  { adminFeedbacksUnsubscribe();  adminFeedbacksUnsubscribe  = null; }
-
-        notifications = []; unreadNotificationsCount = 0; updateNotificationBadge();
+        // Уведомления управляются централизованно через header.js
         document.getElementById('loggedOutView').classList.remove('hidden');
         document.getElementById('loggedInView').classList.add('hidden');
         document.getElementById('guestWarning').classList.remove('hidden');
@@ -1623,7 +1567,6 @@ setTimeout(() => {
     { id: 'loginModal', closeFn: window.closeLoginModal },
     { id: 'addModal', closeFn: window.closeAddModal },
     { id: 'activityModal', closeFn: window.closeActivityModal },
-    { id: 'notificationsModal', closeFn: window.closeNotificationsModal },
     { id: 'feedbackModal', closeFn: window.closeFeedbackModal },
     { id: 'feedbackListModal', closeFn: window.closeFeedbackListModal },
     { id: 'promptModal', closeFn: window.closePromptModal },
