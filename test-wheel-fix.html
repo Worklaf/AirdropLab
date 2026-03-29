@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Wheel Fix</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-white p-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-center">🔧 Test Wheel Functions</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Function Test -->
+      <div class="bg-gray-800 p-6 rounded-lg">
+        <h2 class="text-xl font-bold mb-4">🧪 Function Tests</h2>
+        
+        <div class="space-y-4">
+          <button onclick="testSwitchToOnline()" 
+                  class="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-exchange-alt mr-2"></i>Test switchToOnline
+          </button>
+          
+          <button onclick="testSwitchToSolo()" 
+                  class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-exchange-alt mr-2"></i>Test switchToSolo
+          </button>
+          
+          <button onclick="testInitOnline()" 
+                  class="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-play mr-2"></i>Test initOnlineGame
+          </button>
+          
+          <button onclick="testElements()" 
+                  class="w-full bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-search mr-2"></i>Test Elements
+          </button>
+        </div>
+      </div>
+      
+      <!-- Results -->
+      <div class="bg-gray-800 p-6 rounded-lg">
+        <h2 class="text-xl font-bold mb-4">📊 Test Results</h2>
+        
+        <div id="testResults" class="space-y-2 text-sm font-mono">
+          <div class="text-gray-400">Click test buttons to see results...</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Instructions -->
+    <div class="mt-8 bg-gray-800 p-6 rounded-lg">
+      <h2 class="text-xl font-bold mb-4">📋 Test Instructions</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-300">
+        <li>Open wheel-of-fortune.html in browser</li>
+        <li>Open this test page</li>
+        <li>Test functions step by step</li>
+        <li>Check console for errors</li>
+        <li>Verify element existence</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    // Тестовые функции
+    function testSwitchToOnline() {
+      try {
+        if (typeof switchToOnline === 'function') {
+          updateResults('✅ switchToOnline function exists', 'success');
+          switchToOnline();
+          updateResults('✅ switchToOnline executed successfully', 'success');
+        } else {
+          updateResults('❌ switchToOnline function NOT found', 'error');
+        }
+      } catch (error) {
+        updateResults(`❌ switchToOnline error: ${error.message}`, 'error');
+      }
+    }
+    
+    function testSwitchToSolo() {
+      try {
+        if (typeof switchToSolo === 'function') {
+          updateResults('✅ switchToSolo function exists', 'success');
+          switchToSolo();
+          updateResults('✅ switchToSolo executed successfully', 'success');
+        } else {
+          updateResults('❌ switchToSolo function NOT found', 'error');
+        }
+      } catch (error) {
+        updateResults(`❌ switchToSolo error: ${error.message}`, 'error');
+      }
+    }
+    
+    function testInitOnline() {
+      try {
+        if (typeof initOnlineGame === 'function') {
+          updateResults('✅ initOnlineGame function exists', 'success');
+          initOnlineGame();
+          updateResults('✅ initOnlineGame executed successfully', 'success');
+        } else {
+          updateResults('❌ initOnlineGame function NOT found', 'error');
+        }
+      } catch (error) {
+        updateResults(`❌ initOnlineGame error: ${error.message}`, 'error');
+      }
+    }
+    
+    function testElements() {
+      const elements = [
+        'onlineModeBtn',
+        'soloModeBtn', 
+        'onlineModeContainer',
+        'onlineTimer',
+        'prizePool',
+        'participantCount'
+      ];
+      
+      let allFound = true;
+      const missingElements = [];
+      
+      elements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          updateResults(`✅ Element ${id} found`, 'success');
+        } else {
+          updateResults(`❌ Element ${id} NOT found`, 'error');
+          allFound = false;
+          missingElements.push(id);
+        }
+      });
+      
+      if (allFound) {
+        updateResults('🎉 All required elements found!', 'success');
+      } else {
+        updateResults(`⚠️ Missing elements: ${missingElements.join(', ')}`, 'warning');
+      }
+    }
+    
+    function updateResults(message, type = 'info') {
+      const resultsDiv = document.getElementById('testResults');
+      const timestamp = new Date().toLocaleTimeString();
+      
+      // Добавляем цвет в зависимости от типа
+      let colorClass = 'text-gray-400';
+      if (type === 'success') colorClass = 'text-green-400';
+      if (type === 'error') colorClass = 'text-red-400';
+      if (type === 'warning') colorClass = 'text-yellow-400';
+      
+      resultsDiv.innerHTML += `
+        <div class="p-2 bg-gray-700 rounded">
+          <span class="text-gray-500">[${timestamp}]</span> 
+          <span class="${colorClass}">${message}</span>
+        </div>
+      `;
+      
+      // Прокручиваем вниз
+      resultsDiv.scrollTop = resultsDiv.scrollHeight;
+    }
+    
+    // Автоматическая проверка при загрузке
+    window.addEventListener('load', function() {
+      updateResults('🚀 Test page loaded. Ready for testing!', 'success');
+      
+      // Проверяем основные функции
+      setTimeout(() => {
+        updateResults('🔍 Checking function availability...', 'info');
+        testElements();
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
