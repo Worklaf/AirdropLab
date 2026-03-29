@@ -1392,23 +1392,31 @@ function updateNotificationBadge() {
   }
 }
 
-window.showNotifications = function() {
-  if (window.showNotifications) {
-    window.showNotifications();
+// Функция-обертка для вызова из index.html
+window.showNotificationsFromIndex = function() {
+  // Используем централизованную функцию из header.js
+  if (typeof window.loadNotifications === 'function') {
+    window.loadNotifications();
   } else {
     showToast('Уведомления загружаются...');
   }
 };
 
+// Для совместимости со старыми вызовами
+window.showNotifications = window.showNotificationsFromIndex;
+
 window.closeNotificationsModal = function() {
-  if (window.closeNotificationsModal) {
-    window.closeNotificationsModal();
+  if (typeof window.closeNotificationsModalWheel === 'function') {
+    window.closeNotificationsModalWheel();
   }
 };
 
 window.markNotificationAsRead = async function(notifId) {
-  if (window.markNotificationAsRead) {
-    await window.markNotificationAsRead(notifId);
+  // Используем централизованную функцию из header.js
+  if (typeof window.markNotificationAsReadWheel === 'function') {
+    await window.markNotificationAsReadWheel(notifId);
+  } else {
+    console.log('Mark notification as read:', notifId);
   }
 };
 
