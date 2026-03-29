@@ -360,10 +360,10 @@
     
     <!-- Game Mode Toggle -->
     <div style="display:flex;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:4px;">
-      <button id="soloModeBtn" onclick="switchToSolo()" style="padding:8px 16px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:8px;color:white;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
+      <button id="soloModeBtn" onclick="if(typeof switchToSolo === 'function'){switchToSolo();}else{console.error('switchToSolo not defined');}" style="padding:8px 16px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:8px;color:white;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
         <i class="fas fa-user" style="margin-right:6px;"></i>Solo
       </button>
-      <button id="onlineModeBtn" onclick="switchToOnline()" style="padding:8px 16px;background:transparent;border:none;border-radius:8px;color:var(--text-secondary);font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
+      <button id="onlineModeBtn" onclick="if(typeof switchToOnline === 'function'){switchToOnline();}else{console.error('switchToOnline not defined');}" style="padding:8px 16px;background:transparent;border:none;border-radius:8px;color:var(--text-secondary);font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
         <i class="fas fa-users" style="margin-right:6px;"></i>Online
       </button>
     </div>
