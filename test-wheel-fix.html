@@ -32,9 +32,14 @@
             <i class="fas fa-play mr-2"></i>Test initOnlineGame
           </button>
           
-          <button onclick="testElements()" 
-                  class="w-full bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded font-medium">
-            <i class="fas fa-search mr-2"></i>Test Elements
+          <button onclick="testEnsureElements()" 
+                  class="w-full bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-shield-alt mr-2"></i>Test ensureOnlineElements
+          </button>
+          
+          <button onclick="testUpdateOnlineUI()" 
+                  class="w-full bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-sync-alt mr-2"></i>Test updateOnlineUI
           </button>
         </div>
       </div>
@@ -137,6 +142,34 @@
       }
     }
     
+    function testEnsureElements() {
+      try {
+        if (typeof ensureOnlineElements === 'function') {
+          updateResults('✅ ensureOnlineElements function exists', 'success');
+          ensureOnlineElements();
+          updateResults('✅ ensureOnlineElements executed successfully', 'success');
+        } else {
+          updateResults('❌ ensureOnlineElements function NOT found', 'error');
+        }
+      } catch (error) {
+        updateResults(`❌ ensureOnlineElements error: ${error.message}`, 'error');
+      }
+    }
+    
+    function testUpdateOnlineUI() {
+      try {
+        if (typeof updateOnlineUI === 'function') {
+          updateResults('✅ updateOnlineUI function exists', 'success');
+          updateOnlineUI();
+          updateResults('✅ updateOnlineUI executed successfully', 'success');
+        } else {
+          updateResults('❌ updateOnlineUI function NOT found', 'error');
+        }
+      } catch (error) {
+        updateResults(`❌ updateOnlineUI error: ${error.message}`, 'error');
+      }
+    }
+    
     function updateResults(message, type = 'info') {
       const resultsDiv = document.getElementById('testResults');
       const timestamp = new Date().toLocaleTimeString();
@@ -157,17 +190,6 @@
       // Прокручиваем вниз
       resultsDiv.scrollTop = resultsDiv.scrollHeight;
     }
-    
-    // Автоматическая проверка при загрузке
-    window.addEventListener('load', function() {
-      updateResults('🚀 Test page loaded. Ready for testing!', 'success');
-      
-      // Проверяем основные функции
-      setTimeout(() => {
-        updateResults('🔍 Checking function availability...', 'info');
-        testElements();
-      }, 1000);
-    });
   </script>
 </body>
 </html>
