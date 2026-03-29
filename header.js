@@ -2947,6 +2947,14 @@ function initFeedbacksListener(uid) {
     document.getElementById('jackpotWinnerOverlay').classList.remove('show');
   };
 
+  // Функция закрытия модального окна уведомлений
+  window.closeNotificationsModal = function() {
+    const modal = document.getElementById('notificationsModalOverlay');
+    if (modal) {
+      modal.remove();
+    }
+  };
+
   // Функция отображения модального окна уведомлений (улучшенная версия)
   window.showNotifications = function() {
     if (!window.currentUser) { 
@@ -3068,8 +3076,10 @@ function initFeedbacksListener(uid) {
     // Добавляем обработчик закрытия по ESC
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
-        window.closeNotificationsModal();
-        document.removeEventListener('keydown', handleEscape);
+        const modal = document.getElementById('notificationsModalOverlay');
+        if (modal) {
+          window.closeNotificationsModal();
+        }
       }
     };
     document.addEventListener('keydown', handleEscape);
