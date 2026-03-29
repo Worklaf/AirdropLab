@@ -2959,57 +2959,96 @@ function initOnlineWheel() {
   if (!canvas) return;
   
   const ctx = canvas.getContext('2d');
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const radius = Math.min(centerX, centerY) - 10;
+  const W = canvas.width;
+  const cx = W / 2, cy = W / 2;
+  const R = Math.min(cx, cy) - 10;
   
-  // Сектора колеса (такие же как в одиночном режиме)
+  // Улучшенные сектора колеса с градиентами (такие же как в одиночном режиме)
   const sectors = [
-    { label: '1 RGT', value: 1, color: '#8b5cf6' },
-    { label: '2 RGT', value: 2, color: '#3b82f6' },
-    { label: '3 RGT', value: 3, color: '#06b6d4' },
-    { label: '4 RGT', value: 4, color: '#10b981' },
-    { label: '10 RGT', value: 10, color: '#22c55e' },
-    { label: '20 RGT', value: 20, color: '#eab308' },
-    { label: '50 RGT', value: 50, color: '#f97316' },
-    { label: '100 RGT', value: 100, color: '#ef4444' }
+    { label: '1 RGT', value: 1, colors: ['#8b5cf6', '#6366f1'] },
+    { label: '2 RGT', value: 2, colors: ['#3b82f6', '#2563eb'] },
+    { label: '3 RGT', value: 3, colors: ['#06b6d4', '#0891b2'] },
+    { label: '4 RGT', value: 4, colors: ['#10b981', '#059669'] },
+    { label: '10 RGT', value: 10, colors: ['#22c55e', '#16a34a'] },
+    { label: '20 RGT', value: 20, colors: ['#eab308', '#ca8a04'] },
+    { label: '50 RGT', value: 50, colors: ['#f97316', '#dc2626'] },
+    { label: '100 RGT', value: 100, colors: ['#ef4444', '#b91c1c'] }
   ];
   
-  // Рисуем колесо
-  drawOnlineWheel(ctx, centerX, centerY, radius, sectors);
+  drawOnlineWheel(ctx, cx, cy, R, sectors);
 }
 
-// Рисование онлайн колеса (переименовано чтобы избежать конфликта)
+// Рисование онлайн колеса
 function drawOnlineWheel(ctx, centerX, centerY, radius, sectors) {
   const anglePerSector = (Math.PI * 2) / sectors.length;
+  
+  // Очищаем canvas
+  ctx.clearRect(0, 0, centerX * 2, centerY * 2);
   
   sectors.forEach((sector, index) => {
     const startAngle = index * anglePerSector - Math.PI / 2;
     const endAngle = startAngle + anglePerSector;
+    
+    // Создаем градиент для сектора
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, sector.colors[0]);
+    gradient.addColorStop(1, sector.colors[1]);
     
     // Рисуем сектор
     ctx.beginPath();
     ctx.moveTo(centerX, centerY);
     ctx.arc(centerX, centerY, radius, startAngle, endAngle);
     ctx.closePath();
-    ctx.fillStyle = sector.color;
+    ctx.fillStyle = gradient;
     ctx.fill();
     
-    // Рисуем текст
+    // Добавляем границу сектора
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Рисуем текст с тенью
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(startAngle + anglePerSector / 2);
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.fillText(sector.label, radius / 2, 0);
+    ctx.font = 'bold 16px Inter, sans-serif';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 4;
+    ctx.fillText(sector.label, R / 2, 0);
     ctx.restore();
   });
   
-  // Рисуем центральную окружность
+  // Рисуем внешнюю окружность с градиентом
+  const outerGradient = ctx.createRadialGradient(cx, cy, R - 5, cx, cy, R + 5);
+  outerGradient.addColorStop(0, 'rgba(139,92,246,0.3)');
+  outerGradient.addColorStop(1, 'rgba(139,92,246,0.1)');
+  
   ctx.beginPath();
-  ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
-  ctx.fillStyle = '#1e2538';
+  ctx.arc(cx, cy, R + 2, 0, Math.PI * 2);
+  ctx.strokeStyle = outerGradient;
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  
+  // Рисуем центральную окружность с градиентом
+  const centerGradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, 25);
+  centerGradient.addColorStop(0, '#1e2538');
+  centerGradient.addColorStop(1, '#0f172a');
+  
+  ctx.beginPath();
+  ctx.arc(cx, cy, 25, 0, Math.PI * 2);
+  ctx.fillStyle = centerGradient;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(139,92,246,0.5)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Добавляем внутренний круг
+  ctx.beginPath();
+  ctx.arc(cx, cy, 15, 0, Math.PI * 2);
+  ctx.fillStyle = '#8b5cf6';
   ctx.fill();
 }
 
