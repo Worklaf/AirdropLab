@@ -8,9 +8,40 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
+  <link rel="stylesheet" href="styles.css">
+  <script src="languages.js"></script>
+  <script src="header.js"></script>
+  <script src="config/firebase-config.js"></script>
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
+    // Делаем доступным глобально
+    window.initializeApp = initializeApp;
+    window.getAuth = getAuth;
+    window.onAuthStateChanged = onAuthStateChanged;
+    window.signOut = signOut;
+    window.signInWithPopup = signInWithPopup;
+    window.GoogleAuthProvider = GoogleAuthProvider;
+    window.TwitterAuthProvider = TwitterAuthProvider;
+    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+    window.getFirestore = getFirestore;
+    window.doc = doc;
+    window.setDoc = setDoc;
+    window.getDoc = getDoc;
+    window.updateDoc = updateDoc;
+    window.serverTimestamp = serverTimestamp;
+    
+    console.log('🔥 Firebase SDK loaded as modules');
+  </script>
+  
   <!-- CENTRALIZED AUTHENTICATION SYSTEM -->
-  <script src="auth.js"></script>
-  <script src="auth-modal.js"></script>
+  <script type="module" src="auth.js"></script>
+  <script type="module" src="auth-modal.js"></script>
   
   <style>
     /* Modal styles */
@@ -88,10 +119,6 @@
       margin-top: 1rem;
     }
   </style>
-  <link rel="stylesheet" href="styles.css">
-  <script src="languages.js"></script>
-  <script src="header.js"></script>
-  <script src="config/firebase-config.js"></script>
   <style>
     :root {
       --bg-primary: #0b0f19;
@@ -2658,7 +2685,7 @@ if (currentUser && db) {
 
 <!-- Login Modal создается централизованно через auth-modal.js -->
 
-<script>
+  <script>
 // Ensure login functions are available after DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🔐 Setting up login functions...');
@@ -2670,7 +2697,91 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('🔐 Firebase Auth not available');
   }
   
+  // Инициализируем модальное окно если доступна функция
+  if (typeof window.initLoginModal === 'function') {
+    console.log('🎨 Initializing login modal...');
+    window.initLoginModal();
+  }
+  
+  // Ждем загрузки модулей и проверяем функцию входа
+  setTimeout(() => {
+    console.log('🔍 Checking login modal function...');
+    console.log('openLoginModal available:', typeof openLoginModal);
+    console.log('openLoginModal function:', openLoginModal);
+    
+    // Если функция не доступна, создаем простую заглушку
+    if (typeof openLoginModal !== 'function') {
+      console.warn('⚠️ openLoginModal not available, creating fallback...');
+      window.openLoginModal = function() {
+        console.log('🔐 Login modal fallback called');
+        if (typeof showToast === 'function') {
+          showToast('Login functionality is being prepared...', 'info');
+        }
+      };
+    }
+  }, 1000); // Даем 1 секунду на загрузку модулей
+  
   // Функции аутентификации доступны из централизованной системы auth.js
+  
+  // Простые функции для модального окна
+  window.closeLoginModal = function() {
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('active');
+    }
+  };
+  
+  window.showLoginTab = function(tab) {
+    const emailForm = document.getElementById('emailLoginForm');
+    const googleForm = document.getElementById('googleLoginForm');
+    const emailTab = document.getElementById('emailLoginTab');
+    const googleTab = document.getElementById('googleLoginTab');
+    
+    if (tab === 'email') {
+      emailForm.style.display = 'block';
+      googleForm.style.display = 'none';
+      emailTab.classList.add('active');
+      googleTab.classList.remove('active');
+    } else {
+      emailForm.style.display = 'none';
+      googleForm.style.display = 'block';
+      emailTab.classList.remove('active');
+      googleTab.classList.add('active');
+    }
+  };
+  
+  window.loginWithEmail = function() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+      if (typeof showToast === 'function') {
+        showToast('Please enter email and password', 'warning');
+      }
+      return;
+    }
+    
+    // Здесь будет логика входа через email
+    console.log('🔐 Email login:', email);
+    if (typeof showToast === 'function') {
+      showToast('Email login functionality coming soon...', 'info');
+    }
+  };
+  
+  window.loginWithGoogle = function() {
+    // Здесь будет логика входа через Google
+    console.log('🔐 Google login requested');
+    if (typeof showToast === 'function') {
+      showToast('Google login functionality coming soon...', 'info');
+    }
+  };
+  
+  window.showRegisterModal = function() {
+    if (typeof showToast === 'function') {
+      showToast('Registration functionality coming soon...', 'info');
+    }
+  };
 });
 </script>
 
