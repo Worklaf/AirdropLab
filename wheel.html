@@ -13,8 +13,6 @@
     <!-- languages.js ДОЛЖЕН загружаться ПЕРЕД основным скриптом -->
     <script src="languages.js"></script>
     <script src="header.js"></script>
-    <script src="auth-modal.js"></script>
-    <script src="auth.js"></script>
     <script src="assets/reagents.js"></script>
      
    
@@ -330,6 +328,27 @@
   </aside>
 </div>
 
+<!-- Login Modal -->
+<div id="loginModal" class="modal">
+  <div class="modal-content modal-sm p-6 relative">
+    <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+    <h2 class="text-2xl font-bold mb-6 text-center" data-translate="login_title">Вход</h2>
+    <div class="space-y-3">
+      <button onclick="loginGoogle()" class="w-full bg-white text-slate-900 font-bold py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-200"><i class="fab fa-google text-red-500"></i> <span data-translate="google">Google</span></button>
+      <button onclick="loginTwitter()" class="w-full bg-[#1DA1F2] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-3"><i class="fab fa-twitter"></i> <span data-translate="twitter">Twitter</span></button>
+      <div class="relative py-2"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-700"></div></div><div class="relative flex justify-center"><span class="bg-[#1e2538] px-2 text-xs text-slate-500" data-translate="or_email">ИЛИ EMAIL</span></div></div>
+      <form onsubmit="handleEmailAuth(event)" class="space-y-3">
+        <input type="email" id="emailInput" placeholder="Email" data-translate="email" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm">
+        <input type="password" id="passInput" placeholder="Пароль" data-translate="password" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm" autocomplete="current-password">
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="handleRegister()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg text-sm" data-translate="register">Регистрация</button>
+          <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2 rounded-lg text-sm font-bold" data-translate="login_btn">Войти</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- Add/Edit Project Modal -->
 <div id="addModal" class="modal">
   <div class="modal-content modal-large">
@@ -472,6 +491,62 @@
   </div>
 </div>
 
+<!-- Feedback Modal -->
+<div id="feedbackModal" class="modal">
+  <div class="modal-content modal-lg relative overflow-hidden">
+    <div class="modal-header">
+      <div class="flex justify-between items-center w-full">
+        <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments text-purple-400"></i><span id="feedbackModalTitle" data-translate="feedback">Обратная связь</span></h2>
+        <button onclick="closeFeedbackModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+      </div>
+    </div>
+    <div class="modal-body bg-[#151b2b]">
+      <input type="hidden" id="feedbackProjectId">
+      <input type="hidden" id="feedbackDocId">
+      <div class="mb-3 pb-3 border-b border-slate-700"><span class="text-sm text-slate-400" id="feedbackProjectLabel">Проект: </span><span id="feedbackProjectName" class="text-sm font-bold text-blue-400">...</span></div>
+      <div id="feedbackChatHistory" class="h-80 overflow-y-auto pr-3 custom-scrollbar bg-slate-900/30 rounded-xl p-4"><div class="flex flex-col items-center justify-center h-full text-slate-500"><i class="fas fa-comments text-4xl mb-3 opacity-50"></i><p class="text-sm" data-translate="loading_chat">Загрузка переписки...</p></div></div>
+      <div id="feedbackFormNew" class="space-y-4">
+        <div><label class="block text-sm font-medium text-slate-300 mb-2" data-translate="topic">Тема обращения</label><select id="feedbackCategory" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-200"><option value="suggestion" data-translate="suggestion">💡 Предложение</option><option value="bug" data-translate="bug">🐛 Ошибка</option><option value="question" data-translate="question">❓ Вопрос</option><option value="other" data-translate="other">💬 Другое</option></select></div>
+        <div><label class="block text-sm font-medium text-slate-300 mb-2" data-translate="message">Сообщение</label><textarea id="feedbackText" rows="4" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-200" placeholder="Опишите суть обращения..." data-translate="message_placeholder"></textarea></div>
+      </div>
+      <div id="feedbackFormReply" class="hidden">
+        <label class="block text-sm font-medium text-slate-300 mb-2" data-translate="your_answer">Ваш ответ</label>
+        <div class="flex gap-2">
+          <input type="text" id="feedbackUserReplyText" placeholder="Напишите ответ..." data-translate="reply_placeholder" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white">
+          <button onclick="sendUserFeedbackReply()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-bold"><i class="fas fa-paper-plane"></i></button>
+          <button id="adminChatDeleteBtn" onclick="if(confirm('Удалить переписку?')) deleteAdminFeedback(document.getElementById('feedbackDocId').value)" class="hidden text-red-400 hover:text-red-300" title="Удалить"><i class="fas fa-trash text-xl"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer bg-[#1e2538] border-t border-slate-700 p-4 shrink-0">
+      <div class="flex gap-3 w-full justify-end" id="feedbackModalFooter">
+        <button onclick="closeFeedbackModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-sm" data-translate="close">Закрыть</button>
+        <button id="feedbackSendBtn" onclick="window.sendUserFeedback()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg text-sm font-bold" data-translate="send">Отправить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Feedback List Modal -->
+<div id="feedbackListModal" class="modal">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <div class="flex justify-between items-center w-full">
+        <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments text-purple-400"></i><span data-translate="feedbacks_list">Отзывы и предложения</span></h2>
+        <button onclick="closeFeedbackListModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="feedbacksContainer" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2"><p class="text-slate-500 text-center py-8" data-translate="loading_feedbacks">Загрузка отзывов...</p></div>
+    </div>
+    <div class="modal-footer"><div class="flex justify-center w-full"><button onclick="closeFeedbackListModal()" class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-lg text-sm" data-translate="close">Закрыть</button></div></div>
+  </div>
+</div>
+
+<div id="toast" class="fixed bottom-4 right-4 bg-slate-800 border border-slate-700 text-white px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+  <i class="fas fa-check-circle text-emerald-400"></i><span id="toastMessage">Действие выполнено</span>
+</div>
+
 <!-- Prompt Modal -->
 <div id="promptModal" class="modal">
   <div class="modal-content modal-sm p-6 relative">
@@ -528,7 +603,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { 
   getAuth, 
-  onAuthStateChanged
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  TwitterAuthProvider, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  updateProfile          // ← ДОБАВЛЕНО
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import { 
@@ -560,7 +642,6 @@ const firebaseConfig = window.firebaseConfig;
 const ADMIN_UID = globalThis.ADMIN_UID || "SAkz4mdW9reDaIsvqigCNZhEKJR2";
 
 const app = initializeApp(firebaseConfig);
-window.firebaseApp = app;
 const auth = getAuth(app);
 // IndexedDB кэш — данные мгновенно при каждом открытии страницы
 let db;
@@ -605,8 +686,10 @@ window.__firestoreExports = {
     increment
 };
 
-// ✅ Auth функции
+// ✅ Auth функции с updateProfile
 window.__authExports = {
+    updateProfile,
+    signOut,
     onAuthStateChanged
 };
 const STORAGE_KEY = 'arc_tracker_v3';
@@ -845,6 +928,15 @@ window.handleModalMouseDown = function(e) {
 window.handleModalMouseUp = function(e) {
   modalClickStartTarget = null;
 };
+
+// === AUTH ===
+window.openLoginModal = function() { document.getElementById('loginModal').classList.add('active'); };
+window.closeLoginModal = function() { document.getElementById('loginModal').classList.remove('active'); };
+window.loginGoogle = async function() { try { await signInWithPopup(auth, new GoogleAuthProvider()); closeLoginModal(); showToast('Вход: Google'); } catch(e) { showToast(e.message); } };
+window.loginTwitter = async function() { try { await signInWithPopup(auth, new TwitterAuthProvider()); closeLoginModal(); showToast('Вход: Twitter'); } catch(e) { showToast(e.message); } };
+window.handleEmailAuth = async function(e) { e.preventDefault(); const email = document.getElementById('emailInput').value; const pass = document.getElementById('passInput').value; try { await signInWithEmailAndPassword(auth, email, pass); closeLoginModal(); showToast('Вход выполнен'); } catch(e) { showToast(e.message); } };
+window.handleRegister = async function() { const email = document.getElementById('emailInput').value; const pass = document.getElementById('passInput').value; try { await createUserWithEmailAndPassword(auth, email, pass); closeLoginModal(); showToast('Аккаунт создан!'); } catch(e) { showToast(e.message); } };
+window.logout = function() { signOut(auth).then(() => { showToast('Выход'); localStorage.removeItem('favorites_backup'); localStorage.removeItem(STORAGE_KEY); userFavorites = []; userCompleted = []; arcData = {}; }); };
 
 let adminFeedbacks = [];
 let adminFeedbacksUnsubscribe = null;
@@ -1178,6 +1270,24 @@ window.renderFeedbackList = function() {
   }).join('');
 };
 
+window.closeFeedbackChat = function() {
+  document.getElementById('feedbackModal').classList.remove('active');
+  if (window.currentFeedbackUnsub) {
+    window.currentFeedbackUnsub();
+    window.currentFeedbackUnsub = null;
+  }
+  openFeedbackListModal();
+};
+
+window.backToFeedbackList = function() {
+  document.getElementById('feedbackModal').classList.remove('active');
+  if (window.currentFeedbackUnsub) {
+    window.currentFeedbackUnsub();
+    window.currentFeedbackUnsub = null;
+  }
+  openFeedbackListModal();
+};
+
 window.openFeedbackFromList = function(docId, projectId, projectName) {
   const isSupport = projectId === '__support__' || projectName === 'Support';
 
@@ -1272,9 +1382,36 @@ window.openFeedbackFromList = function(docId, projectId, projectName) {
   modal.classList.add('active');
 };
 
-// Функции уведомлений доступны из централизованной системы header.js
+function initNotificationsListener(uid) {
+  console.log('🔔 Notifications initialized via header.js for user:', uid);
+}
 
-// Вспомогательная функция для форматирования времени (используется в feedback)
+function updateNotificationBadge() {
+  if (window.updateNotificationBadge) {
+    window.updateNotificationBadge();
+  }
+}
+
+window.showNotifications = function() {
+  if (window.showNotifications) {
+    window.showNotifications();
+  } else {
+    showToast('Уведомления загружаются...');
+  }
+};
+
+window.closeNotificationsModal = function() {
+  if (window.closeNotificationsModal) {
+    window.closeNotificationsModal();
+  }
+};
+
+window.markNotificationAsRead = async function(notifId) {
+  if (window.markNotificationAsRead) {
+    await window.markNotificationAsRead(notifId);
+  }
+};
+
 function formatTimeAgo(date) {
   if (!date) return '';
   const now = new Date();
