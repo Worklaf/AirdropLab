@@ -2921,7 +2921,7 @@ function initFeedbacksListener(uid) {
   }
 
   // Глобальные переменные для Firebase (будут установлены в основном файле)
-  let collection, query, where, orderBy, limit, doc, getDoc, getDocs, addDoc, updateDoc, writeBatch, serverTimestamp, onSnapshot;
+  let collection, query, where, orderBy, limit, doc, getDoc, getDocs, addDoc, updateDoc, writeBatch, runTransaction, serverTimestamp, onSnapshot;
 
   // Функция инициализации Firebase экспортов
   window.initFirebaseExports = function(firebaseExports) {
@@ -2936,6 +2936,7 @@ function initFeedbacksListener(uid) {
     addDoc = firebaseExports.addDoc;
     updateDoc = firebaseExports.updateDoc;
     writeBatch = firebaseExports.writeBatch;
+    runTransaction = firebaseExports.runTransaction;
     serverTimestamp = firebaseExports.serverTimestamp;
     onSnapshot = firebaseExports.onSnapshot;
     
