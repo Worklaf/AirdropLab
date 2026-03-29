@@ -2605,27 +2605,6 @@ function renderNotificationsInWheel(notifications) {
   updateNotificationBadge();
 }
 
-// Функция форматирования даты для уведомлений
-function formatNotificationDate(timestamp) {
-  if (!timestamp) return '';
-  
-  const now = new Date();
-  const date = timestamp instanceof Date ? timestamp : timestamp.toDate();
-  const diff = now - date;
-  
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  
-  if (seconds < 60) return 'только что';
-  if (minutes < 60) return `${minutes} мин. назад`;
-  if (hours < 24) return `${hours} ч. назад`;
-  if (days < 7) return `${days} д. назад`;
-  
-  return date.toLocaleDateString('ru-RU');
-}
-
 // Функция обновления счетчиков фильтров
 function updateFilterCounts(notifications) {
   const counts = {
@@ -2870,43 +2849,7 @@ if (currentUser && db) {
   </div>
 </div>
 
-<!-- Login Modal -->
-<div id="loginModal" class="modal" style="display: none;">
-  <div class="modal-content modal-sm p-6 relative">
-    <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
-    <h2 class="text-2xl font-bold mb-6 text-center" data-translate="login_title">Вход</h2>
-    <div class="space-y-3">
-      <button onclick="loginGoogle()" class="w-full bg-white text-slate-900 font-bold py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-200">
-        <i class="fab fa-google text-red-500"></i> 
-        <span data-translate="google">Google</span>
-      </button>
-      <button onclick="loginTwitter()" class="w-full bg-[#1DA1F2] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-3">
-        <i class="fab fa-twitter"></i> 
-        <span data-translate="twitter">Twitter</span>
-      </button>
-      <div class="relative py-2">
-        <div class="absolute inset-0 flex items-center">
-          <div class="w-full border-t border-slate-700"></div>
-        </div>
-        <div class="relative flex justify-center">
-          <span class="bg-[#1e2538] px-2 text-xs text-slate-500" data-translate="or_email">ИЛИ EMAIL</span>
-        </div>
-      </div>
-      <form onsubmit="handleEmailAuth(event)" class="space-y-3">
-        <input type="email" id="emailInput" placeholder="Email" class="w-full bg-[#1e2538] border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" required>
-        <input type="password" id="passInput" placeholder="Пароль" class="w-full bg-[#1e2538] border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" required>
-        <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold py-3 rounded-xl hover:from-cyan-500 hover:to-blue-500">
-          <span data-translate="login_btn">Войти</span>
-        </button>
-      </form>
-      <div class="text-center">
-        <button onclick="toggleRegisterMode()" class="text-cyan-400 hover:text-cyan-300 text-sm">
-          <span data-translate="no_account">Нет аккаунта?</span> <span data-translate="register">Зарегистрироваться</span>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Login Modal создается централизованно через auth-modal.js -->
 
 <script>
 // Ensure login functions are available after DOM is loaded
