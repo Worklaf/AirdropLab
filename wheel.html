@@ -2188,12 +2188,10 @@ if (auth) {
     // Загружаем историю прокруток из Firestore
     loadLocalHistory();
     
-    // Load notifications for header
+    // Load notifications for wheel
     if (user && db && window.__firestoreExports) {
-      // Используем централизованную систему уведомлений из header.js
-      if (typeof window.loadNotifications === 'function') {
-        window.loadNotifications();
-      }
+      // Загружаем уведомления для колеса
+      loadNotificationsForWheel();
     }
     
     // Обновляем бейдж уведомлений сразу при загрузке
@@ -2462,9 +2460,308 @@ window.clearAllNotifications = async function() {
 
 // Функции уведомлений доступны из централизованной системы header.js
 
-// Функции уведомлений доступны из централизованной системы header.js
+// Функция загрузки уведомлений для колеса
+async function loadNotificationsForWheel() {
+  if (!window.db || !currentUser) {
+    const listEl = document.getElementById('notificationsList');
+    if (listEl) {
+      listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Недоступно без авторизации</p>';
+    }
+    return;
+  }
+  
+  // Проверяем доступность Firestore функций
+  if (!window.__firestoreExports) {
+    console.warn('Firestore exports not ready, retrying in 500ms...');
+    setTimeout(loadNotificationsForWheel, 500);
+    return;
+  }
+  
+  try {
+    const { collection, query, where, orderBy, onSnapshot } = window.__firestoreExports;
+    
+    if (!collection || !query || !where || !orderBy || !onSnapshot) {
+      console.error('Required Firestore functions not available:', { collection, query, where, orderBy, onSnapshot });
+      const listEl = document.getElementById('notificationsList');
+      if (listEl) {
+        listEl.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка: функции Firestore недоступны</p>';
+      }
+      return;
+    }
+    
+    const q = query(
+      collection(window.db, "notifications"),
+      where("userId", "==", currentUser.uid),
+      orderBy("createdAt", "desc")
+    );
+    
+    onSnapshot(q, (snapshot) => {
+      const notifications = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        data.id = doc.id;
+        notifications.push(data);
+        console.log('📨 Loaded notification:', { id: data.id, type: data.type, message: data.message?.substring(0, 50) });
+      });
+      
+      console.log('📨 Total loaded notifications:', notifications.length);
+      window.allNotifications = notifications; // Сохраняем полный массив
+      window.notifications = notifications; // Для совместимости
+      
+      // Автоматически обновляем бейдж при изменениях
+      updateNotificationBadge();
+      
+      // Если модальное окно открыто, обновляем его
+      if (document.getElementById('notificationsModalOverlay')) {
+        const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+        filterNotifications(activeFilter);
+      } else {
+        renderNotificationsInWheel(notifications);
+      }
+      
+      // Обновляем счетчики если модальное окно открыто
+      if (document.getElementById('notificationsModalOverlay')) {
+        updateFilterCounts(notifications);
+      }
+    });
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+    const listEl = document.getElementById('notificationsList');
+    if (listEl) {
+      listEl.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка загрузки уведомлений</p>';
+    }
+  }
+}
 
-// Функция для отображения модального окна выигрыша джекпота из уведомлений (использует существующий jackpotWinnerOverlay)
+// Функция отображения уведомлений для колеса
+function renderNotificationsInWheel(notifications) {
+  const listEl = document.getElementById('notificationsList');
+  if (!listEl) return;
+  
+  if (notifications.length === 0) {
+    listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Нет уведомлений</p>';
+    return;
+  }
+  
+  listEl.innerHTML = notifications.map(notif => {
+    const messageWithLinks = (notif.message || notif.msg || '').replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #60a5fa; text-decoration: underline;">$1</a>');
+    const isUnread = !notif.read;
+    
+    // Определяем тип и иконку
+    let typeIcon = '📢';
+    let typeLabel = 'Уведомление';
+    
+    if (notif.type === 'wheel_spin') {
+      typeIcon = '🎰';
+      typeLabel = 'Колесо фортуны';
+    } else if (notif.type === 'jackpot_win') {
+      typeIcon = '🏆';
+      typeLabel = 'Джекпот';
+    } else if (notif.type === 'faucet_claim') {
+      typeIcon = '🚰';
+      typeLabel = 'Кран';
+    } else if (notif.type === 'game_reward') {
+      typeIcon = '🎮';
+      typeLabel = 'Игра';
+    } else if (notif.type === 'feedback_reply') {
+      typeIcon = '💬';
+      typeLabel = 'Ответ на сообщение';
+    } else if (notif.type === 'admin' || notif.type === 'broadcast' || notif.type === 'announcement') {
+      typeIcon = '🛡️';
+      typeLabel = 'Администрация';
+    } else if (notif.type === 'reward') {
+      typeIcon = '🎁';
+      typeLabel = 'Поощрение';
+    } else if (notif.type === 'newsletter' || notif.type === 'subscription') {
+      typeIcon = '📧';
+      typeLabel = 'Рассылка';
+    } else if (!notif.type) {
+      typeIcon = '📢';
+      typeLabel = 'Уведомление';
+    } else {
+      // Для всех остальных типов
+      typeIcon = '📢';
+      typeLabel = notif.type.charAt(0).toUpperCase() + notif.type.slice(1);
+    }
+    
+    return `
+      <div style="background: rgba(30,37,56,0.6); border: 1px solid ${isUnread ? 'rgba(34,211,238,0.4)' : 'rgba(34,211,238,0.2)'}; border-radius: 12px; padding: 16px; margin-bottom: 12px; ${isUnread ? 'border-left: 3px solid #22d3ee;' : ''} ${notif.type === 'jackpot_win' ? 'cursor: pointer; transition: all 0.3s;' : ''}" data-notif-id="${notif.id}" ${notif.type === 'jackpot_win' ? `onclick="window.showJackpotWinnerFromNotification({id: '${notif.id}', userId: '${notif.userId || ''}', winnerName: '${notif.winnerName || ''}', amount: '${notif.amount || '0'}', message: '${notif.message || ''}'})"` : ''}>
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+          <h4 style="color: ${notif.type === 'jackpot_win' ? '#22c55e' : '#22d3ee'}; font-size: 14px; font-weight: 600; margin: 0;">
+            ${typeIcon} ${typeLabel}
+            ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">🎉 Нажмите для подробностей</span>' : ''}
+          </h4>
+          ${isUnread ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
+        </div>
+        <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${messageWithLinks}</p>
+        <p style="color: #64748b; font-size: 11px; margin: 0;">${formatNotificationDate(notif.createdAt)}</p>
+        ${isUnread && notif.type !== 'jackpot_win' ? `<button onclick="event.stopPropagation(); markNotificationAsReadWheel('${notif.id}')" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
+      </div>
+    `;
+  }).join('');
+  
+  // Сохраняем уведомления глобально для обновления бейджа
+  window.notifications = notifications;
+  updateNotificationBadge();
+}
+
+// Функция форматирования даты для уведомлений
+function formatNotificationDate(timestamp) {
+  if (!timestamp) return '';
+  
+  const now = new Date();
+  const date = timestamp instanceof Date ? timestamp : timestamp.toDate();
+  const diff = now - date;
+  
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  
+  if (seconds < 60) return 'только что';
+  if (minutes < 60) return `${minutes} мин. назад`;
+  if (hours < 24) return `${hours} ч. назад`;
+  if (days < 7) return `${days} д. назад`;
+  
+  return date.toLocaleDateString('ru-RU');
+}
+
+// Функция обновления счетчиков фильтров
+function updateFilterCounts(notifications) {
+  const counts = {
+    all: notifications.length,
+    games: notifications.filter(n => n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))).length,
+    jackpot_win: notifications.filter(n => n.type === 'jackpot_win').length,
+    admin: notifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game'))).length
+  };
+  
+  const unreadCounts = {
+    all: notifications.filter(n => !n.read).length,
+    games: notifications.filter(n => !n.read && (n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game')))).length,
+    jackpot_win: notifications.filter(n => !n.read && n.type === 'jackpot_win').length,
+    admin: notifications.filter(n => !n.read && n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game'))).length
+  };
+  
+  // Обновляем счетчики для каждого фильтра
+  Object.keys(counts).forEach(type => {
+    const countEl = document.getElementById(`filterCount-${type}`);
+    if (countEl) {
+      countEl.textContent = counts[type];
+    }
+    
+    const badgeEl = document.getElementById(`unreadBadge-${type}`);
+    if (badgeEl) {
+      const unreadCount = unreadCounts[type];
+      if (unreadCount > 0) {
+        badgeEl.textContent = unreadCount;
+        badgeEl.style.display = 'flex';
+      } else {
+        badgeEl.style.display = 'none';
+      }
+    }
+  });
+}
+
+// Функция отметки уведомления как прочитанного
+window.markNotificationAsReadWheel = async function(notificationId) {
+  if (!window.db || !currentUser) return;
+  
+  try {
+    const { doc, updateDoc, serverTimestamp } = window.__firestoreExports || {};
+    if (doc && updateDoc) {
+      await updateDoc(doc(window.db, 'notifications', notificationId), {
+        read: true,
+        readAt: serverTimestamp()
+      });
+      
+      // Обновляем локальный массив
+      if (window.allNotifications) {
+        const notif = window.allNotifications.find(n => n.id === notificationId);
+        if (notif) notif.read = true;
+      }
+      
+      // Обновляем бейдж
+      updateNotificationBadge();
+      
+      // Мгновенно обновляем текущий фильтр
+      const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+      filterNotifications(activeFilter);
+    }
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+  }
+};
+
+// Функция фильтрации уведомлений
+window.filterNotifications = function(type) {
+  const notifications = window.allNotifications || window.notifications || [];
+  console.log('🔍 Filter notifications:', type, 'Total notifications:', notifications.length);
+  
+  let filtered = notifications;
+  
+  if (type !== 'all') {
+    if (type === 'games') {
+      // Все игровые уведомления (колесо, краны, будущие игры)
+      filtered = notifications.filter(n => {
+        const isGame = n.type === 'wheel_spin' || 
+                      n.type === 'faucet_claim' || 
+                      n.type === 'game_reward' ||
+                      (n.type && n.type.includes('game'));
+        return isGame;
+      });
+    } else if (type === 'admin') {
+      // Все админские уведомления
+      filtered = notifications.filter(n => {
+        const isNotGame = n.type !== 'wheel_spin' && 
+                         n.type !== 'faucet_claim' && 
+                         n.type !== 'game_reward' &&
+                         n.type !== 'jackpot_win' &&
+                         (!n.type || !n.type.includes('game'));
+        return isNotGame;
+      });
+    } else {
+      // Конкретный тип
+      filtered = notifications.filter(n => n.type === type);
+    }
+  }
+  
+  // Сохраняем текущий фильтр и отфильтрованные данные
+  window.currentFilter = type;
+  window.filteredNotifications = filtered;
+  
+  // Обновляем стили кнопок
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    if (btn.dataset.filter === type) {
+      btn.style.background = 'rgba(34,211,238,0.2)';
+      btn.style.borderColor = '#22d3ee';
+      btn.style.color = '#e2e8f0';
+      // Обновляем цвет счетчика
+      const countEl = btn.querySelector('.filter-count');
+      if (countEl) {
+        countEl.style.background = 'rgba(255,255,255,0.15)';
+        countEl.style.color = '#e2e8f0';
+      }
+    } else {
+      btn.style.background = 'rgba(34,211,238,0.1)';
+      btn.style.borderColor = 'rgba(34,211,238,0.3)';
+      btn.style.color = '#94a3b8';
+      // Обновляем цвет счетчика
+      const countEl = btn.querySelector('.filter-count');
+      if (countEl) {
+        countEl.style.background = 'rgba(255,255,255,0.1)';
+        countEl.style.color = '#94a3b8';
+      }
+    }
+  });
+  
+  // Обновляем счетчики
+  updateFilterCounts(filtered);
+  
+  // Отображаем уведомления
+  renderNotificationsInWheel(filtered);
+};
+
+// Функция для отображения модального окна выигрыша джекпота из уведомлений
 window.showJackpotWinnerFromNotification = async function(notification) {
   try {
     // Сначала закрываем модальное окно уведомлений чтобы оно не мешало
@@ -2617,13 +2914,9 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('🔐 Setting up login functions...');
   
   // Make Firebase Auth functions available globally
+  // Firebase Auth функции доступны из централизованной системы auth.js
   if (window.auth && typeof window.auth !== 'undefined') {
-    window.signInWithPopup = signInWithPopup;
-    window.GoogleAuthProvider = GoogleAuthProvider;
-    window.TwitterAuthProvider = TwitterAuthProvider;
-    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-    console.log('🔐 Firebase Auth functions made global');
+    console.log('🔐 Firebase Auth functions available from auth.js');
   } else {
     console.error('🔐 Firebase Auth not available');
   }
