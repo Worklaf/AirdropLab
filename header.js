@@ -3524,22 +3524,35 @@ function initFeedbacksListener(uid) {
     
     // Используем window.__firestoreExports как в других функциях
     const fx = window.__firestoreExports;
-    if (!fx || !fx.updateDoc || !fx.doc || !fx.serverTimestamp) {
+    if (!fx || !fx.updateDoc || !fx.doc || !fx.serverTimestamp || !fx.increment) {
       console.error('Firestore functions not available for marking as read');
       return;
     }
     
     try {
+      // Находим уведомление для получения broadcastId
+      const notif = window.allNotifications ? window.allNotifications.find(n => n.id === notificationId) : null;
+      
+      // Обновляем уведомление как прочитанное
       await fx.updateDoc(fx.doc(window.db, 'notifications', notificationId), {
         read: true,
         readAt: fx.serverTimestamp()
       });
       
-      if (window.allNotifications) {
-        const notif = window.allNotifications.find(n => n.id === notificationId);
-        if (notif) notif.read = true;
+      // Если уведомление связано с рассылкой, обновляем счетчик просмотров
+      if (notif && notif.broadcastId) {
+        await fx.updateDoc(fx.doc(window.db, 'broadcasts', notif.broadcastId), {
+          viewCount: fx.increment(1)
+        });
       }
       
+      // Обновляем локальные данные
+      if (window.allNotifications) {
+        const localNotif = window.allNotifications.find(n => n.id === notificationId);
+        if (localNotif) localNotif.read = true;
+      }
+      
+      // Обновляем UI
       if (typeof window.updateNotificationBadge === 'function') {
         window.updateNotificationBadge();
       }
@@ -3551,6 +3564,7 @@ function initFeedbacksListener(uid) {
       if (typeof window.filterNotifications === 'function') {
         window.filterNotifications(activeFilter);
       }
+      
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
