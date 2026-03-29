@@ -880,6 +880,12 @@ async function loadBcastHistory() {
 window.delBcast = async function(id) {
     if (!confirm('Удалить рассылку и все связанные уведомления у пользователей?')) return;
     
+    // Показываем индикатор загрузки
+    var btn = event.target;
+    var originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
     try {
         // Сначала находим все уведомления с этим broadcastId
         var notifsQuery = fbQuery(fbCol(fbDb, "notifications"), fbWhere("broadcastId", "==", id));
@@ -903,6 +909,10 @@ window.delBcast = async function(id) {
     } catch(error) {
         console.error('Error deleting broadcast and notifications:', error);
         alert('Ошибка при удалении рассылки');
+    } finally {
+        // Восстанавливаем кнопку
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
     }
 };
 
