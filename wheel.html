@@ -634,7 +634,9 @@ import {
     arrayUnion, 
     getCountFromServer,
     increment,
-    limit
+    limit,
+    writeBatch,
+    runTransaction
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = window.firebaseConfig;
@@ -685,7 +687,9 @@ window.__firestoreExports = {
     limit,
     serverTimestamp,
     arrayUnion,
-    increment
+    increment,
+    writeBatch,
+    runTransaction
 };
 
 // ✅ Auth функции с updateProfile
@@ -1509,6 +1513,11 @@ onAuthStateChanged(auth, async function(user) {
 
         initUserSync(user.uid);
         initNotificationsListener(user.uid);
+
+        // Обновляем бейдж уведомлений при загрузке
+        if (typeof window.updateNotificationBadge === 'function') {
+          window.updateNotificationBadge();
+        }
 
         // ✅ Загружаем состояние hero из Firestore
         await loadHeroStateFromFirestore(user.uid);
