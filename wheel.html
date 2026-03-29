@@ -919,116 +919,133 @@ window.handleModalMouseUp = function(e) {
 // === AUTH ===
 // Функции аутентификации доступны из централизованной системы auth.js
 
-window.closeFeedbackChat = function() {
-  document.getElementById('feedbackModal').classList.remove('active');
-  if (window.currentFeedbackUnsub) {
-    window.currentFeedbackUnsub();
-    window.currentFeedbackUnsub = null;
-  }
-  openFeedbackListModal();
-};
+// Локальные функции фидбека для проектов (кнопка над каждым проектом)
 
-window.backToFeedbackList = function() {
-  document.getElementById('feedbackModal').classList.remove('active');
-  if (window.currentFeedbackUnsub) {
-    window.currentFeedbackUnsub();
-    window.currentFeedbackUnsub = null;
-  }
-  openFeedbackListModal();
-};
-
-window.openFeedbackFromList = function(docId, projectId, projectName) {
-  const isSupport = projectId === '__support__' || projectName === 'Support';
-
-  // Закрываем список
-  document.getElementById('feedbackListModal').classList.remove('active');
+// Локальная функция для открытия модального окна фидбека по проекту
+window.openFeedbackModal = function(projId, projName) {
+  if (!currentUser) { showToast('Войдите'); openLoginModal(); return; }
 
   const modal = document.getElementById('feedbackModal');
-  document.getElementById('feedbackProjectId').value = projectId;
-  document.getElementById('feedbackDocId').value = docId;
+  const isSupport = projId === '__support__';
+
   document.getElementById('adminChatDeleteBtn').classList.add('hidden');
+  document.getElementById('feedbackProjectId').value = projId;
+  document.getElementById('feedbackChatHistory').innerHTML =
+    '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-blue-400"></i></div>';
 
-  // Находим данные фидбека для темы
-  const fb = adminFeedbacks.find(f => f.id === docId);
-  const categoryLabels = {
-    suggestion: '💡 Предложение',
-    bug: '🐛 Ошибка',
-    question: '❓ Вопрос',
-    other: '💬 Другое',
-    technical: '🔧 Техническая проблема',
-    account: '👤 Проблема с аккаунтом',
-    partnership: '🤝 Партнёрство'
-  };
-  const categoryLabel = fb?.category ? (categoryLabels[fb.category] || fb.category) : '';
-
-  // ---- Метка проекта ----
-  let projectDisplayHtml = `
-    <button onclick="closeFeedbackChat()"
-            class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700
-                   hover:bg-slate-600 text-white mr-2 transition-colors flex-shrink-0">
-      <i class="fas fa-arrow-left text-sm"></i>
-    </button>`;
+  // Метка над чатом
+  const projectLabel = document.getElementById('feedbackProjectLabel');
+  const projectNameEl = document.getElementById('feedbackProjectName');
 
   if (isSupport) {
-    projectDisplayHtml += `
-      <div class="flex flex-col gap-1">
-        <div class="flex items-center gap-2">
-          <span style="background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(139,92,246,0.1));
-                       border:1px solid rgba(139,92,246,0.4);
-                       padding:3px 10px;border-radius:20px;
-                       color:#c084fc;font-size:12px;font-weight:700;letter-spacing:1px;">
-            🛡️ SUPPORT
-          </span>
-          ${categoryLabel
-            ? `<span style="background:rgba(88,28,135,0.3);border:1px solid rgba(139,92,246,0.3);
-                            padding:2px 8px;border-radius:10px;color:#a78bfa;font-size:11px;">
-                ${categoryLabel}
-               </span>`
-            : ''}
-        </div>
-      </div>`;
+    if (projectLabel) projectLabel.textContent = '';
+    if (projectNameEl) {
+      projectNameEl.innerHTML = '<span style="background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.4);padding:3px 10px;border-radius:20px;color:#c084fc;font-size:12px;font-weight:700;letter-spacing:1px;">🛡️ SUPPORT</span>';
+    }
+    // Фиолетовый фон шапки модалки
+    const modalBody = document.querySelector('#feedbackModal .modal-body');
+    if (modalBody) modalBody.style.borderTop = '2px solid rgba(139,92,246,0.4)';
+    // Саппортовые категории
+    const catSelect = document.getElementById('feedbackCategory');
+    if (catSelect) {
+      catSelect.innerHTML = `
+        <option value="technical">🔧 Техническая проблема</option>
+        <option value="account">👤 Проблема с аккаунтом</option>
+        <option value="question">❓ Вопрос</option>
+        <option value="suggestion">💡 Предложение</option>
+        <option value="partnership">🤝 Партнёрство</option>
+        <option value="other">💬 Другое</option>
+      `;
+    }
+    const feedbackText = document.getElementById('feedbackText');
+    if (feedbackText) feedbackText.placeholder = 'Опишите вашу проблему подробно...';
   } else {
-    const project = typeof projects !== 'undefined'
-      ? projects.find(p => p.id === projectId)
-      : null;
-    const logo = project?.image || '';
-    projectDisplayHtml += `
-      <div class="flex flex-col gap-1">
-        <div class="flex items-center gap-2">
-          ${logo ? `<img src="${logo}" class="w-6 h-6 rounded object-cover" onerror="this.style.display='none'">` : ''}
-          <span class="font-bold text-white">${projectName}</span>
-          ${categoryLabel
-            ? `<span class="text-xs bg-slate-700 px-2 py-0.5 rounded-full text-slate-300">
-                ${categoryLabel}
-               </span>`
-            : ''}
-        </div>
-      </div>`;
+    if (projectLabel) projectLabel.textContent = 'Проект: ';
+    if (projectNameEl) {
+      projectNameEl.textContent = projName || 'Unknown';
+      projectNameEl.className = 'text-sm font-bold text-blue-400';
+    }
+    const modalBody = document.querySelector('#feedbackModal .modal-body');
+    if (modalBody) modalBody.style.borderTop = '';
+    // Стандартные категории
+    const catSelect = document.getElementById('feedbackCategory');
+    if (catSelect) {
+      catSelect.innerHTML = `
+        <option value="suggestion">💡 Предложение</option>
+        <option value="bug">🐛 Ошибка</option>
+        <option value="question">❓ Вопрос</option>
+        <option value="other">💬 Другое</option>
+      `;
+    }
+    const feedbackText = document.getElementById('feedbackText');
+    if (feedbackText) feedbackText.placeholder = 'Опишите суть обращения...';
   }
 
-  document.getElementById('feedbackProjectName').innerHTML = projectDisplayHtml;
-
-  // ---- Заголовок модалки ----
-  document.getElementById('feedbackModalTitle').innerHTML = isSupport
-    ? '<i class="fas fa-shield-alt text-purple-400 mr-2"></i>Поддержка'
-    : '<button onclick="closeFeedbackChat()" class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-white mr-2 transition-colors"><i class="fas fa-arrow-left text-sm"></i></button>' + t('chat_with_support');
-
-  // ---- Визуальный акцент ----
-  const modalBody = document.querySelector('#feedbackModal .modal-body');
-  if (modalBody) {
-    modalBody.style.borderTop = isSupport
-      ? '2px solid rgba(139,92,246,0.4)'
-      : '';
-  }
-
-  // Показываем форму ответа
-  document.getElementById('feedbackFormNew').classList.add('hidden');
-  document.getElementById('feedbackFormReply').classList.remove('hidden');
-  document.getElementById('feedbackSendBtn').classList.add('hidden');
-
-  // Загружаем чат
-  loadFeedbackChat(docId, projectId);
+  // Показываем форму для нового фидбека
+  document.getElementById('feedbackFormNew').classList.remove('hidden');
+  document.getElementById('feedbackFormReply').classList.add('hidden');
+  document.getElementById('feedbackSendBtn').classList.remove('hidden');
+  document.getElementById('feedbackSendBtn').textContent = t('send');
+  document.getElementById('feedbackSendBtn').onclick = window.sendUserFeedback;
+  document.getElementById('feedbackText').value = '';
+  
   modal.classList.add('active');
+};
+
+// Локальная функция для отправки нового фидбека по проекту
+window.sendUserFeedback = async function() {
+  if (!currentUser) return showToast('Войдите');
+  const projId = document.getElementById('feedbackProjectId').value;
+  const category = document.getElementById('feedbackCategory').value;
+  const message = document.getElementById('feedbackText').value.trim();
+  if (!message) return showToast('Введите сообщение');
+
+  const isSupport = projId === '__support__';
+
+  try {
+    let projectName, projectLogo, projectType;
+
+    if (isSupport) {
+      projectName = 'Support';
+      projectLogo = '';
+      projectType = 'support';
+    } else {
+      const proj = projects.find(p => p.id === projId);
+      projectName = proj?.name || '';
+      projectLogo = proj?.image || '';
+      projectType = 'project';
+    }
+
+    await addDoc(collection(db, "feedbacks"), {
+      projectId: projId,
+      projectName: projectName,
+      projectLogo: projectLogo,
+      type: projectType,
+      category: category,
+      userId: currentUser.uid,
+      userName: currentUser.displayName || currentUser.email,
+      userPhoto: currentUser.photoURL || '',
+      status: 'open',
+      read: false,
+      userRead: true,
+      deleted: false,
+      userDeleted: false,
+      createdAt: serverTimestamp(),
+      messages: [{ sender: 'user', text: message, timestamp: new Date() }]
+    });
+
+    showToast('Отправлено!');
+    document.getElementById('feedbackText').value = '';
+    // Закрываем модалку через небольшую задержку
+    setTimeout(function() {
+      if (typeof window.closeFeedbackModal === 'function') {
+        window.closeFeedbackModal();
+      }
+    }, 1000);
+  } catch (e) {
+    console.error(e);
+    showToast('Ошибка: ' + e.message);
+  }
 };
 
 // Функция formatTimeAgo доступна из централизованной системы header.js
@@ -1227,7 +1244,6 @@ window.toggleComplete = async function(uid, aid) {
       markActivityAsViewed(uid, aid);
     }
   }
-
   userCompleted = newCompleted;
   localStorage.setItem(COMPLETED_KEY, JSON.stringify(newCompleted));
 
