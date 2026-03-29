@@ -332,6 +332,16 @@
       </h1>
       <p style="font-size:13px;color:var(--text-secondary);margin:5px 0 0;" data-translate="wof_subtitle">Spin the wheel and win RGT rewards</p>
     </div>
+    
+    <!-- Mode Switch Buttons -->
+    <div style="display:flex;gap:8px;">
+      <button id="soloModeBtn" onclick="typeof switchToSolo === 'function' && switchToSolo()" style="padding:8px 16px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:8px;color:white;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
+        <i class="fas fa-user" style="margin-right:6px;"></i>Solo
+      </button>
+      <button id="onlineModeBtn" onclick="typeof switchToOnline === 'function' && switchToOnline()" style="padding:8px 16px;background:transparent;border:none;border-radius:8px;color:var(--text-secondary);font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
+        <i class="fas fa-users" style="margin-right:6px;"></i>Online
+      </button>
+    </div>
   </div>
 
   <!-- Main grid -->
@@ -2810,6 +2820,9 @@ function switchToSolo() {
   console.log('🔄 Switching to solo mode...');
   currentGameMode = 'solo';
   
+  // Обновляем стили кнопок
+  updateModeButtons('solo');
+  
   // Скрываем онлайн-контейнер
   const onlineContainer = document.getElementById('onlineModeContainer');
   if (onlineContainer) {
@@ -2837,6 +2850,9 @@ function switchToOnline() {
   console.log('🔄 Switching to online mode...');
   currentGameMode = 'online';
   
+  // Обновляем стили кнопок
+  updateModeButtons('online');
+  
   // Скрываем основной контейнер
   const mainGrid = document.querySelector('.main-grid');
   if (mainGrid) {
@@ -2860,6 +2876,28 @@ function switchToOnline() {
   
   if (typeof showToast === 'function') {
     showToast('Switched to Online Mode', 'success');
+  }
+}
+
+// Обновление стилей кнопок режимов
+function updateModeButtons(activeMode) {
+  const soloBtn = document.getElementById('soloModeBtn');
+  const onlineBtn = document.getElementById('onlineModeBtn');
+  
+  if (soloBtn && onlineBtn) {
+    if (activeMode === 'solo') {
+      // Solo активен
+      soloBtn.style.background = 'linear-gradient(135deg,#8b5cf6,#7c3aed)';
+      soloBtn.style.color = 'white';
+      onlineBtn.style.background = 'transparent';
+      onlineBtn.style.color = 'var(--text-secondary)';
+    } else {
+      // Online активен
+      soloBtn.style.background = 'transparent';
+      soloBtn.style.color = 'var(--text-secondary)';
+      onlineBtn.style.background = 'linear-gradient(135deg,#8b5cf6,#7c3aed)';
+      onlineBtn.style.color = 'white';
+    }
   }
 }
 
@@ -3143,6 +3181,9 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🎨 Initializing login modal...');
     window.initLoginModal();
   }
+  
+  // Инициализируем правильные стили кнопок режимов
+  updateModeButtons('solo');
   
   // Ждем загрузки модулей и проверяем функцию входа
   setTimeout(() => {
