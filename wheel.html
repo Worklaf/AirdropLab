@@ -370,10 +370,10 @@
     
     <!-- Debug Panel -->
     <div style="display:flex;gap:8px;align-items:center;">
-      <button onclick="testFunctions()" style="padding:6px 12px;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);border-radius:6px;color:#f87171;font-weight:600;font-size:12px;cursor:pointer;">
+      <button onclick="safeTestFunctions()" style="padding:6px 12px;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);border-radius:6px;color:#f87171;font-weight:600;font-size:12px;cursor:pointer;">
         <i class="fas fa-bug" style="margin-right:4px;"></i>Test Functions
       </button>
-      <button onclick="checkElements()" style="padding:6px 12px;background:rgba(34,211,238,.2);border:1px solid rgba(34,211,238,.4);border-radius:6px;color:#22d3ee;font-weight:600;font-size:12px;cursor:pointer;">
+      <button onclick="safeCheckElements()" style="padding:6px 12px;background:rgba(34,211,238,.2);border:1px solid rgba(34,211,238,.4);border-radius:6px;color:#22d3ee;font-weight:600;font-size:12px;cursor:pointer;">
         <i class="fas fa-search" style="margin-right:4px;"></i>Check Elements
       </button>
     </div>
@@ -2806,14 +2806,6 @@ function updateNotificationBadge() {
   }
 }
 
-// Инициализация слушателя сообщений при загрузке страницы (только если пользователь уже авторизован)
-if (currentUser && db) {
-  // Используем функцию из header.js
-  if (typeof initFeedbacksListener === 'function') {
-    initFeedbacksListener(currentUser.uid);
-  }
-}
-
 // ── DEBUG FUNCTIONS ──
 function testFunctions() {
   console.log('🧪 Testing functions...');
@@ -2863,6 +2855,35 @@ function checkElements() {
   });
   
   showToast(`Elements found: ${foundCount}/${elements.length}`, foundCount === elements.length ? 'success' : 'warning');
+}
+
+// Безопасная версия тестовых функций с проверкой DOM
+function safeTestFunctions() {
+  if (document.readyState === 'loading') {
+    console.warn('⚠️ DOM still loading, waiting...');
+    setTimeout(safeTestFunctions, 100);
+    return;
+  }
+  
+  testFunctions();
+}
+
+function safeCheckElements() {
+  if (document.readyState === 'loading') {
+    console.warn('⚠️ DOM still loading, waiting...');
+    setTimeout(safeCheckElements, 100);
+    return;
+  }
+  
+  checkElements();
+}
+
+// Инициализация слушателя сообщений при загрузке страницы (только если пользователь уже авторизован)
+if (currentUser && db) {
+  // Используем функцию из header.js
+  if (typeof initFeedbacksListener === 'function') {
+    initFeedbacksListener(currentUser.uid);
+  }
 }
 
 // ── ONLINE MODE FUNCTIONS ──
@@ -3544,6 +3565,13 @@ document.addEventListener('DOMContentLoaded', function() {
   if (currentGameMode === 'online') {
     initOnlineGame();
   }
+  
+  // Тестируем функции при загрузке
+  setTimeout(() => {
+    console.log('🧪 Auto-testing functions on load...');
+    safeTestFunctions();
+    safeCheckElements();
+  }, 1000);
   
   // Функции аутентификации доступны из централизованной системы auth.js
 });
