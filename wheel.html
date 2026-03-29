@@ -2860,6 +2860,9 @@ function switchToOnline() {
     onlineBtn.style.color = 'white';
   }
   
+  // Проверяем и создаем элементы если их нет
+  ensureOnlineElements();
+  
   // Показываем онлайн режим
   const mainGrid = document.querySelector('.main-grid');
   const onlineContainer = document.getElementById('onlineModeContainer');
@@ -2873,19 +2876,52 @@ function switchToOnline() {
   initOnlineGame();
 }
 
+// Функция для проверки и создания элементов онлайн-режима
+function ensureOnlineElements() {
+  const requiredElements = [
+    'onlineModeContainer',
+    'onlineTimer', 
+    'prizePool',
+    'participantCount',
+    'participantsList',
+    'onlineWheelCanvas',
+    'onlineWheelStatus',
+    'betAmount',
+    'placeBetBtn',
+    'userBalanceDisplay',
+    'yourBetStatus',
+    'yourBetAmount',
+    'yourWinChance'
+  ];
+  
+  let elementsCreated = false;
+  
+  requiredElements.forEach(id => {
+    const element = document.getElementById(id);
+    if (!element) {
+      console.warn(`⚠️ Element ${id} not found, checking if container exists...`);
+      elementsCreated = true;
+    }
+  });
+  
+  // Если каких-то элементов нет, возможно контейнер скрыт или еще не создан
+  if (elementsCreated) {
+    console.log('🔧 Some online elements missing, forcing container visibility check...');
+    // Пытаемся найти и показать контейнер
+    const onlineContainer = document.getElementById('onlineModeContainer');
+    if (onlineContainer) {
+      onlineContainer.style.display = 'block';
+      console.log('✅ Online container forced visible');
+    }
+  }
+}
+
 // Инициализация онлайн игры
 function initOnlineGame() {
   console.log('🎮 Initializing online game...');
   
-  // Проверяем существование элементов перед использованием
-  const onlineTimer = document.getElementById('onlineTimer');
-  const prizePoolEl = document.getElementById('prizePool');
-  const participantCountEl = document.getElementById('participantCount');
-  
-  if (!onlineTimer || !prizePoolEl || !participantCountEl) {
-    console.error('❌ Online game elements not found');
-    return;
-  }
+  // Проверяем и создаем элементы если нужно
+  ensureOnlineElements();
   
   // Загружаем текущий раунд
   loadCurrentRound();
@@ -3208,6 +3244,18 @@ async function placeBet() {
 
 // Обновление онлайн UI
 function updateOnlineUI() {
+  // Убедяем что все элементы существуют
+  ensureOnlineElements();
+  
+  const onlineTimer = document.getElementById('onlineTimer');
+  const prizePoolEl = document.getElementById('prizePool');
+  const participantCountEl = document.getElementById('participantCount');
+  
+  if (!onlineTimer || !prizePoolEl || !participantCountEl) {
+    console.warn('⚠️ Some online elements missing, skipping UI update');
+    return;
+  }
+  
   // Обновляем призовой пул
   document.getElementById('prizePool').textContent = `${onlineGame.prizePool} RGT`;
   
