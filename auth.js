@@ -1,18 +1,18 @@
 // ═══════════════════════════════════════════════════════
 // 📦 CENTRALIZED AUTHENTICATION SYSTEM
-// ═════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // Единая система входа для всех страниц сайта
 // Подключается: <script src="auth.js"></script>
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════
 
-// Импорт Firebase Auth функций
-import {
-  getAuth, onAuthStateChanged, signOut, signInWithPopup,
-  GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+// Используем глобальные функции Firebase из module loader
+// import {
+//   getAuth, onAuthStateChanged, signOut, signInWithPopup,
+//   GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword,
+//   createUserWithEmailAndPassword
+// } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+// import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 // Глобальные переменные для аутентификации
 let auth = null;
@@ -26,10 +26,10 @@ async function initAuth() {
   try {
     // Используем существующий Firebase app или создаем новый
     if (window.firebaseApp) {
-      auth = getAuth(window.firebaseApp);
+      auth = window.getAuth(window.firebaseApp);
     } else if (window.firebaseConfig) {
-      const app = initializeApp(window.firebaseConfig);
-      auth = getAuth(app);
+      const app = window.initializeApp(window.firebaseConfig);
+      auth = window.getAuth(app);
       window.firebaseApp = app;
     } else {
       console.warn('🔐 No Firebase config available');
