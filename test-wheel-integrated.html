@@ -3,235 +3,576 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Integrated Wheel Test</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>Simple Wheel Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0b0f19;
+      color: #f1f5f9;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    
+    .mode-toggle {
+      display: flex;
+      background: rgba(139,92,246,0.1);
+      border: 1px solid rgba(139,92,246,0.3);
+      border-radius: 12px;
+      padding: 4px;
+    }
+    
+    .mode-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .mode-btn.active {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+    
+    .mode-btn.inactive {
+      background: transparent;
+      color: #94a3b8;
+    }
+    
+    .online-btn.active {
+      background: linear-gradient(135deg, #22d3ee, #06b6d4);
+    }
+    
+    .debug-panel {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .debug-btn {
+      padding: 6px 12px;
+      background: rgba(239,68,68,0.2);
+      border: 1px solid rgba(239,68,68,0.4);
+      border-radius: 6px;
+      color: #f87171;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .results {
+      background: #1e2538;
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    
+    .result-item {
+      padding: 8px 12px;
+      background: rgba(139,92,246,0.06);
+      border: 1px solid rgba(139,92,246,0.15);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-family: monospace;
+    }
+    
+    .success { color: #10b981; }
+    .error { color: #ef4444; }
+    .warning { color: #f59e0b; }
+    .info { color: #94a3b8; }
+    
+    .online-container {
+      display: none;
+      background: rgba(34,211,238,0.07);
+      border: 1px solid rgba(34,211,238,0.2);
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .timer {
+      font-size: 24px;
+      font-weight: 900;
+      color: #22d3ee;
+      text-align: center;
+      margin: 16px 0;
+    }
+    
+    .status {
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: #22d3ee;
+      margin-bottom: 8px;
+    }
+    
+    .betting-controls {
+      background: rgba(34,211,238,0.1);
+      border: 1px solid rgba(34,211,238,0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    
+    .bet-input {
+      width: 100%;
+      padding: 10px;
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(34,211,238,0.3);
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    
+    .bet-buttons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .bet-btn {
+      padding: 10px 16px;
+      background: rgba(34,211,238,0.2);
+      border: 1px solid rgba(34,211,238,0.4);
+      border-radius: 8px;
+      color: #22d3ee;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .place-bet-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #22d3ee, #06b6d4);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .solo-container {
+      background: rgba(139,92,246,0.07);
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .wheel-container {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      position: relative;
+    }
+    
+    .wheel-canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 0 28px rgba(139,92,246,0.55));
+      border-radius: 50%;
+    }
+    
+    .wheel-pointer {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 26px solid #8b5cf6;
+      filter: drop-shadow(0 0 8px #8b5cf6);
+      z-index: 10;
+    }
+  </style>
 </head>
-<body class="bg-gray-900 text-white p-8">
-  <div class="max-w-4xl mx-auto">
-    <h1 class="text-3xl font-bold mb-6 text-center">🔗 Integrated Wheel Test</h1>
-    
-    <div class="bg-yellow-900 border border-yellow-600 p-4 rounded-lg mb-6">
-      <h2 class="text-xl font-bold mb-2">⚠️ Важная информация!</h2>
-      <p class="text-yellow-200">Этот тест должен работать с основным файлом wheel-of-fortune.html</p>
-      <ol class="list-decimal list-inside space-y-2 text-yellow-300">
-        <li>Откройте wheel-of-fortune.html в той же вкладке</li>
-        <li>Нажмите кнопку Online на основном сайте</li>
-        <li>Затем нажмите кнопки тестирования ниже</li>
-        <li>Функции должны быть доступны напрямую</li>
-      </ol>
-    </div>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Function Test -->
-      <div class="bg-gray-800 p-6 rounded-lg">
-        <h2 class="text-xl font-bold mb-4">🧪 Function Tests</h2>
-        
-        <div class="space-y-4">
-          <button onclick="testSwitchToOnline()" 
-                  class="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-medium">
-            <i class="fas fa-exchange-alt mr-2"></i>Test switchToOnline
-          </button>
-          
-          <button onclick="testSwitchToSolo()" 
-                  class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded font-medium">
-            <i class="fas fa-exchange-alt mr-2"></i>Test switchToSolo
-          </button>
-          
-          <button onclick="testInitOnline()" 
-                  class="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-medium">
-            <i class="fas fa-play mr-2"></i>Test initOnlineGame
-          </button>
-          
-          <button onclick="testElements()" 
-                  class="w-full bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded font-medium">
-            <i class="fas fa-search mr-2"></i>Test Elements
-          </button>
-          
-          <button onclick="testUIUpdate()" 
-                  class="w-full bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded font-medium">
-            <i class="fas fa-sync mr-2"></i>Test UI Update
-          </button>
-        </div>
+<body>
+  <div class="container">
+    <div class="header">
+      <div style="width: 52px; height: 52px; flex-shrink: 0; border-radius: 14px; background: linear-gradient(135deg, rgba(139,92,246,0.22), rgba(236,72,153,0.22)); border: 1px solid rgba(139,92,246,0.35); display: flex; align-items: center; justify-content: center;">
+        <span style="color: #a78bfa; font-size: 22px;">🎰</span>
+      </div>
+      <div style="flex: 1;">
+        <h1 style="font-size: 26px; font-weight: 900; color: white; margin: 0; line-height: 1.2;">
+          Wheel of Fortune <span style="color: #a78bfa;">RGT Edition</span>
+        </h1>
+        <p style="font-size: 13px; color: #94a3b8; margin: 5px 0 0;">Spin wheel and win RGT rewards</p>
       </div>
       
-      <!-- Results -->
-      <div class="bg-gray-800 p-6 rounded-lg">
-        <h2 class="text-xl font-bold mb-4">📊 Test Results</h2>
-        
-        <div id="testResults" class="space-y-2 text-sm font-mono">
-          <div class="text-gray-400">Нажмите кнопки тестирования...</div>
-        </div>
+      <div class="mode-toggle">
+        <button id="soloModeBtn" class="mode-btn active" onclick="switchToSolo()">
+          <span>👤</span> Solo
+        </button>
+        <button id="onlineModeBtn" class="mode-btn inactive" onclick="switchToOnline()">
+          <span>👥</span> Online
+        </button>
       </div>
-    </div>
-    
-    <!-- Instructions -->
-    <div class="mt-8 bg-gray-800 p-6 rounded-lg">
-      <h2 class="text-xl font-bold mb-4">📋 Инструкции</h2>
-      <div class="space-y-4 text-gray-300">
-        <div class="bg-gray-700 p-3 rounded">
-          <h3 class="font-bold text-green-400 mb-2">✅ Правильная последовательность:</h3>
-          <ol class="list-decimal list-inside space-y-1">
-            <li>Откройте wheel-of-fortune.html</li>
-            <li>Переключитесь в режим Online</li>
-            <li>Проверьте консоль - ошибок быть не должно</li>
-            <li>Если есть ошибки, обновите страницу</li>
-          </ol>
-        </div>
-        
-        <div class="bg-gray-700 p-3 rounded">
-          <h3 class="font-bold text-red-400 mb-2">❌ Если ошибки остались:</h3>
-          <ul class="list-disc list-inside space-y-1">
-            <li>Обновите страницу wheel-of-fortune.html</li>
-            <li>Очистите кэш браузера</li>
-            <li>Перезагрузите страницу (Ctrl+F5)</li>
-            <li>Проверьте консоль еще раз</li>
-          </ul>
-        </div>
+      
+      <div class="debug-panel">
+        <button class="debug-btn" onclick="testFunctions()">
+          <span>🧪</span> Test Functions
+        </button>
+        <button class="debug-btn" onclick="checkElements()">
+          <span>🔍</span> Check Elements
+        </button>
       </div>
     </div>
 
-  <script>
-    // Функция для доступа к родительскому окну
-    function getParentWindow() {
-      try {
-        if (window.opener && !window.opener.closed) {
-          return window.opener;
-        }
-      } catch (error) {
-        console.warn('Cannot access parent window:', error);
-        return null;
-      }
-    }
-    
-    // Тестовые функции с доступом к родительскому окну
-    function testSwitchToOnline() {
-      const parentWin = getParentWindow();
-      if (parentWin && typeof parentWin.switchToOnline === 'function') {
-        updateResults('✅ switchToOnline найдена в родительском окне', 'success');
-        try {
-          parentWin.switchToOnline();
-          updateResults('✅ switchToOnline выполнена успешно', 'success');
-        } catch (error) {
-          updateResults(`❌ Ошибка switchToOnline: ${error.message}`, 'error');
-        }
-      } else {
-        updateResults('❌ switchToOnline не найдена или родительское окно недоступно', 'error');
-      }
-    }
-    
-    function testSwitchToSolo() {
-      const parentWin = getParentWindow();
-      if (parentWin && typeof parentWin.switchToSolo === 'function') {
-        updateResults('✅ switchToSolo найдена в родительском окне', 'success');
-        try {
-          parentWin.switchToSolo();
-          updateResults('✅ switchToSolo выполнена успешно', 'success');
-        } catch (error) {
-          updateResults(`❌ Ошибка switchToSolo: ${error.message}`, 'error');
-        }
-      } else {
-        updateResults('❌ switchToSolo не найдена или родительское окно недоступно', 'error');
-      }
-    }
-    
-    function testInitOnline() {
-      const parentWin = getParentWindow();
-      if (parentWin && typeof parentWin.initOnlineGame === 'function') {
-        updateResults('✅ initOnlineGame найдена в родительском окне', 'success');
-        try {
-          parentWin.initOnlineGame();
-          updateResults('✅ initOnlineGame выполнена успешно', 'success');
-        } catch (error) {
-          updateResults(`❌ Ошибка initOnlineGame: ${error.message}`, 'error');
-        }
-      } else {
-        updateResults('❌ initOnlineGame не найдена или родительское окно недоступно', 'error');
-      }
-    }
-    
-    function testElements() {
-      const parentWin = getParentWindow();
-      if (parentWin) {
-        const requiredElements = [
-          'onlineModeBtn',
-          'soloModeBtn', 
-          'onlineModeContainer',
-          'onlineTimer',
-          'prizePool',
-          'participantCount'
-        ];
-        
-        let allFound = true;
-        const missingElements = [];
-        
-        requiredElements.forEach(id => {
-          const element = parentWin.document.getElementById(id);
-          if (element) {
-            updateResults(`✅ Элемент ${id} найден в родительском окне`, 'success');
-          } else {
-            updateResults(`❌ Элемент ${id} НЕ найден в родительском окне`, 'error');
-            allFound = false;
-            missingElements.push(id);
-          }
-        });
-        
-        if (allFound) {
-          updateResults('🎉 Все элементы найдены в родительском окне!', 'success');
-        } else {
-          updateResults(`⚠️ Отсутствуют элементы: ${missingElements.join(', ')}`, 'warning');
-        }
-      } else {
-        updateResults('❌ Родительское окно недоступно', 'error');
-      }
-    }
-    
-    function testUIUpdate() {
-      const parentWin = getParentWindow();
-      if (parentWin && typeof parentWin.updateOnlineUI === 'function') {
-        updateResults('✅ updateOnlineUI найдена в родительском окне', 'success');
-        try {
-          parentWin.updateOnlineUI();
-          updateResults('✅ updateOnlineUI выполнена успешно', 'success');
-        } catch (error) {
-          updateResults(`❌ Ошибка updateOnlineUI: ${error.message}`, 'error');
-        }
-      } else {
-        updateResults('❌ updateOnlineUI не найдена или родительское окно недоступно', 'error');
-      }
-    }
-    
-    function updateResults(message, type = 'info') {
-      const resultsDiv = document.getElementById('testResults');
-      const timestamp = new Date().toLocaleTimeString();
+    <!-- Solo Mode Container -->
+    <div id="soloContainer" class="solo-container">
+      <div class="wheel-container">
+        <div class="wheel-pointer"></div>
+        <canvas id="wheelCanvas" class="wheel-canvas" width="400" height="400"></canvas>
+      </div>
+    </div>
+
+    <!-- Online Mode Container -->
+    <div id="onlineContainer" class="online-container">
+      <div class="timer" id="onlineTimer">30:00</div>
+      <div class="status" id="onlineStatus">
+        <span>⏰</span> Betting Open
+      </div>
+      <p style="text-align: center; color: #94a3b8; margin-bottom: 16px;">Place your bets before the round starts!</p>
       
-      let colorClass = 'text-gray-400';
-      if (type === 'success') colorClass = 'text-green-400';
-      if (type === 'error') colorClass = 'text-red-400';
-      if (type === 'warning') colorClass = 'text-yellow-400';
-      
-      resultsDiv.innerHTML += `
-        <div class="p-2 bg-gray-700 rounded">
-          <span class="text-gray-500">[${timestamp}]</span> 
-          <span class="${colorClass}">${message}</span>
+      <div class="betting-controls">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <span style="font-size: 14px; font-weight: 600; color: white;">Your Bet:</span>
+          <span style="font-size: 14px; color: #22d3ee;" id="userBalanceDisplay">Balance: 0 RGT</span>
         </div>
-      `;
+        
+        <div class="bet-buttons">
+          <input type="number" id="betAmount" class="bet-input" placeholder="Enter amount" min="1" step="1">
+          <button class="bet-btn" onclick="addToBet(10)">+10</button>
+          <button class="bet-btn" onclick="addToBet(50)">+50</button>
+          <button class="bet-btn" onclick="addToBet(100)">+100</button>
+          <button class="bet-btn" onclick="setMaxBet()">MAX</button>
+        </div>
+        
+        <button class="place-bet-btn" onclick="placeBet()">
+          <span>💰</span> Place Bet
+        </button>
+      </div>
       
-      resultsDiv.scrollTop = resultsDiv.scrollHeight;
+      <div style="text-align: center; margin-top: 20px;">
+        <h3 style="color: white; font-size: 18px; margin-bottom: 12px;">
+          <span>🏆</span> Prize Pool
+        </h3>
+        <div style="font-size: 32px; font-weight: 900; color: #10b981;" id="prizePool">0 RGT</div>
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Total bets from all players</p>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results">
+      <h2 style="color: white; font-size: 18px; margin-bottom: 16px;">
+        <span>📊</span> Test Results
+      </h2>
+      <div id="testResults">
+        <div class="result-item info">Click test buttons to see results...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Game State
+    let currentGameMode = 'solo';
+    let onlineGame = {
+      participants: [],
+      prizePool: 0,
+      timeLeft: 1800,
+      isBettingOpen: true,
+      currentRound: null,
+      userBet: null
+    };
+
+    // Toast notification
+    function showToast(message, type = 'info') {
+      console.log(`[${type.toUpperCase()}] ${message}`);
+      
+      const resultsDiv = document.getElementById('testResults');
+      if (resultsDiv) {
+        const timestamp = new Date().toLocaleTimeString();
+        const colorClass = type === 'success' ? 'success' : 
+                           type === 'error' ? 'error' : 
+                           type === 'warning' ? 'warning' : 'info';
+        
+        resultsDiv.innerHTML += `
+          <div class="result-item ${colorClass}">
+            <span style="color: #64748b;">[${timestamp}]</span> ${message}
+          </div>
+        `;
+        
+        resultsDiv.scrollTop = resultsDiv.scrollHeight;
+      }
     }
-    
-    // Автоматическая проверка при загрузке
+
+    // Mode switching functions
+    function switchToSolo() {
+      currentGameMode = 'solo';
+      
+      const soloBtn = document.getElementById('soloModeBtn');
+      const onlineBtn = document.getElementById('onlineModeBtn');
+      const soloContainer = document.getElementById('soloContainer');
+      const onlineContainer = document.getElementById('onlineContainer');
+      
+      if (soloBtn) {
+        soloBtn.classList.add('active');
+        soloBtn.classList.remove('inactive');
+      }
+      if (onlineBtn) {
+        onlineBtn.classList.remove('active');
+        onlineBtn.classList.add('inactive');
+      }
+      if (soloContainer) soloContainer.style.display = 'block';
+      if (onlineContainer) onlineContainer.style.display = 'none';
+      
+      showToast('Switched to Solo mode', 'success');
+    }
+
+    function switchToOnline() {
+      currentGameMode = 'online';
+      
+      const soloBtn = document.getElementById('soloModeBtn');
+      const onlineBtn = document.getElementById('onlineModeBtn');
+      const soloContainer = document.getElementById('soloContainer');
+      const onlineContainer = document.getElementById('onlineContainer');
+      
+      if (soloBtn) {
+        soloBtn.classList.remove('active');
+        soloBtn.classList.add('inactive');
+      }
+      if (onlineBtn) {
+        onlineBtn.classList.add('active');
+        onlineBtn.classList.remove('inactive');
+      }
+      if (soloContainer) soloContainer.style.display = 'none';
+      if (onlineContainer) onlineContainer.style.display = 'block';
+      
+      initOnlineGame();
+      showToast('Switched to Online mode', 'success');
+    }
+
+    // Online game functions
+    function initOnlineGame() {
+      console.log('🎮 Initializing online game...');
+      updateTimer();
+      updateBalance();
+      drawOnlineWheel();
+      showToast('Online game initialized', 'success');
+    }
+
+    function updateTimer() {
+      const timerEl = document.getElementById('onlineTimer');
+      if (timerEl) {
+        const minutes = Math.floor(onlineGame.timeLeft / 60);
+        const seconds = onlineGame.timeLeft % 60;
+        timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      }
+    }
+
+    function updateBalance() {
+      const balanceEl = document.getElementById('userBalanceDisplay');
+      if (balanceEl) {
+        balanceEl.textContent = `Balance: 1000 RGT`;
+      }
+    }
+
+    function drawOnlineWheel() {
+      const canvas = document.getElementById('wheelCanvas');
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = Math.min(centerX, centerY) - 10;
+      
+      const sectors = [
+        { label: '1 RGT', value: 1, colors: ['#8b5cf6', '#6366f1'] },
+        { label: '2 RGT', value: 2, colors: ['#3b82f6', '#2563eb'] },
+        { label: '3 RGT', value: 3, colors: ['#06b6d4', '#0891b2'] },
+        { label: '4 RGT', value: 4, colors: ['#10b981', '#059669'] },
+        { label: '10 RGT', value: 10, colors: ['#22c55e', '#16a34a'] },
+        { label: '20 RGT', value: 20, colors: ['#eab308', '#ca8a04'] },
+        { label: '50 RGT', value: 50, colors: ['#f97316', '#dc2626'] },
+        { label: '100 RGT', value: 100, colors: ['#ef4444', '#b91c1c'] }
+      ];
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const anglePerSector = (Math.PI * 2) / sectors.length;
+      sectors.forEach((sector, index) => {
+        const startAngle = index * anglePerSector - Math.PI / 2;
+        const endAngle = startAngle + anglePerSector;
+        
+        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+        gradient.addColorStop(0, sector.colors[0]);
+        gradient.addColorStop(1, sector.colors[1]);
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + anglePerSector / 2);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(sector.label, radius / 2, 0);
+        ctx.restore();
+      });
+      
+      const centerGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 25);
+      centerGradient.addColorStop(0, '#1e2538');
+      centerGradient.addColorStop(1, '#0f172a');
+      
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 25, 0, Math.PI * 2);
+      ctx.fillStyle = centerGradient;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(34,211,238,0.5)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 15, 0, Math.PI * 2);
+      ctx.fillStyle = '#22d3ee';
+      ctx.fill();
+    }
+
+    // Betting functions
+    function addToBet(amount) {
+      const input = document.getElementById('betAmount');
+      const currentValue = parseInt(input.value) || 0;
+      const newValue = Math.min(currentValue + amount, 1000);
+      input.value = newValue;
+    }
+
+    function setMaxBet() {
+      document.getElementById('betAmount').value = 1000;
+    }
+
+    function placeBet() {
+      const betAmount = parseInt(document.getElementById('betAmount').value);
+      
+      if (!betAmount || betAmount < 1) {
+        showToast('Please enter a valid bet amount', 'warning');
+        return;
+      }
+      
+      if (betAmount > 1000) {
+        showToast('Insufficient balance', 'error');
+        return;
+      }
+      
+      if (!onlineGame.isBettingOpen) {
+        showToast('Betting is currently closed', 'warning');
+        return;
+      }
+      
+      showToast(`Bet placed: ${betAmount} RGT`, 'success');
+      
+      // Disable betting controls
+      document.getElementById('betAmount').disabled = true;
+      document.querySelector('.place-bet-btn').disabled = true;
+      document.querySelector('.betting-controls').style.opacity = '0.6';
+    }
+
+    // Test functions
+    function testFunctions() {
+      console.log('🧪 Testing functions...');
+      
+      const tests = [
+        { name: 'switchToOnline', func: switchToOnline },
+        { name: 'switchToSolo', func: switchToSolo },
+        { name: 'initOnlineGame', func: initOnlineGame },
+        { name: 'drawOnlineWheel', func: drawOnlineWheel },
+        { name: 'addToBet', func: addToBet },
+        { name: 'placeBet', func: placeBet }
+      ];
+      
+      tests.forEach(test => {
+        if (typeof test.func === 'function') {
+          console.log(`✅ ${test.name} - function exists`);
+          showToast(`${test.name} function found!`, 'success');
+        } else {
+          console.error(`❌ ${test.name} - function NOT found`);
+          showToast(`${test.name} function NOT found!`, 'error');
+        }
+      });
+    }
+
+    function checkElements() {
+      console.log('🔍 Checking elements...');
+      
+      const elements = [
+        'soloModeBtn',
+        'onlineModeBtn',
+        'soloContainer',
+        'onlineContainer',
+        'onlineTimer',
+        'wheelCanvas',
+        'betAmount',
+        'userBalanceDisplay',
+        'prizePool'
+      ];
+      
+      let foundCount = 0;
+      elements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          console.log(`✅ Element ${id} found`);
+          foundCount++;
+        } else {
+          console.error(`❌ Element ${id} NOT found`);
+        }
+      });
+      
+      showToast(`Elements found: ${foundCount}/${elements.length}`, foundCount === elements.length ? 'success' : 'warning');
+    }
+
+    // Initialize on load
     window.addEventListener('load', function() {
-      updateResults('🚀 Интегрированный тест загружен', 'success');
+      console.log('🚀 Simple test page loaded');
+      showToast('Simple test page ready!', 'success');
       
       setTimeout(() => {
-        updateResults('🔍 Проверка доступности к родительскому окну...', 'info');
-        const parentWin = getParentWindow();
-        if (parentWin) {
-          updateResults('✅ Родительское окно доступно', 'success');
-        } else {
-          updateResults('❌ Родительское окно недоступно', 'error');
-        }
+        testFunctions();
+        checkElements();
       }, 1000);
     });
   </script>
