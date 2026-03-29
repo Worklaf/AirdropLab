@@ -3121,6 +3121,13 @@ function initFeedbacksListener(uid) {
         window.updateNotificationBadge();
       }
       
+      // Дополнительное обновление бейджа через небольшую задержку
+      setTimeout(() => {
+        if (typeof window.updateNotificationBadge === 'function') {
+          window.updateNotificationBadge();
+        }
+      }, 100);
+      
     } catch (error) {
       console.error('Error loading notifications:', error);
       const listEl = document.getElementById('notificationsList');
@@ -3161,16 +3168,49 @@ function initFeedbacksListener(uid) {
 
   // Функция обновления бейджа уведомлений
   window.updateNotificationBadge = function() {
-    const badge = document.getElementById('notificationBadge');
-    if (!badge) return;
+    // Ищем кнопку уведомлений
+    const notificationBtn = document.querySelector('[onclick*="showNotifications"], button[onclick*="showNotifications"]');
+    if (!notificationBtn) return;
+    
+    // Ищем существующий бейдж
+    let badge = document.getElementById('notificationBadge');
+    
+    // Создаем бейдж если его нет
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.id = 'notificationBadge';
+      badge.style.cssText = `
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #ef4444;
+        color: white;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        border: 2px solid rgba(15,23,42,0.8);
+      `;
+      
+      // Добавляем бейдж к кнопке
+      notificationBtn.style.position = 'relative';
+      notificationBtn.appendChild(badge);
+    }
     
     const unreadCount = (window.allNotifications || []).filter(n => !n.read).length;
     
     if (unreadCount > 0) {
       badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
       badge.classList.remove('hidden');
+      badge.style.display = 'flex';
     } else {
       badge.classList.add('hidden');
+      badge.style.display = 'none';
       badge.textContent = '0';
     }
   };
@@ -3441,24 +3481,34 @@ function initFeedbacksListener(uid) {
 
   // Функция отметки отфильтрованных уведомлений как прочитанных
   window.markFilteredNotificationsAsRead = async function() {
-    if (!window.db || !window.allNotifications) return;
+    if (!window.db || !window.allNotifications || !window.currentUser) return;
     
     const currentFilter = window.currentFilter || 'all';
     let notifications = window.allNotifications;
     
     if (currentFilter === 'all') {
-      notifications = window.allNotifications.filter(n => !n.read);
+      // Обычный пользователь может отмечать только свои уведомления
+      if (window.currentUser.uid !== ADMIN_UID) {
+        notifications = window.allNotifications.filter(n => n.userId === window.currentUser.uid && !n.read);
+      } else {
+        notifications = window.allNotifications.filter(n => !n.read);
+      }
     } else if (currentFilter === 'games') {
-      notifications = window.allNotifications.filter(n => (n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))) && !n.read);
+      notifications = window.allNotifications.filter(n => n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game')));
     } else if (currentFilter === 'jackpot_win') {
-      notifications = window.allNotifications.filter(n => n.type === 'jackpot_win' && !n.read);
+      notifications = window.allNotifications.filter(n => n.type === 'jackpot_win');
     } else if (currentFilter === 'admin') {
-      notifications = window.allNotifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game')) && !n.read);
+      notifications = window.allNotifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game')));
+    }
+    
+    // Дополнительная фильтрация для обычного пользователя - только свои уведомления
+    if (window.currentUser.uid !== ADMIN_UID) {
+      notifications = notifications.filter(n => n.userId === window.currentUser.uid);
     }
     
     if (notifications.length === 0) {
       if (typeof showToast === 'function') {
-        showToast('Нет непрочитанных уведомлений в этом фильтре');
+        showToast('Нет уведомлений для отметки');
       }
       return;
     }
@@ -3500,19 +3550,29 @@ function initFeedbacksListener(uid) {
 
   // Функция очистки отфильтрованных уведомлений
   window.clearFilteredNotifications = async function() {
-    if (!window.db || !window.allNotifications) return;
+    if (!window.db || !window.allNotifications || !window.currentUser) return;
     
     const currentFilter = window.currentFilter || 'all';
     let notifications = window.allNotifications;
     
     if (currentFilter === 'all') {
-      notifications = window.allNotifications;
+      // Обычный пользователь может удалять только свои уведомления
+      if (window.currentUser.uid !== ADMIN_UID) {
+        notifications = window.allNotifications.filter(n => n.userId === window.currentUser.uid);
+      } else {
+        notifications = window.allNotifications;
+      }
     } else if (currentFilter === 'games') {
       notifications = window.allNotifications.filter(n => n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game')));
     } else if (currentFilter === 'jackpot_win') {
       notifications = window.allNotifications.filter(n => n.type === 'jackpot_win');
     } else if (currentFilter === 'admin') {
       notifications = window.allNotifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game')));
+    }
+    
+    // Дополнительная фильтрация для обычного пользователя - только свои уведомления
+    if (window.currentUser.uid !== ADMIN_UID) {
+      notifications = notifications.filter(n => n.userId === window.currentUser.uid);
     }
     
     if (notifications.length === 0) {
