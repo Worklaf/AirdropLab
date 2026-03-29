@@ -877,9 +877,32 @@ async function loadBcastHistory() {
 }
 
 window.delBcast = async function(id) {
-    if (!confirm('Удалить?')) return;
-    await fbDelDoc(fbDoc(fbDb,"broadcasts",id));
-    loadBcastHistory();
+    if (!confirm('Удалить рассылку и все связанные уведомления у пользователей?')) return;
+    
+    try {
+        // Сначала находим все уведомления с этим broadcastId
+        var notifsQuery = fbQuery(fbCol(fbDb, "notifications"), fbWhere("broadcastId", "==", id));
+        var notifsSnap = await fbGetDocs(notifsQuery);
+        
+        // Удаляем все связанные уведомления
+        var batch = fbBatch(fbDb);
+        notifsSnap.forEach(function(doc) {
+            batch.delete(fbDoc(fbDb, "notifications", doc.id));
+        });
+        
+        // Удаляем саму рассылку
+        batch.delete(fbDoc(fbDb, "broadcasts", id));
+        
+        await batch.commit();
+        loadBcastHistory();
+        
+        // Обновляем статистику уведомлений
+        loadNotifStats();
+        
+    } catch(error) {
+        console.error('Error deleting broadcast and notifications:', error);
+        alert('Ошибка при удалении рассылки');
+    }
 };
 
 // ── РЕНДЕР ────────────────────────────────────────────────────────
