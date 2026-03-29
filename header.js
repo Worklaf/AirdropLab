@@ -3078,34 +3078,37 @@ function initFeedbacksListener(uid) {
     window.loadNotifications();
   };
 
-  // Функция закрытия модального окна уведомлений
-  window.closeNotificationsModal = function() {
-    const modal = document.getElementById('notificationsModalOverlay');
-    if (modal) {
-      modal.remove();
-    }
-  };
-
   // Функция загрузки уведомлений
   window.loadNotifications = async function() {
     if (!window.db || !window.currentUser) return;
     
+    // Используем window.__firestoreExports как в других функциях
+    const fx = window.__firestoreExports;
+    if (!fx || !fx.collection || !fx.query || !fx.where || !fx.orderBy || !fx.limit || !fx.getDocs) {
+      console.error('Firestore functions not available for notifications');
+      return;
+    }
+    
     try {
-      const notificationsCol = collection(window.db, 'notifications');
-      const q = query(notificationsCol, 
-                     where('userId', '==', window.currentUser.uid),
-                     orderBy('createdAt', 'desc'),
-                     limit(50));
+      const notificationsCol = fx.collection(window.db, 'notifications');
+      const q = fx.query(notificationsCol, 
+                     fx.where('userId', '==', window.currentUser.uid),
+                     fx.orderBy('createdAt', 'desc'),
+                     fx.limit(50));
       
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await fx.getDocs(q);
       const notifications = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
       
       window.allNotifications = notifications;
-      window.renderNotificationsInWheel(notifications);
-      window.updateNotificationBadge();
+      if (typeof window.renderNotificationsInWheel === 'function') {
+        window.renderNotificationsInWheel(notifications);
+      }
+      if (typeof window.updateNotificationBadge === 'function') {
+        window.updateNotificationBadge();
+      }
       
     } catch (error) {
       console.error('Error loading notifications:', error);
@@ -3391,10 +3394,17 @@ function initFeedbacksListener(uid) {
   window.markNotificationAsReadWheel = async function(notificationId) {
     if (!window.db) return;
     
+    // Используем window.__firestoreExports как в других функциях
+    const fx = window.__firestoreExports;
+    if (!fx || !fx.updateDoc || !fx.doc || !fx.serverTimestamp) {
+      console.error('Firestore functions not available for marking as read');
+      return;
+    }
+    
     try {
-      await updateDoc(doc(window.db, 'notifications', notificationId), {
+      await fx.updateDoc(fx.doc(window.db, 'notifications', notificationId), {
         read: true,
-        readAt: serverTimestamp()
+        readAt: fx.serverTimestamp()
       });
       
       if (window.allNotifications) {
@@ -3402,11 +3412,17 @@ function initFeedbacksListener(uid) {
         if (notif) notif.read = true;
       }
       
-      window.updateNotificationBadge();
-      window.updateFilterCounts();
+      if (typeof window.updateNotificationBadge === 'function') {
+        window.updateNotificationBadge();
+      }
+      if (typeof window.updateFilterCounts === 'function') {
+        window.updateFilterCounts();
+      }
       
       const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
-      window.filterNotifications(activeFilter);
+      if (typeof window.filterNotifications === 'function') {
+        window.filterNotifications(activeFilter);
+      }
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
