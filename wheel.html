@@ -14,13 +14,13 @@
   <script src="config/firebase-config.js"></script>
   
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   
   <!-- CENTRALIZED AUTHENTICATION SYSTEM -->
-  <script src="auth.js"></script>
-  <script src="auth-modal.js"></script>
+  <script type="module" src="auth.js"></script>
+  <script type="module" src="auth-modal.js"></script>
   
   <style>
     /* Modal styles */
@@ -2676,21 +2676,23 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('🔐 Firebase Auth not available');
   }
   
-  // Проверяем доступность функции входа
-  console.log('🔍 Checking login modal function...');
-  console.log('openLoginModal available:', typeof openLoginModal);
-  console.log('openLoginModal function:', openLoginModal);
-  
-  // Если функция не доступна, создаем простую заглушку
-  if (typeof openLoginModal !== 'function') {
-    console.warn('⚠️ openLoginModal not available, creating fallback...');
-    window.openLoginModal = function() {
-      console.log('🔐 Login modal fallback called');
-      if (typeof showToast === 'function') {
-        showToast('Login functionality is being prepared...', 'info');
-      }
-    };
-  }
+  // Ждем загрузки модулей и проверяем функцию входа
+  setTimeout(() => {
+    console.log('🔍 Checking login modal function...');
+    console.log('openLoginModal available:', typeof openLoginModal);
+    console.log('openLoginModal function:', openLoginModal);
+    
+    // Если функция не доступна, создаем простую заглушку
+    if (typeof openLoginModal !== 'function') {
+      console.warn('⚠️ openLoginModal not available, creating fallback...');
+      window.openLoginModal = function() {
+        console.log('🔐 Login modal fallback called');
+        if (typeof showToast === 'function') {
+          showToast('Login functionality is being prepared...', 'info');
+        }
+      };
+    }
+  }, 1000); // Даем 1 секунду на загрузку модулей
   
   // Функции аутентификации доступны из централизованной системы auth.js
 });
