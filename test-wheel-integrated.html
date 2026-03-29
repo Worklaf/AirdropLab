@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Integrated Wheel Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-white p-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-center">🔗 Integrated Wheel Test</h1>
+    
+    <div class="bg-yellow-900 border border-yellow-600 p-4 rounded-lg mb-6">
+      <h2 class="text-xl font-bold mb-2">⚠️ Важная информация!</h2>
+      <p class="text-yellow-200">Этот тест должен работать с основным файлом wheel-of-fortune.html</p>
+      <ol class="list-decimal list-inside space-y-2 text-yellow-300">
+        <li>Откройте wheel-of-fortune.html в той же вкладке</li>
+        <li>Нажмите кнопку Online на основном сайте</li>
+        <li>Затем нажмите кнопки тестирования ниже</li>
+        <li>Функции должны быть доступны напрямую</li>
+      </ol>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Function Test -->
+      <div class="bg-gray-800 p-6 rounded-lg">
+        <h2 class="text-xl font-bold mb-4">🧪 Function Tests</h2>
+        
+        <div class="space-y-4">
+          <button onclick="testSwitchToOnline()" 
+                  class="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-exchange-alt mr-2"></i>Test switchToOnline
+          </button>
+          
+          <button onclick="testSwitchToSolo()" 
+                  class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-exchange-alt mr-2"></i>Test switchToSolo
+          </button>
+          
+          <button onclick="testInitOnline()" 
+                  class="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-play mr-2"></i>Test initOnlineGame
+          </button>
+          
+          <button onclick="testElements()" 
+                  class="w-full bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-search mr-2"></i>Test Elements
+          </button>
+          
+          <button onclick="testUIUpdate()" 
+                  class="w-full bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded font-medium">
+            <i class="fas fa-sync mr-2"></i>Test UI Update
+          </button>
+        </div>
+      </div>
+      
+      <!-- Results -->
+      <div class="bg-gray-800 p-6 rounded-lg">
+        <h2 class="text-xl font-bold mb-4">📊 Test Results</h2>
+        
+        <div id="testResults" class="space-y-2 text-sm font-mono">
+          <div class="text-gray-400">Нажмите кнопки тестирования...</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Instructions -->
+    <div class="mt-8 bg-gray-800 p-6 rounded-lg">
+      <h2 class="text-xl font-bold mb-4">📋 Инструкции</h2>
+      <div class="space-y-4 text-gray-300">
+        <div class="bg-gray-700 p-3 rounded">
+          <h3 class="font-bold text-green-400 mb-2">✅ Правильная последовательность:</h3>
+          <ol class="list-decimal list-inside space-y-1">
+            <li>Откройте wheel-of-fortune.html</li>
+            <li>Переключитесь в режим Online</li>
+            <li>Проверьте консоль - ошибок быть не должно</li>
+            <li>Если есть ошибки, обновите страницу</li>
+          </ol>
+        </div>
+        
+        <div class="bg-gray-700 p-3 rounded">
+          <h3 class="font-bold text-red-400 mb-2">❌ Если ошибки остались:</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li>Обновите страницу wheel-of-fortune.html</li>
+            <li>Очистите кэш браузера</li>
+            <li>Перезагрузите страницу (Ctrl+F5)</li>
+            <li>Проверьте консоль еще раз</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  <script>
+    // Функция для доступа к родительскому окну
+    function getParentWindow() {
+      try {
+        if (window.opener && !window.opener.closed) {
+          return window.opener;
+        }
+      } catch (error) {
+        console.warn('Cannot access parent window:', error);
+        return null;
+      }
+    }
+    
+    // Тестовые функции с доступом к родительскому окну
+    function testSwitchToOnline() {
+      const parentWin = getParentWindow();
+      if (parentWin && typeof parentWin.switchToOnline === 'function') {
+        updateResults('✅ switchToOnline найдена в родительском окне', 'success');
+        try {
+          parentWin.switchToOnline();
+          updateResults('✅ switchToOnline выполнена успешно', 'success');
+        } catch (error) {
+          updateResults(`❌ Ошибка switchToOnline: ${error.message}`, 'error');
+        }
+      } else {
+        updateResults('❌ switchToOnline не найдена или родительское окно недоступно', 'error');
+      }
+    }
+    
+    function testSwitchToSolo() {
+      const parentWin = getParentWindow();
+      if (parentWin && typeof parentWin.switchToSolo === 'function') {
+        updateResults('✅ switchToSolo найдена в родительском окне', 'success');
+        try {
+          parentWin.switchToSolo();
+          updateResults('✅ switchToSolo выполнена успешно', 'success');
+        } catch (error) {
+          updateResults(`❌ Ошибка switchToSolo: ${error.message}`, 'error');
+        }
+      } else {
+        updateResults('❌ switchToSolo не найдена или родительское окно недоступно', 'error');
+      }
+    }
+    
+    function testInitOnline() {
+      const parentWin = getParentWindow();
+      if (parentWin && typeof parentWin.initOnlineGame === 'function') {
+        updateResults('✅ initOnlineGame найдена в родительском окне', 'success');
+        try {
+          parentWin.initOnlineGame();
+          updateResults('✅ initOnlineGame выполнена успешно', 'success');
+        } catch (error) {
+          updateResults(`❌ Ошибка initOnlineGame: ${error.message}`, 'error');
+        }
+      } else {
+        updateResults('❌ initOnlineGame не найдена или родительское окно недоступно', 'error');
+      }
+    }
+    
+    function testElements() {
+      const parentWin = getParentWindow();
+      if (parentWin) {
+        const requiredElements = [
+          'onlineModeBtn',
+          'soloModeBtn', 
+          'onlineModeContainer',
+          'onlineTimer',
+          'prizePool',
+          'participantCount'
+        ];
+        
+        let allFound = true;
+        const missingElements = [];
+        
+        requiredElements.forEach(id => {
+          const element = parentWin.document.getElementById(id);
+          if (element) {
+            updateResults(`✅ Элемент ${id} найден в родительском окне`, 'success');
+          } else {
+            updateResults(`❌ Элемент ${id} НЕ найден в родительском окне`, 'error');
+            allFound = false;
+            missingElements.push(id);
+          }
+        });
+        
+        if (allFound) {
+          updateResults('🎉 Все элементы найдены в родительском окне!', 'success');
+        } else {
+          updateResults(`⚠️ Отсутствуют элементы: ${missingElements.join(', ')}`, 'warning');
+        }
+      } else {
+        updateResults('❌ Родительское окно недоступно', 'error');
+      }
+    }
+    
+    function testUIUpdate() {
+      const parentWin = getParentWindow();
+      if (parentWin && typeof parentWin.updateOnlineUI === 'function') {
+        updateResults('✅ updateOnlineUI найдена в родительском окне', 'success');
+        try {
+          parentWin.updateOnlineUI();
+          updateResults('✅ updateOnlineUI выполнена успешно', 'success');
+        } catch (error) {
+          updateResults(`❌ Ошибка updateOnlineUI: ${error.message}`, 'error');
+        }
+      } else {
+        updateResults('❌ updateOnlineUI не найдена или родительское окно недоступно', 'error');
+      }
+    }
+    
+    function updateResults(message, type = 'info') {
+      const resultsDiv = document.getElementById('testResults');
+      const timestamp = new Date().toLocaleTimeString();
+      
+      let colorClass = 'text-gray-400';
+      if (type === 'success') colorClass = 'text-green-400';
+      if (type === 'error') colorClass = 'text-red-400';
+      if (type === 'warning') colorClass = 'text-yellow-400';
+      
+      resultsDiv.innerHTML += `
+        <div class="p-2 bg-gray-700 rounded">
+          <span class="text-gray-500">[${timestamp}]</span> 
+          <span class="${colorClass}">${message}</span>
+        </div>
+      `;
+      
+      resultsDiv.scrollTop = resultsDiv.scrollHeight;
+    }
+    
+    // Автоматическая проверка при загрузке
+    window.addEventListener('load', function() {
+      updateResults('🚀 Интегрированный тест загружен', 'success');
+      
+      setTimeout(() => {
+        updateResults('🔍 Проверка доступности к родительскому окну...', 'info');
+        const parentWin = getParentWindow();
+        if (parentWin) {
+          updateResults('✅ Родительское окно доступно', 'success');
+        } else {
+          updateResults('❌ Родительское окно недоступно', 'error');
+        }
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
