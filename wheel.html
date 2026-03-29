@@ -367,16 +367,6 @@
         <i class="fas fa-users" style="margin-right:6px;"></i>Online
       </button>
     </div>
-    
-    <!-- Debug Panel -->
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button onclick="safeTestFunctions()" style="padding:6px 12px;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);border-radius:6px;color:#f87171;font-weight:600;font-size:12px;cursor:pointer;">
-        <i class="fas fa-bug" style="margin-right:4px;"></i>Test Functions
-      </button>
-      <button onclick="safeCheckElements()" style="padding:6px 12px;background:rgba(34,211,238,.2);border:1px solid rgba(34,211,238,.4);border-radius:6px;color:#22d3ee;font-weight:600;font-size:12px;cursor:pointer;">
-        <i class="fas fa-search" style="margin-right:4px;"></i>Check Elements
-      </button>
-    </div>
   </div>
 
   <!-- Main grid -->
@@ -2806,6 +2796,14 @@ function updateNotificationBadge() {
   }
 }
 
+// Инициализация слушателя сообщений при загрузке страницы (только если пользователь уже авторизован)
+if (currentUser && db) {
+  // Используем функцию из header.js
+  if (typeof initFeedbacksListener === 'function') {
+    initFeedbacksListener(currentUser.uid);
+  }
+}
+
 // ── GAME STATE ──
 let currentGameMode = 'solo';
 let onlineGame = {
@@ -2816,86 +2814,6 @@ let onlineGame = {
   currentRound: null,
   userBet: null
 };
-
-// ── DEBUG FUNCTIONS ──
-function testFunctions() {
-  console.log('🧪 Testing functions...');
-  
-  const tests = [
-    { name: 'switchToOnline', func: switchToOnline },
-    { name: 'switchToSolo', func: switchToSolo },
-    { name: 'initOnlineGame', func: initOnlineGame },
-    { name: 'ensureOnlineElements', func: ensureOnlineElements },
-    { name: 'updateOnlineUI', func: updateOnlineUI }
-  ];
-  
-  tests.forEach(test => {
-    if (typeof test.func === 'function') {
-      console.log(`✅ ${test.name} - function exists`);
-      showToast(`${test.name} function found!`, 'success');
-    } else {
-      console.error(`❌ ${test.name} - function NOT found`);
-      showToast(`${test.name} function NOT found!`, 'error');
-    }
-  });
-}
-
-function checkElements() {
-  console.log('🔍 Checking elements...');
-  
-  const elements = [
-    'soloModeBtn',
-    'onlineModeBtn',
-    'onlineModeContainer',
-    'onlineTimer',
-    'prizePool',
-    'participantCount',
-    'participantsList',
-    'onlineWheelCanvas'
-  ];
-  
-  let foundCount = 0;
-  elements.forEach(id => {
-    const element = document.getElementById(id);
-    if (element) {
-      console.log(`✅ Element ${id} found`);
-      foundCount++;
-    } else {
-      console.error(`❌ Element ${id} NOT found`);
-    }
-  });
-  
-  showToast(`Elements found: ${foundCount}/${elements.length}`, foundCount === elements.length ? 'success' : 'warning');
-}
-
-// Безопасная версия тестовых функций с проверкой DOM
-function safeTestFunctions() {
-  if (document.readyState === 'loading') {
-    console.warn('⚠️ DOM still loading, waiting...');
-    setTimeout(safeTestFunctions, 100);
-    return;
-  }
-  
-  testFunctions();
-}
-
-function safeCheckElements() {
-  if (document.readyState === 'loading') {
-    console.warn('⚠️ DOM still loading, waiting...');
-    setTimeout(safeCheckElements, 100);
-    return;
-  }
-  
-  checkElements();
-}
-
-// Инициализация слушателя сообщений при загрузке страницы (только если пользователь уже авторизован)
-if (currentUser && db) {
-  // Используем функцию из header.js
-  if (typeof initFeedbacksListener === 'function') {
-    initFeedbacksListener(currentUser.uid);
-  }
-}
 
 // ── ONLINE MODE FUNCTIONS ──
 // Переключение на одиночный режим
@@ -2943,20 +2861,25 @@ function switchToOnline() {
     onlineBtn.style.color = 'white';
   }
   
-  // Проверяем и создаем элементы если их нет
-  ensureOnlineElements();
-  
   // Показываем онлайн режим
   const mainGrid = document.querySelector('.main-grid');
   const onlineContainer = document.getElementById('onlineModeContainer');
   const jackpotBanner = document.getElementById('jackpotBanner');
   
   if (mainGrid) mainGrid.style.display = 'none';
-  if (onlineContainer) onlineContainer.style.display = 'block';
+  if (onlineContainer) {
+    onlineContainer.style.display = 'block';
+    console.log('✅ Online container shown');
+  }
   if (jackpotBanner) jackpotBanner.style.display = 'none';
   
   // Инициализируем онлайн игру
   initOnlineGame();
+  
+  // Показываем уведомление
+  if (typeof showToast === 'function') {
+    showToast('Switched to Online mode! 🎮', 'success');
+  }
 }
 
 // Функция для проверки и создания элементов онлайн-режима
@@ -3004,7 +2927,13 @@ function initOnlineGame() {
   console.log('🎮 Initializing online game...');
   
   // Проверяем и создаем элементы если нужно
-  ensureOnlineElements();
+  const onlineTimer = document.getElementById('onlineTimer');
+  const prizePoolEl = document.getElementById('prizePool');
+  const participantCountEl = document.getElementById('participantCount');
+  
+  if (!onlineTimer || !prizePoolEl || !participantCountEl) {
+    console.warn('⚠️ Some online elements not found, but continuing...');
+  }
   
   // Загружаем текущий раунд
   loadCurrentRound();
@@ -3017,6 +2946,11 @@ function initOnlineGame() {
   
   // Инициализируем онлайн колесо
   initOnlineWheel();
+  
+  // Показываем уведомление
+  if (typeof showToast === 'function') {
+    showToast('Online game initialized! 🎮', 'success');
+  }
 }
 
 // Загрузка текущего раунда
@@ -3564,15 +3498,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Инициализируем онлайн режим при загрузке
   if (currentGameMode === 'online') {
-    initOnlineGame();
+    console.log('🎮 Auto-initializing online mode...');
+    setTimeout(() => {
+      initOnlineGame();
+    }, 500);
   }
-  
-  // Тестируем функции при загрузке
-  setTimeout(() => {
-    console.log('🧪 Auto-testing functions on load...');
-    safeTestFunctions();
-    safeCheckElements();
-  }, 1000);
   
   // Функции аутентификации доступны из централизованной системы auth.js
 });
