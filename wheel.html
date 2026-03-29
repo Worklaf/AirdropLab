@@ -490,7 +490,7 @@
           </div>
 
           <!-- Betting Controls -->
-          <div style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);border-radius:12px;padding:16px;margin-top:16px;">
+          <div class="betting-controls" style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);border-radius:12px;padding:16px;margin-top:16px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
               <span style="font-size:14px;font-weight:600;color:white;">Your Bet:</span>
               <span style="font-size:14px;color:#22d3ee;" id="userBalanceDisplay">Balance: 0 RGT</span>
@@ -2976,11 +2976,11 @@ function initOnlineWheel() {
   ];
   
   // Рисуем колесо
-  drawWheel(ctx, centerX, centerY, radius, sectors);
+  drawOnlineWheel(ctx, centerX, centerY, radius, sectors);
 }
 
-// Рисование колеса
-function drawWheel(ctx, centerX, centerY, radius, sectors) {
+// Рисование онлайн колеса (переименовано чтобы избежать конфликта)
+function drawOnlineWheel(ctx, centerX, centerY, radius, sectors) {
   const anglePerSector = (Math.PI * 2) / sectors.length;
   
   sectors.forEach((sector, index) => {
@@ -3028,14 +3028,32 @@ function setMaxBet() {
 
 // Получение баланса пользователя
 function getUserBalance() {
-  // Здесь должна быть логика получения баланса из Firebase
-  return parseInt(window.userBalance || 0);
+  // Пытаемся получить баланс из разных источников
+  if (window.userBalance !== undefined) {
+    return parseInt(window.userBalance || 0);
+  }
+  
+  // Если есть глобальная переменная баланса
+  if (window.currentUser && window.currentUser.balance !== undefined) {
+    return parseInt(window.currentUser.balance || 0);
+  }
+  
+  // Если есть в Firebase
+  if (window.currentUser && window.db) {
+    // Можно добавить загрузку из Firestore здесь
+    return 0; // Временно
+  }
+  
+  return 0;
 }
 
-// Обновление отображения баланса
+// Обновление баланса пользователя
 function updateUserBalance() {
   const balance = getUserBalance();
   document.getElementById('userBalanceDisplay').textContent = `Balance: ${balance} RGT`;
+  
+  // Сохраняем баланс глобально
+  window.userBalance = balance;
 }
 
 // Размещение ставки
@@ -3106,7 +3124,10 @@ async function placeBet() {
     // Блокируем кнопки ставок
     document.getElementById('betAmount').disabled = true;
     document.getElementById('placeBetBtn').disabled = true;
-    document.querySelector('#onlineModeContainer .betting-controls').classList.add('betting-disabled');
+    const bettingControls = document.querySelector('#onlineModeContainer .betting-controls');
+    if (bettingControls) {
+      bettingControls.classList.add('betting-disabled');
+    }
     
   } catch (error) {
     console.error('Error placing bet:', error);
@@ -3337,6 +3358,11 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🔐 Firebase Auth functions available from auth.js');
   } else {
     console.error('🔐 Firebase Auth not available');
+  }
+  
+  // Инициализируем онлайн режим при загрузке
+  if (currentGameMode === 'online') {
+    initOnlineGame();
   }
   
   // Функции аутентификации доступны из централизованной системы auth.js
