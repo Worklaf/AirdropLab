@@ -433,8 +433,8 @@
                 </button>
                 <div class="al-nav-dropdown">
                   <a href="wheel-of-fortune.html" class="al-nav-item" onclick="closeAlNav(this)"><i class="fas fa-dharmachakra"></i>Wheel of Fortune (RGT)</a>
-                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-dice-d20"></i>Lucky Draw (скоро)</a>
-                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-card-diamonds"></i>Card Game (скоро)</a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-dice-d20"></i>t('lucky_draw_soon')</a>
+                  <a href="#" onclick="showComingSoon();closeAlNav(this);return false;" class="al-nav-item"><i class="fas fa-card-diamonds"></i>t('card_game_soon')</a>
                 </div>
               </div>
 
@@ -1068,26 +1068,28 @@ window.updateMobileAdminButtons = function() {
     addDesktopButton('<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red"><i class="fas fa-trash-restore text-base"></i></button>');
     addDesktopButton('<button onclick="typeof importAllData===\'function\'&&importAllData()" class="admin-action-btn admin-btn-purple"><i class="fas fa-file-import text-base"></i></button>');
     
-    addMobileButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" ' + btnStyle + ' title="Статистика"><i class="fas fa-chart-pie"></i></button>');
-    addMobileButton('<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Загрузить"><i class="fas fa-cloud-upload-alt"></i></button>');
-    addMobileButton('<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт"><i class="fas fa-file-export"></i></button>');
-    addMobileButton('<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" ' + btnStyle + ' title="Удалённые"><i class="fas fa-trash-restore"></i></button>');
+    addMobileButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" ' + btnStyle + ' title="' + t('statistics_title') + '"><i class="fas fa-chart-pie"></i></button>');
+    addMobileButton('<button onclick="typeof migrateToFirestore===\'function\'&&migrateToFirestore()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="' + t('upload_title') + '"><i class="fas fa-cloud-upload-alt"></i></button>');
+    addMobileButton('<button onclick="typeof exportAllData===\'function\'&&exportAllData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="' + t('export_title') + '"><i class="fas fa-file-export"></i></button>');
+    addMobileButton('<button onclick="typeof openDeletedProjects===\'function\'&&openDeletedProjects()" class="admin-action-btn admin-btn-red" ' + btnStyle + ' title="' + t('deleted_title') + '"><i class="fas fa-trash-restore"></i></button>');
 
   } else if (isFaucetPage) {
     if (deskAddBtn) deskAddBtn.style.display = 'flex';
     if (mobAddBtn) mobAddBtn.style.display = 'flex';
 
     // Кнопки для кранов
-    addDesktopButton('<button onclick="typeof toggleEditMode===\'function\'&&toggleEditMode()" class="admin-action-btn admin-btn-purple" title="Режим редактирования"><i id="editModeIcon" class="fas fa-pen text-base"></i></button>');
-    addDesktopButton('<button onclick="typeof showAllHiddenFaucets===\'function\'&&showAllHiddenFaucets()" class="admin-action-btn admin-btn-red" title="Показать скрытые"><i class="fas fa-eye-slash text-base"></i></button>');
-    addDesktopButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" title="Статистика"><i class="fas fa-chart-pie text-base"></i></button>');
-    addDesktopButton('<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" title="Экспорт кранов"><i class="fas fa-file-export text-base"></i></button>');
-    addDesktopButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" title="Импорт кранов"><i class="fas fa-file-import text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof toggleEditMode==='function'&&toggleEditMode()" class="admin-action-btn admin-btn-purple" title="' + t('edit_mode') + '"><i id="editModeIcon" class="fas fa-pen text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof showAllHiddenFaucets==='function'&&showAllHiddenFaucets()" class="admin-action-btn admin-btn-red" title="' + t('show_hidden_title') + '"><i class="fas fa-eye-slash text-base"></i></button>');
+    addDesktopButton('<button onclick="typeof openStats==='function'&&openStats()" class="admin-action-btn admin-btn-orange" title="' + t('statistics_title') + '"><i class="fas fa-chart-pie text-base"></i></button>');
+    addDesktopButton('<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" title="' + t('export_faucets_title') + '"><i class="fas fa-file-export text-base"></i></button>');
+    addDesktopButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" title="' + t('import_faucets_title') + '"><i class="fas fa-file-import text-base"></i></button>');
 
-    addMobileButton('<button onclick="typeof toggleEditMode===\'function\'&&toggleEditMode()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Режим"><i class="fas fa-pen"></i></button>');
-    addMobileButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" ' + btnStyle + ' title="Статистика"><i class="fas fa-chart-pie"></i></button>');
-    addMobileButton('<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="Экспорт"><i class="fas fa-file-export"></i></button>');
-    addMobileButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="Импорт"><i class="fas fa-file-import"></i></button>');
+    addMobileButton('<button onclick="typeof toggleEditMode===\'function\'&&toggleEditMode()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="' + t('edit_mode') + '"><i class="fas fa-pen"></i></button>');
+    addMobileButton('<button onclick="typeof openStats===\'function\'&&openStats()" class="admin-action-btn admin-btn-orange" ' + btnStyle + ' title="' + t('statistics_title') + '"><i class="fas fa-chart-pie"></i></button>');
+    addMobileButton('<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="' + t('export_faucets_title') + '"><i class="fas fa-file-export"></i></button>');
+    addMobileButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="' + t('import_faucets_title') + '"><i class="fas fa-file-import"></i></button>');
+    addMobileButton('<button onclick="window.exportFaucetData()" class="admin-action-btn admin-btn-emerald" ' + btnStyle + ' title="' + t('export_title') + '"><i class="fas fa-file-export"></i></button>');
+    addMobileButton('<button onclick="window.importFaucetData()" class="admin-action-btn admin-btn-purple" ' + btnStyle + ' title="' + t('import_faucets_title') + '"><i class="fas fa-file-import"></i></button>');
   }
 
   deskAdminBtns.innerHTML = buttonsHTML;
@@ -3020,7 +3022,7 @@ function initFeedbacksListener(uid) {
     content.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h3 style="color: #22d3ee; font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-          <i class="fas fa-bell"></i> Уведомления
+          <i class="fas fa-bell"></i> ' + t('notifications') + '
         </h3>
         <button onclick="window.closeNotificationsModal()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer; padding: 4px;">&times;</button>
       </div>
@@ -3039,7 +3041,7 @@ function initFeedbacksListener(uid) {
         <div style="position: relative;">
           <span id="unreadBadge-games" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
           <button onclick="filterNotifications('games')" class="filter-btn" data-filter="games" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            🎮 Игры <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+            🎮 ' + t('games') + ' <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
           </button>
         </div>
         
@@ -3047,7 +3049,7 @@ function initFeedbacksListener(uid) {
         <div style="position: relative;">
           <span id="unreadBadge-jackpot_win" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
           <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            🏆 Джекпот <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+            🏆 ' + t('jackpot') + ' <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
           </button>
         </div>
         
@@ -3062,10 +3064,10 @@ function initFeedbacksListener(uid) {
         <!-- Кнопки управления -->
         <div style="margin-left: auto; display: flex; gap: 8px;">
           <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            ✓ Прочитать все
+            ✓ ' + t('notif_mark_all_read') + '
           </button>
           <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            🗑️ Очистить все
+            🗑️ ' + t('notif_clear_all') + '
           </button>
         </div>
       </div>
@@ -3074,7 +3076,7 @@ function initFeedbacksListener(uid) {
       <div id="notificationsList" style="max-height: 400px; overflow-y: auto;">
         <div style="text-align: center; padding: 40px; color: #94a3b8;">
           <i class="fas fa-bell" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
-          Загрузка уведомлений...
+          ' + t('notif_loading') + '
         </div>
       </div>
     `;
@@ -3301,7 +3303,7 @@ function initFeedbacksListener(uid) {
       listEl.innerHTML = `
         <div style="text-align: center; color: #94a3b8; padding: 40px;">
           <i class="fas fa-bell-slash" style="font-size: 24px; margin-bottom: 10px;"></i>
-          <div>У вас пока нет уведомлений</div>
+          <div>' + t('no_notifications') + '</div>
         </div>
       `;
       return;
@@ -3310,53 +3312,53 @@ function initFeedbacksListener(uid) {
     listEl.innerHTML = notifications.map(notif => {
       const isUnread = !notif.read;
       let typeIcon = '📢';
-      let typeLabel = 'Уведомление';
+      let typeLabel = t('notifications');
       let filterType = 'all';
       
       // Улучшенная логика отображения с конкретными названиями для разных типов
       if (notif.type === 'jackpot_win') {
         typeIcon = '🏆';
-        typeLabel = 'Джекпот';
+        typeLabel = t('jackpot');
         filterType = 'jackpot_win';
       } else if (notif.type === 'wheel_spin') {
         typeIcon = '🎡';
-        typeLabel = 'Колесо фортуны';
+        typeLabel = t('wheel_fortune_type');
         filterType = 'games';
       } else if (notif.type === 'faucet_claim') {
         typeIcon = '💰';
-        typeLabel = 'Кран';
+        typeLabel = t('faucet_type');
         filterType = 'games';
       } else if (notif.type === 'game_reward' || (notif.type && notif.type.includes('game'))) {
         typeIcon = '🎰';
-        typeLabel = 'Игра';
+        typeLabel = t('game_type');
         filterType = 'games';
       } else if (notif.type === 'info') {
         typeIcon = 'ℹ️';
-        typeLabel = 'Информация';
+        typeLabel = t('info_type');
         filterType = 'admin';
       } else if (notif.type === 'success') {
         typeIcon = '✅';
-        typeLabel = 'Успех';
+        typeLabel = t('success_type');
         filterType = 'admin';
       } else if (notif.type === 'warning') {
         typeIcon = '⚠️';
-        typeLabel = 'Важно';
+        typeLabel = t('warning_type');
         filterType = 'admin';
       } else if (notif.type === 'promo') {
         typeIcon = '🎁';
-        typeLabel = 'Акция';
+        typeLabel = t('promo_type');
         filterType = 'admin';
       } else if (notif.type === 'referral') {
         typeIcon = '🔗';
-        typeLabel = 'Реферальная';
+        typeLabel = t('referral_type');
         filterType = 'admin';
       } else if (notif.type !== 'wheel_spin' && notif.type !== 'faucet_claim' && notif.type !== 'game_reward' && notif.type !== 'jackpot_win' && (!notif.type || !notif.type.includes('game'))) {
         typeIcon = '📢';
-        typeLabel = 'Система';
+        typeLabel = t('system');
         filterType = 'admin';
       } else if (!notif.type) {
         typeIcon = '📢';
-        typeLabel = 'Уведомление';
+        typeLabel = t('notifications');
         filterType = 'all';
       } else {
         typeIcon = '📢';
@@ -3722,7 +3724,7 @@ function initFeedbacksListener(uid) {
       }
       
       // Получаем данные пользователя
-      let winnerName = notification.winnerName || 'Пользователь';
+      let winnerName = notification.winnerName || t('jackpot_default_user');
       let winnerAvatar = '';
       
       if (notification.userId) {
@@ -3799,12 +3801,12 @@ function initFeedbacksListener(uid) {
         overlay.innerHTML = `
           <div class="jackpot-winner-card">
             <div style="font-size:60px;margin-bottom:10px;">🏆</div>
-            <div style="font-size:13px;color:#ec4899;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">JACKPOT WINNER</div>
+            <div style="font-size:13px;color:#ec4899;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">' + t('jackpot_winner_title') + '</div>
             <img id="jwAvatar" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ec4899;margin:0 auto 12px;display:block;" onerror="this.style.display='none'">
             <div style="font-size:22px;font-weight:900;color:white;margin-bottom:6px;" id="jwName">—</div>
             <div style="font-size:38px;font-weight:900;background:linear-gradient(135deg,#ec4899,#8b5cf6);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px;" id="jwAmount">0 RGT</div>
-            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 20px;">Congratulations! The monthly jackpot has been awarded.</p>
-            <button onclick="closeJackpotWinner()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Close</button>
+            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 20px;">' + t('jackpot_congratulations') + '</p>
+            <button onclick="closeJackpotWinner()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;">' + t('jackpot_close_button') + '</button>
           </div>
         `;
         
