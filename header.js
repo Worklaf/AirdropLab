@@ -3815,5 +3815,9 @@ function initFeedbacksListener(uid) {
     }
   });
 
+  // Алиасы для совместимости с index.html
+  window.showNotificationsFromHeader = window.showNotifications;
+  window.closeNotificationsModalFromHeader = window.closeNotificationsModal;
+
   console.log('🔧 Common functions loaded in header.js!');
 })();
