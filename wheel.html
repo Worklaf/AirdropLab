@@ -644,7 +644,8 @@ import {
     serverTimestamp, 
     arrayUnion, 
     getCountFromServer,
-    increment
+    increment,
+    limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = window.firebaseConfig;
@@ -692,6 +693,7 @@ window.__firestoreExports = {
     query, 
     where,
     orderBy,
+    limit,
     serverTimestamp,
     arrayUnion,
     increment
