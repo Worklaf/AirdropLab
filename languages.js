@@ -220,7 +220,7 @@ const translations = {
     // ============ NOTIFICATIONS ============
     notifications: 'Уведомления',
     no_notifications: 'Нет уведомлений',
-    mark_read: 'Отметить',
+    mark_read: 'Завершить',
 
     // ============ ADMIN TOOLS ============
     view_stats: 'Посмотреть статистику',
