@@ -220,7 +220,7 @@ const translations = {
     // ============ NOTIFICATIONS ============
     notifications: 'Уведомления',
     no_notifications: 'Нет уведомлений',
-    mark_read: 'Завершить',
+    mark_read: 'Отметить',
 
     // ============ ADMIN TOOLS ============
     view_stats: 'Посмотреть статистику',
@@ -271,7 +271,7 @@ const translations = {
     no_description: 'Нет описания',
     leave_feedback: 'Оставить отзыв',
     last_activity_date: 'Дата последней активности',
-    mark_complete: 'Отметить',
+    mark_complete: 'Завершить',
     add_favorites: 'Избранное',
     deleted_count: 'Удаленных',
     no_deleted_projects: 'Нет удаленных проектов',
