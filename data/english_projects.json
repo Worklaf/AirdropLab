@@ -854,6 +854,39 @@
       "status": "active"
     },
     {
+      "id": "ipworld_944618",
+      "activities": [
+        {
+          "status": "active",
+          "description": "Ip.world [announced](https://x.com/ipdotworld/status/2037616305285800088) the launch of the v3 beta testing. You can apply to join the waitlist and get early access to the product\n\n \n\n1. Go to the [website](https://beta.ip.world/), log in, and submit your application \n![image](https://images.cryptorank.io/image-hub/dsadarqrwqw1774879131369.jpg)",
+          "categories": [
+            "Form Filling"
+          ],
+          "title": "Waitlist",
+          "endDate": "",
+          "date": "2026-03-27",
+          "createdAt": "2026-03-30T19:29:53.258Z",
+          "id": "act_1774898993258"
+        }
+      ],
+      "categories": [
+        "Form Filling"
+      ],
+      "description": "ip.world is a platform built on the Story Protocol, which enables the creation and trading of memecoins backed by intellectual property assets. The platform allows users to tokenize intellectual property (such as creative works, brands, or digital assets) and launch associated memecoins, whose value is derived from the underlying intellectual property.",
+      "createdAt": "2026-03-30T19:29:04.617Z",
+      "referralLink": "",
+      "lastUpdated": "2026-03-27",
+      "status": "active",
+      "guideUrl": "",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/ip-world-activity1140",
+      "hasDaily": false,
+      "name": "IP World",
+      "image": "https://images.cryptorank.io/coins/ip_world1774870320789.png",
+      "twitterUrl": "https://x.com/ipdotworld?hzet=dszqupsbol",
+      "deleted": false,
+      "priority": "normal"
+    },
+    {
       "id": "kaio_345183",
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/kaio-activity1108",
       "lastUpdated": "2026-03-24",
@@ -1771,54 +1804,67 @@
     },
     {
       "id": "proj_1770059246487",
+      "name": "ARO Network",
+      "createdAt": "2026-02-02T19:07:26.487Z",
+      "referralLink": "https://dashboard.aro.network/signup?referral=GR5OOG",
+      "twitterUrl": "https://x.com/AroNetwork",
+      "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
+      "deleted": false,
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/aro-network-activity1077",
+      "isFavorite": false,
+      "hasDaily": false,
+      "lastUpdated": "2026-03-30",
       "updatedAt": {
         "seconds": 1774440676,
         "nanoseconds": 384000000
       },
-      "description": "The ARO Network is a decentralized edge cloud that enables real-time content delivery and next-generation artificial intelligence task execution.\n\nPowered by people, not data centers, anyone can share their unused bandwidth to create a faster and smarter network and become its owner.",
-      "guideUrl": "",
-      "image": "https://img.cryptorank.io/coins/aro_network1753689486335.png",
-      "hasDaily": false,
-      "twitterUrl": "https://x.com/AroNetwork",
-      "priority": "normal",
-      "createdAt": "2026-02-02T19:07:26.487Z",
-      "referralLink": "https://dashboard.aro.network/signup?referral=GR5OOG",
       "activities": [
         {
-          "title": "Browser Node",
           "status": "active",
-          "description": "The ARO Network project has a browser node with a confirmed airdrop. We can install it in our browser or on our PC and earn $ARO tokens. Additionally, another [campaign](https://x.com/AroNetwork/status/2013125049813979526) with a $20K prize pool is currently active, where we can earn weekly rewards for launching a node, inviting friends, and creating content on X.\n\n1. Go to the [link](https://dashboard.aro.network/signup?referral=GR5OOG) and sign up using your email.\n\n2. Open the ARO Nodes tab and launch one of the available nodes. The top two devices are paid, but they bring more rewards. The lower nodes are free and can be installed in your browser or on your PC:\n![](https://img.cryptorank.io/image-hub/aro1769470472197.png)\n\n3. Earn badges, invite friends, and complete tasks in the Campaigns tab. You can also connect your wallet here and receive rewards on it in the future:\n![](https://img.cryptorank.io/image-hub/aro_11769470656392.png)\n\n4. Track the addition of new tasks on Galxe.",
+          "date": "",
+          "title": "Browser Node",
+          "id": "act_1770562843048",
           "categories": [
             "DePIN"
           ],
-          "date": "",
-          "id": "act_1770562843048"
+          "description": "The ARO Network project has a browser node with a confirmed airdrop. We can install it in our browser or on our PC and earn $ARO tokens. Additionally, another [campaign](https://x.com/AroNetwork/status/2013125049813979526) with a $20K prize pool is currently active, where we can earn weekly rewards for launching a node, inviting friends, and creating content on X.\n\n1. Go to the [link](https://dashboard.aro.network/signup?referral=GR5OOG) and sign up using your email.\n\n2. Open the ARO Nodes tab and launch one of the available nodes. The top two devices are paid, but they bring more rewards. The lower nodes are free and can be installed in your browser or on your PC:\n![](https://img.cryptorank.io/image-hub/aro1769470472197.png)\n\n3. Earn badges, invite friends, and complete tasks in the Campaigns tab. You can also connect your wallet here and receive rewards on it in the future:\n![](https://img.cryptorank.io/image-hub/aro_11769470656392.png)\n\n4. Track the addition of new tasks on Galxe."
         },
         {
-          "title": "Contributor Program",
+          "id": "act_1772286560525",
           "status": "active",
-          "description": "Aro [announced](https://x.com/AroNetwork/status/2021116660665794738) the launch of its contributor program. You can create content, help newcomers, or provide feedback to earn unique roles and badges.\n\nThe basic condition for participation is to obtain the \"Guardian\" role (reach level 15 on the project's Discord server).\n\nThe program features 3 unique contributor roles:\n• Aro Creator: create 3-5 high-quality posts about the ecosystem per week, primarily on X/Twitter. Minimum 2 weeks\n• Aro Gem: provide constructive feedback, bug hunting, and suggest improvements. 5-10 useful reports over 2-3 weeks\n• Aro Yapper: maintain high-quality discussions and assist newcomers in chats. Stable activity over 7-14 days\n\n1. Join the project's [Discord](https://discord.gg/PdmtcnN4t6) and reach level 15\nLevel is achieved through chatting\n\n2. Meet the conditions corresponding to your chosen direction\n\n3. Apply for a contributor role in the contributor-application thread, attaching a link to your work\nThe contributor-application thread is only open on the 15th and 30th of each month",
           "date": "2026-02-10",
+          "title": "Contributor Program",
+          "description": "Aro [announced](https://x.com/AroNetwork/status/2021116660665794738) the launch of its contributor program. You can create content, help newcomers, or provide feedback to earn unique roles and badges.\n\nThe basic condition for participation is to obtain the \"Guardian\" role (reach level 15 on the project's Discord server).\n\nThe program features 3 unique contributor roles:\n• Aro Creator: create 3-5 high-quality posts about the ecosystem per week, primarily on X/Twitter. Minimum 2 weeks\n• Aro Gem: provide constructive feedback, bug hunting, and suggest improvements. 5-10 useful reports over 2-3 weeks\n• Aro Yapper: maintain high-quality discussions and assist newcomers in chats. Stable activity over 7-14 days\n\n1. Join the project's [Discord](https://discord.gg/PdmtcnN4t6) and reach level 15\nLevel is achieved through chatting\n\n2. Meet the conditions corresponding to your chosen direction\n\n3. Apply for a contributor role in the contributor-application thread, attaching a link to your work\nThe contributor-application thread is only open on the 15th and 30th of each month",
           "categories": [
             "Role Claim",
             "Social Activity"
+          ]
+        },
+        {
+          "endDate": "",
+          "createdAt": "2026-03-30T19:12:42.136Z",
+          "categories": [
+            "Testnet"
           ],
-          "id": "act_1772286560525"
+          "description": "The ARO Network [announced](https://x.com/AroNetwork/status/2038480514508874073) the launch of the second phase of its testnet. You can install the application on your PC or phone and start earning $ARO tokens, as well as share a $30,000 prize pool.\n\n1. Go to the [website](https://dashboard.aro.network/signup?referral=GR5OOG), log in, and download the node. Install it on your chosen device.\n\n2. Launch the application and copy the code \n![image](https://images.cryptorank.io/image-hub/dsaafa1774876864046.jpg)\n\n3. Paste the code and register the node \n![image](https://images.cryptorank.io/image-hub/dsafgaq1774876868374.jpg)\n\n4. Go to the [Leaderboard tab](https://dashboard.aro.network/?mode=testnet&tab=campaigns) and claim your badge \n![image](https://images.cryptorank.io/image-hub/213412_rfa1774876872238.jpg)",
+          "date": "2026-03-30",
+          "status": "active",
+          "title": "Season 2 Testnet",
+          "id": "act_1774897962136"
         }
       ],
+      "priority": "normal",
+      "status": "active",
+      "description": "The ARO Network is a decentralized edge cloud that enables real-time content delivery and next-generation artificial intelligence task execution.\n\nPowered by people, not data centers, anyone can share their unused bandwidth to create a faster and smarter network and become its owner.",
       "categories": [
         "DePIN",
         "Blockchain",
         "Role Claim",
-        "Social Activity"
+        "Social Activity",
+        "Testnet"
       ],
-      "name": "ARO Network",
-      "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "isFavorite": false,
-      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/aro-network-activity1077",
-      "deleted": false,
-      "lastUpdated": "2026-02-10",
-      "status": "active"
+      "guideUrl": "",
+      "image": "https://img.cryptorank.io/coins/aro_network1753689486335.png"
     },
     {
       "id": "proj_1770059407575",
@@ -2379,41 +2425,53 @@
     },
     {
       "id": "quip_network_885695",
+      "deleted": false,
+      "image": "https://img.cryptorank.io/coins/quip_network1770813552953.png",
+      "lastUpdated": "2026-03-26",
+      "cryptoRankUrl": "",
       "priority": "normal",
+      "categories": [
+        "Social Activity",
+        "Testnet"
+      ],
       "createdAt": "2026-02-12T10:08:05.695Z",
-      "referralLink": "https://quest.quip.network/airdrop?referral_code=MM0U33UJ",
+      "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
+      "description": "The Quip Network is a base-layer protocol that adds post-quantum security to existing blockchains and forms a decentralized infrastructure for quantum computing.\n\nIt presents QUIP as secure, composable inputs for transactions, similar to enhanced vaults that package classical assets with post-quantum signatures, using algorithms such as WOTS+, to protect against future quantum attacks.\n\nUsers deposit funds into QUIP-enabled contracts or wallets, creating states for proposals, approvals, bids, and timeouts, enabling atomic cross-network operations without altering the underlying chains.\n\nKey components include:\n\n* Seamless integration with networks like Bitcoin or Ethereum via wallet extensions or smart contracts, supporting compatibility without protocol changes.\n* The QUIP token for incentivizing validation, staking, nominations, and executing quantum tasks;\n* Validators (full nodes) and canary nodes (lightweight attestation);\n* Quantum clusters performing verifiable quantum tasks (e.g., hash mining, key recovery) using classical or quantum processors.",
+      "status": "active",
+      "name": "Quip Network",
       "activities": [
         {
-          "status": "active",
-          "title": "Farm points",
-          "id": "act_1770890882162",
           "date": "2026-02-10",
           "categories": [
             "Social Activity",
             "Testnet"
           ],
-          "description": "Quip Network [announced](https://x.com/quipnetwork/status/2021244222842761455) the launch of quests. You can earn Quip points by completing social tasks. These points can later be converted into the $QUIP token.\n\n1. Go to the [website](https://quest.quip.network/airdrop?referral_code=MM0U33UJ) and connect your wallet.\n\n2. Open your [profile settings](https://quest.quip.network/airdrop?editProfile=1&modalTab=social) and connect your social media accounts.\n![](https://img.cryptorank.io/image-hub/34123211770816817758.jpg)\n\n3. Invite friends and complete daily tasks.\n![](https://img.cryptorank.io/image-hub/3214123123211770816986772.jpg)"
+          "description": "Quip Network [announced](https://x.com/quipnetwork/status/2021244222842761455) the launch of quests. You can earn Quip points by completing social tasks. These points can later be converted into the $QUIP token.\n\n1. Go to the [website](https://quest.quip.network/airdrop?referral_code=MM0U33UJ) and connect your wallet.\n\n2. Open your [profile settings](https://quest.quip.network/airdrop?editProfile=1&modalTab=social) and connect your social media accounts.\n![](https://img.cryptorank.io/image-hub/34123211770816817758.jpg)\n\n3. Invite friends and complete daily tasks.\n![](https://img.cryptorank.io/image-hub/3214123123211770816986772.jpg)",
+          "status": "active",
+          "id": "act_1770890882162",
+          "title": "Farm points"
+        },
+        {
+          "date": "2026-03-26",
+          "endDate": "",
+          "categories": [
+            "Social Activity"
+          ],
+          "id": "act_1774806801369",
+          "title": "Quip Mindshare Season 1",
+          "status": "active",
+          "description": "Quip [announced](https://x.com/quipnetwork/status/2037245742562369993?s=20) the launch of a program for content creators. You can participate in the first season, contribute to the development of the ecosystem by completing tasks on X, and receive a portion of the reward pool.\n\n• As part of the first season, $100,000 in $QUIP tokens has been allocated for the TGE.\nRewards will be paid out in native $QUIP tokens to the top 315 creators.\n\n1. Go to the [website](https://quest.quip.network/airdrop?referral_code=MM0U33UJ) and connect your wallet. Start completing tasks.\n\n2. Publish high-quality content with the @QuipNetwork tag and engage with QUIP on X.\nReceiving active feedback has the greatest impact on your ranking.\n\n3. Open the [Mindshare](https://mindshare.quip.network/) page and track your progress\n![image](https://images.cryptorank.io/image-hub/sadasasfa1774624989641.jpg)",
+          "createdAt": "2026-03-29T17:53:21.369Z"
         }
       ],
-      "description": "The Quip Network is a base-layer protocol that adds post-quantum security to existing blockchains and forms a decentralized infrastructure for quantum computing.\n\nIt presents QUIP as secure, composable inputs for transactions, similar to enhanced vaults that package classical assets with post-quantum signatures, using algorithms such as WOTS+, to protect against future quantum attacks.\n\nUsers deposit funds into QUIP-enabled contracts or wallets, creating states for proposals, approvals, bids, and timeouts, enabling atomic cross-network operations without altering the underlying chains.\n\nKey components include:\n\n* Seamless integration with networks like Bitcoin or Ethereum via wallet extensions or smart contracts, supporting compatibility without protocol changes.\n* The QUIP token for incentivizing validation, staking, nominations, and executing quantum tasks;\n* Validators (full nodes) and canary nodes (lightweight attestation);\n* Quantum clusters performing verifiable quantum tasks (e.g., hash mining, key recovery) using classical or quantum processors.",
+      "hasDaily": true,
+      "guideUrl": "",
       "updatedAt": {
         "seconds": 1774440678,
         "nanoseconds": 205000000
       },
-      "twitterUrl": "https://x.com/quipnetwork",
-      "hasDaily": true,
-      "guideUrl": "",
-      "image": "https://img.cryptorank.io/coins/quip_network1770813552953.png",
-      "deleted": false,
-      "lastUpdated": "2026-02-10",
-      "cryptoRankUrl": "",
-      "status": "active",
-      "name": "Quip Network",
-      "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "categories": [
-        "Social Activity",
-        "Testnet"
-      ]
+      "referralLink": "https://quest.quip.network/airdrop?referral_code=MM0U33UJ",
+      "twitterUrl": "https://x.com/quipnetwork"
     },
     {
       "id": "robinhood_382133",
