@@ -2990,37 +2990,61 @@ function initOnlineGame() {
 
 // Установка Firebase listener для реального времени
 function setupFirebaseListener() {
-  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function') {
-    const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
+  console.log('🔥 Setting up Firebase listener for real-time updates...');
+  
+  // Проверяем доступность Firebase
+  if (typeof window.firestore === 'undefined' || typeof window.doc === 'undefined' || typeof window.onSnapshot === 'undefined') {
+    console.log('⚠️ Firebase not available, using polling');
+    // Fallback к polling с интервалом 5 секунд
+    setInterval(() => {
+      if (onlineGame.bettingOpen) {
+        loadOnlineGameData();
+      }
+    }, 5000);
+    return;
+  }
+  
+  try {
+    // Используем правильный синтаксис для Firebase v9+
+    const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
     
-    // Real-time listener
-    onlineGameRef.onSnapshot((doc) => {
-      if (doc.exists) {
+    const unsubscribe = window.onSnapshot(gameDocRef, (doc) => {
+      if (doc.exists()) {
         const data = doc.data();
         
-        // Проверяем, изменились ли данные
+        // Обновляем локальные данные только если есть изменения
         if (JSON.stringify(data) !== JSON.stringify(onlineGame)) {
-          console.log('🔄 Real-time update received:', data);
           onlineGame = { ...onlineGame, ...data };
+          console.log('🔄 Real-time update received:', data);
           updateOnlineUI();
           
-          // Если игра активна и есть время окончания, запускаем таймер
-          if (data.bettingOpen && data.endTime && !bettingTimer) {
-            console.log('⏰ Starting timer for active game...');
-            startBettingTimer();
+          // Если игра активна и идет таймер, запускаем локальный таймер
+          if (data.bettingOpen && data.timeLeft > 0 && !bettingTimer) {
+            startBettingTimer(data.timeLeft);
           }
         }
       }
     }, (error) => {
       console.error('❌ Firebase listener error:', error);
+      console.log('🔄 Falling back to polling');
+      // Fallback к polling при ошибке
+      setInterval(() => {
+        if (onlineGame.bettingOpen) {
+          loadOnlineGameData();
+        }
+      }, 5000);
     });
     
-    console.log('👂 Firebase listener setup complete');
-  } else {
-    console.log('⚠️ Firebase not available, using polling');
-    // Fallback - опрос каждые 5 секунд
+    console.log('✅ Firebase listener set up successfully');
+    
+  } catch (error) {
+    console.error('❌ Error setting up Firebase listener:', error);
+    console.log('🔄 Falling back to polling');
+    // Fallback к polling при ошибке
     setInterval(() => {
-      loadOnlineGameData();
+      if (onlineGame.bettingOpen) {
+        loadOnlineGameData();
+      }
     }, 5000);
   }
 }
@@ -3028,37 +3052,33 @@ function setupFirebaseListener() {
 // Таймер для фазы ставок с реальным временем
 let bettingTimer = null;
 
-function startBettingTimer() {
+function startBettingTimer(timeLeft = 60) {
   if (bettingTimer) {
     clearInterval(bettingTimer);
   }
   
+  console.log(`⏰ Starting betting timer: ${timeLeft} seconds`);
+  
   bettingTimer = setInterval(() => {
-    // Рассчитываем реальное время до окончания
-    const now = new Date();
-    const endTime = new Date(onlineGame.endTime);
-    const timeLeft = Math.max(0, Math.floor((endTime.getTime() - now.getTime()) / 1000));
-    
-    onlineGame.timeLeft = timeLeft;
-    
-    // Обновляем колесо
-    const canvas = document.getElementById('onlineWheelCanvas');
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      drawOnlineWheel(ctx, canvas.width, canvas.height);
-    }
-    
-    // Обновляем время в UI
-    const timeLeftEl = document.getElementById('onlineTimeLeft');
-    if (timeLeftEl) {
-      const minutes = Math.floor(timeLeft / 60);
-      const seconds = timeLeft % 60;
-      timeLeftEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    }
-    
-    if (timeLeft <= 0) {
+    if (onlineGame.timeLeft > 0) {
+      onlineGame.timeLeft--;
+      
+      // Обновляем время в Firebase
+      if (typeof window.firestore !== 'undefined' && typeof window.doc !== 'undefined' && typeof window.setDoc === 'function') {
+        const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
+        window.setDoc(gameDocRef, {
+          timeLeft: onlineGame.timeLeft,
+          endTime: new Date(Date.now() + onlineGame.timeLeft * 1000).toISOString()
+        }, { merge: true });
+      }
+      
+      // Обновляем UI
+      updateOnlineUI();
+    } else {
+      // Время вышло - заканчиваем фазу ставок
       clearInterval(bettingTimer);
       bettingTimer = null;
+      console.log('⏰ Betting time expired!');
       endBettingPhase();
     }
   }, 1000);
@@ -3357,17 +3377,36 @@ function initOnlineWheel() {
   canvas.width = 400;
   canvas.height = 400;
   
-  drawOnlineWheel(ctx, canvas.width, canvas.height);
+  drawOnlineWheel(0); // Добавляем параметр вращения
 }
 
 // Рисование онлайн-колеса с динамическими секторами
-function drawOnlineWheel(ctx, width, height) {
+function drawOnlineWheel(rotation = 0) {
+  const canvas = document.getElementById('onlineWheelCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  
+  canvas.width = 400;
+  canvas.height = 400;
+  
+  const width = canvas.width;
+  const height = canvas.height;
   const centerX = width / 2;
   const centerY = height / 2;
   const radius = Math.min(width, height) / 2 - 10;
   
   // Очистка canvas
   ctx.clearRect(0, 0, width, height);
+  
+  // Сохраняем состояние контекста
+  ctx.save();
+  
+  // Применяем вращение
+  ctx.translate(centerX, centerY);
+  ctx.rotate((rotation * Math.PI) / 180);
+  ctx.translate(-centerX, -centerY);
   
   // Если нет участников - рисуем пустое колесо
   if (onlineGame.participants.length === 0) {
@@ -3384,32 +3423,28 @@ function drawOnlineWheel(ctx, width, height) {
     ctx.fillStyle = gradient;
     ctx.fill();
     
-    // Граница
     ctx.strokeStyle = '#1e2538';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
     ctx.stroke();
     
-    // Текст в центре
-    ctx.fillStyle = '#a78bfa';
+    // Текст ожидания
+    ctx.fillStyle = '#8b5cf6';
     ctx.font = 'bold 16px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('Waiting for players...', centerX, centerY);
     
+    ctx.restore();
     return;
   }
   
   // Рассчитываем проценты каждого участника
   const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
-  
   let currentAngle = -Math.PI / 2; // Начинаем сверху
   
-  // Рисуем сектора для каждого участника
   onlineGame.participants.forEach((participant, index) => {
     const percentage = participant.bet / totalBets;
     const angle = percentage * Math.PI * 2;
-    
-    // Получаем цвет для участника
     const color = getParticipantColor(index);
     
     // Рисуем сектор
@@ -3425,7 +3460,6 @@ function drawOnlineWheel(ctx, width, height) {
     ctx.fillStyle = gradient;
     ctx.fill();
     
-    // Граница сектора
     ctx.strokeStyle = '#1e2538';
     ctx.lineWidth = 2;
     ctx.stroke();
@@ -3460,30 +3494,42 @@ function drawOnlineWheel(ctx, width, height) {
   // Рисуем центральную кнопку
   ctx.beginPath();
   ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
-  ctx.fillStyle = '#1e2538';
+  ctx.closePath();
+  
+  const buttonGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 30);
+  buttonGradient.addColorStop(0, '#8b5cf6');
+  buttonGradient.addColorStop(1, '#7c3aed');
+  ctx.fillStyle = buttonGradient;
   ctx.fill();
-  ctx.strokeStyle = '#8b5cf6';
+  
+  ctx.strokeStyle = '#1e2538';
   ctx.lineWidth = 3;
   ctx.stroke();
   
-  ctx.fillStyle = '#8b5cf6';
+  ctx.fillStyle = 'white';
   ctx.font = 'bold 14px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('SPIN', centerX, centerY);
   
-  // Рисуем стрелку сверху
+  // Рисуем стрелку
+  ctx.restore();
+  
+  // Стрелка (не вращается)
   ctx.save();
-  ctx.translate(centerX, 20);
   ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(-15, -20);
-  ctx.lineTo(0, -15);
-  ctx.lineTo(15, -20);
+  ctx.moveTo(centerX + radius + 10, centerY);
+  ctx.lineTo(centerX + radius - 10, centerY - 15);
+  ctx.lineTo(centerX + radius - 10, centerY + 15);
   ctx.closePath();
-  ctx.fillStyle = '#ef4444';
+  
+  const arrowGradient = ctx.createLinearGradient(centerX + radius - 10, centerY - 15, centerX + radius + 10, centerY);
+  arrowGradient.addColorStop(0, '#ef4444');
+  arrowGradient.addColorStop(1, '#dc2626');
+  ctx.fillStyle = arrowGradient;
   ctx.fill();
-  ctx.strokeStyle = '#dc2626';
+  
+  ctx.strokeStyle = '#1e2538';
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.restore();
