@@ -14,16 +14,15 @@
   <script src="config/firebase-config.js"></script>
   
   <!-- Firebase SDK -->
-  <script type="module">
+ <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import {
-  getFirestore, initializeFirestore,
-  collection, doc, getDoc, setDoc, getDocs,
-  updateDoc, addDoc, deleteDoc, query, orderBy, limit, where,
-  serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      getFirestore, initializeFirestore,
+      collection, doc, getDoc, setDoc, getDocs,
+      updateDoc, addDoc, deleteDoc, query, orderBy, limit, where,
+      serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     
     // Делаем доступным глобально
     window.initializeApp = initializeApp;
@@ -43,7 +42,7 @@
     window.serverTimestamp = serverTimestamp;
     
     console.log('🔥 Firebase SDK loaded as modules');
-  </script>
+</script>
   
   <!-- CENTRALIZED AUTHENTICATION SYSTEM -->
   <script type="module" src="auth.js"></script>
@@ -2269,6 +2268,22 @@ function launchConfetti(count = 40) {
 
 // Toast fallback
 function showToastLocal(key, fallback) {
+  try {
+    if (typeof window.showToast === 'function') {
+      const message = (typeof window.t === 'function' ? window.t(key) : null) || fallback;
+      window.showToast(message);
+    } else if (typeof showToast === 'function') {
+      const message = (typeof window.t === 'function' ? window.t(key) : null) || fallback;
+      showToast(message);
+    } else {
+      alert(fallback);
+      console.log('Toast:', fallback);
+    }
+  } catch (error) {
+    console.error('Error showing toast:', error);
+    alert(fallback);
+  }
+}
 
 // ═══════════════════════════════════════════════════════════
 // HEADER AUTH UI UPDATE
@@ -2311,7 +2326,6 @@ function updateHeaderAuthUI(user) {
   const adminPanel = document.getElementById('adminPanel');
   if (adminPanel) adminPanel.style.display = isAdmin ? 'flex' : 'none';
 }
-
 // ═══════════════════════════════════════════════════════════
 // AUTH STATE
 // ═══════════════════════════════════════════════════════════
@@ -3625,7 +3639,7 @@ async function finishOnlineGame() {
     alert('Error finishing game');
   }
 }
-
+}
 // Продолжение функции selectWinnerByProbability
 function selectWinnerByProbability(participants) {
   const totalBets = participants.reduce((sum, p) => sum + p.bet, 0);
