@@ -14,10 +14,11 @@
   <script src="config/firebase-config.js"></script>
   
   <!-- Firebase SDK -->
- <script type="module">
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
     // Делаем доступным глобально
     window.initializeApp = initializeApp;
     window.getAuth = getAuth;
@@ -36,7 +37,7 @@
     window.serverTimestamp = serverTimestamp;
     
     console.log('🔥 Firebase SDK loaded as modules');
-</script>
+  </script>
   
   <!-- CENTRALIZED AUTHENTICATION SYSTEM -->
   <script type="module" src="auth.js"></script>
@@ -334,12 +335,12 @@
     
     <!-- Mode Switch Buttons -->
     <div style="display:flex;gap:8px;">
-      <button id="soloModeBtn" onclick="window.switchToSolo && window.switchToSolo()" style="padding:8px 16px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:8px;color:white;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
-  <i class="fas fa-user" style="margin-right:6px;"></i>Solo
-</button>
-<button id="onlineModeBtn" onclick="window.switchToOnline && window.switchToOnline()" style="padding:8px 16px;background:transparent;border:none;border-radius:8px;color:var(--text-secondary);font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
-  <i class="fas fa-users" style="margin-right:6px;"></i>Online
-</button>
+      <button id="soloModeBtn" onclick="typeof switchToSolo === 'function' && switchToSolo()" style="padding:8px 16px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:8px;color:white;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
+        <i class="fas fa-user" style="margin-right:6px;"></i>Solo
+      </button>
+      <button id="onlineModeBtn" onclick="typeof switchToOnline === 'function' && switchToOnline()" style="padding:8px 16px;background:transparent;border:none;border-radius:8px;color:var(--text-secondary);font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
+        <i class="fas fa-users" style="margin-right:6px;"></i>Online
+      </button>
     </div>
   </div>
 
@@ -713,18 +714,7 @@ try {
   // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
   window.auth = auth;
   window.db   = db;
- window.__firestoreExports = { 
-  collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, 
-  query, orderBy, limit, where, serverTimestamp, increment, 
-  runTransaction, writeBatch, arrayUnion, onSnapshot,
-  initializeFirestore, getFirestore
-};
-window.__authExports = { onAuthStateChanged, signOut };
-
-// Исправление для Firebase Auth
-window.getAuth = getAuth;
-window.onAuthStateChanged = onAuthStateChanged;
-window.signOut = signOut;
+  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot };
   window.__authExports = { onAuthStateChanged, signOut };
   console.log('✅ WoF Firebase initialized');
   
@@ -2269,20 +2259,10 @@ function launchConfetti(count = 40) {
 
 // Toast fallback
 function showToastLocal(key, fallback) {
-  try {
-    if (typeof window.showToast === 'function') {
-      const message = (typeof window.t === 'function' ? window.t(key) : null) || fallback;
-      window.showToast(message);
-    } else if (typeof showToast === 'function') {
-      const message = (typeof window.t === 'function' ? window.t(key) : null) || fallback;
-      showToast(message);
-    } else {
-      alert(fallback);
-      console.log('Toast:', fallback);
-    }
-  } catch (error) {
-    console.error('Error showing toast:', error);
-    alert(fallback);
+  if (typeof window.showToast === 'function') {
+    window.showToast(typeof window.t === 'function' ? window.t(key) || fallback : fallback);
+  } else {
+    console.log(fallback);
   }
 }
 
@@ -2327,6 +2307,7 @@ function updateHeaderAuthUI(user) {
   const adminPanel = document.getElementById('adminPanel');
   if (adminPanel) adminPanel.style.display = isAdmin ? 'flex' : 'none';
 }
+
 // ═══════════════════════════════════════════════════════════
 // AUTH STATE
 // ═══════════════════════════════════════════════════════════
@@ -2841,1196 +2822,83 @@ if (currentUser && db) {
 <!-- Login Modal создается централизованно через auth-modal.js -->
 
   <script>
-    // ═══════════════════════════════════════════════════════════
-// 🛠️ FUNCTION AVAILABILITY CHECKS AND FALLBACKS
-// ═══════════════════════════════════════════════════════════
-
-// Глобальная функция для безопасного показа уведомлений
-window.showToastLocal = function(key, fallback) {
-  try {
-    if (typeof window.showToast === 'function') {
-      const message = (typeof window.t === 'function' ? window.t(key) : null) || fallback;
-      window.showToast(message);
-    } else if (typeof showToast === 'function') {
-      const message = (typeof window.t === 'function' ? window.t(key) : null) || fallback;
-      showToast(message);
-    } else {
-      alert(fallback);
-      console.log('Toast:', fallback);
-    }
-  } catch (error) {
-    console.error('Error showing toast:', error);
-    alert(fallback);
-  }
-};
-
-// Проверка доступности Firebase функций
-function checkFirebaseReady() {
-  const requiredFunctions = ['runTransaction', 'writeBatch', 'collection', 'doc', 'updateDoc', 'onSnapshot'];
-  
-  if (!window.__firestoreExports) {
-    console.error('❌ Firestore exports not available');
-    return false;
-  }
-  
-  for (const func of requiredFunctions) {
-    if (!window.__firestoreExports[func]) {
-      console.error(`❌ ${func} not available in Firestore exports`);
-      return false;
-    }
-  }
-  
-  return true;
-}
-
-// Функция ожидания готовности Firebase
-async function waitForFirebaseReady(maxAttempts = 10) {
-  for (let i = 0; i < maxAttempts; i++) {
-    if (checkFirebaseReady()) {
-      return true;
-    }
-    console.log(`⏳ Waiting for Firebase... attempt ${i + 1}/${maxAttempts}`);
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  return false;
-}
 // ═══════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════
-// 🎮 REAL ONLINE WHEEL OF FORTUNE SYSTEM
-// ═══════════════════════════════════════════════════════════
-
-// Константы для онлайн игр
-const ONLINE_GAME_DURATION = 60; // 60 секунд на ставки
-const PARTICIPANT_COLORS = [
-  '#8b5cf6', '#22d3ee', '#10b981', '#f59e0b', 
-  '#ef4444', '#ec4899', '#a855f7', '#fbbf24',
-  '#06b6d4', '#84cc16', '#f97316', '#e11d48'
-];
+// 🎮 ONLINE WHEEL OF FORTUNE FUNCTIONS
+// ═══════════════════════════════════════════════════════
 
 // Глобальные переменные для онлайн-режима
 let currentGameMode = 'solo';
-let onlineGame = null;
-let gameListener = null;
-let bettingTimer = null;
-let realTimeListener = null;
+let onlineGame = {
+  participants: [],
+  prizePool: 0,
+  timeLeft: 0,
+  bettingOpen: false,
+  gameCount: 0 // Изменено с currentRound на gameCount
+};
 
-// ═══════════════════════════════════════════════════════════
-// 💰 REAL RGT BALANCE FUNCTIONS
-// ═══════════════════════════════════════════════════════════
-
-// Получение реального баланса пользователя
-async function getRealUserBalance() {
-  if (!currentUser || !db) {
-    console.warn('💰 No user or database connection');
-    return 0;
-  }
-
-  try {
-    const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-    if (userDoc.exists()) {
-      const userData = userDoc.data();
-      const balance = userData.reagents || 0; // Используем reagents как RGT
-      console.log('💰 Real user balance loaded:', balance);
-      return balance;
-    } else {
-      console.log('💰 User document not found');
-      return 0;
-    }
-  } catch (error) {
-    console.error('💰 Error loading user balance:', error);
-    return 0;
-  }
-}
-
-// Обновление баланса пользователя
-async function updateUserBalance(newBalance) {
-  if (!currentUser || !db) return false;
-
-  try {
-    await updateDoc(doc(db, 'users', currentUser.uid), {
-      reagents: newBalance
-    });
-    
-    // Обновляем локальные переменные
-    userData.reagents = newBalance;
-    window.userProfileData = userData;
-    
-    console.log('💰 User balance updated:', newBalance);
-    return true;
-  } catch (error) {
-    console.error('💰 Error updating user balance:', error);
-    return false;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-// 🎮 ONLINE GAME SYSTEM
-// ═══════════════════════════════════════════════════════════
-
-// Функции переключения режимов (обновленные)
-window.switchToSolo = function() {
+// Функции переключения режимов
+function switchToSolo() {
   console.log('🔄 Switching to solo mode...');
   currentGameMode = 'solo';
   
-  // Отключаем реал-тайм слушатели
-  if (realTimeListener) {
-    realTimeListener();
-    realTimeListener = null;
-  }
-  
-  // Останавливаем таймер
-  if (bettingTimer) {
-    clearInterval(bettingTimer);
-    bettingTimer = null;
-  }
-  
+  // Обновляем стили кнопок
   updateModeButtons('solo');
   
+  // Скрываем онлайн-контейнер
   const onlineContainer = document.getElementById('onlineModeContainer');
+  if (onlineContainer) {
+    onlineContainer.style.display = 'none';
+  }
+  
+  // Показываем основной контейнер
   const mainGrid = document.querySelector('.main-grid');
+  if (mainGrid) {
+    mainGrid.style.display = 'grid';
+  }
+  
+  // Показываем баннер джекпота
   const jackpotBanner = document.getElementById('jackpotBanner');
+  if (jackpotBanner) {
+    jackpotBanner.style.display = 'block';
+  }
   
-  if (onlineContainer) onlineContainer.style.display = 'none';
-  if (mainGrid) mainGrid.style.display = 'grid';
-  if (jackpotBanner) jackpotBanner.style.display = 'block';
-  
-  showToastLocal('wof_solo_mode', 'Switched to Solo Mode');
-};
+  if (typeof showToast === 'function') {
+    showToast('Switched to Solo Mode', 'success');
+  }
+}
 
-window.switchToOnline = function() {
+function switchToOnline() {
   console.log('🔄 Switching to online mode...');
   currentGameMode = 'online';
   
+  // Обновляем стили кнопок
   updateModeButtons('online');
   
+  // Скрываем основной контейнер
   const mainGrid = document.querySelector('.main-grid');
+  if (mainGrid) {
+    mainGrid.style.display = 'none';
+  }
+  
+  // Скрываем баннер джекпота
   const jackpotBanner = document.getElementById('jackpotBanner');
+  if (jackpotBanner) {
+    jackpotBanner.style.display = 'none';
+  }
+  
+  // Показываем онлайн-контейнер
   const onlineContainer = document.getElementById('onlineModeContainer');
-  
-  if (mainGrid) mainGrid.style.display = 'none';
-  if (jackpotBanner) jackpotBanner.style.display = 'none';
-  if (onlineContainer) onlineContainer.style.display = 'block';
-  
-  // Инициализируем онлайн систему
-  initOnlineSystem();
-  
-  showToastLocal('wof_online_mode', 'Switched to Online Mode');
-};
-
-// Инициализация онлайн системы
-async function initOnlineSystem() {
-  if (!currentUser || !db) {
-    if (typeof showToastLocal === 'function') {
-      showToastLocal('wof_need_login', 'Please log in to play online');
-    } else {
-      alert('Please log in to play online');
-    }
-    return;
-  }
-
-  // Проверяем доступность Firestore функций
-  if (!window.__firestoreExports) {
-    console.error('❌ Firestore exports not ready');
-    alert('Database not ready. Please refresh the page.');
-    return;
-  }
-
-  console.log('🎮 Initializing online system...');
-  
-  // Обновляем баланс пользователя
-  await updateOnlineUserBalance();
-  
-  // Инициализируем колесо
-  initOnlineWheel();
-  
-  // Подключаемся к активной игре или создаем новую
-  await connectToOnlineGame();
-  
-  // Загружаем лидерборд
-  loadOnlineLeaderboard();
-}
-
-// Обновление баланса в онлайн интерфейсе
-async function updateOnlineUserBalance() {
-  const balance = await getRealUserBalance();
-  const balanceEl = document.getElementById('onlineUserBalance');
-  if (balanceEl) {
-    balanceEl.textContent = `Balance: ${balance} RGT`;
-  }
-  window.currentUserRGT = balance;
-}
-
-// Подключение к активной онлайн игре
-async function connectToOnlineGame() {
-  if (!db) return;
-
-  // ДОБАВИТЬ ЭТУ ПРОВЕРКУ:
-  if (!window.__firestoreExports) {
-    console.error('❌ Firestore exports not available');
-    return;
+  if (onlineContainer) {
+    onlineContainer.style.display = 'block';
   }
   
-  const { collection, query, where, orderBy, limit, getDocs } = window.__firestoreExports;
+  // Инициализируем онлайн-игру
+  initOnlineGame();
   
-  if (!collection || !query || !where || !orderBy || !limit || !getDocs) {
-    console.error('❌ Required Firestore functions not available');
-    return;
-  }
-
-  try {
-    // Ищем активную игру
-    const activeGameQuery = query(
-      collection(db, 'onlineWheelGames'),
-      where('status', '==', 'active'),
-      orderBy('createdAt', 'desc'),
-      limit(1)
-    );
-    
-    const snapshot = await getDocs(activeGameQuery);
-    
-    if (!snapshot.empty) {
-      // Подключаемся к существующей игре
-      const gameDoc = snapshot.docs[0];
-      onlineGame = { id: gameDoc.id, ...gameDoc.data() };
-      console.log('🎮 Connected to existing game:', onlineGame.id);
-      
-      // Устанавливаем реал-тайм слушатель
-      setupGameListener(onlineGame.id);
-    } else {
-      // Создаем новую игру (но пока не активируем)
-      onlineGame = {
-        participants: [],
-        prizePool: 0,
-        status: 'waiting', // waiting -> active -> finished
-        createdAt: serverTimestamp(),
-        createdBy: currentUser.uid,
-        gameNumber: await getNextGameNumber()
-      };
-      
-      console.log('🎮 Ready to create new game');
-    }
-    
-    updateOnlineUI();
-  } catch (error) {
-    console.error('❌ Error connecting to online game:', error);
+  if (typeof showToast === 'function') {
+    showToast('Switched to Online Mode', 'success');
   }
 }
-
-// Получение номера следующей игры
-async function getNextGameNumber() {
-  if (!window.__firestoreExports) {
-    console.error('❌ Firestore exports not available');
-    return 1;
-  }
-  
-  const { collection, query, orderBy, limit, getDocs } = window.__firestoreExports;
-  
-  try {
-    const gamesQuery = query(
-      collection(db, 'onlineWheelGames'),
-      orderBy('gameNumber', 'desc'),
-      limit(1)
-    );
-    
-    const snapshot = await getDocs(gamesQuery);
-    if (!snapshot.empty) {
-      return snapshot.docs[0].data().gameNumber + 1;
-    } else {
-      return 1;
-    }
-  } catch (error) {
-    console.error('Error getting next game number:', error);
-    return 1;
-  }
-}
-
-// Установка реал-тайм слушателя игры
-function setupGameListener(gameId) {
-  if (!db || realTimeListener) return;
-  
-  // ДОБАВИТЬ:
-  if (!window.__firestoreExports) {
-    console.error('❌ Firestore exports not available');
-    return;
-  }
-  
-  const { doc, onSnapshot } = window.__firestoreExports;
-  
-  if (!doc || !onSnapshot) {
-    console.error('❌ Required Firestore functions not available');
-    return;
-  }
-
-  console.log('👂 Setting up game listener for:', gameId);
-  
-  const gameRef = doc(db, 'onlineWheelGames', gameId);
-  
-  realTimeListener = onSnapshot(gameRef, (docSnapshot) => {
-    if (docSnapshot.exists()) {
-      const newGameData = docSnapshot.data();
-      console.log('🔄 Game update received:', newGameData);
-      
-      onlineGame = { id: docSnapshot.id, ...newGameData };
-      updateOnlineUI();
-      
-      // Управляем таймером
-      if (onlineGame.status === 'active' && !bettingTimer) {
-        startRealTimeBettingTimer();
-      } else if (onlineGame.status !== 'active' && bettingTimer) {
-        clearInterval(bettingTimer);
-        bettingTimer = null;
-      }
-    }
-  }, (error) => {
-    console.error('❌ Game listener error:', error);
-  });
-}
-
-// Реал-тайм таймер ставок
-function startRealTimeBettingTimer() {
-  if (bettingTimer) {
-    clearInterval(bettingTimer);
-  }
-  
-  console.log('⏰ Starting real-time betting timer');
-  
-  bettingTimer = setInterval(() => {
-    if (!onlineGame || !onlineGame.endTime) {
-      clearInterval(bettingTimer);
-      bettingTimer = null;
-      return;
-    }
-    
-    const now = Date.now();
-    const endTime = onlineGame.endTime.seconds ? 
-      onlineGame.endTime.seconds * 1000 : 
-      new Date(onlineGame.endTime).getTime();
-    
-    const timeLeft = Math.max(0, Math.floor((endTime - now) / 1000));
-    
-    // Обновляем UI
-    updateTimeDisplay(timeLeft);
-    
-    // Перерисовываем колесо с таймером
-    drawOnlineWheelWithTimer(timeLeft);
-    
-    if (timeLeft <= 0) {
-      clearInterval(bettingTimer);
-      bettingTimer = null;
-      
-      // Только админ может завершить игру
-      if (onlineGame.createdBy === currentUser.uid) {
-        finishOnlineGame();
-      }
-    }
-  }, 1000);
-}
-
-// Обновление отображения времени
-function updateTimeDisplay(timeLeft) {
-  const timeLeftEl = document.getElementById('onlineTimeLeft');
-  if (timeLeftEl) {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    timeLeftEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    
-    // Меняем цвет при окончании времени
-    if (timeLeft <= 10) {
-      timeLeftEl.style.color = '#ef4444';
-    } else if (timeLeft <= 30) {
-      timeLeftEl.style.color = '#f59e0b';
-    } else {
-      timeLeftEl.style.color = '#22d3ee';
-    }
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-// 🎯 BET PLACEMENT SYSTEM
-// ═══════════════════════════════════════════════════════════
-
-// Функции для ставок (обновленные)
-window.addToOnlineBet = function(amount) {
-  const betInput = document.getElementById('onlineBetAmount');
-  if (betInput) {
-    const currentBet = parseInt(betInput.value) || 0;
-    betInput.value = currentBet + amount;
-  }
-};
-
-window.setMaxOnlineBet = async function() {
-  const betInput = document.getElementById('onlineBetAmount');
-  if (betInput) {
-    const balance = await getRealUserBalance();
-    betInput.value = balance;
-  }
-};
-
-window.placeOnlineBet = async function() {
-  if (!currentUser) {
-    if (typeof showToastLocal === 'function') {
-      showToastLocal('wof_need_login', 'Please log in to place bets');
-    } else {
-      alert('Please log in to place bets');
-    }
-    return;
-  }
-
-  // ДОБАВИТЬ ПОСЛЕ ПРОВЕРКИ ПОЛЬЗОВАТЕЛЯ:
-  if (!window.__firestoreExports) {
-    console.error('❌ Firestore exports not available');
-    alert('Database functions not available. Please refresh the page.');
-    return;
-  }
-  
-  const { runTransaction, collection, doc, serverTimestamp } = window.__firestoreExports;
-  
-  if (!runTransaction || !collection || !doc || !serverTimestamp) {
-    console.error('❌ Required Firestore functions not available');
-    alert('Database functions not available. Please refresh the page.');
-    return;
-  }
-
-  const betInput = document.getElementById('onlineBetAmount');
-  const betAmount = parseInt(betInput.value);
-  
-  if (!betAmount || betAmount <= 0) {
-    if (typeof showToastLocal === 'function') {
-      showToastLocal('wof_invalid_bet', 'Please enter a valid bet amount');
-    } else {
-      alert('Please enter a valid bet amount');
-    }
-    return;
-  }
-
-  // Проверяем баланс
-  const currentBalance = await getRealUserBalance();
-  if (betAmount > currentBalance) {
-    if (typeof showToastLocal === 'function') {
-      showToastLocal('wof_insufficient_balance', 'Insufficient RGT balance');
-    } else {
-      alert('Insufficient RGT balance');
-    }
-    return;
-  }
-
-  // Проверяем доступность runTransaction
-  if (!window.__firestoreExports || !window.__firestoreExports.runTransaction) {
-    console.error('❌ runTransaction not available');
-    alert('Database functions not available. Please refresh the page.');
-    return;
-  }
-
-  const { runTransaction } = window.__firestoreExports;
-
-  try {
-    await runTransaction(db, async (transaction) => {
-      let gameRef;
-      let gameDoc;
-
-      if (onlineGame && onlineGame.id) {
-        // Обновляем существующую игру
-        gameRef = doc(db, 'onlineWheelGames', onlineGame.id);
-        gameDoc = await transaction.get(gameRef);
-        
-        if (!gameDoc.exists()) {
-          throw new Error('Game not found');
-        }
-      } else {
-        // Создаем новую игру
-        gameRef = doc(collection(db, 'onlineWheelGames'));
-        onlineGame = {
-          participants: [],
-          prizePool: 0,
-          status: 'waiting',
-          createdAt: serverTimestamp(),
-          createdBy: currentUser.uid,
-          gameNumber: await getNextGameNumber()
-        };
-      }
-
-      const currentGameData = gameDoc ? gameDoc.data() : onlineGame;
-      const participants = currentGameData.participants || [];
-      
-      // Проверяем, есть ли уже участник
-      const existingParticipantIndex = participants.findIndex(p => p.uid === currentUser.uid);
-      
-      if (existingParticipantIndex >= 0) {
-        // Увеличиваем ставку существующего участника
-        participants[existingParticipantIndex].bet += betAmount;
-      } else {
-        // Добавляем нового участника с цветом
-        const participantColor = PARTICIPANT_COLORS[participants.length % PARTICIPANT_COLORS.length];
-        participants.push({
-          uid: currentUser.uid,
-          displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Anonymous',
-          photoURL: currentUser.photoURL,
-          bet: betAmount,
-          color: participantColor,
-          joinedAt: serverTimestamp()
-        });
-      }
-
-      const newPrizePool = (currentGameData.prizePool || 0) + betAmount;
-      let newStatus = currentGameData.status;
-      let endTime = currentGameData.endTime;
-
-      // Если это второй участник, активируем игру
-      if (participants.length >= 2 && newStatus === 'waiting') {
-        newStatus = 'active';
-        endTime = new Date(Date.now() + ONLINE_GAME_DURATION * 1000);
-      }
-
-      // Обновляем баланс пользователя
-      const userRef = doc(db, 'users', currentUser.uid);
-      const userDoc = await transaction.get(userRef);
-      const currentUserBalance = userDoc.exists() ? (userDoc.data().reagents || 0) : 0;
-      
-      transaction.update(userRef, {
-        reagents: currentUserBalance - betAmount
-      });
-
-      // Сохраняем игру
-      const gameData = {
-        ...currentGameData,
-        participants,
-        prizePool: newPrizePool,
-        status: newStatus,
-        endTime: endTime,
-        updatedAt: serverTimestamp()
-      };
-
-      if (onlineGame.id) {
-        transaction.update(gameRef, gameData);
-      } else {
-        transaction.set(gameRef, gameData);
-        onlineGame.id = gameRef.id;
-      }
-
-      // Устанавливаем слушатель если его еще нет
-      if (!realTimeListener) {
-        setupGameListener(gameRef.id);
-      }
-    });
-
-    // Успешно поставили ставку
-    showToastLocal('wof_bet_placed', `Bet placed: ${betAmount} RGT`);
-    betInput.value = '';
-    
-    // Обновляем баланс в UI
-    await updateOnlineUserBalance();
-
-  } catch (error) {
-    console.error('❌ Error placing bet:', error);
-    showToastLocal('wof_bet_error', 'Error placing bet. Please try again.');
-  }
-};
-
-// ═══════════════════════════════════════════════════════════
-// 🎨 WHEEL RENDERING WITH COLOR SYNC
-// ═══════════════════════════════════════════════════════════
-
-// Инициализация онлайн колеса
-function initOnlineWheel() {
-  const canvas = document.getElementById('onlineWheelCanvas');
-  if (!canvas) return;
-
-  canvas.width = 400;
-  canvas.height = 400;
-  
-  drawOnlineWheelWithTimer(0);
-}
-
-// Рисование онлайн колеса с таймером
-function drawOnlineWheelWithTimer(timeLeft = 0) {
-  const canvas = document.getElementById('onlineWheelCanvas');
-  if (!canvas) return;
-
-  const ctx = canvas.getContext('2d');
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const radius = Math.min(canvas.width, canvas.height) / 2 - 10;
-
-  // Очистка
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  if (!onlineGame || !onlineGame.participants || onlineGame.participants.length === 0) {
-    drawEmptyWheel(ctx, centerX, centerY, radius);
-    return;
-  }
-
-  // Рисуем секторы участников
-  const participants = onlineGame.participants;
-  const totalBets = participants.reduce((sum, p) => sum + p.bet, 0);
-  
-  let currentAngle = -Math.PI / 2;
-  
-  participants.forEach((participant) => {
-    const percentage = totalBets > 0 ? (participant.bet / totalBets) : 0;
-    const angleSize = percentage * Math.PI * 2;
-    
-    // Используем цвет участника
-    const color = participant.color || '#8b5cf6';
-    
-    // Рисуем сектор
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + angleSize);
-    ctx.closePath();
-    
-    // Градиент
-    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-    gradient.addColorStop(0, color + 'cc');
-    gradient.addColorStop(1, color);
-    ctx.fillStyle = gradient;
-    ctx.fill();
-    
-    // Граница
-    ctx.strokeStyle = '#1e2538';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    
-    // Текст участника
-    if (percentage > 0.05) {
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate(currentAngle + angleSize / 2);
-      
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 11px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      const shortName = participant.displayName.length > 8 ? 
-        participant.displayName.substring(0, 8) + '...' : 
-        participant.displayName;
-      
-      ctx.fillText(shortName, radius * 0.65, -6);
-      ctx.font = '9px Arial';
-      ctx.fillText(`${participant.bet} RGT`, radius * 0.65, 6);
-      
-      ctx.restore();
-    }
-    
-    currentAngle += angleSize;
-  });
-
-  // Центральная окружность
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, 35, 0, Math.PI * 2);
-  ctx.fillStyle = '#1e2538';
-  ctx.fill();
-  ctx.strokeStyle = onlineGame.status === 'active' ? '#22d3ee' : '#8b5cf6';
-  ctx.lineWidth = 4;
-  ctx.stroke();
-
-  // Текст в центре
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 12px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  
-  if (onlineGame.status === 'active' && timeLeft > 0) {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    ctx.fillText(`${minutes}:${seconds.toString().padStart(2, '0')}`, centerX, centerY);
-  } else if (participants.length < 2) {
-    ctx.font = '10px Arial';
-    ctx.fillText('Waiting...', centerX, centerY);
-  } else {
-    ctx.fillText('Ready!', centerX, centerY);
-  }
-}
-
-// Рисование пустого колеса
-function drawEmptyWheel(ctx, centerX, centerY, radius) {
-  // Один большой сектор
-  ctx.beginPath();
-  ctx.moveTo(centerX, centerY);
-  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-  ctx.closePath();
-  
-  const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-  gradient.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
-  gradient.addColorStop(1, 'rgba(139, 92, 246, 0.1)');
-  ctx.fillStyle = gradient;
-  ctx.fill();
-  
-  ctx.strokeStyle = '#1e2538';
-  ctx.lineWidth = 3;
-  ctx.stroke();
-  
-  // Центр
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, 35, 0, Math.PI * 2);
-  ctx.fillStyle = '#1e2538';
-  ctx.fill();
-  ctx.strokeStyle = '#8b5cf6';
-  ctx.lineWidth = 4;
-  ctx.stroke();
-  
-  ctx.fillStyle = '#a78bfa';
-  ctx.font = 'bold 14px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('Empty', centerX, centerY - 5);
-  ctx.font = '10px Arial';
-  ctx.fillText('Place bet to start', centerX, centerY + 8);
-}
-
-// ═══════════════════════════════════════════════════════════
-// 📝 PARTICIPANTS LIST WITH COLOR SYNC
-// ═══════════════════════════════════════════════════════════
-
-// Обновление списка участников с синхронизированными цветами
-function updateParticipantsList() {
-  const participantsList = document.getElementById('onlineParticipantsList');
-  const participantCount = document.getElementById('onlineParticipantCount');
-  
-  if (!participantsList) return;
-  
-  const participants = onlineGame?.participants || [];
-  participantCount.textContent = participants.length;
-  
-  if (participants.length === 0) {
-    participantsList.innerHTML = `
-      <div style="text-align:center;padding:20px;color:var(--text-secondary);">
-        <i class="fas fa-user-friends" style="font-size:24px;opacity:0.3;margin-bottom:8px;"></i>
-        <div>No participants yet</div>
-        <div style="font-size:12px;margin-top:4px;">Be the first to place a bet!</div>
-      </div>
-    `;
-    return;
-  }
-  
-  const totalBets = participants.reduce((sum, p) => sum + p.bet, 0);
-  
-  participantsList.innerHTML = participants.map((participant, index) => {
-    const percentage = totalBets > 0 ? ((participant.bet / totalBets) * 100).toFixed(1) : 0;
-    const isCurrentUser = participant.uid === currentUser?.uid;
-    
-    return `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:${participant.color}15;border:1px solid ${participant.color}40;border-left:4px solid ${participant.color};border-radius:8px;margin-bottom:8px;${isCurrentUser ? 'box-shadow: 0 0 0 1px ' + participant.color + '80;' : ''}">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:36px;height:36px;border-radius:50%;background:${participant.color};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;box-shadow:0 2px 8px ${participant.color}40;">
-            ${participant.displayName ? participant.displayName.charAt(0).toUpperCase() : 'A'}
-          </div>
-          <div>
-            <div style="font-size:14px;color:white;font-weight:600;${isCurrentUser ? 'text-decoration: underline;' : ''}">
-              ${participant.displayName || 'Anonymous'}
-              ${isCurrentUser ? ' <span style="color:' + participant.color + ';font-size:12px;">(You)</span>' : ''}
-            </div>
-            <div style="font-size:12px;color:var(--text-secondary);">Bet: ${participant.bet} RGT</div>
-          </div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:16px;color:${participant.color};font-weight:700;">${percentage}%</div>
-          <div style="font-size:11px;color:var(--text-secondary);">win chance</div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-// ═══════════════════════════════════════════════════════════
-// 🎯 GAME COMPLETION SYSTEM
-// ═══════════════════════════════════════════════════════════
-
-// Завершение онлайн игры
-async function finishOnlineGame() {
-  if (!onlineGame || !onlineGame.participants || onlineGame.participants.length < 2) {
-    console.log('🎮 Cannot finish game: insufficient participants');
-    return;
-  }
-
-  console.log('🎮 Finishing online game...');
-
-  try {
-    // Выбираем победителя на основе ставок
-    const winner = selectWinnerByProbability(onlineGame.participants);
-    const totalPrizePool = onlineGame.prizePool;
-    const realWinAmount = totalPrizePool - winner.bet; // Реальный выигрыш
-
-    // Обновляем статус игры
-    await updateDoc(doc(db, 'onlineWheelGames', onlineGame.id), {
-      status: 'finished',
-      winner: {
-        uid: winner.uid,
-        displayName: winner.displayName,
-        bet: winner.bet,
-        winAmount: realWinAmount
-      },
-      finishedAt: serverTimestamp()
-    });
-
-    // Выплачиваем выигрыш
-    await updateDoc(doc(db, 'users', winner.uid), {
-      reagents: increment(totalPrizePool) // Возвращаем полный пул
-    });
-
-    // Сохраняем в историю
-    await saveGameToHistory(onlineGame, winner, realWinAmount);
-    
-    // Обновляем статистику участников
-    await updateParticipantsStats(onlineGame.participants, winner);
-
-    // Показываем результат
-    showOnlineGameResult(winner, realWinAmount, totalPrizePool);
-
-    // Сбрасываем локальную игру
-    resetLocalGameState();
-
-  } catch (error) {
-  console.error('❌ Error finishing game:', error);
-  if (typeof showToastLocal === 'function') {
-    showToastLocal('wof_game_error', 'Error finishing game');
-  } else {
-    alert('Error finishing game');
-  }
-}
-}
-// Продолжение функции selectWinnerByProbability
-function selectWinnerByProbability(participants) {
-  const totalBets = participants.reduce((sum, p) => sum + p.bet, 0);
-  const random = Math.random();
-  let accumulator = 0;
-
-  for (const participant of participants) {
-    const probability = participant.bet / totalBets;
-    accumulator += probability;
-    if (random <= accumulator) {
-      return participant;
-    }
-  }
-
-  // Fallback - возвращаем последнего участника
-  return participants[participants.length - 1];
-}
-
-// Сохранение игры в историю
-async function saveGameToHistory(game, winner, realWinAmount) {
-  try {
-    await addDoc(collection(db, 'onlineWheelHistory'), {
-      gameId: game.id,
-      gameNumber: game.gameNumber,
-      participants: game.participants.map(p => ({
-        uid: p.uid,
-        displayName: p.displayName,
-        bet: p.bet,
-        color: p.color
-      })),
-      winner: {
-        uid: winner.uid,
-        displayName: winner.displayName,
-        bet: winner.bet,
-        realWinAmount: realWinAmount
-      },
-      totalPrizePool: game.prizePool,
-      finishedAt: serverTimestamp()
-    });
-    
-    console.log('📚 Game saved to history');
-  } catch (error) {
-    console.error('❌ Error saving game to history:', error);
-  }
-}
-
-// Обновление статистики участников
-async function updateParticipantsStats(participants, winner) {
-  const batch = writeBatch(db);
-
-  for (const participant of participants) {
-    const statsRef = doc(db, 'onlineWheelStats', participant.uid);
-    const isWinner = participant.uid === winner.uid;
-    
-    // Получаем текущую статистику
-    const statsDoc = await getDoc(statsRef);
-    const currentStats = statsDoc.exists() ? statsDoc.data() : {
-      displayName: participant.displayName,
-      totalGames: 0,
-      totalWins: 0,
-      totalWon: 0,
-      totalBet: 0
-    };
-
-    // Обновляем статистику
-    const updatedStats = {
-      ...currentStats,
-      displayName: participant.displayName, // Обновляем имя на случай изменения
-      totalGames: currentStats.totalGames + 1,
-      totalWins: currentStats.totalWins + (isWinner ? 1 : 0),
-      totalWon: currentStats.totalWon + (isWinner ? (winner.bet === participant.bet ? participant.bet - participant.bet : 0) : 0), // Реальный выигрыш
-      totalBet: currentStats.totalBet + participant.bet,
-      lastPlayed: serverTimestamp()
-    };
-
-    batch.set(statsRef, updatedStats);
-  }
-
-  await batch.commit();
-  console.log('📊 Participants stats updated');
-}
-
-// Показ результата онлайн игры
-function showOnlineGameResult(winner, realWinAmount, totalPrizePool) {
-  const isCurrentUserWinner = winner.uid === currentUser?.uid;
-  
-  // Создаем модальное окно результата
-  const modal = document.createElement('div');
-  modal.style.cssText = `
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); z-index: 15000; display: flex;
-    align-items: center; justify-content: center; backdrop-filter: blur(8px);
-  `;
-  
-  modal.innerHTML = `
-    <div style="background: linear-gradient(145deg, #1e2538, #2d3748); border: 2px solid ${winner.color || '#8b5cf6'}; border-radius: 24px; padding: 40px; max-width: 500px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: modalFadeIn 0.5s ease-out;">
-      <div style="font-size: 64px; margin-bottom: 20px;">${isCurrentUserWinner ? '🎉' : '🎯'}</div>
-      <h2 style="color: white; font-size: 28px; font-weight: 900; margin-bottom: 16px;">
-        ${isCurrentUserWinner ? 'YOU WON!' : 'Game Finished!'}
-      </h2>
-      
-      <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 24px; padding: 20px; background: ${winner.color}20; border: 1px solid ${winner.color}40; border-radius: 16px;">
-        <div style="width: 64px; height: 64px; border-radius: 50%; background: ${winner.color}; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 24px; box-shadow: 0 4px 16px ${winner.color}40;">
-          ${winner.displayName.charAt(0).toUpperCase()}
-        </div>
-        <div>
-          <div style="color: white; font-size: 20px; font-weight: 700;">${winner.displayName}</div>
-          <div style="color: ${winner.color}; font-size: 14px; font-weight: 600;">Winner</div>
-        </div>
-      </div>
-
-      <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-        <div style="color: #10b981; font-size: 14px; font-weight: 600; margin-bottom: 8px;">💰 Prize Breakdown</div>
-        <div style="color: white; font-size: 24px; font-weight: 900; margin-bottom: 4px;">+${realWinAmount} RGT</div>
-        <div style="color: #64748b; font-size: 12px;">Real winnings (${totalPrizePool} total - ${winner.bet} bet)</div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
-        <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 12px;">
-          <div style="color: #3b82f6; font-size: 12px; font-weight: 600;">Winner's Bet</div>
-          <div style="color: white; font-size: 16px; font-weight: 700;">${winner.bet} RGT</div>
-        </div>
-        <div style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 12px;">
-          <div style="color: #f59e0b; font-size: 12px; font-weight: 600;">Total Pool</div>
-          <div style="color: white; font-size: 16px; font-weight: 700;">${totalPrizePool} RGT</div>
-        </div>
-      </div>
-
-      <button onclick="this.closest('div').parentElement.remove(); connectToOnlineGame();" style="background: linear-gradient(135deg, ${winner.color}, ${winner.color}dd); border: none; border-radius: 12px; color: white; font-weight: 700; padding: 14px 32px; cursor: pointer; font-size: 16px; box-shadow: 0 4px 16px ${winner.color}40; transition: all 0.3s;">
-        ${isCurrentUserWinner ? 'Awesome! 🎉' : 'Play Again 🎮'}
-      </button>
-    </div>
-
-    <style>
-      @keyframes modalFadeIn {
-        from { opacity: 0; transform: scale(0.8) translateY(-20px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-      }
-    </style>
-  `;
-  
-  document.body.appendChild(modal);
-  
-  // Запускаем конфетти для победителя
-  if (isCurrentUserWinner && typeof launchConfetti === 'function') {
-    setTimeout(() => launchConfetti(120), 500);
-  }
-}
-
-// Сброс локального состояния игры
-function resetLocalGameState() {
-  onlineGame = null;
-  if (realTimeListener) {
-    realTimeListener();
-    realTimeListener = null;
-  }
-  if (bettingTimer) {
-    clearInterval(bettingTimer);
-    bettingTimer = null;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-// 📊 ONLINE LEADERBOARD SYSTEM
-// ═══════════════════════════════════════════════════════════
-
-// Загрузка онлайн лидерборда
-async function loadOnlineLeaderboard() {
-  const leaderboardList = document.getElementById('onlineLeaderboardList');
-  if (!leaderboardList || !db) return;
-
-  // ДОБАВИТЬ:
-  if (!window.__firestoreExports) {
-    console.error('❌ Firestore exports not available');
-    renderOnlineLeaderboard([]);
-    return;
-  }
-  
-  const { collection, query, orderBy, limit, getDocs } = window.__firestoreExports;
-  
-  if (!collection || !query || !orderBy || !limit || !getDocs) {
-    console.error('❌ Required Firestore functions not available');
-    renderOnlineLeaderboard([]);
-    return;
-  }
-
-  try {
-    const sortBy = document.getElementById('leaderboardSort')?.value || 'totalWon';
-    let orderField = 'totalWon';
-    
-    switch (sortBy) {
-      case 'totalWon': orderField = 'totalWon'; break;
-      case 'games': orderField = 'totalGames'; break;
-      case 'wins': orderField = 'totalWins'; break;
-    }
-
-    const q = query(
-      collection(db, 'onlineWheelStats'),
-      orderBy(orderField, 'desc'),
-      limit(10)
-    );
-
-    const snapshot = await getDocs(q);
-    const stats = [];
-    
-    snapshot.forEach((doc) => {
-      stats.push({ id: doc.id, ...doc.data() });
-    });
-
-    renderOnlineLeaderboard(stats);
-  } catch (error) {
-    console.error('❌ Error loading online leaderboard:', error);
-    renderOnlineLeaderboard([]);
-  }
-}
-
-// Рендеринг онлайн лидерборда
-function renderOnlineLeaderboard(stats) {
-  const leaderboardList = document.getElementById('onlineLeaderboardList');
-  if (!leaderboardList) return;
-
-  if (stats.length === 0) {
-    leaderboardList.innerHTML = `
-      <div style="text-align:center;padding:24px;color:var(--text-secondary);">
-        <i class="fas fa-trophy" style="font-size:32px;opacity:0.3;margin-bottom:12px;display:block;"></i>
-        <div style="font-size:14px;margin-bottom:4px;">No games played yet</div>
-        <div style="font-size:12px;">Be the first to play online!</div>
-      </div>
-    `;
-    return;
-  }
-
-  leaderboardList.innerHTML = stats.map((stat, index) => {
-    const winRate = stat.totalGames > 0 ? ((stat.totalWins / stat.totalGames) * 100).toFixed(1) : 0;
-    const avgWin = stat.totalWins > 0 ? Math.round(stat.totalWon / stat.totalWins) : 0;
-    
-    let medal = '';
-    let rankColor = '#64748b';
-    
-    if (index === 0) { medal = '🥇'; rankColor = '#fbbf24'; }
-    else if (index === 1) { medal = '🥈'; rankColor = '#e5e7eb'; }
-    else if (index === 2) { medal = '🥉'; rankColor = '#f97316'; }
-    else { medal = `#${index + 1}`; }
-
-    return `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.15);border-radius:12px;margin-bottom:8px;transition:all 0.2s;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:32px;height:32px;border-radius:50%;background:${rankColor}20;border:2px solid ${rankColor};display:flex;align-items:center;justify-content:center;color:${rankColor};font-weight:800;font-size:12px;">
-            ${medal}
-          </div>
-          <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#22d3ee,#0891b2);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;">
-            ${stat.displayName ? stat.displayName.charAt(0).toUpperCase() : 'A'}
-          </div>
-          <div>
-            <div style="font-size:14px;color:white;font-weight:600;">${stat.displayName || 'Anonymous'}</div>
-            <div style="font-size:11px;color:var(--text-secondary);">${stat.totalGames || 0} games • ${winRate}% wins</div>
-          </div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:15px;color:#f59e0b;font-weight:700;">${stat.totalWon || 0} RGT</div>
-          <div style="font-size:10px;color:var(--text-secondary);">Avg: ${avgWin} RGT/win</div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-// Обновление онлайн UI
-function updateOnlineUI() {
-  if (!onlineGame) return;
-
-  // Обновляем основную информацию
-  const prizePoolEl = document.getElementById('onlinePrizePool');
-  const roundEl = document.getElementById('onlineRound');
-  
-  if (prizePoolEl) prizePoolEl.textContent = `${onlineGame.prizePool || 0} RGT`;
-  if (roundEl) roundEl.textContent = onlineGame.gameNumber || 0;
-
-  // Обновляем список участников
-  updateParticipantsList();
-  
-  // Обновляем статистику
-  updateOnlineStats();
-  
-  // Обновляем статус игры
-  updateOnlineGameStatus();
-  
-  // Перерисовываем колесо
-  drawOnlineWheelWithTimer(0);
-}
-
-// Обновление статуса игры
-function updateOnlineGameStatus() {
-  const statusEl = document.getElementById('onlineGameStatus');
-  if (!statusEl || !onlineGame) return;
-
-  let statusHTML = '';
-  
-  if (onlineGame.participants.length === 0) {
-    statusHTML = `
-      <div style="font-size:14px;color:#22d3ee;font-weight:600;margin-bottom:8px;">🎯 Waiting for players...</div>
-      <div style="font-size:12px;color:var(--text-secondary);">Be the first to place a bet!</div>
-    `;
-  } else if (onlineGame.participants.length === 1) {
-    statusHTML = `
-      <div style="font-size:14px;color:#f59e0b;font-weight:600;margin-bottom:8px;">⏳ Need one more player...</div>
-      <div style="font-size:12px;color:var(--text-secondary);">Place a bet to start the 60s timer!</div>
-    `;
-  } else if (onlineGame.status === 'active') {
-    statusHTML = `
-      <div style="font-size:14px;color:#10b981;font-weight:600;margin-bottom:8px;">🔥 Betting phase active!</div>
-      <div style="font-size:12px;color:var(--text-secondary);">Place more bets or wait for the timer!</div>
-    `;
-  } else if (onlineGame.status === 'finished') {
-    statusHTML = `
-      <div style="font-size:14px;color:#8b5cf6;font-weight:600;margin-bottom:8px;">✅ Game finished!</div>
-      <div style="font-size:12px;color:var(--text-secondary);">Waiting for next game...</div>
-    `;
-  }
-  
-  statusEl.innerHTML = statusHTML;
-}
-
-// Обновление онлайн статистики
-function updateOnlineStats() {
-  const totalBetsEl = document.getElementById('onlineTotalBets');
-  const activePlayersEl = document.getElementById('onlineActivePlayers');
-  
-  if (totalBetsEl) {
-    const totalBets = onlineGame?.participants?.reduce((sum, p) => sum + p.bet, 0) || 0;
-    totalBetsEl.textContent = totalBets;
-  }
-  
-  if (activePlayersEl) {
-    activePlayersEl.textContent = onlineGame?.participants?.length || 0;
-  }
-}
-
-// Функция для обновления лидерборда при изменении сортировки
-window.updateOnlineLeaderboard = function() {
-  loadOnlineLeaderboard();
-};
 
 // Обновление стилей кнопок режимов
 function updateModeButtons(activeMode) {
@@ -4039,11 +2907,13 @@ function updateModeButtons(activeMode) {
   
   if (soloBtn && onlineBtn) {
     if (activeMode === 'solo') {
+      // Solo активен
       soloBtn.style.background = 'linear-gradient(135deg,#8b5cf6,#7c3aed)';
       soloBtn.style.color = 'white';
       onlineBtn.style.background = 'transparent';
       onlineBtn.style.color = 'var(--text-secondary)';
     } else {
+      // Online активен
       soloBtn.style.background = 'transparent';
       soloBtn.style.color = 'var(--text-secondary)';
       onlineBtn.style.background = 'linear-gradient(135deg,#8b5cf6,#7c3aed)';
@@ -4052,70 +2922,1086 @@ function updateModeButtons(activeMode) {
   }
 }
 
-// Экспорт функций в глобальную область
-window.switchToSolo = switchToSolo;
-window.switchToOnline = switchToOnline;
-    // ═══════════════════════════════════════════════════════════
-// 🔧 ЭКСПОРТ ФУНКЦИЙ ПЕРЕКЛЮЧЕНИЯ РЕЖИМОВ
-// ═══════════════════════════════════════════════════════════
+// Инициализация онлайн-игры
+function initOnlineGame() {
+  console.log('🎮 Initializing online game...');
+  
+  // Загружаем данные из Firebase
+  loadOnlineGameData();
+  
+  // Обновляем баланс пользователя
+  updateUserBalance();
+  
+  // Инициализация онлайн-колеса
+  initOnlineWheel();
+  
+  // Устанавливаем Firebase listener для реального времени
+  setupFirebaseListener();
+  
+  // Обновление UI
+  updateOnlineUI();
+}
 
-// Убедимся что функции доступны глобально
-if (typeof window.switchToSolo !== 'function') {
-  window.switchToSolo = function() {
-    console.log('🔄 Switching to solo mode...');
-    currentGameMode = 'solo';
+// Установка Firebase listener для реального времени
+function setupFirebaseListener() {
+  if (typeof window.firestore !== 'undefined') {
+    const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
     
-    // Отключаем реал-тайм слушатели
-    if (realTimeListener) {
-      realTimeListener();
-      realTimeListener = null;
+    // Real-time listener
+    onlineGameRef.onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        
+        // Проверяем, изменились ли данные
+        if (JSON.stringify(data) !== JSON.stringify(onlineGame)) {
+          console.log('🔄 Real-time update received:', data);
+          onlineGame = { ...onlineGame, ...data };
+          updateOnlineUI();
+          
+          // Если игра активна и есть время окончания, запускаем таймер
+          if (data.bettingOpen && data.endTime && !bettingTimer) {
+            console.log('⏰ Starting timer for active game...');
+            startBettingTimer();
+          }
+        }
+      }
+    }, (error) => {
+      console.error('❌ Firebase listener error:', error);
+    });
+    
+    console.log('👂 Firebase listener setup complete');
+  } else {
+    console.log('⚠️ Firebase not available, using polling');
+    // Fallback - опрос каждые 5 секунд
+    setInterval(() => {
+      loadOnlineGameData();
+    }, 5000);
+  }
+}
+
+// Таймер для фазы ставок с реальным временем
+let bettingTimer = null;
+
+function startBettingTimer() {
+  if (bettingTimer) {
+    clearInterval(bettingTimer);
+  }
+  
+  bettingTimer = setInterval(() => {
+    // Рассчитываем реальное время до окончания
+    const now = new Date();
+    const endTime = new Date(onlineGame.endTime);
+    const timeLeft = Math.max(0, Math.floor((endTime.getTime() - now.getTime()) / 1000));
+    
+    onlineGame.timeLeft = timeLeft;
+    
+    // Обновляем колесо
+    const canvas = document.getElementById('onlineWheelCanvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      drawOnlineWheel(ctx, canvas.width, canvas.height);
     }
     
-    // Останавливаем таймер
-    if (bettingTimer) {
+    // Обновляем время в UI
+    const timeLeftEl = document.getElementById('onlineTimeLeft');
+    if (timeLeftEl) {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timeLeftEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    if (timeLeft <= 0) {
       clearInterval(bettingTimer);
       bettingTimer = null;
+      endBettingPhase();
+    }
+  }, 1000);
+}
+
+// Загрузка данных онлайн-игры из Firebase
+function loadOnlineGameData() {
+  // Проверяем доступность Firebase
+  if (typeof window.firestore !== 'undefined') {
+    const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
+    
+    onlineGameRef.get().then((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        onlineGame = { ...onlineGame, ...data };
+        console.log('📦 Loaded global online game data:', data);
+        updateOnlineUI();
+        
+        // Если игра активна и идет таймер, запускаем локальный таймер
+        if (data.bettingOpen && data.timeLeft > 0) {
+          startBettingTimer(data.timeLeft);
+        }
+      } else {
+        console.log('📦 No global game exists, creating new one');
+        // Создаем новую глобальную игру
+        createNewGlobalGame();
+      }
+    }).catch((error) => {
+      console.error('❌ Error loading global online game data:', error);
+      // Fallback к localStorage
+      loadFromLocalStorage();
+    });
+  } else {
+    // Fallback к localStorage если Firebase недоступен
+    loadFromLocalStorage();
+  }
+}
+
+// Создание новой глобальной игры
+function createNewGlobalGame() {
+  const now = new Date();
+  onlineGame = {
+    participants: [],
+    prizePool: 0,
+    timeLeft: 0,
+    bettingOpen: false,
+    gameCount: 1,
+    createdBy: window.currentUser?.uid || 'anonymous',
+    createdAt: now.toISOString(),
+    startTime: null, // Время начала фазы ставок
+    endTime: null // Время окончания фазы ставок
+  };
+  
+  saveOnlineGameData();
+  updateOnlineUI();
+  console.log('🎮 Created new global game:', onlineGame);
+}
+
+// Загрузка из localStorage как fallback
+function loadFromLocalStorage() {
+  try {
+    const savedData = localStorage.getItem('onlineWheelGame');
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      onlineGame = { ...onlineGame, ...data };
+      console.log('📦 Loaded online game data from localStorage:', data);
+    }
+  } catch (error) {
+    console.error('❌ Error loading online game data from localStorage:', error);
+  }
+}
+
+// Сохранение данных онлайн-игры в Firebase
+function saveOnlineGameData() {
+  // Проверяем доступность Firebase
+  if (typeof window.firestore !== 'undefined') {
+    const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
+    
+    onlineGameRef.set(onlineGame).then(() => {
+      console.log('💾 Saved global online game data to Firebase');
+    }).catch((error) => {
+      console.error('❌ Error saving online game data to Firebase:', error);
+      // Fallback to localStorage
+      saveToLocalStorage();
+    });
+  } else {
+    // Fallback to localStorage если Firebase недоступен
+    saveToLocalStorage();
+  }
+}
+
+// Сохранение в localStorage как fallback
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem('onlineWheelGame', JSON.stringify(onlineGame));
+    console.log('💾 Saved online game data to localStorage');
+  } catch (error) {
+    console.error('❌ Error saving online game data to localStorage:', error);
+  }
+}
+
+// Обновление баланса пользователя
+function updateUserBalance() {
+  const balanceEl = document.getElementById('onlineUserBalance');
+  if (!balanceEl) return;
+  
+  // Получаем баланс пользователя из Firebase
+  if (typeof window.firestore !== 'undefined' && window.currentUser) {
+    const userRef = window.firestore.collection('users').doc(window.currentUser.uid);
+    
+    userRef.get().then((doc) => {
+      let balance = 0;
+      
+      if (doc.exists) {
+        const userData = doc.data();
+        balance = userData.balance || userData.rgt || 0;
+        console.log('💰 User balance from Firebase:', balance);
+      } else {
+        console.log('💰 No user data in Firebase, using defaults');
+        balance = 1000; // Тестовый баланс
+      }
+      
+      // Обновляем UI
+      balanceEl.textContent = `Balance: ${balance} RGT`;
+      
+      // Сохраняем в глобальную переменную для других функций
+      window.currentUserRGT = balance;
+      
+    }).catch((error) => {
+      console.error('❌ Error loading user balance from Firebase:', error);
+      // Fallback к другим источникам
+      loadBalanceFromOtherSources();
+    });
+  } else {
+    // Fallback к другим источникам если Firebase недоступен
+    loadBalanceFromOtherSources();
+  }
+}
+
+// Загрузка баланса из других источников как fallback
+function loadBalanceFromOtherSources() {
+  const balanceEl = document.getElementById('onlineUserBalance');
+  if (!balanceEl) return;
+  
+  let balance = 0;
+  
+  // Проверяем глобальные переменные из wheel-of-fortune
+  if (typeof userBalance !== 'undefined' && userBalance > 0) {
+    balance = userBalance;
+  }
+  
+  // Проверяем window.currentUser
+  if (window.currentUser && window.currentUser.balance) {
+    balance = window.currentUser.balance;
+  }
+  
+  // Проверяем переменные из других скриптов
+  if (typeof window.userRGT !== 'undefined' && window.userRGT > 0) {
+    balance = window.userRGT;
+  }
+  
+  if (typeof window.currentUserRGT !== 'undefined' && window.currentUserRGT > 0) {
+    balance = window.currentUserRGT;
+  }
+  
+  // Проверяем localStorage
+  const storedBalance = localStorage.getItem('userBalance');
+  if (storedBalance) {
+    balance = parseFloat(storedBalance);
+  }
+  
+  const storedRGT = localStorage.getItem('userRGT');
+  if (storedRGT) {
+    balance = parseFloat(storedRGT);
+  }
+  
+  // Для демонстрации если баланс все еще 0
+  if (balance === 0) {
+    balance = 1000; // Тестовый баланс
+  }
+  
+  balanceEl.textContent = `Balance: ${balance} RGT`;
+  window.currentUserRGT = balance;
+  console.log('💰 User balance from fallback sources:', balance);
+}
+
+// Цвета для участников колеса
+const participantColors = [
+  '#8b5cf6', // Фиолетовый
+  '#22d3ee', // Голубой  
+  '#f59e0b', // Оранжевый
+  '#10b981', // Зеленый
+  '#ef4444', // Красный
+  '#f97316', // Ярко-оранжевый
+  '#06b6d4', // Циановый
+  '#84cc16', // Лаймовый
+  '#a855f7', // Пурпурный
+  '#ec4899'  // Розовый
+];
+
+// Получение цвета для участника
+function getParticipantColor(index) {
+  return participantColors[index % participantColors.length];
+}
+
+// Инициализация онлайн-колеса
+function initOnlineWheel() {
+  const canvas = document.getElementById('onlineWheelCanvas');
+  if (!canvas) {
+    console.warn('⚠️ Online wheel canvas not found');
+    return;
+  }
+  
+  const ctx = canvas.getContext('2d');
+  canvas.width = 400;
+  canvas.height = 400;
+  
+  drawOnlineWheel(ctx, canvas.width, canvas.height);
+}
+
+// Рисование онлайн-колеса с динамическими секторами
+function drawOnlineWheel(ctx, width, height) {
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = Math.min(width, height) / 2 - 10;
+  
+  // Очистка canvas
+  ctx.clearRect(0, 0, width, height);
+  
+  // Если нет участников - рисуем пустое колесо
+  if (onlineGame.participants.length === 0) {
+    // Рисуем один большой сектор - ожидание игроков
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.closePath();
+    
+    // Градиент для пустого колеса
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
+    gradient.addColorStop(1, 'rgba(139, 92, 246, 0.1)');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    // Граница
+    ctx.strokeStyle = '#1e2538';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Текст в центре
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Waiting for players...', centerX, centerY);
+    
+    return;
+  }
+  
+  // Рассчитываем проценты каждого участника
+  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+  
+  let currentAngle = -Math.PI / 2; // Начинаем сверху
+  
+  // Рисуем сектора для каждого участника
+  onlineGame.participants.forEach((participant, index) => {
+    const percentage = participant.bet / totalBets;
+    const angle = percentage * Math.PI * 2;
+    
+    // Получаем цвет для участника
+    const color = getParticipantColor(index);
+    
+    // Рисуем сектор
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + angle);
+    ctx.closePath();
+    
+    // Градиент для сектора
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, color + 'dd');
+    gradient.addColorStop(1, color + '99');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    // Граница сектора
+    ctx.strokeStyle = '#1e2538';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Текст с именем и процентом
+    const textAngle = currentAngle + angle / 2;
+    const textX = centerX + Math.cos(textAngle) * (radius * 0.7);
+    const textY = centerY + Math.sin(textAngle) * (radius * 0.7);
+    
+    ctx.save();
+    ctx.translate(textX, textY);
+    ctx.rotate(textAngle + Math.PI / 2);
+    
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Имя участника
+    const displayName = participant.displayName || 'Player';
+    ctx.fillText(displayName.length > 10 ? displayName.substring(0, 10) + '...' : displayName, 0, -8);
+    
+    // Процент
+    ctx.font = '10px Arial';
+    ctx.fillText(`${(percentage * 100).toFixed(1)}%`, 0, 8);
+    
+    ctx.restore();
+    
+    currentAngle += angle;
+  });
+  
+  // Рисуем центральную кнопку
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+  ctx.fillStyle = '#1e2538';
+  ctx.fill();
+  ctx.strokeStyle = '#8b5cf6';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  
+  ctx.fillStyle = '#8b5cf6';
+  ctx.font = 'bold 14px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('SPIN', centerX, centerY);
+}
+
+// Обновление онлайн UI
+function updateOnlineUI() {
+  // Обновление призового пула
+  const prizePoolEl = document.getElementById('onlinePrizePool');
+  if (prizePoolEl) {
+    prizePoolEl.textContent = `${onlineGame.prizePool} RGT`;
+  }
+  
+  // Обновление времени
+  const timeLeftEl = document.getElementById('onlineTimeLeft');
+  if (timeLeftEl) {
+    if (onlineGame.timeLeft > 0) {
+      const minutes = Math.floor(onlineGame.timeLeft / 60);
+      const seconds = onlineGame.timeLeft % 60;
+      timeLeftEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    } else {
+      timeLeftEl.textContent = '--:--';
+    }
+  }
+  
+  // Обновление раунда
+  const roundEl = document.getElementById('onlineRound');
+  if (roundEl) {
+    roundEl.textContent = onlineGame.gameCount;
+  }
+  
+  // Обновление списка участников
+  updateParticipantsList();
+  
+  // Обновление статистики
+  updateOnlineStats();
+}
+
+// Обновление списка участников
+function updateParticipantsList() {
+  const participantsList = document.getElementById('onlineParticipantsList');
+  const participantCount = document.getElementById('onlineParticipantCount');
+  
+  if (!participantsList) return;
+  
+  participantCount.textContent = onlineGame.participants.length;
+  
+  if (onlineGame.participants.length === 0) {
+    participantsList.innerHTML = `
+      <div style="text-align:center;padding:20px;color:var(--text-secondary);">
+        <i class="fas fa-user-friends" style="font-size:24px;opacity:0.3;margin-bottom:8px;"></i>
+        <div>No participants yet</div>
+      </div>
+    `;
+    return;
+  }
+  
+  // Рассчитываем проценты
+  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+  
+  participantsList.innerHTML = onlineGame.participants.map((participant, index) => {
+    const percentage = totalBets > 0 ? ((participant.bet / totalBets) * 100).toFixed(1) : 0;
+    const winChance = onlineGame.participants.length > 1 ? percentage : 0;
+    const color = getParticipantColor(index);
+    
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:${color}15;border:1px solid ${color}30;border-radius:8px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,${color},${color}dd);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">
+            ${participant.displayName ? participant.displayName.charAt(0).toUpperCase() : 'A'}
+          </div>
+          <div>
+            <div style="font-size:14px;color:white;font-weight:600;">${participant.displayName || 'Anonymous'}</div>
+            <div style="font-size:12px;color:${color};">Bet: ${participant.bet} RGT</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:14px;color:${color};font-weight:600;">${participant.bet} RGT</div>
+          <div style="font-size:11px;color:#22d3ee;">${winChance}% win</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Обновление онлайн статистики
+function updateOnlineStats() {
+  const totalBetsEl = document.getElementById('onlineTotalBets');
+  const activePlayersEl = document.getElementById('onlineActivePlayers');
+  
+  if (totalBetsEl) {
+    const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+    totalBetsEl.textContent = totalBets;
+  }
+  
+  if (activePlayersEl) {
+    activePlayersEl.textContent = onlineGame.participants.length;
+  }
+  
+  // Обновляем лидерборд
+  updateOnlineLeaderboard();
+}
+
+// Обновление онлайн-лидерборда
+function updateOnlineLeaderboard() {
+  const leaderboardList = document.getElementById('onlineLeaderboardList');
+  if (!leaderboardList) return;
+  
+  // Загружаем статистику из Firebase
+  if (typeof window.firestore !== 'undefined') {
+    const statsRef = window.firestore.collection('onlineWheelStats').orderBy('totalWon', 'desc');
+    
+    statsRef.get().then((querySnapshot) => {
+      const stats = [];
+      querySnapshot.forEach((doc) => {
+        stats.push({ id: doc.id, ...doc.data() });
+      });
+      
+      renderOnlineLeaderboard(stats);
+    }).catch((error) => {
+      console.error('❌ Error loading online leaderboard:', error);
+      // Fallback к демо-данным
+      renderOnlineLeaderboard([]);
+    });
+  } else {
+    // Fallback к демо-данным
+    renderOnlineLeaderboard([]);
+  }
+}
+
+// Рендеринг онлайн-лидерборда
+function renderOnlineLeaderboard(stats) {
+  const leaderboardList = document.getElementById('onlineLeaderboardList');
+  const sortBy = document.getElementById('leaderboardSort')?.value || 'totalWon';
+  
+  if (!leaderboardList) return;
+  
+  // Сортируем статистику
+  const sortedStats = stats.sort((a, b) => {
+    switch (sortBy) {
+      case 'totalWon':
+        return (b.totalWon || 0) - (a.totalWon || 0);
+      case 'games':
+        return (b.games || 0) - (a.games || 0);
+      case 'wins':
+        return (b.wins || 0) - (a.wins || 0);
+      default:
+        return (b.totalWon || 0) - (a.totalWon || 0);
+    }
+  });
+  
+  if (sortedStats.length === 0) {
+    leaderboardList.innerHTML = `
+      <div style="text-align:center;padding:20px;color:var(--text-secondary);">
+        <i class="fas fa-trophy" style="font-size:24px;opacity:0.3;margin-bottom:8px;"></i>
+        <div>No games played yet</div>
+      </div>
+    `;
+    return;
+  }
+  
+  leaderboardList.innerHTML = sortedStats.slice(0, 10).map((stat, index) => {
+    const winRate = stat.games > 0 ? ((stat.wins / stat.games) * 100).toFixed(1) : 0;
+    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
+    
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:rgba(34,211,238,.05);border-radius:8px;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:24px;text-align:center;font-weight:700;color:#22d3ee;">${medal}</div>
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#22d3ee,#0891b2);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:12px;">
+            ${stat.displayName ? stat.displayName.charAt(0).toUpperCase() : 'A'}
+          </div>
+          <div>
+            <div style="font-size:13px;color:white;font-weight:600;">${stat.displayName || 'Anonymous'}</div>
+            <div style="font-size:11px;color:var(--text-secondary);">${winRate}% win rate</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px;color:#f59e0b;font-weight:600;">${stat.totalWon || 0} RGT</div>
+          <div style="font-size:10px;color:var(--text-secondary);">${stat.games || 0} games</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Сохранение статистики игрока
+function savePlayerStats(winner, totalPrize) {
+  if (typeof window.firestore !== 'undefined' && winner) {
+    const statsRef = window.firestore.collection('onlineWheelStats').doc(winner.uid);
+    
+    statsRef.get().then((doc) => {
+      const currentStats = doc.exists ? doc.data() : {
+        displayName: winner.displayName,
+        games: 0,
+        wins: 0,
+        totalWon: 0,
+        totalBet: 0
+      };
+      
+      // Обновляем статистику
+      const updatedStats = {
+        ...currentStats,
+        games: (currentStats.games || 0) + 1,
+        wins: (currentStats.wins || 0) + 1,
+        totalWon: (currentStats.totalWon || 0) + totalPrize,
+        lastPlayed: new Date().toISOString()
+      };
+      
+      statsRef.set(updatedStats).then(() => {
+        console.log('💾 Player stats saved:', updatedStats);
+        updateOnlineLeaderboard();
+      }).catch((error) => {
+        console.error('❌ Error saving player stats:', error);
+      });
+    });
+    
+    // Сохраняем статистику для всех участников
+    onlineGame.participants.forEach(participant => {
+      if (participant.uid !== winner.uid) {
+        const participantStatsRef = window.firestore.collection('onlineWheelStats').doc(participant.uid);
+        
+        participantStatsRef.get().then((doc) => {
+          const currentStats = doc.exists ? doc.data() : {
+            displayName: participant.displayName,
+            games: 0,
+            wins: 0,
+            totalWon: 0,
+            totalBet: 0
+          };
+          
+          const updatedStats = {
+            ...currentStats,
+            games: (currentStats.games || 0) + 1,
+            totalBet: (currentStats.totalBet || 0) + participant.bet,
+            lastPlayed: new Date().toISOString()
+          };
+          
+          participantStatsRef.set(updatedStats);
+        });
+      }
+    });
+  }
+}
+
+// Функции для ставок
+function addToOnlineBet(amount) {
+  const betInput = document.getElementById('onlineBetAmount');
+  if (betInput) {
+    const currentBet = parseInt(betInput.value) || 0;
+    betInput.value = currentBet + amount;
+  }
+}
+
+function setMaxOnlineBet() {
+  const betInput = document.getElementById('onlineBetAmount');
+  const balanceEl = document.getElementById('onlineUserBalance');
+  
+  if (betInput && balanceEl) {
+    // Получаем баланс из текста (например, "Balance: 1000 RGT")
+    const balanceText = balanceEl.textContent;
+    const balance = parseInt(balanceText.match(/\d+/)?.[0] || 0);
+    betInput.value = balance;
+  }
+}
+
+function placeOnlineBet() {
+  const betInput = document.getElementById('onlineBetAmount');
+  if (!betInput) return;
+  
+  const betAmount = parseInt(betInput.value);
+  if (!betAmount || betAmount <= 0) {
+    if (typeof showToast === 'function') {
+      showToast('Please enter a valid bet amount', 'warning');
+    }
+    return;
+  }
+  
+  // Симуляция размещения ставки
+  const currentUser = window.currentUser;
+  if (currentUser) {
+    // Проверяем баланс
+    const userBalance = window.currentUserRGT || 0;
+    if (betAmount > userBalance) {
+      if (typeof showToast === 'function') {
+        showToast(`Insufficient balance! You have ${userBalance} RGT`, 'error');
+      }
+      return;
     }
     
-    updateModeButtons('solo');
+    // Ищем существующего участника
+    const existingParticipant = onlineGame.participants.find(p => p.uid === currentUser.uid);
     
-    const onlineContainer = document.getElementById('onlineModeContainer');
-    const mainGrid = document.querySelector('.main-grid');
-    const jackpotBanner = document.getElementById('jackpotBanner');
+    if (existingParticipant) {
+      // Увеличиваем существующую ставку
+      if (!onlineGame.bettingOpen) {
+        if (typeof showToast === 'function') {
+          showToast('Betting phase not started yet. Wait for more players!', 'info');
+        }
+        return;
+      }
+      
+      // Проверяем баланс для увеличения ставки
+      const userBalance = window.currentUserRGT || 0;
+      if (betAmount > userBalance) {
+        if (typeof showToast === 'function') {
+          showToast(`Insufficient balance! You have ${userBalance} RGT`, 'error');
+        }
+        return;
+      }
+      
+      existingParticipant.bet += betAmount;
+      onlineGame.prizePool += betAmount;
+      
+      if (typeof showToast === 'function') {
+        showToast(`Bet increased: +${betAmount} RGT (Total: ${existingParticipant.bet} RGT)`, 'success');
+      }
+    } else {
+      // Добавляем нового участника
+      onlineGame.participants.push({
+        uid: currentUser.uid,
+        displayName: currentUser.displayName || 'You',
+        bet: betAmount,
+        photoURL: currentUser.photoURL
+      });
+      
+      onlineGame.prizePool += betAmount;
+      
+      // Если это первый участник - начинаем игру (без таймера)
+      if (onlineGame.participants.length === 1) {
+        startNewGame();
+      }
+      // Если второй участник - начинаем фазу ставок с таймером
+      else if (onlineGame.participants.length === 2 && !onlineGame.bettingOpen) {
+        startBettingPhase();
+      }
+      
+      if (typeof showToast === 'function') {
+        showToast(`Bet placed: ${betAmount} RGT`, 'success');
+      }
+    }
     
-    if (onlineContainer) onlineContainer.style.display = 'none';
-    if (mainGrid) mainGrid.style.display = 'grid';
-    if (jackpotBanner) jackpotBanner.style.display = 'block';
+    // Обновляем UI
+    updateOnlineUI();
     
-    showToastLocal('wof_solo_mode', 'Switched to Solo Mode');
-  };
+    // Сохраняем данные
+    saveOnlineGameData();
+    
+    // Очищаем поле ставки
+    betInput.value = '';
+  } else {
+    if (typeof showToast === 'function') {
+      showToast('Please login to place bets', 'warning');
+    }
+  }
 }
 
-if (typeof window.switchToOnline !== 'function') {
-  window.switchToOnline = function() {
-    console.log('🔄 Switching to online mode...');
-    currentGameMode = 'online';
-    
-    updateModeButtons('online');
-    
-    const mainGrid = document.querySelector('.main-grid');
-    const jackpotBanner = document.getElementById('jackpotBanner');
-    const onlineContainer = document.getElementById('onlineModeContainer');
-    
-    if (mainGrid) mainGrid.style.display = 'none';
-    if (jackpotBanner) jackpotBanner.style.display = 'none';
-    if (onlineContainer) onlineContainer.style.display = 'block';
-    
-    // Инициализируем онлайн систему
-    initOnlineSystem();
-    
-    showToastLocal('wof_online_mode', 'Switched to Online Mode');
-  };
+// Начало новой игры при первой ставке
+function startNewGame() {
+  console.log('🎮 Starting new game with first player...');
+  const now = new Date();
+  
+  onlineGame.startTime = now.toISOString();
+  // НЕ устанавливаем endTime - ждем второго участника
+  onlineGame.bettingOpen = false; // Пока не открыто для ставок
+  onlineGame.timeLeft = 0;
+  
+  updateGameStatus('Waiting for more players to join...');
+  
+  // Сохраняем в Firebase
+  saveOnlineGameData();
 }
 
-console.log('🔧 Mode switch functions exported:', {
-  switchToSolo: typeof window.switchToSolo,
-  switchToOnline: typeof window.switchToOnline
+// Начало фазы ставок
+function startBettingPhase() {
+  console.log('🎮 Starting betting phase...');
+  const now = new Date();
+  
+  onlineGame.bettingOpen = true;
+  onlineGame.endTime = new Date(now.getTime() + 60000).toISOString(); // +1 минута
+  onlineGame.timeLeft = 60;
+  
+  // Обновляем статус игры
+  updateGameStatus('Betting phase active! 60 seconds remaining...');
+  
+  // Запускаем локальный таймер
+  startBettingTimer();
+  
+  // Сохраняем в Firebase
+  saveOnlineGameData();
+}
+
+// Окончание фазы ставок и запуск колеса
+function endBettingPhase() {
+  console.log('🎮 Ending betting phase, spinning wheel...');
+  onlineGame.bettingOpen = false;
+  
+  if (onlineGame.participants.length < 2) {
+    // Недостаточно участников - сбрасываем игру
+    updateGameStatus('Not enough participants. Game reset. Waiting for players...');
+    console.log('🔄 Not enough participants, resetting game...');
+    
+    // Создаем новую игру
+    setTimeout(() => {
+      resetOnlineGame();
+    }, 3000);
+    
+    return;
+  }
+  
+  // Запускаем вращение колеса
+  spinOnlineWheel();
+}
+
+// Вращение онлайн-колеса
+function spinOnlineWheel() {
+  const canvas = document.getElementById('onlineWheelCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+  
+  // Рассчитываем вероятности
+  const probabilities = onlineGame.participants.map(p => ({
+    participant: p,
+    probability: p.bet / totalBets
+  }));
+  
+  // Выбираем победителя
+  const random = Math.random();
+  let accumulator = 0;
+  let winner = null;
+  
+  for (const prob of probabilities) {
+    accumulator += prob.probability;
+    if (random <= accumulator) {
+      winner = prob.participant;
+      break;
+    }
+  }
+  
+  if (!winner) {
+    winner = probabilities[probabilities.length - 1].participant;
+  }
+  
+  // Анимация вращения
+  let rotation = 0;
+  const targetRotation = 360 * 5 + Math.random() * 360; // 5 полных оборотов + случайный угол
+  
+  const animateSpin = () => {
+    rotation += 15;
+    
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    
+    drawOnlineWheel(ctx, canvas.width, canvas.height);
+    
+    ctx.restore();
+    
+    if (rotation < targetRotation) {
+      requestAnimationFrame(animateSpin);
+    } else {
+      // Показываем результаты
+      showOnlineWinner(winner);
+    }
+  };
+  
+  animateSpin();
+}
+
+// Показ победителя онлайн-игры
+function showOnlineWinner(winner) {
+  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+  const winPercentage = ((winner.bet / totalBets) * 100).toFixed(1);
+  
+  // Рассчитываем реальный выигрыш (призовой пул - своя ставка)
+  const realWinAmount = totalBets - winner.bet;
+  
+  // Сохраняем статистику игроков
+  savePlayerStats(winner, realWinAmount);
+  
+  // Создаем модальное окно победителя
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  
+  modal.innerHTML = `
+    <div style="background: linear-gradient(135deg, #1e2538, #2d3748); border: 2px solid #8b5cf6; border-radius: 20px; padding: 40px; max-width: 500px; text-align: center; box-shadow: 0 25px 50px rgba(139, 92, 246, 0.3);">
+      <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
+      <h2 style="color: white; font-size: 28px; font-weight: 900; margin-bottom: 16px;">Online Wheel Winner!</h2>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px;">
+          ${winner.displayName ? winner.displayName.charAt(0).toUpperCase() : 'W'}
+        </div>
+        <div>
+          <div style="color: #a78bfa; font-size: 20px; font-weight: 700;">${winner.displayName || 'Anonymous'}</div>
+          <div style="color: #22d3ee; font-size: 14px;">Win chance: ${winPercentage}%</div>
+        </div>
+      </div>
+      <div style="color: #f59e0b; font-size: 32px; font-weight: 900; margin-bottom: 8px;">${realWinAmount} RGT</div>
+      <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;">Real win amount (prize pool - your bet)</div>
+      <div style="color: #a78bfa; font-size: 16px; margin-bottom: 20px;">Your bet: ${winner.bet} RGT | Total pool: ${totalBets} RGT</div>
+      <button onclick="this.closest('div').parentElement.remove(); resetOnlineGame();" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; border-radius: 10px; color: white; font-weight: 700; padding: 12px 24px; cursor: pointer;">
+        Awesome!
+      </button>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Обновляем статистику
+  updateOnlineStats();
+}
+
+// Сброс онлайн-игры для нового раунда
+function resetOnlineGame() {
+  console.log('🔄 Resetting online game for new round...');
+  
+  // Создаем новую глобальную игру
+  const now = new Date();
+  onlineGame = {
+    participants: [],
+    prizePool: 0,
+    timeLeft: 0,
+    bettingOpen: false,
+    gameCount: (onlineGame.gameCount || 0) + 1,
+    createdBy: window.currentUser?.uid || 'anonymous',
+    createdAt: now.toISOString(),
+    startTime: null,
+    endTime: null
+  };
+  
+  updateOnlineUI();
+  updateGameStatus('Waiting for players...');
+  
+  // Сохраняем данные
+  saveOnlineGameData();
+}
+
+// Обновление статуса игры
+function updateGameStatus(message) {
+  const statusEl = document.getElementById('onlineGameStatus');
+  if (statusEl) {
+    statusEl.innerHTML = `
+      <div style="font-size:14px;color:#22d3ee;font-weight:600;margin-bottom:8px;">${message}</div>
+      <div style="font-size:12px;color:var(--text-secondary);">Place your bets to join!</div>
+    `;
+  }
+}
+
+// Ensure login functions are available after DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔐 Setting up login functions...');
+  
+  // Make Firebase Auth functions available globally
+  if (window.auth && typeof window.auth !== 'undefined') {
+    console.log('🔐 Firebase Auth functions available from auth.js');
+  } else {
+    console.error('🔐 Firebase Auth not available');
+  }
+  
+  // Инициализируем модальное окно если доступна функция
+  if (typeof window.initLoginModal === 'function') {
+    console.log('🎨 Initializing login modal...');
+    window.initLoginModal();
+  }
+  
+  // Инициализируем правильные стили кнопок режимов
+  updateModeButtons('solo');
+  
+  // Ждем загрузки модулей и проверяем функцию входа
+  setTimeout(() => {
+    console.log('🔍 Checking login modal function...');
+    console.log('openLoginModal available:', typeof openLoginModal);
+    console.log('openLoginModal function:', openLoginModal);
+    
+    // Если функция не доступна, создаем простую заглушку
+    if (typeof openLoginModal !== 'function') {
+      console.warn('⚠️ openLoginModal not available, creating fallback...');
+      window.openLoginModal = function() {
+        console.log('🔐 Login modal fallback called');
+        if (typeof showToast === 'function') {
+          showToast('Login functionality is being prepared...', 'info');
+        }
+      };
+    }
+  }, 1000); // Даем 1 секунду на загрузку модулей
+  
+  // Функции аутентификации доступны из централизованной системы auth.js
+  
+  // Простые функции для модального окна
+  window.closeLoginModal = function() {
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('active');
+    }
+  };
+  
+  window.showLoginTab = function(tab) {
+    const emailForm = document.getElementById('emailLoginForm');
+    const googleForm = document.getElementById('googleLoginForm');
+    const emailTab = document.getElementById('emailLoginTab');
+    const googleTab = document.getElementById('googleLoginTab');
+    
+    if (tab === 'email') {
+      emailForm.style.display = 'block';
+      googleForm.style.display = 'none';
+      emailTab.classList.add('active');
+      googleTab.classList.remove('active');
+    } else {
+      emailForm.style.display = 'none';
+      googleForm.style.display = 'block';
+      emailTab.classList.remove('active');
+      googleTab.classList.add('active');
+    }
+  };
+  
+  window.loginWithEmail = function() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+      if (typeof showToast === 'function') {
+        showToast('Please enter email and password', 'warning');
+      }
+      return;
+    }
+    
+    // Здесь будет логика входа через email
+    console.log('🔐 Email login:', email);
+    if (typeof showToast === 'function') {
+      showToast('Email login functionality coming soon...', 'info');
+    }
+  };
+  
+  window.loginWithGoogle = function() {
+    // Здесь будет логика входа через Google
+    console.log('🔐 Google login requested');
+    if (typeof showToast === 'function') {
+      showToast('Google login functionality coming soon...', 'info');
+    }
+  };
+  
+  window.showRegisterModal = function() {
+    if (typeof showToast === 'function') {
+      showToast('Registration functionality coming soon...', 'info');
+    }
+  };
 });
 </script>
 
