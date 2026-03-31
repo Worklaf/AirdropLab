@@ -2958,9 +2958,10 @@ function setupFirebaseListener() {
           onlineGame = { ...onlineGame, ...data };
           updateOnlineUI();
           
-          // Если началась фаза ставок, запускаем таймер
-          if (data.bettingOpen && data.timeLeft > 0 && !window.bettingTimer) {
-            startBettingTimer(data.timeLeft);
+          // Если игра активна и есть время окончания, запускаем таймер
+          if (data.bettingOpen && data.endTime && !bettingTimer) {
+            console.log('⏰ Starting timer for active game...');
+            startBettingTimer();
           }
         }
       }
@@ -2978,17 +2979,21 @@ function setupFirebaseListener() {
   }
 }
 
-// Таймер для фазы ставок
+// Таймер для фазы ставок с реальным временем
 let bettingTimer = null;
 
-function startBettingTimer(initialTime = 60) {
+function startBettingTimer() {
   if (bettingTimer) {
     clearInterval(bettingTimer);
   }
   
-  onlineGame.timeLeft = initialTime;
   bettingTimer = setInterval(() => {
-    onlineGame.timeLeft--;
+    // Рассчитываем реальное время до окончания
+    const now = new Date();
+    const endTime = new Date(onlineGame.endTime);
+    const timeLeft = Math.max(0, Math.floor((endTime.getTime() - now.getTime()) / 1000));
+    
+    onlineGame.timeLeft = timeLeft;
     
     // Обновляем колесо
     const canvas = document.getElementById('onlineWheelCanvas');
@@ -3000,15 +3005,12 @@ function startBettingTimer(initialTime = 60) {
     // Обновляем время в UI
     const timeLeftEl = document.getElementById('onlineTimeLeft');
     if (timeLeftEl) {
-      const minutes = Math.floor(onlineGame.timeLeft / 60);
-      const seconds = onlineGame.timeLeft % 60;
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
       timeLeftEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
     
-    // Сохраняем обновленное время в Firebase
-    saveOnlineGameData();
-    
-    if (onlineGame.timeLeft <= 0) {
+    if (timeLeft <= 0) {
       clearInterval(bettingTimer);
       bettingTimer = null;
       endBettingPhase();
@@ -3051,6 +3053,7 @@ function loadOnlineGameData() {
 
 // Создание новой глобальной игры
 function createNewGlobalGame() {
+  const now = new Date();
   onlineGame = {
     participants: [],
     prizePool: 0,
@@ -3058,11 +3061,14 @@ function createNewGlobalGame() {
     bettingOpen: false,
     gameCount: 1,
     createdBy: window.currentUser?.uid || 'anonymous',
-    createdAt: new Date().toISOString()
+    createdAt: now.toISOString(),
+    startTime: null, // Время начала фазы ставок
+    endTime: null // Время окончания фазы ставок
   };
   
   saveOnlineGameData();
   updateOnlineUI();
+  console.log('🎮 Created new global game:', onlineGame);
 }
 
 // Загрузка из localStorage как fallback
@@ -3629,8 +3635,12 @@ function placeOnlineBet() {
       
       onlineGame.prizePool += betAmount;
       
-      // Проверяем, нужно ли начать игру
-      if (onlineGame.participants.length >= 2 && !onlineGame.bettingOpen) {
+      // Если это первый участник - начинаем игру
+      if (onlineGame.participants.length === 1) {
+        startNewGame();
+      }
+      // Если второй участник - начинаем фазу ставок
+      else if (onlineGame.participants.length === 2 && !onlineGame.bettingOpen) {
         startBettingPhase();
       }
       
@@ -3652,6 +3662,25 @@ function placeOnlineBet() {
       showToast('Please login to place bets', 'warning');
     }
   }
+}
+
+// Начало новой игры при первой ставке
+function startNewGame() {
+  console.log('🎮 Starting new game with first player...');
+  const now = new Date();
+  
+  onlineGame.startTime = now.toISOString();
+  onlineGame.endTime = new Date(now.getTime() + 60000).toISOString(); // +1 минута
+  onlineGame.bettingOpen = true;
+  onlineGame.timeLeft = 60;
+  
+  updateGameStatus('Betting phase started! 60 seconds to join!');
+  
+  // Запускаем локальный таймер
+  startBettingTimer(60);
+  
+  // Сохраняем в Firebase
+  saveOnlineGameData();
 }
 
 // Начало фазы ставок
@@ -3748,8 +3777,11 @@ function showOnlineWinner(winner) {
   const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
   const winPercentage = ((winner.bet / totalBets) * 100).toFixed(1);
   
+  // Рассчитываем реальный выигрыш (призовой пул - своя ставка)
+  const realWinAmount = totalBets - winner.bet;
+  
   // Сохраняем статистику игроков
-  savePlayerStats(winner, totalBets);
+  savePlayerStats(winner, realWinAmount);
   
   // Создаем модальное окно победителя
   const modal = document.createElement('div');
@@ -3779,8 +3811,9 @@ function showOnlineWinner(winner) {
           <div style="color: #22d3ee; font-size: 14px;">Win chance: ${winPercentage}%</div>
         </div>
       </div>
-      <div style="color: #f59e0b; font-size: 32px; font-weight: 900; margin-bottom: 20px;">${totalBets} RGT</div>
-      <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 24px;">Total prize pool won!</div>
+      <div style="color: #f59e0b; font-size: 32px; font-weight: 900; margin-bottom: 8px;">${realWinAmount} RGT</div>
+      <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;">Real win amount (prize pool - your bet)</div>
+      <div style="color: #a78bfa; font-size: 16px; margin-bottom: 20px;">Your bet: ${winner.bet} RGT | Total pool: ${totalBets} RGT</div>
       <button onclick="this.closest('div').parentElement.remove(); resetOnlineGame();" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; border-radius: 10px; color: white; font-weight: 700; padding: 12px 24px; cursor: pointer;">
         Awesome!
       </button>
@@ -3798,6 +3831,7 @@ function resetOnlineGame() {
   console.log('🔄 Resetting online game for new round...');
   
   // Создаем новую глобальную игру
+  const now = new Date();
   onlineGame = {
     participants: [],
     prizePool: 0,
@@ -3805,7 +3839,9 @@ function resetOnlineGame() {
     bettingOpen: false,
     gameCount: (onlineGame.gameCount || 0) + 1,
     createdBy: window.currentUser?.uid || 'anonymous',
-    createdAt: new Date().toISOString()
+    createdAt: now.toISOString(),
+    startTime: null,
+    endTime: null
   };
   
   updateOnlineUI();
