@@ -3479,18 +3479,18 @@ function drawOnlineWheel(rotation = 0) {
     ctx.closePath();
     
     // Градиент для пустого колеса
-    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
-    gradient.addColorStop(1, 'rgba(139, 92, 246, 0.1)');
-    ctx.fillStyle = gradient;
+    const gradient1 = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient1.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
+    gradient1.addColorStop(1, 'rgba(139, 92, 246, 0.1)');
+    ctx.fillStyle = gradient1;
     ctx.fill();
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
     
-    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-    gradient.addColorStop(0, '#1e293b');
-    gradient.addColorStop(1, '#0f172a');
-    ctx.fillStyle = gradient;
+    const gradient2 = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient2.addColorStop(0, '#1e293b');
+    gradient2.addColorStop(1, '#0f172a');
+    ctx.fillStyle = gradient2;
     ctx.fill();
     
     ctx.strokeStyle = '#475569';
