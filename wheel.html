@@ -938,7 +938,7 @@ function drawWheel() {
   if (!ctx) return;
   const W = canvas.width;
   const cx = W / 2, cy = W / 2;
-  const R  = cx - 8;
+  const R  = Math.max(0, cx - 8); // Защита от отрицательного радиуса
   ctx.clearRect(0, 0, W, W);
 
   const n = REWARDS.length;
@@ -3419,10 +3419,14 @@ function updateParticipantsList() {
   // Рассчитываем проценты
   const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
   
-  participantsList.innerHTML = onlineGame.participants.map((participant, index) => {
+  // Сортируем участников по шансам на победу (по убыванию)
+  const sortedParticipants = [...onlineGame.participants].sort((a, b) => b.bet - a.bet);
+  
+  participantsList.innerHTML = sortedParticipants.map((participant, index) => {
     const percentage = totalBets > 0 ? ((participant.bet / totalBets) * 100).toFixed(1) : 0;
     const winChance = onlineGame.participants.length > 1 ? percentage : 0;
-    const color = getParticipantColor(index);
+    const originalIndex = onlineGame.participants.findIndex(p => p.uid === participant.uid);
+    const color = getParticipantColor(originalIndex);
     
     return `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:${color}15;border:1px solid ${color}30;border-radius:8px;margin-bottom:8px;">
@@ -3464,11 +3468,8 @@ function updateOnlineStats() {
 
 // Обновление онлайн-лидерборда
 function updateOnlineLeaderboard() {
-  const leaderboardList = document.getElementById('onlineLeaderboardList');
-  if (!leaderboardList) return;
-  
   // Загружаем статистику из Firebase
-  if (typeof window.firestore !== 'undefined') {
+  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function') {
     const statsRef = window.firestore.collection('onlineWheelStats').orderBy('totalWon', 'desc');
     
     statsRef.get().then((querySnapshot) => {
@@ -3484,6 +3485,7 @@ function updateOnlineLeaderboard() {
       renderOnlineLeaderboard([]);
     });
   } else {
+    console.log('⚠️ Firestore not available for leaderboard, using empty data');
     // Fallback к демо-данным
     renderOnlineLeaderboard([]);
   }
@@ -3581,7 +3583,7 @@ function saveGameToHistory(winner, realWinAmount) {
 
 // Сохранение статистики игрока
 function savePlayerStats(winner, totalPrize) {
-  if (typeof window.firestore !== 'undefined' && winner) {
+  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function' && winner) {
     console.log('💾 Saving player stats to Firebase...');
     
     const statsRef = window.firestore.collection('onlineWheelStats').doc(winner.uid);
@@ -3642,7 +3644,7 @@ function savePlayerStats(winner, totalPrize) {
       }
     });
   } else {
-    console.log('⚠️ Firebase not available, skipping stats save');
+    console.log('⚠️ Firestore not available, skipping stats save');
   }
 }
 
