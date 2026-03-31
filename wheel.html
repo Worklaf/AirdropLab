@@ -2839,7 +2839,7 @@ let onlineGame = {
 };
 
 // Функции переключения режимов
-function switchToSolo() {
+window.switchToSolo = function() {
   console.log('🔄 Switching to solo mode...');
   currentGameMode = 'solo';
   
@@ -2867,9 +2867,10 @@ function switchToSolo() {
   if (typeof showToast === 'function') {
     showToast('Switched to Solo Mode', 'success');
   }
-}
+};
 
-function switchToOnline() {
+// Переключение на онлайн-режим
+window.switchToOnline = function() {
   console.log('🔄 Switching to online mode...');
   currentGameMode = 'online';
   
@@ -2900,7 +2901,7 @@ function switchToOnline() {
   if (typeof showToast === 'function') {
     showToast('Switched to Online Mode', 'success');
   }
-}
+};
 
 // Обновление стилей кнопок режимов
 function updateModeButtons(activeMode) {
