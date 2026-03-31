@@ -2927,14 +2927,23 @@ function updateModeButtons(activeMode) {
 function initOnlineGame() {
   console.log('🎮 Initializing online game...');
   
+  // Отладочная информация о доступных Firestore инстансах
+  console.log('🔍 Debug - available Firestore instances:');
+  console.log('  window.firestore:', typeof window.firestore);
+  console.log('  window.db:', typeof window.db);
+  console.log('  window.wofDb:', typeof window.wofDb);
+  
   // Проверяем доступность Firestore разными способами
   let firestore = null;
   if (typeof window.firestore !== 'undefined') {
     firestore = window.firestore;
+    console.log('✅ Using window.firestore');
   } else if (typeof window.db !== 'undefined') {
     firestore = window.db;
+    console.log('✅ Using window.db');
   } else if (typeof window.wofDb !== 'undefined') {
     firestore = window.wofDb;
+    console.log('✅ Using window.wofDb');
   }
   
   if (!firestore) {
@@ -2943,9 +2952,29 @@ function initOnlineGame() {
     return;
   }
   
+  // Проверяем что collection работает
+  if (typeof firestore.collection !== 'function') {
+    console.log('❌ Firestore.collection is not a function, trying to reinitialize...');
+    // Пробуем переинициализировать
+    setTimeout(() => {
+      if (typeof window.getFirestore === 'function' && window.firebaseApp) {
+        firestore = window.getFirestore(window.firebaseApp);
+        window.firestore = firestore;
+        console.log('🔄 Reinitialized Firestore');
+        initOnlineGame();
+      } else {
+        console.log('❌ Cannot reinitialize Firestore, using localStorage');
+        initOnlineGame();
+      }
+    }, 1000);
+    return;
+  }
+  
   // Устанавливаем глобальную переменную
   window.firestore = firestore;
   console.log('✅ Firestore is available for online game');
+  console.log('🔍 Firestore instance:', firestore);
+  console.log('🔍 Collection function:', typeof firestore.collection);
   
   // Загружаем данные из Firebase
   loadOnlineGameData();
@@ -3041,8 +3070,13 @@ function startBettingTimer() {
 
 // Загрузка данных онлайн-игры из Firebase
 function loadOnlineGameData() {
+  console.log('📦 Loading online game data...');
+  console.log('🔍 Current window.firestore:', typeof window.firestore);
+  console.log('🔍 window.firestore.collection:', typeof window.firestore?.collection);
+  
   // Проверяем доступность Firebase
   if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function') {
+    console.log('✅ Using Firebase for online game data');
     const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
     
     onlineGameRef.get().then((doc) => {
@@ -3063,11 +3097,14 @@ function loadOnlineGameData() {
       }
     }).catch((error) => {
       console.error('❌ Error loading global online game data:', error);
+      console.log('🔄 Falling back to localStorage');
       // Fallback к localStorage
       loadFromLocalStorage();
     });
   } else {
     console.log('⚠️ Firestore not available, using localStorage');
+    console.log('🔍 Firestore type:', typeof window.firestore);
+    console.log('🔍 Collection type:', typeof window.firestore?.collection);
     // Fallback к localStorage если Firebase недоступен
     loadFromLocalStorage();
   }
@@ -3139,11 +3176,17 @@ function saveToLocalStorage() {
 
 // Обновление баланса пользователя
 function updateUserBalance() {
+  console.log('💰 Updating user balance...');
+  console.log('🔍 Current user:', window.currentUser?.uid);
+  console.log('🔍 Firestore available:', typeof window.firestore);
+  console.log('🔍 Collection available:', typeof window.firestore?.collection);
+  
   const balanceEl = document.getElementById('onlineUserBalance');
   if (!balanceEl) return;
   
   // Получаем баланс пользователя из Firebase
   if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function' && window.currentUser) {
+    console.log('✅ Using Firebase for user balance');
     const userRef = window.firestore.collection('onlineWheelUsers').doc(window.currentUser.uid);
     
     userRef.get().then((doc) => {
@@ -3173,11 +3216,15 @@ function updateUserBalance() {
       
     }).catch((error) => {
       console.error('❌ Error loading user balance from Firebase:', error);
+      console.log('🔄 Falling back to other sources');
       // Fallback к другим источникам
       loadBalanceFromOtherSources();
     });
   } else {
     console.log('⚠️ Firebase or user not available, using fallback');
+    console.log('🔍 Firestore type:', typeof window.firestore);
+    console.log('🔍 Collection type:', typeof window.firestore?.collection);
+    console.log('🔍 Current user:', window.currentUser?.uid);
     // Fallback к другим источникам
     loadBalanceFromOtherSources();
   }
