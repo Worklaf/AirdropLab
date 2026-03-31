@@ -3592,84 +3592,114 @@ function updateOnlineStats() {
 }
 
 // Обновление онлайн-лидерборда
-function updateOnlineLeaderboard() {
-  // Загружаем статистику из Firebase
-  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function') {
-    const statsRef = window.firestore.collection('onlineWheelStats').orderBy('totalWon', 'desc');
-    
-    statsRef.get().then((querySnapshot) => {
-      const stats = [];
-      querySnapshot.forEach((doc) => {
-        stats.push({ id: doc.id, ...doc.data() });
-      });
-      
-      renderOnlineLeaderboard(stats);
-    }).catch((error) => {
-      console.error('❌ Error loading online leaderboard:', error);
-      // Fallback к демо-данным
-      renderOnlineLeaderboard([]);
-    });
-  } else {
+async function updateOnlineLeaderboard() {
+  console.log('🏆 Updating online leaderboard...');
+  
+  const leaderboardEl = document.getElementById('onlineLeaderboard');
+  if (!leaderboardEl) return;
+  
+  // Проверяем доступность Firebase
+  if (typeof window.firestore === 'undefined' || typeof window.doc === 'undefined' || typeof window.getDoc === 'undefined') {
     console.log('⚠️ Firestore not available for leaderboard, using empty data');
-    // Fallback к демо-данным
-    renderOnlineLeaderboard([]);
-  }
-}
-
-// Рендеринг онлайн-лидерборда
-function renderOnlineLeaderboard(stats) {
-  const leaderboardList = document.getElementById('onlineLeaderboardList');
-  const sortBy = document.getElementById('leaderboardSort')?.value || 'totalWon';
-  
-  if (!leaderboardList) return;
-  
-  // Сортируем статистику
-  const sortedStats = stats.sort((a, b) => {
-    switch (sortBy) {
-      case 'totalWon':
-        return (b.totalWon || 0) - (a.totalWon || 0);
-      case 'games':
-        return (b.games || 0) - (a.games || 0);
-      case 'wins':
-        return (b.wins || 0) - (a.wins || 0);
-      default:
-        return (b.totalWon || 0) - (a.totalWon || 0);
-    }
-  });
-  
-  if (sortedStats.length === 0) {
-    leaderboardList.innerHTML = `
-      <div style="text-align:center;padding:20px;color:var(--text-secondary);">
-        <i class="fas fa-trophy" style="font-size:24px;opacity:0.3;margin-bottom:8px;"></i>
-        <div>No games played yet</div>
+    leaderboardEl.innerHTML = `
+      <div style="text-align:center;color:#a0aec0;padding:40px;">
+        <i class="fas fa-trophy" style="font-size:48px;margin-bottom:16px;opacity:0.3;"></i>
+        <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Leaderboard</div>
+        <div style="font-size:14px;">No data available</div>
       </div>
     `;
     return;
   }
   
-  leaderboardList.innerHTML = sortedStats.slice(0, 10).map((stat, index) => {
-    const winRate = stat.games > 0 ? ((stat.wins / stat.games) * 100).toFixed(1) : 0;
-    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
+  try {
+    // Получаем все документы статистики
+    const statsCollectionRef = window.collection(window.firestore, 'onlineWheelStats');
+    const statsSnapshot = await window.getDocs(statsCollectionRef);
     
-    return `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:rgba(34,211,238,.05);border-radius:8px;margin-bottom:6px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:24px;text-align:center;font-weight:700;color:#22d3ee;">${medal}</div>
-          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#22d3ee,#0891b2);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:12px;">
-            ${stat.displayName ? stat.displayName.charAt(0).toUpperCase() : 'A'}
+    const leaderboardData = [];
+    
+    statsSnapshot.forEach((doc) => {
+      const data = doc.data();
+      leaderboardData.push({
+        uid: doc.id,
+        displayName: data.displayName || 'Anonymous',
+        photoURL: data.photoURL || '',
+        totalGames: data.totalGames || 0,
+        totalWins: data.totalWins || 0,
+        totalWinnings: data.totalWinnings || 0,
+        totalBets: data.totalBets || 0,
+        lastPlayed: data.lastPlayed,
+        winRate: data.totalGames > 0 ? ((data.totalWins / data.totalGames) * 100).toFixed(1) : '0.0'
+      });
+    });
+    
+    // Сортируем по общим выигрышам (не включая свои)
+    leaderboardData.sort((a, b) => b.totalWinnings - a.totalWinnings);
+    
+    // Ограничиваем топ-10
+    const topPlayers = leaderboardData.slice(0, 10);
+    
+    if (topPlayers.length === 0) {
+      leaderboardEl.innerHTML = `
+        <div style="text-align:center;color:#a0aec0;padding:40px;">
+          <i class="fas fa-trophy" style="font-size:48px;margin-bottom:16px;opacity:0.3;"></i>
+          <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Leaderboard</div>
+          <div style="font-size:14px;">No games played yet</div>
+        </div>
+      `;
+      return;
+    }
+    
+    // Генерируем HTML для лидерборда
+    const leaderboardHTML = topPlayers.map((player, index) => {
+      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+      
+      return `
+        <div style="display:flex;align-items:center;padding:12px;border-bottom:1px solid rgba(148,163,184,0.1);background:${index < 3 ? 'linear-gradient(135deg,rgba(251,191,36,0.1),rgba(251,191,36,0.05))' : 'transparent'};">
+          <div style="width:40px;text-align:center;font-weight:700;color:${index < 3 ? '#f59e0b' : '#a0aec0'};font-size:16px;">${medal}</div>
+          <div style="flex:1;display:flex;align-items:center;gap:12px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:white;">
+              ${player.photoURL ? `<img src="${player.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='${player.displayName ? player.displayName.charAt(0).toUpperCase() : 'A'}';">` : (player.displayName ? player.displayName.charAt(0).toUpperCase() : 'A')}
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:600;color:white;margin-bottom:2px;">${player.displayName}</div>
+              <div style="font-size:12px;color:#a0aec0;">
+                Games: ${player.totalGames} | Wins: ${player.totalWins} (${player.winRate}%)
+              </div>
+            </div>
           </div>
-          <div>
-            <div style="font-size:13px;color:white;font-weight:600;">${stat.displayName || 'Anonymous'}</div>
-            <div style="font-size:11px;color:var(--text-secondary);">${winRate}% win rate</div>
+          <div style="text-align:right;">
+            <div style="font-weight:700;color:#10b981;font-size:16px;">${player.totalWinnings} RGT</div>
+            <div style="font-size:12px;color:#a0aec0;">Total Won</div>
           </div>
         </div>
-        <div style="text-align:right;">
-          <div style="font-size:13px;color:#f59e0b;font-weight:600;">${stat.totalWon || 0} RGT</div>
-          <div style="font-size:10px;color:var(--text-secondary);">${stat.games || 0} games</div>
+      `;
+    }).join('');
+    
+    leaderboardEl.innerHTML = `
+      <div style="background:#1e293b;border-radius:12px;border:1px solid rgba(148,163,184,0.2);overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;padding:16px;text-align:center;">
+          <i class="fas fa-trophy" style="font-size:24px;margin-right:8px;"></i>
+          <span style="font-weight:700;font-size:18px;">Top Players</span>
+        </div>
+        <div style="max-height:400px;overflow-y:auto;">
+          ${leaderboardHTML}
         </div>
       </div>
     `;
-  }).join('');
+    
+    console.log('✅ Online leaderboard updated successfully');
+    
+  } catch (error) {
+    console.error('❌ Error updating online leaderboard:', error);
+    leaderboardEl.innerHTML = `
+      <div style="text-align:center;color:#ef4444;padding:40px;">
+        <i class="fas fa-exclamation-triangle" style="font-size:48px;margin-bottom:16px;"></i>
+        <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Error</div>
+        <div style="font-size:14px;">Failed to load leaderboard</div>
+      </div>
+    `;
+  }
 }
 
 // Сохранение игры в историю
@@ -3706,71 +3736,61 @@ function saveGameToHistory(winner, realWinAmount) {
   }
 }
 
-// Сохранение статистики игрока
-function savePlayerStats(winner, totalPrize) {
-  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function' && winner) {
-    console.log('💾 Saving player stats to Firebase...');
-    
-    const statsRef = window.firestore.collection('onlineWheelStats').doc(winner.uid);
-    
-    statsRef.get().then((doc) => {
-      const currentStats = doc.exists ? doc.data() : {
-        displayName: winner.displayName,
-        games: 0,
-        wins: 0,
-        totalWon: 0,
-        totalBet: 0
-      };
+// Сохранение статистики игроков
+function savePlayerStats(winner, winAmount) {
+  console.log('📊 Saving player stats...');
+  
+  // Проверяем доступность Firebase
+  if (typeof window.firestore === 'undefined' || typeof window.doc === 'undefined' || typeof window.updateDoc === 'undefined') {
+    console.log('⚠️ Firestore not available for stats, skipping');
+    return;
+  }
+  
+  // Обновляем статистику для всех участников
+  onlineGame.participants.forEach(async (participant) => {
+    try {
+      const statsDocRef = window.doc(window.firestore, 'onlineWheelStats', participant.uid);
       
-      // Обновляем статистику
-      const updatedStats = {
-        ...currentStats,
-        games: (currentStats.games || 0) + 1,
-        wins: (currentStats.wins || 0) + 1,
-        totalWon: (currentStats.totalWon || 0) + totalPrize,
+      // Получаем текущую статистику
+      const statsDoc = await window.getDoc(statsDocRef);
+      let currentStats = {
+        totalGames: 0,
+        totalWins: 0,
+        totalWinnings: 0,
+        totalBets: 0,
+        displayName: participant.displayName || 'Anonymous',
+        photoURL: participant.photoURL || '',
         lastPlayed: new Date().toISOString()
       };
       
-      statsRef.set(updatedStats).then(() => {
-        console.log('💾 Winner stats saved:', updatedStats);
-        updateOnlineLeaderboard();
-      }).catch((error) => {
-        console.error('❌ Error saving winner stats:', error);
-      });
-    });
-    
-    // Сохраняем статистику для всех участников
-    onlineGame.participants.forEach(participant => {
-      if (participant.uid !== winner.uid) {
-        const participantStatsRef = window.firestore.collection('onlineWheelStats').doc(participant.uid);
-        
-        participantStatsRef.get().then((doc) => {
-          const currentStats = doc.exists ? doc.data() : {
-            displayName: participant.displayName,
-            games: 0,
-            wins: 0,
-            totalWon: 0,
-            totalBet: 0
-          };
-          
-          const updatedStats = {
-            ...currentStats,
-            games: (currentStats.games || 0) + 1,
-            totalBet: (currentStats.totalBet || 0) + participant.bet,
-            lastPlayed: new Date().toISOString()
-          };
-          
-          participantStatsRef.set(updatedStats).then(() => {
-            console.log('💾 Participant stats saved:', updatedStats);
-          }).catch((error) => {
-            console.error('❌ Error saving participant stats:', error);
-          });
-        });
+      if (statsDoc.exists()) {
+        currentStats = statsDoc.data();
       }
-    });
-  } else {
-    console.log('⚠️ Firestore not available, skipping stats save');
-  }
+      
+      // Обновляем статистику
+      currentStats.totalGames += 1;
+      currentStats.totalBets += participant.bet;
+      
+      // Если это победитель - обновляем статистику побед
+      if (participant.uid === winner.uid) {
+        currentStats.totalWins += 1;
+        currentStats.totalWinnings += winAmount;
+      }
+      
+      currentStats.lastPlayed = new Date().toISOString();
+      
+      // Сохраняем обновленную статистику
+      await window.setDoc(statsDocRef, currentStats);
+      
+      console.log(`📊 Stats saved for ${participant.displayName}: Games: ${currentStats.totalGames}, Wins: ${currentStats.totalWins}, Winnings: ${currentStats.totalWinnings}`);
+      
+    } catch (error) {
+      console.error(`❌ Error saving stats for ${participant.displayName}:`, error);
+    }
+  });
+  
+  // Обновляем лидерборд
+  updateOnlineLeaderboard();
 }
 
 // Функции для ставок
@@ -3983,49 +4003,33 @@ function spinOnlineWheel() {
     winner = probabilities[probabilities.length - 1].participant;
   }
   
-  console.log('🎯 Selected winner:', winner.displayName, 'with probability:', accumulator);
+  console.log(`🎯 Selected winner: ${winner.displayName} with probability: ${winner.bet / totalBets}`);
   
-  // Рассчитываем точный угол для победителя
-  const winnerIndex = onlineGame.participants.findIndex(p => p.uid === winner.uid);
-  const winnerPercentage = winner.bet / totalBets;
-  const sliceAngle = winnerPercentage * 360;
+  // Рассчитываем точный угол для остановки на победителе
+  const winnerIndex = onlineGame.participants.indexOf(winner);
+  const segmentAngle = (Math.PI * 2) / onlineGame.participants.length;
+  const winnerStartAngle = winnerIndex * segmentAngle;
+  const winnerCenterAngle = winnerStartAngle + segmentAngle / 2;
   
-  // Начинаем с верха (12 часов)
-  let currentAngle = 0;
-  for (let i = 0; i < winnerIndex; i++) {
-    currentAngle += (onlineGame.participants[i].bet / totalBets) * 360;
-  }
+  // Добавляем несколько полных оборотов для эффекта
+  const targetRotation = 360 * 6 + (winnerCenterAngle * 180 / Math.PI);
   
-  // Добавляем половину сектора победителя для центра
-  const winnerCenterAngle = currentAngle + (sliceAngle / 2);
+  console.log(`🎯 Target angle for winner: ${targetRotation} winner center: ${winnerCenterAngle * 180 / Math.PI}`);
   
-  // Рассчитываем целевой угол так, чтобы стрелка указывала на центр сектора победителя
-  // Стрелка находится сверху, поэтому нужно чтобы сектор победителя был вверху
-  const targetAngle = 360 * 8 + (360 - winnerCenterAngle + 90); // 8 оборотов + точное позиционирование
-  
-  console.log('🎯 Target angle for winner:', targetAngle, 'winner center:', winnerCenterAngle);
-  
-  // Медленная анимация вращения с интригой
-  let rotation = 0;
-  const duration = 8000; // 8 секунд для полной интриги
+  let currentRotation = 0;
+  const spinDuration = 12000; // 12 секунд для медленной прокрутки
   const startTime = Date.now();
   
   const animateSpin = () => {
     const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / duration, 1);
+    const progress = Math.min(elapsed / spinDuration, 1);
     
-    // Замедление в конце (ease-out)
-    const easeProgress = 1 - Math.pow(1 - progress, 3);
-    rotation = targetAngle * easeProgress;
+    // Плавное замедление в конце
+    const easeOut = 1 - Math.pow(1 - progress, 3);
+    currentRotation = targetRotation * easeOut;
     
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.translate(-canvas.width / 2, -canvas.height / 2);
-    
-    drawOnlineWheel(ctx, canvas.width, canvas.height);
-    
-    ctx.restore();
+    // Рисуем колесо
+    drawOnlineWheel(currentRotation);
     
     if (progress < 1) {
       requestAnimationFrame(animateSpin);
@@ -4045,8 +4049,8 @@ function showOnlineWinner(winner) {
   const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
   const winPercentage = ((winner.bet / totalBets) * 100).toFixed(1);
   
-  // Рассчитываем реальный выигрыш (призовой пул - своя ставка)
-  const realWinAmount = totalBets - winner.bet;
+  // Рассчитываем реальный выигрыш (весь призовой пул)
+  const realWinAmount = totalBets; // Весь призовой пул идет победителю
   
   // Сохраняем игру в историю
   saveGameToHistory(winner, realWinAmount);
@@ -4077,15 +4081,25 @@ function showOnlineWinner(winner) {
     animation: fadeIn 0.3s ease-out;
   `;
   
+  // Получаем цвет победителя
+  const winnerIndex = onlineGame.participants.indexOf(winner);
+  const winnerColor = getParticipantColor(winnerIndex);
+  
   modal.innerHTML = `
-    <div style="background:linear-gradient(135deg,#1e2538,#2d3748);border-radius:20px;padding:40px;text-align:center;max-width:500px;width:90%;border:2px solid #8b5cf6;box-shadow:0 20px 40px rgba(139,92,246,0.3);">
+    <div style="background:linear-gradient(135deg,#1e2538,#2d3748);border-radius:20px;padding:40px;text-align:center;max-width:500px;width:90%;border:2px solid ${winnerColor};box-shadow:0 20px 40px rgba(139,92,246,0.3);">
       <div style="font-size:60px;margin-bottom:20px;">🎉</div>
       <div style="font-size:28px;font-weight:900;color:white;margin-bottom:10px;text-transform:uppercase;">Winner!</div>
-      <div style="font-size:20px;color:#8b5cf6;font-weight:700;margin-bottom:20px;">${winner.displayName || 'Anonymous'}</div>
+      
+      <!-- Аватар победителя -->
+      <div style="width:80px;height:80px;border-radius:50%;margin:0 auto 20px;background:${winnerColor};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:white;">
+        ${winner.photoURL ? `<img src="${winner.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='${winner.displayName ? winner.displayName.charAt(0).toUpperCase() : 'W'}';">` : (winner.displayName ? winner.displayName.charAt(0).toUpperCase() : 'W')}
+      </div>
+      
+      <div style="font-size:20px;color:${winnerColor};font-weight:700;margin-bottom:20px;">${winner.displayName || 'Anonymous'}</div>
       
       <div style="background:rgba(139,92,246,0.1);border-radius:15px;padding:20px;margin-bottom:20px;">
         <div style="font-size:16px;color:#a0aec0;margin-bottom:8px;">Bet Amount</div>
-        <div style="font-size:24px;font-weight:700;color:#8b5cf6;">${winner.bet} RGT</div>
+        <div style="font-size:24px;font-weight:700;color:${winnerColor};">${winner.bet} RGT</div>
       </div>
       
       <div style="background:rgba(16,185,129,0.1);border-radius:15px;padding:20px;margin-bottom:20px;">
@@ -4094,12 +4108,12 @@ function showOnlineWinner(winner) {
       </div>
       
       <div style="background:rgba(239,68,68,0.1);border-radius:15px;padding:20px;margin-bottom:30px;">
-        <div style="font-size:16px;color:#a0aec0;margin-bottom:8px;">Real Win Amount</div>
+        <div style="font-size:16px;color:#a0aec0;margin-bottom:8px;">Total Win Amount</div>
         <div style="font-size:32px;font-weight:900;color:#ef4444;">${realWinAmount} RGT</div>
-        <div style="font-size:12px;color:#a0aec0;margin-top:4px;">(Prize Pool - Your Bet)</div>
+        <div style="font-size:12px;color:#a0aec0;margin-top:4px;">(Full Prize Pool)</div>
       </div>
       
-      <button onclick="this.parentElement.parentElement.remove(); resetOnlineGame();" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:12px;color:white;font-weight:700;font-size:16px;padding:15px 40px;cursor:pointer;transition:all 0.3s ease;">
+      <button onclick="this.parentElement.parentElement.remove(); resetOnlineGame();" style="background:linear-gradient(135deg,${winnerColor},${winnerColor}dd);border:none;border-radius:12px;color:white;font-weight:700;font-size:16px;padding:15px 40px;cursor:pointer;transition:all 0.3s ease;">
         Play Again
       </button>
     </div>
