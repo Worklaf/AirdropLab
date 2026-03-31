@@ -3298,8 +3298,8 @@ async function saveOnlineGameData() {
       timeLeft: onlineGame.timeLeft,
       bettingOpen: onlineGame.bettingOpen,
       gameCount: onlineGame.gameCount,
-      createdBy: onlineGame.createdBy,
-      createdAt: onlineGame.createdAt,
+      createdBy: onlineGame.createdBy || 'anonymous',
+      createdAt: onlineGame.createdAt || new Date().toISOString(),
       startTime: onlineGame.startTime,
       endTime: onlineGame.endTime,
       lastUpdated: new Date().toISOString()
@@ -4723,10 +4723,11 @@ function resetOnlineGame() {
     endTime: null
   };
   
+  // Обновляем UI
   updateOnlineUI();
-  updateGameStatus('Waiting for players...');
+  updateGameStatus('Game reset. Waiting for players...');
   
-  // Сохраняем данные
+  // Сохраняем
   saveOnlineGameData();
 }
 
