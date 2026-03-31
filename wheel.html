@@ -17,7 +17,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     
     // Делаем доступным глобально
     window.initializeApp = initializeApp;
@@ -35,6 +35,7 @@
     window.getDoc = getDoc;
     window.updateDoc = updateDoc;
     window.serverTimestamp = serverTimestamp;
+    window.increment = increment;
     
     console.log('🔥 Firebase SDK loaded as modules');
   </script>
@@ -3193,7 +3194,7 @@ function updateUserBalance() {
   if (typeof window.firestore !== 'undefined' && typeof window.getDoc === 'function' && window.currentUser) {
     console.log('✅ Using Firebase v9+ syntax for user balance');
     
-    // Используем существующую коллекцию 'users' вместо 'onlineWheelUsers'
+    // Используем коллекцию 'users' и поле 'reagents' как в faucet.html
     const userDocRef = window.doc(window.firestore, 'users', window.currentUser.uid);
     
     window.getDoc(userDocRef).then((doc) => {
@@ -3201,8 +3202,8 @@ function updateUserBalance() {
       
       if (doc.exists()) {
         const userData = doc.data();
-        balance = userData.balance || userData.rgt || 0;
-        console.log('💰 User balance from Firebase:', balance);
+        balance = userData.reagents || userData.balance || userData.rgt || 0;
+        console.log('💰 User balance from Firebase (reagents):', balance);
       } else {
         console.log('💰 No user data in Firebase, using 0 balance');
         balance = 0; // Не используем тестовый баланс
@@ -3210,7 +3211,7 @@ function updateUserBalance() {
         // Создаем документ пользователя
         window.setDoc(userDocRef, {
           displayName: window.currentUser.displayName || 'Anonymous',
-          balance: 0,
+          reagents: 0,
           createdAt: new Date().toISOString()
         });
       }
@@ -3267,6 +3268,36 @@ function loadBalanceFromOtherSources() {
   balanceEl.textContent = `Balance: ${balance} RGT`;
   window.currentUserRGT = balance;
   console.log('💰 User balance from fallback sources:', balance);
+}
+
+// Обновление баланса пользователя в Firebase (при выигрыше/проигрыше)
+function updateUserBalanceInFirebase(amount, isWin = false) {
+  if (!window.currentUser || typeof window.firestore === 'undefined' || typeof window.updateDoc !== 'function') {
+    console.log('⚠️ Cannot update balance - Firebase or user not available');
+    return Promise.resolve();
+  }
+  
+  console.log(`💰 Updating user balance in Firebase: ${isWin ? '+' : '-'}${amount} RGT`);
+  
+  const userDocRef = window.doc(window.firestore, 'users', window.currentUser.uid);
+  
+  // Используем increment для атомарного обновления
+  return window.updateDoc(userDocRef, {
+    reagents: window.increment(isWin ? amount : -amount),
+    updatedAt: new Date().toISOString()
+  }).then(() => {
+    console.log(`✅ Balance updated: ${isWin ? '+' : '-'}${amount} RGT`);
+    // Обновляем локальный баланс
+    window.currentUserRGT = (window.currentUserRGT || 0) + (isWin ? amount : -amount);
+    
+    // Обновляем UI
+    const balanceEl = document.getElementById('onlineUserBalance');
+    if (balanceEl) {
+      balanceEl.textContent = `Balance: ${window.currentUserRGT} RGT`;
+    }
+  }).catch((error) => {
+    console.error('❌ Error updating user balance:', error);
+  });
 }
 
 // Цвета для участников колеса
@@ -3785,6 +3816,11 @@ function placeOnlineBet() {
       existingParticipant.bet += betAmount;
       onlineGame.prizePool += betAmount;
       
+      // Вычитаем ставку из баланса в Firebase
+      updateUserBalanceInFirebase(betAmount, false).then(() => {
+        console.log('💰 Bet amount deducted from balance');
+      });
+      
       if (typeof showToast === 'function') {
         showToast(`Bet increased: +${betAmount} RGT (Total: ${existingParticipant.bet} RGT)`, 'success');
       }
@@ -3798,6 +3834,11 @@ function placeOnlineBet() {
       });
       
       onlineGame.prizePool += betAmount;
+      
+      // Вычитаем ставку из баланса в Firebase
+      updateUserBalanceInFirebase(betAmount, false).then(() => {
+        console.log('💰 Bet amount deducted from balance');
+      });
       
       // Если это первый участник - начинаем игру (без таймера)
       if (onlineGame.participants.length === 1) {
@@ -3987,6 +4028,13 @@ function showOnlineWinner(winner) {
   // Сохраняем статистику игроков
   savePlayerStats(winner, realWinAmount);
   
+  // Обновляем баланс победителя в Firebase
+  if (winner.uid === window.currentUser?.uid) {
+    updateUserBalanceInFirebase(realWinAmount, true).then(() => {
+      console.log('💰 Winner balance updated in Firebase');
+    });
+  }
+  
   // Создаем модальное окно победителя
   const modal = document.createElement('div');
   modal.style.cssText = `
@@ -3995,39 +4043,53 @@ function showOnlineWinner(winner) {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.8);
-    z-index: 10000;
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease-out;
   `;
   
   modal.innerHTML = `
-    <div style="background: linear-gradient(135deg, #1e2538, #2d3748); border: 2px solid #8b5cf6; border-radius: 20px; padding: 40px; max-width: 500px; text-align: center; box-shadow: 0 25px 50px rgba(139, 92, 246, 0.3);">
-      <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
-      <h2 style="color: white; font-size: 28px; font-weight: 900; margin-bottom: 16px;">Online Wheel Winner!</h2>
-      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px;">
-        <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px;">
-          ${winner.displayName ? winner.displayName.charAt(0).toUpperCase() : 'W'}
-        </div>
-        <div>
-          <div style="color: #a78bfa; font-size: 20px; font-weight: 700;">${winner.displayName || 'Anonymous'}</div>
-          <div style="color: #22d3ee; font-size: 14px;">Win chance: ${winPercentage}%</div>
-        </div>
+    <div style="background:linear-gradient(135deg,#1e2538,#2d3748);border-radius:20px;padding:40px;text-align:center;max-width:500px;width:90%;border:2px solid #8b5cf6;box-shadow:0 20px 40px rgba(139,92,246,0.3);">
+      <div style="font-size:60px;margin-bottom:20px;">🎉</div>
+      <div style="font-size:28px;font-weight:900;color:white;margin-bottom:10px;text-transform:uppercase;">Winner!</div>
+      <div style="font-size:20px;color:#8b5cf6;font-weight:700;margin-bottom:20px;">${winner.displayName || 'Anonymous'}</div>
+      
+      <div style="background:rgba(139,92,246,0.1);border-radius:15px;padding:20px;margin-bottom:20px;">
+        <div style="font-size:16px;color:#a0aec0;margin-bottom:8px;">Bet Amount</div>
+        <div style="font-size:24px;font-weight:700;color:#8b5cf6;">${winner.bet} RGT</div>
       </div>
-      <div style="color: #f59e0b; font-size: 32px; font-weight: 900; margin-bottom: 8px;">${realWinAmount} RGT</div>
-      <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;">Real win amount (prize pool - your bet)</div>
-      <div style="color: #a78bfa; font-size: 16px; margin-bottom: 20px;">Your bet: ${winner.bet} RGT | Total pool: ${totalBets} RGT</div>
-      <button onclick="this.closest('div').parentElement.remove(); resetOnlineGame();" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; border-radius: 10px; color: white; font-weight: 700; padding: 12px 24px; cursor: pointer;">
-        Awesome!
+      
+      <div style="background:rgba(16,185,129,0.1);border-radius:15px;padding:20px;margin-bottom:20px;">
+        <div style="font-size:16px;color:#a0aec0;margin-bottom:8px;">Prize Pool</div>
+        <div style="font-size:24px;font-weight:700;color:#10b981;">${totalBets} RGT</div>
+      </div>
+      
+      <div style="background:rgba(239,68,68,0.1);border-radius:15px;padding:20px;margin-bottom:30px;">
+        <div style="font-size:16px;color:#a0aec0;margin-bottom:8px;">Real Win Amount</div>
+        <div style="font-size:32px;font-weight:900;color:#ef4444;">${realWinAmount} RGT</div>
+        <div style="font-size:12px;color:#a0aec0;margin-top:4px;">(Prize Pool - Your Bet)</div>
+      </div>
+      
+      <button onclick="this.parentElement.parentElement.remove(); resetOnlineGame();" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:12px;color:white;font-weight:700;font-size:16px;padding:15px 40px;cursor:pointer;transition:all 0.3s ease;">
+        Play Again
       </button>
     </div>
   `;
   
   document.body.appendChild(modal);
   
-  // Обновляем статистику
-  updateOnlineStats();
+  // Добавляем анимацию
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 // Сброс онлайн-игры для нового раунда
