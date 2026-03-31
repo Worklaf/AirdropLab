@@ -4612,8 +4612,8 @@ document.addEventListener('DOMContentLoaded', function() {
       console.warn('⚠️ openLoginModal not available, creating fallback...');
       window.openLoginModal = function() {
         console.log('🔐 Login modal fallback called');
-        if (typeof showToast === 'function') {
-          showToast('Login functionality is being prepared...', 'info');
+        if (typeof window.showToast === 'function') {
+          window.showToast('Login functionality is being prepared...', 'info');
         }
       };
     }
@@ -4654,30 +4654,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const password = document.getElementById('loginPassword').value;
     
     if (!email || !password) {
-      if (typeof showToast === 'function') {
-        showToast('Please enter email and password', 'warning');
+      if (typeof window.showToast === 'function') {
+        window.showToast('Please enter email and password', 'warning');
       }
       return;
     }
     
     // Здесь будет логика входа через email
     console.log('🔐 Email login:', email);
-    if (typeof showToast === 'function') {
-      showToast('Email login functionality coming soon...', 'info');
+    if (typeof window.showToast === 'function') {
+      window.showToast('Email login functionality coming soon...', 'info');
     }
   };
   
   window.loginWithGoogle = function() {
     // Здесь будет логика входа через Google
     console.log('🔐 Google login requested');
-    if (typeof showToast === 'function') {
-      showToast('Google login functionality coming soon...', 'info');
+    if (typeof window.showToast === 'function') {
+      window.showToast('Google login functionality coming soon...', 'info');
     }
   };
   
   window.showRegisterModal = function() {
-    if (typeof showToast === 'function') {
-      showToast('Registration functionality coming soon...', 'info');
+    if (typeof window.showToast === 'function') {
+      window.showToast('Registration functionality coming soon...', 'info');
     }
   };
 }); // Закрываем document.addEventListener
