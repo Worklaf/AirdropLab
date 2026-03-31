@@ -719,10 +719,12 @@ try {
   // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
   window.auth = auth;
   window.db   = db;
-  window.__firestoreExports = { 
+ window.__firestoreExports = { 
   collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, 
   query, orderBy, limit, where, serverTimestamp, increment, 
-  runTransaction, writeBatch, arrayUnion, onSnapshot 
+  runTransaction, writeBatch, arrayUnion, onSnapshot,
+  // Добавляем недостающие функции для онлайн системы
+  initializeFirestore, getFirestore
 };
   window.__authExports = { onAuthStateChanged, signOut };
   console.log('✅ WoF Firebase initialized');
@@ -3063,6 +3065,19 @@ async function updateOnlineUserBalance() {
 async function connectToOnlineGame() {
   if (!db) return;
 
+  // ДОБАВИТЬ ЭТУ ПРОВЕРКУ:
+  if (!window.__firestoreExports) {
+    console.error('❌ Firestore exports not available');
+    return;
+  }
+  
+  const { collection, query, where, orderBy, limit, getDocs } = window.__firestoreExports;
+  
+  if (!collection || !query || !where || !orderBy || !limit || !getDocs) {
+    console.error('❌ Required Firestore functions not available');
+    return;
+  }
+
   try {
     // Ищем активную игру
     const activeGameQuery = query(
@@ -3104,6 +3119,13 @@ async function connectToOnlineGame() {
 
 // Получение номера следующей игры
 async function getNextGameNumber() {
+  if (!window.__firestoreExports) {
+    console.error('❌ Firestore exports not available');
+    return 1;
+  }
+  
+  const { collection, query, orderBy, limit, getDocs } = window.__firestoreExports;
+  
   try {
     const gamesQuery = query(
       collection(db, 'onlineWheelGames'),
@@ -3126,6 +3148,19 @@ async function getNextGameNumber() {
 // Установка реал-тайм слушателя игры
 function setupGameListener(gameId) {
   if (!db || realTimeListener) return;
+  
+  // ДОБАВИТЬ:
+  if (!window.__firestoreExports) {
+    console.error('❌ Firestore exports not available');
+    return;
+  }
+  
+  const { doc, onSnapshot } = window.__firestoreExports;
+  
+  if (!doc || !onSnapshot) {
+    console.error('❌ Required Firestore functions not available');
+    return;
+  }
 
   console.log('👂 Setting up game listener for:', gameId);
   
@@ -3239,6 +3274,21 @@ window.placeOnlineBet = async function() {
     } else {
       alert('Please log in to place bets');
     }
+    return;
+  }
+
+  // ДОБАВИТЬ ПОСЛЕ ПРОВЕРКИ ПОЛЬЗОВАТЕЛЯ:
+  if (!window.__firestoreExports) {
+    console.error('❌ Firestore exports not available');
+    alert('Database functions not available. Please refresh the page.');
+    return;
+  }
+  
+  const { runTransaction, collection, doc, serverTimestamp } = window.__firestoreExports;
+  
+  if (!runTransaction || !collection || !doc || !serverTimestamp) {
+    console.error('❌ Required Firestore functions not available');
+    alert('Database functions not available. Please refresh the page.');
     return;
   }
 
@@ -3810,6 +3860,21 @@ function resetLocalGameState() {
 async function loadOnlineLeaderboard() {
   const leaderboardList = document.getElementById('onlineLeaderboardList');
   if (!leaderboardList || !db) return;
+
+  // ДОБАВИТЬ:
+  if (!window.__firestoreExports) {
+    console.error('❌ Firestore exports not available');
+    renderOnlineLeaderboard([]);
+    return;
+  }
+  
+  const { collection, query, orderBy, limit, getDocs } = window.__firestoreExports;
+  
+  if (!collection || !query || !orderBy || !limit || !getDocs) {
+    console.error('❌ Required Firestore functions not available');
+    renderOnlineLeaderboard([]);
+    return;
+  }
 
   try {
     const sortBy = document.getElementById('leaderboardSort')?.value || 'totalWon';
