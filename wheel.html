@@ -2898,6 +2898,18 @@ window.switchToOnline = function() {
   // Инициализируем онлайн-игру
   initOnlineGame();
   
+  // Принудительное обновление лидерборда при загрузке
+  setTimeout(() => {
+    console.log('🔄 Forcing initial leaderboard update...');
+    updateOnlineLeaderboard();
+  }, 2000);
+  
+  // Принудительное обновление каждые 10 секунд
+  setInterval(() => {
+    console.log('🔄 Periodic leaderboard update...');
+    updateOnlineLeaderboard();
+  }, 10000);
+  
   if (typeof showToast === 'function') {
     showToast('Switched to Online Mode', 'success');
   }
@@ -3702,7 +3714,7 @@ function updateOnlineStats() {
 
 // Обновление онлайн-лидерборда
 let lastLeaderboardUpdate = 0;
-const LEADERBOARD_UPDATE_INTERVAL = 3000; // 3 секунды между обновлениями
+const LEADERBOARD_UPDATE_INTERVAL = 2000; // 2 секунды между обновлениями
 
 async function updateOnlineLeaderboard() {
   const now = Date.now();
@@ -3960,6 +3972,70 @@ function setMaxOnlineBet() {
     const balance = parseInt(balanceText.match(/\d+/)?.[0] || 0);
     betInput.value = balance;
   }
+  
+  // Обновляем онлайн UI
+function updateOnlineUI() {
+  // Обновляем баланс
+  const balanceEl = document.getElementById('onlineUserBalance');
+  if (balanceEl) {
+    // Получаем баланс из текста (например, "Balance: 1000 RGT")
+    const balanceText = balanceEl.textContent;
+    const balance = parseInt(balanceText.match(/\d+/)?.[0] || 0);
+    const betInput = document.getElementById('onlineBetAmount');
+    if (betInput) {
+      betInput.value = balance;
+    }
+  }
+  
+  // Обновляем количество игроков
+  const activePlayersEl = document.getElementById('activePlayersCount');
+  if (activePlayersEl) {
+    activePlayersEl.textContent = onlineGame.participants.length;
+  }
+  
+  // Обновляем призовой пул
+  const prizePoolEl = document.getElementById('onlinePrizePool');
+  if (prizePoolEl) {
+    prizePoolEl.textContent = `Prize Pool: ${onlineGame.prizePool} RGT`;
+  }
+  
+  // Обновляем статус игры
+  const gameStatusEl = document.getElementById('onlineGameStatus');
+  if (gameStatusEl) {
+    if (onlineGame.bettingOpen) {
+      const now = new Date();
+      const endTime = new Date(onlineGame.endTime);
+      const timeLeft = Math.max(0, Math.floor((endTime - now) / 1000));
+      gameStatusEl.textContent = `Betting ends in: ${timeLeft}s`;
+    } else {
+      gameStatusEl.textContent = onlineGame.participants.length === 0 ? 'Waiting for players...' : 'Waiting for more players...';
+    }
+  }
+  
+  // Обновляем лидерборд
+  updateOnlineLeaderboard();
+  
+  // Перерисовываем колесо с реальным временем
+  drawOnlineWheel(getCurrentRotation());
+}
+
+// Получение текущего вращения колеса
+function getCurrentRotation() {
+  const now = new Date();
+  if (onlineGame.startTime && onlineGame.endTime) {
+    const startTime = new Date(onlineGame.startTime);
+    const endTime = new Date(onlineGame.endTime);
+    const elapsed = now - startTime;
+    const duration = endTime - startTime;
+    const progress = Math.min(1, Math.max(0, elapsed / duration));
+    
+    // Если идет вращение, возвращаем угол вращения
+    if (onlineGame.spinning) {
+      return progress * 360 * 3; // 3 полных оборота за время вращения
+    }
+  }
+  
+  return 0; // По умолчанию
 }
 
 // Размещение онлайн-ставки
