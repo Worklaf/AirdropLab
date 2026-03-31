@@ -3448,6 +3448,29 @@ function drawOnlineWheel(rotation = 0) {
   
   // Если нет участников - рисуем пустое колесо
   if (onlineGame.participants.length === 0) {
+    // Если нет участников, рисуем пустое колесо с сообщением
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    
+    const emptyGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    emptyGradient.addColorStop(0, '#1e293b');
+    emptyGradient.addColorStop(1, '#0f172a');
+    ctx.fillStyle = emptyGradient;
+    ctx.fill();
+    
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Текст ожидания
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '18px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Waiting for players...', centerX, centerY - 10);
+    ctx.font = '14px Arial';
+    ctx.fillText('Place your bet to join', centerX, centerY + 15);
+  } else {
     // Рисуем один большой сектор - ожидание игроков
     ctx.beginPath();
     ctx.moveTo(centerX, centerY);
@@ -3460,145 +3483,78 @@ function drawOnlineWheel(rotation = 0) {
     gradient.addColorStop(1, 'rgba(139, 92, 246, 0.1)');
     ctx.fillStyle = gradient;
     ctx.fill();
-    
-    ctx.strokeStyle = '#1e2538';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    
-    // Текст ожидания
-    ctx.fillStyle = '#8b5cf6';
-    ctx.font = 'bold 16px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Waiting for players...', centerX, centerY);
-    
-    ctx.restore();
-    return;
-  }
-  
-  // Рассчитываем проценты каждого участника
-  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
-  let currentAngle = -Math.PI / 2; // Начинаем сверху
-  
-  onlineGame.participants.forEach((participant, index) => {
-    const percentage = participant.bet / totalBets;
-    const angle = percentage * Math.PI * 2;
-    const color = getParticipantColor(index);
-    
-    // Рисуем сектор с градиентом
     ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + angle);
-    ctx.closePath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
     
-    // Градиент для сектора
     const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-    gradient.addColorStop(0, color + 'ff');
-    gradient.addColorStop(0.7, color + 'cc');
-    gradient.addColorStop(1, color + '88');
+    gradient.addColorStop(0, '#1e293b');
+    gradient.addColorStop(1, '#0f172a');
     ctx.fillStyle = gradient;
     ctx.fill();
     
-    // Рисуем границу сектора
-    ctx.strokeStyle = '#1e2538';
+    ctx.strokeStyle = '#475569';
     ctx.lineWidth = 3;
     ctx.stroke();
     
-    // Рисуем внутреннюю границу для лучшей видимости
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, radius * 0.95, currentAngle, currentAngle + angle);
-    ctx.closePath();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    
-    // Текст с именем и процентом
-    const textAngle = currentAngle + angle / 2;
-    const textX = centerX + Math.cos(textAngle) * (radius * 0.65);
-    const textY = centerY + Math.sin(textAngle) * (radius * 0.65);
-    
-    ctx.save();
-    ctx.translate(textX, textY);
-    ctx.rotate(textAngle + Math.PI / 2);
-    
-    // Тень для текста
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 1;
-    ctx.shadowOffsetY = 1;
-    
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 12px Arial';
+    // Текст ожидания
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '18px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(participant.displayName || 'Player', 0, 0);
-    
-    ctx.font = '10px Arial';
-    ctx.fillText(`${(percentage * 100).toFixed(1)}%`, 0, 15);
-    
-    ctx.restore();
-    
-    currentAngle += angle;
-  });
+    ctx.fillText('Waiting for players...', centerX, centerY - 10);
+    ctx.font = '14px Arial';
+    ctx.fillText('Place your bet to join', centerX, centerY + 15);
+  }
   
-  // Рисуем центральную кнопку с градиентом
+  // Рисуем центральную кнопку
   ctx.beginPath();
-  ctx.arc(centerX, centerY, 35, 0, Math.PI * 2);
-  ctx.closePath();
+  ctx.arc(centerX, centerY, 60, 0, 2 * Math.PI);
   
-  const buttonGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 35);
-  buttonGradient.addColorStop(0, '#8b5cf6');
-  buttonGradient.addColorStop(0.7, '#7c3aed');
-  buttonGradient.addColorStop(1, '#6d28d9');
+  const buttonGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 60);
+  if (onlineGame.bettingOpen && !onlineGame.spinning) {
+    buttonGradient.addColorStop(0, '#10b981');
+    buttonGradient.addColorStop(1, '#059669');
+  } else {
+    buttonGradient.addColorStop(0, '#6b7280');
+    buttonGradient.addColorStop(1, '#4b5563');
+  }
+  
   ctx.fillStyle = buttonGradient;
   ctx.fill();
   
-  ctx.strokeStyle = '#1e2538';
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#ffffff33';
+  ctx.lineWidth = 3;
   ctx.stroke();
   
-  // Внутренняя граница кнопки
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
-  ctx.closePath();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  
-  ctx.fillStyle = 'white';
+  // Текст кнопки
+  ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 14px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('SPIN', centerX, centerY);
+  
+  if (onlineGame.spinning) {
+    ctx.fillText('SPINNING...', centerX, centerY);
+  } else if (onlineGame.bettingOpen) {
+    ctx.fillText('SPIN!', centerX, centerY);
+  } else {
+    ctx.fillText('WAITING...', centerX, centerY);
+  }
   
   // Рисуем стрелку
-  ctx.restore();
-  
-  // Стрелка (не вращается)
-  ctx.save();
-  
-  // Тень для стрелки
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-  ctx.shadowBlur = 8;
-  ctx.shadowOffsetX = 2;
-  ctx.shadowOffsetY = 2;
-  
   ctx.beginPath();
-  ctx.moveTo(centerX + radius + 15, centerY);
-  ctx.lineTo(centerX + radius - 15, centerY - 20);
-  ctx.lineTo(centerX + radius - 15, centerY + 20);
+  ctx.moveTo(centerX + radius + 10, centerY);
+  ctx.lineTo(centerX + radius - 20, centerY - 15);
+  ctx.lineTo(centerX + radius - 20, centerY + 15);
   ctx.closePath();
   
-  const arrowGradient = ctx.createLinearGradient(centerX + radius - 15, centerY - 20, centerX + radius + 15, centerY);
-  arrowGradient.addColorStop(0, '#ef4444');
-  arrowGradient.addColorStop(0.5, '#dc2626');
-  arrowGradient.addColorStop(1, '#b91c1c');
+  const arrowGradient = ctx.createLinearGradient(centerX + radius + 10, centerY, centerX + radius - 20, centerY);
+  arrowGradient.addColorStop(0, '#fbbf24');
+  arrowGradient.addColorStop(1, '#f59e0b');
   ctx.fillStyle = arrowGradient;
   ctx.fill();
   
-  ctx.strokeStyle = '#1e2538';
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#ffffff66';
+  ctx.lineWidth = 2;
   ctx.stroke();
   
   // Внутренняя граница стрелки
@@ -4039,8 +3995,15 @@ async function savePlayerStats(winner, winAmount) {
   
   // Обновляем лидерборд с задержкой
   setTimeout(() => {
+    console.log('🔄 Forcing leaderboard update after stats save...');
     updateOnlineLeaderboard();
   }, 1000);
+  
+  // Дополнительное обновление через 3 секунды
+  setTimeout(() => {
+    console.log('🔄 Second leaderboard update...');
+    updateOnlineLeaderboard();
+  }, 3000);
 }
 
 // Функции для ставок
