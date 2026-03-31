@@ -2928,6 +2928,13 @@ function updateModeButtons(activeMode) {
 function initOnlineGame() {
   console.log('🎮 Initializing online game...');
   
+  // Ждем загрузки Firebase функций
+  if (typeof window.doc === 'undefined' || typeof window.getDoc === 'undefined') {
+    console.log('⏳ Firebase functions not ready, waiting...');
+    setTimeout(() => initOnlineGame(), 500);
+    return;
+  }
+  
   // Отладочная информация о доступных Firestore инстансах
   console.log('🔍 Debug - available Firestore instances:');
   console.log('  window.firestore:', typeof window.firestore);
@@ -2959,6 +2966,7 @@ function initOnlineGame() {
   console.log('  doc:', typeof firestore.doc);
   console.log('  getDoc:', typeof window.getDoc);
   console.log('  setDoc:', typeof window.setDoc);
+  console.log('  doc (global):', typeof window.doc);
   
   // Устанавливаем глобальную переменную
   window.firestore = firestore;
@@ -3065,6 +3073,14 @@ function loadOnlineGameData() {
   console.log('  doc:', typeof window.firestore?.doc);
   console.log('  getDoc:', typeof window.getDoc);
   console.log('  setDoc:', typeof window.setDoc);
+  console.log('  doc (global):', typeof window.doc);
+  
+  // Ждем загрузки Firebase функций
+  if (typeof window.doc === 'undefined' || typeof window.getDoc === 'undefined') {
+    console.log('⏳ Firebase functions not ready for game data, waiting...');
+    setTimeout(() => loadOnlineGameData(), 500);
+    return;
+  }
   
   // Проверяем доступность Firebase с правильным синтаксисом v9+
   if (typeof window.firestore !== 'undefined' && typeof window.getDoc === 'function') {
@@ -3099,6 +3115,7 @@ function loadOnlineGameData() {
     console.log('⚠️ Firebase v9+ functions not available, using localStorage');
     console.log('🔍 Firestore type:', typeof window.firestore);
     console.log('🔍 getDoc type:', typeof window.getDoc);
+    console.log('🔍 doc type:', typeof window.doc);
     // Fallback к localStorage если Firebase недоступен
     loadFromLocalStorage();
   }
@@ -3186,9 +3203,17 @@ function updateUserBalance() {
   console.log('  getDoc:', typeof window.getDoc);
   console.log('  setDoc:', typeof window.setDoc);
   console.log('  doc:', typeof window.firestore?.doc);
+  console.log('  doc (global):', typeof window.doc);
   
   const balanceEl = document.getElementById('onlineUserBalance');
   if (!balanceEl) return;
+  
+  // Ждем загрузки Firebase функций
+  if (typeof window.doc === 'undefined' || typeof window.getDoc === 'undefined') {
+    console.log('⏳ Firebase functions not ready for balance, waiting...');
+    setTimeout(() => updateUserBalance(), 500);
+    return;
+  }
   
   // Получаем баланс пользователя из Firebase с правильным синтаксисом v9+
   if (typeof window.firestore !== 'undefined' && typeof window.getDoc === 'function' && window.currentUser) {
@@ -3232,6 +3257,7 @@ function updateUserBalance() {
     console.log('⚠️ Firebase v9+ functions or user not available, using fallback');
     console.log('🔍 Firestore type:', typeof window.firestore);
     console.log('🔍 getDoc type:', typeof window.getDoc);
+    console.log('🔍 doc type:', typeof window.doc);
     console.log('🔍 Current user:', window.currentUser?.uid);
     // Fallback к другим источникам
     loadBalanceFromOtherSources();
