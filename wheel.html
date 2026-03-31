@@ -3330,7 +3330,10 @@ async function getUserBalanceFromFirebase() {
     
     if (userDoc.exists()) {
       const userData = userDoc.data();
-      return userData.balance || 0;
+      // Проверяем все возможные поля баланса
+      const balance = userData.reagents || userData.balance || userData.rgt || 0;
+      console.log('💰 User balance from Firebase:', balance, '(fields checked: reagents, balance, rgt)');
+      return balance;
     } else {
       console.log('⚠️ User document not found');
       return 0;
