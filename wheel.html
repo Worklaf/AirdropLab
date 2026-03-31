@@ -3972,8 +3972,9 @@ function setMaxOnlineBet() {
     const balance = parseInt(balanceText.match(/\d+/)?.[0] || 0);
     betInput.value = balance;
   }
-  
-  // Обновляем онлайн UI
+}
+
+// Обновляем онлайн UI
 function updateOnlineUI() {
   // Обновляем баланс
   const balanceEl = document.getElementById('onlineUserBalance');
