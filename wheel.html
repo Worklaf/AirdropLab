@@ -2952,7 +2952,7 @@ function initOnlineGame() {
 
 // Установка Firebase listener для реального времени
 function setupFirebaseListener() {
-  if (typeof window.firestore !== 'undefined') {
+  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function') {
     const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
     
     // Real-time listener
@@ -3029,7 +3029,7 @@ function startBettingTimer() {
 // Загрузка данных онлайн-игры из Firebase
 function loadOnlineGameData() {
   // Проверяем доступность Firebase
-  if (typeof window.firestore !== 'undefined') {
+  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function') {
     const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
     
     onlineGameRef.get().then((doc) => {
@@ -3054,6 +3054,7 @@ function loadOnlineGameData() {
       loadFromLocalStorage();
     });
   } else {
+    console.log('⚠️ Firestore not available, using localStorage');
     // Fallback к localStorage если Firebase недоступен
     loadFromLocalStorage();
   }
@@ -3096,18 +3097,19 @@ function loadFromLocalStorage() {
 // Сохранение данных онлайн-игры в Firebase
 function saveOnlineGameData() {
   // Проверяем доступность Firebase
-  if (typeof window.firestore !== 'undefined') {
+  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function') {
     const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
     
     onlineGameRef.set(onlineGame).then(() => {
       console.log('💾 Saved global online game data to Firebase');
     }).catch((error) => {
-      console.error('❌ Error saving online game data to Firebase:', error);
-      // Fallback to localStorage
+      console.error('❌ Error saving global online game data to Firebase:', error);
+      // Fallback к localStorage
       saveToLocalStorage();
     });
   } else {
-    // Fallback to localStorage если Firebase недоступен
+    console.log('⚠️ Firestore not available, using localStorage');
+    // Fallback к localStorage если Firebase недоступен
     saveToLocalStorage();
   }
 }
@@ -3128,8 +3130,8 @@ function updateUserBalance() {
   if (!balanceEl) return;
   
   // Получаем баланс пользователя из Firebase
-  if (typeof window.firestore !== 'undefined' && window.currentUser) {
-    const userRef = window.firestore.collection('users').doc(window.currentUser.uid);
+  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function' && window.currentUser) {
+    const userRef = window.firestore.collection('onlineWheelUsers').doc(window.currentUser.uid);
     
     userRef.get().then((doc) => {
       let balance = 0;
@@ -3141,6 +3143,13 @@ function updateUserBalance() {
       } else {
         console.log('💰 No user data in Firebase, using 0 balance');
         balance = 0; // Не используем тестовый баланс
+        
+        // Создаем документ пользователя
+        userRef.set({
+          displayName: window.currentUser.displayName || 'Anonymous',
+          balance: 0,
+          createdAt: new Date().toISOString()
+        });
       }
       
       // Обновляем UI
@@ -3536,6 +3545,40 @@ function renderOnlineLeaderboard(stats) {
   }).join('');
 }
 
+// Сохранение игры в историю
+function saveGameToHistory(winner, realWinAmount) {
+  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function') {
+    const historyRef = window.firestore.collection('onlineWheelHistory').doc(`game_${Date.now()}`);
+    
+    const historyEntry = {
+      gameId: onlineGame.gameCount,
+      winner: {
+        uid: winner.uid,
+        displayName: winner.displayName,
+        bet: winner.bet,
+        winAmount: realWinAmount
+      },
+      participants: onlineGame.participants.map(p => ({
+        uid: p.uid,
+        displayName: p.displayName,
+        bet: p.bet
+      })),
+      totalPrize: onlineGame.prizePool,
+      timestamp: new Date().toISOString(),
+      gameData: {
+        participantCount: onlineGame.participants.length,
+        duration: onlineGame.endTime ? new Date(onlineGame.endTime).getTime() - new Date(onlineGame.startTime).getTime() : null
+      }
+    };
+    
+    historyRef.set(historyEntry).then(() => {
+      console.log('📜 Game saved to history:', historyEntry);
+    }).catch((error) => {
+      console.error('❌ Error saving game to history:', error);
+    });
+  }
+}
+
 // Сохранение статистики игрока
 function savePlayerStats(winner, totalPrize) {
   if (typeof window.firestore !== 'undefined' && winner) {
@@ -3846,6 +3889,9 @@ function showOnlineWinner(winner) {
   
   // Рассчитываем реальный выигрыш (призовой пул - своя ставка)
   const realWinAmount = totalBets - winner.bet;
+  
+  // Сохраняем игру в историю
+  saveGameToHistory(winner, realWinAmount);
   
   // Сохраняем статистику игроков
   savePlayerStats(winner, realWinAmount);
