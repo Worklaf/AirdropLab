@@ -3975,6 +3975,7 @@ function saveGameToHistory(winner, realWinAmount) {
   }
 }
 
+// Сохранение статистики игроков в Firestore
 async function savePlayerStats(winner, winAmount) {
   if (!onlineGame.participants || onlineGame.participants.length === 0) {
     console.log('⚠️ No participants to save stats for');
@@ -3992,40 +3993,44 @@ async function savePlayerStats(winner, winAmount) {
       let currentStats = {};
       if (statsDoc.exists()) {
         currentStats = statsDoc.data();
+        console.log(`📋 Found existing stats for ${participant.displayName}:`, currentStats);
       } else {
         // Создаем новую статистику для нового пользователя
         currentStats = {
           displayName: participant.displayName,
           photoURL: participant.photoURL || '',
-          games: 0,
-          wins: 0,
-          totalWon: 0,
-          totalBet: 0,
+          totalGames: 0,
+          totalWins: 0,
+          totalWinnings: 0,
+          totalBets: 0,
           lastPlayed: new Date().toISOString()
         };
+        console.log(`🆕 Creating new stats for ${participant.displayName}:`, currentStats);
       }
       
-      // Обновляем статистику
+      // Обновляем статистику - используем правильные имена полей
       const updatedStats = {
         ...currentStats,
-        games: (currentStats.games || 0) + 1,
-        totalBet: (currentStats.totalBet || 0) + participant.bet,
+        totalGames: (currentStats.totalGames || 0) + 1,
+        totalBets: (currentStats.totalBets || 0) + participant.bet,
         lastPlayed: new Date().toISOString()
       };
       
       // Если это победитель, добавляем победу и выигрыш
       if (participant.uid === winner.uid) {
-        updatedStats.wins = (currentStats.wins || 0) + 1;
-        updatedStats.totalWon = (currentStats.totalWon || 0) + winAmount;
+        updatedStats.totalWins = (currentStats.totalWins || 0) + 1;
+        updatedStats.totalWinnings = (currentStats.totalWinnings || 0) + winAmount;
+        console.log(`🏆 Updating winner ${participant.displayName}: +1 win, +${winAmount} winnings`);
       }
       
       // Сохраняем в Firestore
       await window.setDoc(statsDocRef, updatedStats);
       
-      console.log(`📊 Stats saved for ${participant.displayName}: Games: ${updatedStats.games}, Wins: ${updatedStats.wins}, Winnings: ${updatedStats.totalWon}`);
+      console.log(`📊 Stats saved for ${participant.displayName}: Games: ${updatedStats.totalGames}, Wins: ${updatedStats.totalWins}, Winnings: ${updatedStats.totalWinnings}`);
       
     } catch (error) {
       console.error(`❌ Error saving stats for ${participant.displayName}:`, error);
+      console.error(`❌ Error details:`, error.code, error.message);
     }
   });
   
