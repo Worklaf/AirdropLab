@@ -3145,16 +3145,28 @@ function setupFirebaseListener() {
 // Таймер для фазы ставок с реальным временем
 let bettingTimer = null;
 
-function startBettingTimer(timeLeft = 60) {
+// Таймер фазы ставок с реальным отсчетом
+function startBettingTimer() {
   if (bettingTimer) {
     clearInterval(bettingTimer);
   }
   
-  console.log(`⏰ Starting betting timer: ${timeLeft} seconds`);
+  console.log(`⏰ Starting betting timer: ${onlineGame.timeLeft} seconds`);
   
   bettingTimer = setInterval(() => {
+    onlineGame.timeLeft--;
+    
+    // Обновляем UI с отсчетом
+    updateOnlineUI();
+    
+    // Обновляем статус с обратным отсчетом
     if (onlineGame.timeLeft > 0) {
-      onlineGame.timeLeft--;
+      updateGameStatus(`Betting phase active! ${onlineGame.timeLeft} seconds remaining...`);
+      console.log(`⏰ Time left: ${onlineGame.timeLeft}s`);
+    }
+    
+    // Таймер закончился
+    if (onlineGame.timeLeft <= 0) {
       clearInterval(bettingTimer);
       bettingTimer = null;
       
@@ -3264,31 +3276,44 @@ function loadFromLocalStorage() {
 }
 
 // Сохранение данных онлайн-игры в Firebase
-function saveOnlineGameData() {
-  console.log('💾 Saving online game data...');
-  console.log('🔍 Available Firebase functions:');
-  console.log('  setDoc:', typeof window.setDoc);
-  console.log('  doc:', typeof window.firestore?.doc);
+async function saveOnlineGameData() {
+  if (!window.firestore) {
+    console.log('⚠️ Firebase not available, skipping save');
+    return;
+  }
   
-  // Проверяем доступность Firebase с правильным синтаксисом v9+
-  if (typeof window.firestore !== 'undefined' && typeof window.setDoc === 'function') {
-    console.log('✅ Using Firebase v9+ syntax for saving game data');
+  try {
+    console.log('💾 Saving online game data...');
+    console.log('🔍 Available Firebase functions:');
+    console.log('  setDoc:', typeof window.setDoc);
+    console.log('  doc:', typeof window.doc);
+    console.log('  doc (global):', typeof window.doc);
     
-    // Используем правильный синтаксис для создания document reference
-    const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
+    // Используем правильный синтаксис для Firebase v9+
+    const gameDataRef = window.doc(window.firestore, 'onlineWheelGame', 'current');
     
-    window.setDoc(gameDocRef, onlineGame).then(() => {
-      console.log('💾 Saved global online game data to Firebase');
-    }).catch((error) => {
-      console.error('❌ Error saving global online game data to Firebase:', error);
-      // Fallback к localStorage
-      saveToLocalStorage();
-    });
-  } else {
-    console.log('⚠️ Firebase v9+ functions not available, using localStorage');
-    console.log('🔍 Firestore type:', typeof window.firestore);
-    console.log('🔍 setDoc type:', typeof window.setDoc);
-    // Fallback к localStorage если Firebase недоступен
+    const gameData = {
+      participants: onlineGame.participants,
+      prizePool: onlineGame.prizePool,
+      timeLeft: onlineGame.timeLeft,
+      bettingOpen: onlineGame.bettingOpen,
+      gameCount: onlineGame.gameCount,
+      createdBy: onlineGame.createdBy,
+      createdAt: onlineGame.createdAt,
+      startTime: onlineGame.startTime,
+      endTime: onlineGame.endTime,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    await window.setDoc(gameDataRef, gameData);
+    console.log('💾 Saved global online game data to Firebase');
+    
+  } catch (error) {
+    console.error('❌ Error saving online game data:', error);
+    console.log('🔄 Falling back to localStorage');
+    
+    // Fallback to localStorage
+    localStorage.setItem('onlineWheelGame', JSON.stringify(onlineGame));
     saveToLocalStorage();
   }
 }
@@ -3561,7 +3586,7 @@ function initOnlineWheel() {
   console.log('✅ Online wheel initialized');
 }
 
-// Рисование онлайн колеса с улучшенным дизайном
+// Рисование онлайн колеса с улучшенным дизайном и цветами участников
 function drawOnlineWheel(rotation = 0) {
   const canvas = document.getElementById('onlineWheelCanvas');
   if (!canvas) return;
@@ -3579,7 +3604,7 @@ function drawOnlineWheel(rotation = 0) {
     return;
   }
 
-  // Рисуем секторы участников с улучшенным дизайном
+  // Рисуем секторы участников с уникальными цветами
   const participants = onlineGame.participants;
   const totalBets = participants.reduce((sum, p) => sum + p.bet, 0);
   
@@ -3589,8 +3614,10 @@ function drawOnlineWheel(rotation = 0) {
     const percentage = totalBets > 0 ? (participant.bet / totalBets) : 0;
     const angleSize = percentage * Math.PI * 2;
     
-    // Используем цвет участника
-    const color = participant.color || '#8b5cf6';
+    // Используем уникальный цвет участника
+    const color = participant.color || getParticipantColorByUid(participant.uid);
+    
+    console.log(`🎨 Drawing sector for ${participant.displayName} with color ${color}`);
     
     // Рисуем сектор с градиентом и тенью
     ctx.save();
@@ -4297,14 +4324,6 @@ function startBettingPhase() {
   
   // Сохраняем в Firebase
   saveOnlineGameData();
-  
-  // Автоматически запускаем колесо после окончания таймера
-  setTimeout(() => {
-    if (onlineGame.bettingOpen && onlineGame.participants.length >= 2) {
-      console.log('⏰ Timer ended, spinning wheel automatically...');
-      endBettingPhase();
-    }
-  }, 60000); // 60 секунд
 }
 
 // Окончание фазы ставок и запуск колеса
