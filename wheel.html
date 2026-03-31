@@ -4019,9 +4019,11 @@ async function placeOnlineBet() {
     
     // Очищаем поле ставки
     betInput.value = '';
-  } else {
+    
+  } catch (error) {
+    console.error('❌ Error placing online bet:', error);
     if (typeof showToast === 'function') {
-      showToast('Please login to place bets', 'warning');
+      showToast('Error placing bet', 'error');
     }
   }
 }
