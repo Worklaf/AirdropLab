@@ -3369,15 +3369,53 @@ function getParticipantColor(index) {
 function initOnlineWheel() {
   const canvas = document.getElementById('onlineWheelCanvas');
   if (!canvas) {
-    console.warn('⚠️ Online wheel canvas not found');
+    console.error('❌ onlineWheelCanvas not found');
     return;
   }
   
-  const ctx = canvas.getContext('2d');
+  // Устанавливаем размеры canvas
   canvas.width = 400;
   canvas.height = 400;
   
-  drawOnlineWheel(0); // Добавляем параметр вращения
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    console.error('❌ Failed to get canvas context');
+    return;
+  }
+  
+  // Рисуем пустое колесо при инициализации
+  drawOnlineWheel();
+  
+  // Добавляем обработчик клика на canvas
+  canvas.addEventListener('click', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+    
+    // Проверяем, что клик по центральной кнопке (радиус ~60px)
+    if (distance <= 60) {
+      if (onlineGame.bettingOpen && !onlineGame.spinning) {
+        spinOnlineWheel();
+      }
+    }
+  });
+  
+  // Добавляем hover эффект
+  canvas.addEventListener('mousemove', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+    
+    canvas.style.cursor = (distance <= 60 && onlineGame.bettingOpen && !onlineGame.spinning) ? 'pointer' : 'default';
+  });
+  
+  console.log('✅ Online wheel initialized');
 }
 
 // Рисование онлайн-колеса с динамическими секторами
@@ -3937,64 +3975,67 @@ function saveGameToHistory(winner, realWinAmount) {
   }
 }
 
-// Сохранение статистики игроков
 async function savePlayerStats(winner, winAmount) {
-  console.log('📊 Saving player stats...');
-  
-  // Проверяем доступность Firebase
-  if (typeof window.firestore === 'undefined' || typeof window.doc === 'undefined' || typeof window.setDoc === 'undefined') {
-    console.log('⚠️ Firestore not available for stats, skipping');
+  if (!onlineGame.participants || onlineGame.participants.length === 0) {
+    console.log('⚠️ No participants to save stats for');
     return;
   }
+
+  console.log('📊 Saving player stats...');
   
-  // Обновляем статистику для всех участников
-  for (const participant of onlineGame.participants) {
+  const statsPromises = onlineGame.participants.map(async (participant) => {
     try {
+      // Используем глобальные функции Firebase v9+
       const statsDocRef = window.doc(window.firestore, 'onlineWheelStats', participant.uid);
-      
-      // Получаем текущую статистику
       const statsDoc = await window.getDoc(statsDocRef);
-      let currentStats = {
-        totalGames: 0,
-        totalWins: 0,
-        totalWinnings: 0,
-        totalBets: 0,
-        displayName: participant.displayName || 'Anonymous',
-        photoURL: participant.photoURL || '',
-        lastPlayed: new Date().toISOString()
-      };
       
+      let currentStats = {};
       if (statsDoc.exists()) {
         currentStats = statsDoc.data();
+      } else {
+        // Создаем новую статистику для нового пользователя
+        currentStats = {
+          displayName: participant.displayName,
+          photoURL: participant.photoURL || '',
+          games: 0,
+          wins: 0,
+          totalWon: 0,
+          totalBet: 0,
+          lastPlayed: new Date().toISOString()
+        };
       }
       
       // Обновляем статистику
-      currentStats.totalGames += 1;
-      currentStats.totalBets += participant.bet;
+      const updatedStats = {
+        ...currentStats,
+        games: (currentStats.games || 0) + 1,
+        totalBet: (currentStats.totalBet || 0) + participant.bet,
+        lastPlayed: new Date().toISOString()
+      };
       
-      // Если это победитель - обновляем статистику побед
+      // Если это победитель, добавляем победу и выигрыш
       if (participant.uid === winner.uid) {
-        currentStats.totalWins += 1;
-        currentStats.totalWinnings += winAmount;
+        updatedStats.wins = (currentStats.wins || 0) + 1;
+        updatedStats.totalWon = (currentStats.totalWon || 0) + winAmount;
       }
       
-      currentStats.lastPlayed = new Date().toISOString();
+      // Сохраняем в Firestore
+      await window.setDoc(statsDocRef, updatedStats);
       
-      // Сохраняем обновленную статистику
-      await window.setDoc(statsDocRef, currentStats);
-      
-      console.log(`📊 Stats saved for ${participant.displayName}: Games: ${currentStats.totalGames}, Wins: ${currentStats.totalWins}, Winnings: ${currentStats.totalWinnings}`);
+      console.log(`📊 Stats saved for ${participant.displayName}: Games: ${updatedStats.games}, Wins: ${updatedStats.wins}, Winnings: ${updatedStats.totalWon}`);
       
     } catch (error) {
       console.error(`❌ Error saving stats for ${participant.displayName}:`, error);
-      // Продолжаем с другими игроками даже если один не сохранился
     }
-  }
+  });
+  
+  // Ждем завершения всех сохранений
+  await Promise.all(statsPromises);
   
   // Обновляем лидерборд с задержкой
   setTimeout(() => {
     updateOnlineLeaderboard();
-  }, 2000);
+  }, 1000);
 }
 
 // Функции для ставок
