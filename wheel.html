@@ -2952,29 +2952,16 @@ function initOnlineGame() {
     return;
   }
   
-  // Проверяем что collection работает
-  if (typeof firestore.collection !== 'function') {
-    console.log('❌ Firestore.collection is not a function, trying to reinitialize...');
-    // Пробуем переинициализировать
-    setTimeout(() => {
-      if (typeof window.getFirestore === 'function' && window.firebaseApp) {
-        firestore = window.getFirestore(window.firebaseApp);
-        window.firestore = firestore;
-        console.log('🔄 Reinitialized Firestore');
-        initOnlineGame();
-      } else {
-        console.log('❌ Cannot reinitialize Firestore, using localStorage');
-        initOnlineGame();
-      }
-    }, 1000);
-    return;
-  }
+  // Проверяем что Firestore имеет правильные методы для v9+
+  console.log('🔍 Firestore methods check:');
+  console.log('  collection:', typeof firestore.collection);
+  console.log('  doc:', typeof firestore.doc);
+  console.log('  getDoc:', typeof window.getDoc);
+  console.log('  setDoc:', typeof window.setDoc);
   
   // Устанавливаем глобальную переменную
   window.firestore = firestore;
   console.log('✅ Firestore is available for online game');
-  console.log('🔍 Firestore instance:', firestore);
-  console.log('🔍 Collection function:', typeof firestore.collection);
   
   // Загружаем данные из Firebase
   loadOnlineGameData();
@@ -3072,15 +3059,19 @@ function startBettingTimer() {
 function loadOnlineGameData() {
   console.log('📦 Loading online game data...');
   console.log('🔍 Current window.firestore:', typeof window.firestore);
-  console.log('🔍 window.firestore.collection:', typeof window.firestore?.collection);
+  console.log('🔍 Available Firebase functions:');
+  console.log('  collection:', typeof window.firestore?.collection);
+  console.log('  doc:', typeof window.firestore?.doc);
+  console.log('  getDoc:', typeof window.getDoc);
+  console.log('  setDoc:', typeof window.setDoc);
   
-  // Проверяем доступность Firebase
-  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function') {
-    console.log('✅ Using Firebase for online game data');
-    const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
+  // Проверяем доступность Firebase с правильным синтаксисом v9+
+  if (typeof window.firestore !== 'undefined' && typeof window.getDoc === 'function') {
+    console.log('✅ Using Firebase v9+ syntax for online game data');
+    const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
     
-    onlineGameRef.get().then((doc) => {
-      if (doc.exists) {
+    window.getDoc(gameDocRef).then((doc) => {
+      if (doc.exists()) {
         const data = doc.data();
         onlineGame = { ...onlineGame, ...data };
         console.log('📦 Loaded global online game data:', data);
@@ -3102,9 +3093,9 @@ function loadOnlineGameData() {
       loadFromLocalStorage();
     });
   } else {
-    console.log('⚠️ Firestore not available, using localStorage');
+    console.log('⚠️ Firebase v9+ functions not available, using localStorage');
     console.log('🔍 Firestore type:', typeof window.firestore);
-    console.log('🔍 Collection type:', typeof window.firestore?.collection);
+    console.log('🔍 getDoc type:', typeof window.getDoc);
     // Fallback к localStorage если Firebase недоступен
     loadFromLocalStorage();
   }
@@ -3146,11 +3137,17 @@ function loadFromLocalStorage() {
 
 // Сохранение данных онлайн-игры в Firebase
 function saveOnlineGameData() {
-  // Проверяем доступность Firebase
-  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function') {
-    const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
+  console.log('💾 Saving online game data...');
+  console.log('🔍 Available Firebase functions:');
+  console.log('  setDoc:', typeof window.setDoc);
+  console.log('  doc:', typeof window.firestore?.doc);
+  
+  // Проверяем доступность Firebase с правильным синтаксисом v9+
+  if (typeof window.firestore !== 'undefined' && typeof window.setDoc === 'function') {
+    console.log('✅ Using Firebase v9+ syntax for saving game data');
+    const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
     
-    onlineGameRef.set(onlineGame).then(() => {
+    window.setDoc(gameDocRef, onlineGame).then(() => {
       console.log('💾 Saved global online game data to Firebase');
     }).catch((error) => {
       console.error('❌ Error saving global online game data to Firebase:', error);
@@ -3158,7 +3155,9 @@ function saveOnlineGameData() {
       saveToLocalStorage();
     });
   } else {
-    console.log('⚠️ Firestore not available, using localStorage');
+    console.log('⚠️ Firebase v9+ functions not available, using localStorage');
+    console.log('🔍 Firestore type:', typeof window.firestore);
+    console.log('🔍 setDoc type:', typeof window.setDoc);
     // Fallback к localStorage если Firebase недоступен
     saveToLocalStorage();
   }
@@ -3178,21 +3177,23 @@ function saveToLocalStorage() {
 function updateUserBalance() {
   console.log('💰 Updating user balance...');
   console.log('🔍 Current user:', window.currentUser?.uid);
-  console.log('🔍 Firestore available:', typeof window.firestore);
-  console.log('🔍 Collection available:', typeof window.firestore?.collection);
+  console.log('🔍 Available Firebase functions:');
+  console.log('  getDoc:', typeof window.getDoc);
+  console.log('  setDoc:', typeof window.setDoc);
+  console.log('  doc:', typeof window.firestore?.doc);
   
   const balanceEl = document.getElementById('onlineUserBalance');
   if (!balanceEl) return;
   
-  // Получаем баланс пользователя из Firebase
-  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function' && window.currentUser) {
-    console.log('✅ Using Firebase for user balance');
-    const userRef = window.firestore.collection('onlineWheelUsers').doc(window.currentUser.uid);
+  // Получаем баланс пользователя из Firebase с правильным синтаксисом v9+
+  if (typeof window.firestore !== 'undefined' && typeof window.getDoc === 'function' && window.currentUser) {
+    console.log('✅ Using Firebase v9+ syntax for user balance');
+    const userDocRef = window.doc(window.firestore, 'onlineWheelUsers', window.currentUser.uid);
     
-    userRef.get().then((doc) => {
+    window.getDoc(userDocRef).then((doc) => {
       let balance = 0;
       
-      if (doc.exists) {
+      if (doc.exists()) {
         const userData = doc.data();
         balance = userData.balance || userData.rgt || 0;
         console.log('💰 User balance from Firebase:', balance);
@@ -3201,7 +3202,7 @@ function updateUserBalance() {
         balance = 0; // Не используем тестовый баланс
         
         // Создаем документ пользователя
-        userRef.set({
+        window.setDoc(userDocRef, {
           displayName: window.currentUser.displayName || 'Anonymous',
           balance: 0,
           createdAt: new Date().toISOString()
@@ -3221,9 +3222,9 @@ function updateUserBalance() {
       loadBalanceFromOtherSources();
     });
   } else {
-    console.log('⚠️ Firebase or user not available, using fallback');
+    console.log('⚠️ Firebase v9+ functions or user not available, using fallback');
     console.log('🔍 Firestore type:', typeof window.firestore);
-    console.log('🔍 Collection type:', typeof window.firestore?.collection);
+    console.log('🔍 getDoc type:', typeof window.getDoc);
     console.log('🔍 Current user:', window.currentUser?.uid);
     // Fallback к другим источникам
     loadBalanceFromOtherSources();
