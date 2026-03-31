@@ -3068,6 +3068,8 @@ function loadOnlineGameData() {
   // Проверяем доступность Firebase с правильным синтаксисом v9+
   if (typeof window.firestore !== 'undefined' && typeof window.getDoc === 'function') {
     console.log('✅ Using Firebase v9+ syntax for online game data');
+    
+    // Используем правильный синтаксис для создания document reference
     const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
     
     window.getDoc(gameDocRef).then((doc) => {
@@ -3145,6 +3147,8 @@ function saveOnlineGameData() {
   // Проверяем доступность Firebase с правильным синтаксисом v9+
   if (typeof window.firestore !== 'undefined' && typeof window.setDoc === 'function') {
     console.log('✅ Using Firebase v9+ syntax for saving game data');
+    
+    // Используем правильный синтаксис для создания document reference
     const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
     
     window.setDoc(gameDocRef, onlineGame).then(() => {
@@ -3188,7 +3192,9 @@ function updateUserBalance() {
   // Получаем баланс пользователя из Firebase с правильным синтаксисом v9+
   if (typeof window.firestore !== 'undefined' && typeof window.getDoc === 'function' && window.currentUser) {
     console.log('✅ Using Firebase v9+ syntax for user balance');
-    const userDocRef = window.doc(window.firestore, 'onlineWheelUsers', window.currentUser.uid);
+    
+    // Используем существующую коллекцию 'users' вместо 'onlineWheelUsers'
+    const userDocRef = window.doc(window.firestore, 'users', window.currentUser.uid);
     
     window.getDoc(userDocRef).then((doc) => {
       let balance = 0;
