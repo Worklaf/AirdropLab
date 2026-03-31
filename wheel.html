@@ -2926,7 +2926,7 @@ function updateModeButtons(activeMode) {
 function initOnlineGame() {
   console.log('🎮 Initializing online game...');
   
-  // Загружаем данные из localStorage если есть
+  // Загружаем данные из Firebase
   loadOnlineGameData();
   
   // Обновляем баланс пользователя
@@ -2940,27 +2940,12 @@ function initOnlineGame() {
   
   // Обновление UI
   updateOnlineUI();
-  
-  // Симуляция данных для демонстрации
-  setTimeout(() => {
-    // НЕ добавляем демо-бота - ждем настоящих пользователей
-    console.log('🎮 Waiting for real players to join...');
-    
-    // Устанавливаем начальные значения
-    if (onlineGame.gameCount === 0) {
-      onlineGame.gameCount = 1;
-      onlineGame.timeLeft = 0;
-      saveOnlineGameData();
-    }
-    
-    updateOnlineUI();
-  }, 1000);
 }
 
 // Установка Firebase listener для реального времени
 function setupFirebaseListener() {
   if (typeof window.firestore !== 'undefined') {
-    const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('currentGame');
+    const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
     
     // Real-time listener
     onlineGameRef.onSnapshot((doc) => {
@@ -3020,6 +3005,9 @@ function startBettingTimer(initialTime = 60) {
       timeLeftEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
     
+    // Сохраняем обновленное время в Firebase
+    saveOnlineGameData();
+    
     if (onlineGame.timeLeft <= 0) {
       clearInterval(bettingTimer);
       bettingTimer = null;
@@ -3031,27 +3019,50 @@ function startBettingTimer(initialTime = 60) {
 // Загрузка данных онлайн-игры из Firebase
 function loadOnlineGameData() {
   // Проверяем доступность Firebase
-  if (typeof window.firestore !== 'undefined' && window.currentUser) {
-    const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('currentGame');
+  if (typeof window.firestore !== 'undefined') {
+    const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
     
     onlineGameRef.get().then((doc) => {
       if (doc.exists) {
         const data = doc.data();
         onlineGame = { ...onlineGame, ...data };
-        console.log('📦 Loaded online game data from Firebase:', data);
+        console.log('📦 Loaded global online game data:', data);
         updateOnlineUI();
+        
+        // Если игра активна и идет таймер, запускаем локальный таймер
+        if (data.bettingOpen && data.timeLeft > 0) {
+          startBettingTimer(data.timeLeft);
+        }
       } else {
-        console.log('📦 No online game data in Firebase, using defaults');
+        console.log('📦 No global game exists, creating new one');
+        // Создаем новую глобальную игру
+        createNewGlobalGame();
       }
     }).catch((error) => {
-      console.error('❌ Error loading online game data from Firebase:', error);
-      // Fallback to localStorage
+      console.error('❌ Error loading global online game data:', error);
+      // Fallback к localStorage
       loadFromLocalStorage();
     });
   } else {
-    // Fallback to localStorage если Firebase недоступен
+    // Fallback к localStorage если Firebase недоступен
     loadFromLocalStorage();
   }
+}
+
+// Создание новой глобальной игры
+function createNewGlobalGame() {
+  onlineGame = {
+    participants: [],
+    prizePool: 0,
+    timeLeft: 0,
+    bettingOpen: false,
+    gameCount: 1,
+    createdBy: window.currentUser?.uid || 'anonymous',
+    createdAt: new Date().toISOString()
+  };
+  
+  saveOnlineGameData();
+  updateOnlineUI();
 }
 
 // Загрузка из localStorage как fallback
@@ -3071,11 +3082,11 @@ function loadFromLocalStorage() {
 // Сохранение данных онлайн-игры в Firebase
 function saveOnlineGameData() {
   // Проверяем доступность Firebase
-  if (typeof window.firestore !== 'undefined' && window.currentUser) {
-    const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('currentGame');
+  if (typeof window.firestore !== 'undefined') {
+    const onlineGameRef = window.firestore.collection('onlineWheelGames').doc('globalGame');
     
     onlineGameRef.set(onlineGame).then(() => {
-      console.log('💾 Saved online game data to Firebase');
+      console.log('💾 Saved global online game data to Firebase');
     }).catch((error) => {
       console.error('❌ Error saving online game data to Firebase:', error);
       // Fallback to localStorage
@@ -3785,11 +3796,17 @@ function showOnlineWinner(winner) {
 // Сброс онлайн-игры для нового раунда
 function resetOnlineGame() {
   console.log('🔄 Resetting online game for new round...');
-  onlineGame.participants = [];
-  onlineGame.prizePool = 0;
-  onlineGame.timeLeft = 0;
-  onlineGame.bettingOpen = false;
-  onlineGame.gameCount++;
+  
+  // Создаем новую глобальную игру
+  onlineGame = {
+    participants: [],
+    prizePool: 0,
+    timeLeft: 0,
+    bettingOpen: false,
+    gameCount: (onlineGame.gameCount || 0) + 1,
+    createdBy: window.currentUser?.uid || 'anonymous',
+    createdAt: new Date().toISOString()
+  };
   
   updateOnlineUI();
   updateGameStatus('Waiting for players...');
