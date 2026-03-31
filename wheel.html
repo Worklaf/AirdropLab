@@ -1,385 +1,4675 @@
-rules_version = '2';
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wheel of Fortune — RGT Edition | AirdropLab</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="styles.css">
+  <script src="languages.js"></script>
+  <script src="header.js"></script>
+  <script src="config/firebase-config.js"></script>
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
+    // Делаем доступным глобально
+    window.initializeApp = initializeApp;
+    window.getAuth = getAuth;
+    window.onAuthStateChanged = onAuthStateChanged;
+    window.signOut = signOut;
+    window.signInWithPopup = signInWithPopup;
+    window.GoogleAuthProvider = GoogleAuthProvider;
+    window.TwitterAuthProvider = TwitterAuthProvider;
+    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+    window.getFirestore = getFirestore;
+    window.doc = doc;
+    window.setDoc = setDoc;
+    window.getDoc = getDoc;
+    window.updateDoc = updateDoc;
+    window.serverTimestamp = serverTimestamp;
+    window.increment = increment;
+    
+    console.log('🔥 Firebase SDK loaded as modules');
+  </script>
+  
+  <!-- CENTRALIZED AUTHENTICATION SYSTEM -->
+  <script type="module" src="auth.js"></script>
+  <script type="module" src="auth-modal.js"></script>
+  
+  <style>
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active,
+    .modal[style*="flex"] {
+      display: flex !important;
+    }
+    
+    .modal-content {
+      background: #1e2538;
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-sm {
+      max-width: 400px;
+      width: 90%;
+    }
+    
+    .modal-lg {
+      max-width: 600px;
+      width: 90%;
+    }
+    
+    .modal-xl {
+      max-width: 800px;
+      width: 90%;
+    }
+    
+    .modal-large {
+      max-width: 900px;
+      width: 90%;
+    }
+    
+    .custom-modal {
+      max-width: 500px;
+      width: 90%;
+    }
+    
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(148,163,184,0.1);
+    }
+    
+    .modal-body {
+      padding: 1.5rem;
+    }
+    
+    .modal-footer {
+      padding: 1.5rem;
+      border-top: 1px solid rgba(148,163,184,0.1);
+    }
+    
+    .space-y-3 > * + * {
+      margin-top: 0.75rem;
+    }
+    
+    .space-y-4 > * + * {
+      margin-top: 1rem;
+    }
+  </style>
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-secondary: #151b2b;
+      --bg-card: #1e2538;
+      --accent: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; background:var(--bg-primary); color:var(--text-primary); font-family:'Inter',-apple-system,sans-serif; overflow-x:hidden; }
+    main { max-width:1400px; margin:0 auto; padding:28px 16px 80px; }
 
-service cloud.firestore {
-  match /databases/{database}/documents {
+    /* ── Wheel ── */
+    .wheel-wrap { position:relative; width:100%; max-width:400px; margin:0 auto; }
+    #wheelCanvas { display:block; width:100%; height:auto; filter:drop-shadow(0 0 28px rgba(139,92,246,.55)); border-radius:50%; }
+    .wheel-pointer {
+      position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+      width:0; height:0;
+      border-left:14px solid transparent; border-right:14px solid transparent;
+      border-top:26px solid #8b5cf6;
+      filter:drop-shadow(0 0 8px #8b5cf6);
+      z-index:10;
+    }
+    .spin-btn {
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      width:100%; margin-top:20px; padding:14px 24px;
+      background:linear-gradient(135deg,#8b5cf6,#7c3aed);
+      border:2px solid rgba(139,92,246,.5); border-radius:14px;
+      color:white; font-weight:800; font-size:15px; cursor:pointer;
+      transition:all .25s; letter-spacing:.02em;
+    }
+    .spin-btn:hover:not(:disabled) { background:linear-gradient(135deg,#7c3aed,#6d28d9); box-shadow:0 0 24px rgba(139,92,246,.6); }
+    .spin-btn:disabled { opacity:.45; cursor:not-allowed; }
 
-    // ============================
-    // USERS
-    // ============================
-    match /users/{userId} {
-      // читать могут все (для публичных профилей)
-      allow read: if true;
- 
-      // писать может только владелец или админ
-      allow write: if request.auth != null && (
-        request.auth.uid == userId ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-      );
+    /* ── Stat cards ── */
+    .stat-card {
+      background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.22);
+      border-radius:12px; padding:14px 16px; text-align:center;
+    }
+    .stat-label { font-size:11px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.06em; margin-bottom:5px; }
+    .stat-val { font-size:22px; font-weight:800; color:#a78bfa; }
+
+    /* ── Spins dots ── */
+    .spin-dot {
+      width:11px; height:11px; border-radius:50%;
+      background:rgba(139,92,246,.25); border:1px solid rgba(139,92,246,.4);
+      transition:all .3s;
+    }
+    .spin-dot.on { background:#8b5cf6; box-shadow:0 0 10px rgba(139,92,246,.9); }
+
+    /* ── Tabs ── */
+    .tab-nav { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+    .tab-btn {
+      padding:8px 18px; border-radius:9px; font-size:12px; font-weight:600; cursor:pointer;
+      border:1px solid rgba(139,92,246,.22);
+      background:rgba(139,92,246,.07); color:var(--text-secondary);
+      transition:all .2s; white-space:nowrap;
+    }
+    .tab-btn:hover { color:#a78bfa; border-color:rgba(139,92,246,.5); }
+    .tab-btn.active { background:rgba(139,92,246,.22); color:#a78bfa; border-color:rgba(139,92,246,.55); }
+
+    /* ── Jackpot banner ── */
+    .jackpot-banner {
+      position:relative; overflow:hidden;
+      background:linear-gradient(135deg,rgba(236,72,153,.18),rgba(139,92,246,.18));
+      border:2px solid rgba(236,72,153,.45); border-radius:18px;
+      padding:24px 28px; text-align:center; margin-bottom:28px;
+    }
+    .jackpot-glow {
+      position:absolute; inset:0;
+      background:radial-gradient(ellipse at 50% 0%,rgba(236,72,153,.15),transparent 60%);
+      pointer-events:none;
+    }
+    .jackpot-title { font-size:11px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.1em; }
+    .jackpot-amount {
+      font-size:42px; font-weight:900; margin:6px 0;
+      background:linear-gradient(135deg,#ec4899,#8b5cf6);
+      background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .jackpot-timer { font-size:12px; color:var(--text-secondary); }
+
+    /* ── Leaderboard ── */
+    .lb-table { width:100%; border-collapse:collapse; }
+    .lb-table thead th {
+      background:rgba(139,92,246,.15); padding:10px 14px; text-align:left;
+      font-size:11px; color:#8b5cf6; font-weight:700; text-transform:uppercase;
+      border-bottom:1px solid rgba(139,92,246,.2);
+    }
+    .lb-table tbody td { padding:11px 14px; border-bottom:1px solid rgba(139,92,246,.09); font-size:13px; }
+    .lb-table tbody tr:hover td { background:rgba(139,92,246,.07); }
+    .rank-pill {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:28px; height:28px; border-radius:50%; font-weight:700; font-size:11px;
+      background:rgba(139,92,246,.2); color:#a78bfa;
+    }
+    .rank-1 { background:rgba(251,191,36,.2); color:#fbbf24; }
+    .rank-2 { background:rgba(203,213,225,.15); color:#cbd5e1; }
+    .rank-3 { background:rgba(249,115,22,.18); color:#fb923c; }
+
+    /* ── Result modal ── */
+    .result-overlay {
+      display:none; position:fixed; inset:0; z-index:8000;
+      background:rgba(0,0,0,.88); backdrop-filter:blur(10px);
+      align-items:center; justify-content:center; padding:20px;
+    }
+    .result-overlay.show { display:flex; }
+    .result-card {
+      position:relative; width:100%; max-width:440px;
+      border-radius:24px; padding:36px 28px; text-align:center;
+      animation:popIn .45s cubic-bezier(.34,1.56,.64,1);
+      overflow:hidden;
+    }
+    @keyframes popIn { from{transform:scale(.75);opacity:0;} to{transform:scale(1);opacity:1;} }
+    .res-win {
+      background:linear-gradient(145deg,rgba(16,185,129,.14),rgba(139,92,246,.14));
+      border:2px solid rgba(16,185,129,.5);
+    }
+    .res-lose {
+      background:linear-gradient(145deg,rgba(239,68,68,.12),rgba(139,92,246,.12));
+      border:2px solid rgba(239,68,68,.4);
+    }
+    .res-jackpot {
+      background:linear-gradient(145deg,rgba(236,72,153,.22),rgba(139,92,246,.22));
+      border:2px solid rgba(236,72,153,.7);
+    }
+    .res-amount {
+      font-size:52px; font-weight:900; margin:12px 0;
+      background:linear-gradient(135deg,#8b5cf6,#ec4899);
+      background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .res-emoji { font-size:52px; line-height:1; margin-bottom:8px; }
+    .res-label { font-size:13px; color:var(--text-secondary); margin-bottom:18px; }
+    .res-close-btn {
+      padding:10px 28px; background:rgba(139,92,246,.2);
+      border:1px solid rgba(139,92,246,.4); border-radius:10px;
+      color:#a78bfa; font-weight:700; font-size:13px; cursor:pointer;
+      transition:all .2s;
+    }
+    .res-close-btn:hover { background:rgba(139,92,246,.35); }
+
+    /* ── Jackpot Winner Modal ── */
+    .jackpot-winner-overlay {
+      display:none; position:fixed; inset:0; z-index:9000;
+      background:rgba(0,0,0,.92); backdrop-filter:blur(14px);
+      align-items:center; justify-content:center; padding:20px;
+    }
+    .jackpot-winner-overlay.show { display:flex; animation:fadeIn .5s; }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+    .jackpot-winner-card {
+      width:100%; max-width:500px; border-radius:28px; padding:40px 32px; text-align:center;
+      background:linear-gradient(145deg,rgba(236,72,153,.2),rgba(139,92,246,.2));
+      border:2px solid rgba(236,72,153,.7);
+      animation:jackpotPopIn .6s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes jackpotPopIn { from{transform:scale(.6) rotate(-5deg);opacity:0;} to{transform:scale(1) rotate(0deg);opacity:1;} }
+
+    /* ── History items ── */
+    .history-item {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      background:rgba(139,92,246,.06); border:1px solid rgba(139,92,246,.15);
+      border-radius:10px; padding:12px 16px;
+    }
+
+    /* ── Admin jackpot btn ── */
+    .jackpot-admin-btn {
+      display:none; margin-top:12px;
+      padding:10px 24px;
+      background:linear-gradient(135deg,rgba(236,72,153,.25),rgba(139,92,246,.25));
+      border:2px solid rgba(236,72,153,.6); border-radius:12px;
+      color:white; font-weight:700; font-size:13px; cursor:pointer;
+      transition:all .25s;
+    }
+    .jackpot-admin-btn:hover { box-shadow:0 0 20px rgba(236,72,153,.5); }
+
+    /* ── Responsive ── */
+    @media(max-width:768px) {
+      .main-grid { grid-template-columns:1fr !important; }
+      .jackpot-amount { font-size:30px; }
+    }
+
+    /* ── Confetti ── */
+    .confetti-piece {
+      position:fixed; width:10px; height:10px; border-radius:2px;
+      animation:confettiFall 3s ease-in forwards;
+      pointer-events:none; z-index:9999;
+    }
+    @keyframes confettiFall {
+      0% { transform:translateY(-20px) rotate(0deg); opacity:1; }
+      100% { transform:translateY(110vh) rotate(720deg); opacity:0; }
+    }
+  </style>
+</head>
+<body class="antialiased">
+
+<div id="site-header"></div>
+
+<main>
+
+  <!-- Page header -->
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
+    <div style="width:52px;height:52px;flex-shrink:0;border-radius:14px;background:linear-gradient(135deg,rgba(139,92,246,.22),rgba(236,72,153,.22));border:1px solid rgba(139,92,246,.35);display:flex;align-items:center;justify-content:center;">
+      <i class="fas fa-dharmachakra" style="color:#a78bfa;font-size:22px;"></i>
+    </div>
+    <div>
+      <h1 style="font-size:26px;font-weight:900;color:white;margin:0;line-height:1.2;">
+        Wheel of Fortune &nbsp;<span style="color:#a78bfa;">RGT Edition</span>
+      </h1>
+      <p style="font-size:13px;color:var(--text-secondary);margin:5px 0 0;" data-translate="wof_subtitle">Spin the wheel and win RGT rewards</p>
+    </div>
+    
+    <!-- Mode Switch Buttons -->
+    <div style="display:flex;gap:8px;">
+      <button id="soloModeBtn" onclick="typeof switchToSolo === 'function' && switchToSolo()" style="padding:8px 16px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:8px;color:white;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
+        <i class="fas fa-user" style="margin-right:6px;"></i>Solo
+      </button>
+      <button id="onlineModeBtn" onclick="typeof switchToOnline === 'function' && switchToOnline()" style="padding:8px 16px;background:transparent;border:none;border-radius:8px;color:var(--text-secondary);font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
+        <i class="fas fa-users" style="margin-right:6px;"></i>Online
+      </button>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="main-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:32px;">
+
+    <!-- LEFT: WHEEL -->
+    <div>
+      <div style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);border-radius:18px;padding:24px;">
+        <div class="wheel-wrap">
+          <div class="wheel-pointer"></div>
+          <canvas id="wheelCanvas"></canvas>
+        </div>
+
+        <!-- Spins dots -->
+        <div style="display:flex;gap:8px;justify-content:center;margin:16px 0;" id="spinDots"></div>
+
+        <!-- Spin info row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <div class="stat-card">
+            <div class="stat-label" data-translate="wof_free_today">Free today</div>
+            <div class="stat-val"><span id="freeLeft">3</span>/<span id="freeTot">3</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label" data-translate="wof_paid_cost">Extra spin</div>
+            <div class="stat-val" id="spinCostLabel">5 RGT</div>
+          </div>
+        </div>
+
+        <button id="spinBtn" class="spin-btn" onclick="doSpin()">
+          <i class="fas fa-dharmachakra"></i>
+          <span id="spinBtnLabel" data-translate="wof_spin_free">SPIN (FREE)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT: rules + stats -->
+    <div style="display:flex;flex-direction:column;gap:18px;">
+
+      <!-- Rules -->
+      <div style="background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.2);border-radius:16px;padding:20px;">
+        <div style="font-size:14px;font-weight:700;color:white;margin-bottom:10px;">
+          <i class="fas fa-scroll" style="color:#22d3ee;margin-right:8px;"></i><span data-translate="wof_rules_title">Rules</span>
+        </div>
+        <ul style="font-size:12px;color:var(--text-secondary);line-height:1.9;margin:0;padding-left:18px;">
+          <li data-translate="wof_rule1">3 free spins per day</li>
+          <li data-translate="wof_rule2">Extra spins cost 5 RGT each</li>
+          <li data-translate="wof_rule3">Rewards: 1, 2, 3, 4, 10, 20, 50, 100 RGT</li>
+          <li data-translate="wof_rule4">Higher reward = lower probability</li>
+          <li data-translate="wof_rule5">You may win less than you paid</li>
+        </ul>
+      </div>
+
+      <!-- Stats -->
+      <div style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);border-radius:16px;padding:20px;">
+        <div style="font-size:14px;font-weight:700;color:white;margin-bottom:14px;">
+          <i class="fas fa-chart-bar" style="color:#a78bfa;margin-right:8px;"></i><span data-translate="wof_your_stats">Your Stats</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div class="stat-card">
+            <div class="stat-label" data-translate="wof_total_spins">Spins</div>
+            <div class="stat-val" id="stTotalSpins">0</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(52,211,153,.3);">
+            <div class="stat-label" data-translate="wof_total_won">Won</div>
+            <div class="stat-val" id="stTotalWon" style="color:#34d399;">0</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(248,113,113,.3);">
+            <div class="stat-label" data-translate="wof_total_lost">Lost</div>
+            <div class="stat-val" id="stTotalLost" style="color:#f87171;">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly chance -->
+      <div style="background:rgba(236,72,153,.07);border:1px solid rgba(236,72,153,.2);border-radius:16px;padding:20px;">
+        <div style="font-size:14px;font-weight:700;color:white;margin-bottom:8px;">
+          <i class="fas fa-percentage" style="color:#ec4899;margin-right:8px;"></i><span data-translate="wof_jackpot_chance">Your Jackpot Chance</span>
+        </div>
+        <div style="font-size:32px;font-weight:900;color:#ec4899;" id="stJackpotChance">0%</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;" data-translate="wof_chance_hint">Based on your losses vs total losses this month</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONLINE MODE CONTAINER -->
+  <div id="onlineModeContainer" style="display:none;background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);border-radius:18px;padding:24px;margin-bottom:32px;">
+    <div style="text-align:center;margin-bottom:24px;">
+      <h2 style="font-size:24px;font-weight:900;color:white;margin:0;display:flex;align-items:center;justify-content:center;gap:12px;">
+        <i class="fas fa-users" style="color:#a78bfa;"></i>
+        <span>Online Wheel of Fortune</span>
+      </h2>
+      <p style="color:var(--text-secondary);margin:8px 0 0;font-size:14px;">Play with other players in real-time!</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;">
+      <!-- LEFT: ONLINE WHEEL -->
+      <div>
+        <div class="wheel-wrap">
+          <div class="wheel-pointer"></div>
+          <canvas id="onlineWheelCanvas"></canvas>
+        </div>
+
+        <!-- Online Game Info -->
+        <div style="text-align:center;margin-top:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+              <div style="font-size:12px;color:var(--text-secondary);">Prize Pool</div>
+              <div style="font-size:20px;font-weight:900;color:#f59e0b;" id="onlinePrizePool">0 RGT</div>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-secondary);">Time Left</div>
+              <div style="font-size:20px;font-weight:900;color:#22d3ee;" id="onlineTimeLeft">--:--</div>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-secondary);">Game</div>
+              <div style="font-size:20px;font-weight:900;color:#8b5cf6;" id="onlineRound">0</div>
+            </div>
+          </div>
+
+          <!-- Betting Controls -->
+          <div class="betting-controls" id="onlineBettingControls">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <span style="font-size:14px;font-weight:600;color:white;">Your Bet:</span>
+              <span style="font-size:14px;color:#a78bfa;" id="onlineUserBalance">Balance: 0 RGT</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <input type="number" id="onlineBetAmount" placeholder="Enter amount" min="1" step="1" style="flex:1;padding:10px;background:rgba(15,23,42,0.8);border:1px solid rgba(139,92,246,.3);border-radius:8px;color:white;font-size:14px;">
+              <button onclick="addToOnlineBet(10)" style="padding:10px 16px;background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);border-radius:8px;color:#a78bfa;font-weight:600;cursor:pointer;">+10</button>
+              <button onclick="addToOnlineBet(50)" style="padding:10px 16px;background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);border-radius:8px;color:#a78bfa;font-weight:600;cursor:pointer;">+50</button>
+              <button onclick="addToOnlineBet(100)" style="padding:10px 16px;background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);border-radius:8px;color:#a78bfa;font-weight:600;cursor:pointer;">+100</button>
+              <button onclick="setMaxOnlineBet()" style="padding:10px 16px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">MAX</button>
+            </div>
+            <button onclick="placeOnlineBet()" id="placeOnlineBetBtn" style="width:100%;padding:12px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:10px;color:white;font-weight:700;font-size:15px;cursor:pointer;transition:all .2s;">
+              <i class="fas fa-coins" style="margin-right:8px;"></i>
+              PLACE BET
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: PARTICIPANTS & STATS -->
+      <div style="display:flex;flex-direction:column;gap:24px;">
+        <!-- Participants -->
+        <div style="background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.15);border-radius:16px;padding:20px;">
+          <h3 style="font-size:16px;font-weight:800;color:white;margin:0 0 16px;display:flex;align-items:center;gap:8px;">
+            <i class="fas fa-users" style="color:#a78bfa;"></i>
+            Participants (<span id="onlineParticipantCount">0</span>)
+          </h3>
+          <div id="onlineParticipantsList" style="max-height:200px;overflow-y:auto;">
+            <div style="text-align:center;padding:20px;color:var(--text-secondary);">
+              <i class="fas fa-user-friends" style="font-size:24px;opacity:0.3;margin-bottom:8px;"></i>
+              <div>No participants yet</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Online Stats -->
+        <div style="background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.15);border-radius:16px;padding:20px;">
+          <h3 style="font-size:16px;font-weight:800;color:white;margin:0 0 16px;display:flex;align-items:center;gap:8px;">
+            <i class="fas fa-chart-line" style="color:#a78bfa;"></i>
+            Online Stats
+          </h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:10px;padding:12px;">
+              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Total Bets</div>
+              <div style="font-size:18px;font-weight:900;color:#a78bfa;" id="onlineTotalBets">0</div>
+            </div>
+            <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:10px;padding:12px;">
+              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Active Players</div>
+              <div style="font-size:18px;font-weight:900;color:#22d3ee;" id="onlineActivePlayers">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Online Leaderboard -->
+        <div style="background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.15);border-radius:16px;padding:20px;">
+          <h3 style="font-size:16px;font-weight:800;color:white;margin:0 0 16px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="display:flex;align-items:center;gap:8px;">
+              <i class="fas fa-trophy" style="color:#22d3ee;"></i>
+              Online Leaderboard
+            </span>
+            <select id="leaderboardSort" onchange="updateOnlineLeaderboard()" style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);border-radius:6px;color:#22d3ee;font-size:12px;padding:4px 8px;">
+              <option value="totalWon">Total Won</option>
+              <option value="games">Games</option>
+              <option value="wins">Wins</option>
+            </select>
+          </h3>
+          <div id="onlineLeaderboardList" style="max-height:200px;overflow-y:auto;">
+            <div style="text-align:center;padding:20px;color:var(--text-secondary);">
+              <i class="fas fa-trophy" style="font-size:24px;opacity:0.3;margin-bottom:8px;"></i>
+              <div>No games played yet</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Status -->
+        <div style="background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.15);border-radius:16px;padding:20px;">
+          <h3 style="font-size:16px;font-weight:800;color:white;margin:0 0 16px;display:flex;align-items:center;gap:8px;">
+            <i class="fas fa-gamepad" style="color:#22d3ee;"></i>
+            Game Status
+          </h3>
+          <div id="onlineGameStatus" style="text-align:center;">
+            <div style="font-size:14px;color:#22d3ee;font-weight:600;margin-bottom:8px;">Waiting for players...</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Betting will start soon!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JACKPOT BANNER -->
+  <div class="jackpot-banner" id="jackpotBanner">
+    <div class="jackpot-glow"></div>
+    <div class="jackpot-title" data-translate="wof_monthly_jackpot">🎁 MONTHLY JACKPOT</div>
+    <div class="jackpot-amount" id="jackpotAmt">0 RGT</div>
+    <div class="jackpot-timer" id="jackpotTimer"></div>
+    <button class="jackpot-admin-btn" id="jackpotAdminBtn" onclick="openJackpotSpin()">
+      <i class="fas fa-dice" style="margin-right:8px;"></i><span data-translate="wof_spin_jackpot">Spin Jackpot (Admin)</span>
+    </button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('leaderboard',this)">🏆 <span data-translate="wof_tab_top">Top Wins</span></button>
+    <button class="tab-btn" onclick="switchTab('history',this)">📜 <span data-translate="wof_tab_history">History</span></button>
+    <button class="tab-btn" onclick="switchTab('jackpot-info',this)">💎 <span data-translate="wof_tab_jackpot">Jackpot Info</span></button>
+  </div>
+
+  <!-- LEADERBOARD TAB -->
+  <div id="tab-leaderboard">
+    <div style="background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.15);border-radius:14px;overflow:hidden;">
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th style="width:50px;">#</th>
+            <th data-translate="wof_lb_player">Player</th>
+            <th style="text-align:right;" data-translate="wof_lb_maxwin">Best Win</th>
+            <th style="text-align:right;" data-translate="wof_lb_totalwon">Total Won</th>
+          </tr>
+        </thead>
+        <tbody id="lbBody">
+          <tr><td colspan="4" style="text-align:center;padding:28px;color:var(--text-secondary);"><i class="fas fa-circle-notch fa-spin"></i> <span data-translate="wof_loading">Loading...</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div id="tab-history" style="display:none;">
+    <div style="display:flex;flex-direction:column;gap:10px;" id="historyList">
+      <div style="text-align:center;padding:40px;color:var(--text-secondary);">
+        <i class="fas fa-history" style="font-size:36px;opacity:.3;display:block;margin-bottom:12px;"></i>
+        <span data-translate="wof_history_empty">No spins yet</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- JACKPOT INFO TAB -->
+  <div id="tab-jackpot-info" style="display:none;">
+    <div style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:white;margin-bottom:8px;" data-translate="wof_how_jackpot">How does Jackpot work?</div>
+        <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin:0;" data-translate="wof_jackpot_desc">At the end of each month the admin draws a jackpot from all RGT that players lost on the wheel. Only net losses are counted.</p>
+      </div>
+      <div style="background:rgba(139,92,246,.12);border-left:3px solid #8b5cf6;border-radius:8px;padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:6px;" data-translate="wof_loss_calc">Loss calculation</div>
+        <p style="font-size:12px;color:var(--text-secondary);margin:0;line-height:1.7;" data-translate="wof_loss_calc_desc">If you spent 5 RGT and won 3 RGT → loss = 2 RGT. If you won more than you spent → loss = 0.</p>
+      </div>
+      <div style="background:rgba(139,92,246,.12);border-left:3px solid #8b5cf6;border-radius:8px;padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:6px;" data-translate="wof_chance_calc">Your chance formula</div>
+        <p style="font-size:12px;color:var(--text-secondary);margin:0;line-height:1.7;" data-translate="wof_chance_calc_desc">Your chance = Your loss / Total loss of all players. E.g. if you lost 5 RGT and total is 7 RGT → your chance = 5/7 ≈ 71%.</p>
+      </div>
+      <div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:14px;">
+        <span style="color:#34d399;font-weight:700;">💡 </span>
+        <span style="font-size:12px;color:var(--text-secondary);" data-translate="wof_jackpot_tip">The more you lose on the wheel this month, the higher your jackpot chance!</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- RESULT MODAL -->
+<div id="resultOverlay" class="result-overlay" onclick="if(event.target===this)closeResult()">
+  <div class="result-card" id="resultCard">
+    <div class="res-emoji" id="resEmoji">🎉</div>
+    <div style="font-size:18px;font-weight:800;color:white;" id="resTitle">You Won!</div>
+    <div class="res-amount" id="resAmount">+50 RGT</div>
+    <div class="res-label" id="resLabel">Congratulations!</div>
+    <button class="res-close-btn" onclick="closeResult()" data-translate="close">Close</button>
+  </div>
+</div>
+
+<!-- JACKPOT WINNER MODAL -->
+<div id="jackpotWinnerOverlay" class="jackpot-winner-overlay" onclick="if(event.target===this)closeJackpotWinner()">
+  <div class="jackpot-winner-card">
+    <div style="font-size:60px;margin-bottom:10px;">🏆</div>
+    <div style="font-size:13px;color:#ec4899;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;" data-translate="wof_jackpot_winner">JACKPOT WINNER</div>
+    <img id="jwAvatar" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ec4899;margin:0 auto 12px;display:block;" onerror="this.style.display='none'">
+    <div style="font-size:22px;font-weight:900;color:white;margin-bottom:6px;" id="jwName">—</div>
+    <div style="font-size:38px;font-weight:900;background:linear-gradient(135deg,#ec4899,#8b5cf6);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px;" id="jwAmount">0 RGT</div>
+    <p style="font-size:12px;color:var(--text-secondary);margin:0 0 20px;" data-translate="wof_jackpot_congrats">Congratulations! The monthly jackpot has been awarded.</p>
+    <button onclick="closeJackpotWinner()" style="padding:10px 28px;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:12px;color:white;font-weight:700;font-size:13px;cursor:pointer;" data-translate="close">Close</button>
+  </div>
+</div>
+
+<script src="footer.js"></script>
+<script src="assets/reagents.js"></script>
+
+<script type="module">
+// ═══════════════════════════════════════════════════════════
+// FIREBASE INIT (same pattern as faucet.html)
+// ═══════════════════════════════════════════════════════════
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signOut, signInWithPopup, 
+  GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore, initializeFirestore,
+  collection, doc, getDoc, setDoc, getDocs,
+  updateDoc, addDoc, deleteDoc, query, orderBy, limit, where,
+  serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// Wait for firebase-config.js to set window.firebaseConfig
+async function waitForConfig(maxMs = 3000) {
+  const t0 = Date.now();
+  while (!window.firebaseConfig?.apiKey && Date.now() - t0 < maxMs) {
+    await new Promise(r => setTimeout(r, 80));
+  }
+  return window.firebaseConfig;
+}
+
+const cfg = await waitForConfig();
+if (!cfg?.apiKey) {
+  console.warn('WoF: Firebase config not available, running offline');
+}
+
+let app, auth, db;
+try {
+  // Try to reuse existing Firebase app if available
+  if (window.firebaseApp) {
+    app = window.firebaseApp;
+    auth = getAuth(app);
+    try {
+      db = getFirestore(app);
+    } catch(e) {
+      console.warn('WoF: Firestore init failed, will retry:', e);
+      db = null;
+    }
+  } else {
+    // Otherwise, create the default app (same as main page)
+    app  = initializeApp(cfg);
+    auth = getAuth(app);
+    try {
+      db = initializeFirestore(app, { cacheSizeBytes: 5000000 });
+    } catch(e) {
+      console.warn('WoF: Firestore init failed, will retry:', e);
+      db = null;
+    }
+    // Store globally for other pages to reuse
+    window.firebaseApp = app;
+  }
+  // Export for global use (especially footer.js account modal)
+  window.wofAuth = auth;
+  window.wofDb   = db;
+  // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
+  window.auth = auth;
+  window.db   = db;
+  window.firestore = db; // Добавляем для онлайн-режима
+  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot };
+  window.__authExports = { onAuthStateChanged, signOut };
+  console.log('✅ WoF Firebase initialized');
+  
+  // Immediately check current user state
+  if (auth) {
+    const immediateUser = auth.currentUser;
+    if (immediateUser) {
+      console.log('🔐 User already logged in:', immediateUser.uid);
+      currentUser = immediateUser;
+      window.currentUser = immediateUser;
+      isAdmin = !!(immediateUser && immediateUser.uid === WOF_ADMIN_UID);
+      updateSpinsUI();
+    }
+  }
+} catch(e) {
+  console.warn('WoF Firebase init error:', e);
+}
+
+// ═══════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════
+const WOF_ADMIN_UID  = globalThis.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2';
+const REWARDS        = [100, 50, 20, 10, 4, 3, 2, 1];
+const COLORS         = ['#ec4899','#8b5cf6','#f59e0b','#10b981','#3b82f6','#ef4444','#22d3ee','#a78bfa'];
+const WEIGHTS        = [0.5, 1, 2, 3, 5, 6, 7, 9];
+const DAILY_FREE     = 3;
+const PAID_COST      = 5;
+const SPIN_MS        = 4500;
+const COL_WHEEL      = 'wheel_spins';
+const COL_JACKPOT    = 'wheel_jackpot';
+const COL_USERS      = 'users';
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let currentUser = null;
+let isAdmin     = false;
+let userData    = {};
+let wheelAngle  = 0;   // radians
+let spinning    = false;
+let localHistory = [];
+
+// Загружаем историю из Firestore при загрузке страницы (оптимизированная)
+function loadLocalHistory() {
+  if (!currentUser || !window.db) {
+    console.log('📚 No user or DB, will retry in 500ms');
+    setTimeout(loadLocalHistory, 500);
+    return;
+  }
+
+  // Проверяем доступность Firestore функций
+  if (!window.__firestoreExports) {
+    console.log('📚 Firestore exports not ready, will retry in 500ms');
+    setTimeout(loadLocalHistory, 500);
+    return;
+  }
+
+  try {
+    const { doc, onSnapshot } = window.__firestoreExports;
+    
+    if (!doc || !onSnapshot) {
+      console.log('📚 Firestore functions not available, will retry in 500ms');
+      setTimeout(loadLocalHistory, 500);
+      return;
+    }
+    
+    const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
+    
+    console.log('📚 Setting up Firestore history listener for user:', currentUser.uid);
+    
+    // Используем onSnapshot для real-time обновлений
+    onSnapshot(userHistoryRef, (docSnapshot) => {
+      console.log('📚 Firestore history snapshot received');
       
-      // Дополнительные правила для обновления
-      allow update: if request.auth != null && (
-        // Владелец может обновлять свой профиль
-        request.auth.uid == userId ||
-        // Другие пользователи могут обновлять только определенные поля
-        (request.auth.uid != userId &&
-          request.resource.data.diff(resource.data).changedKeys().hasOnly([
-            'reagents','streak','lastClaimDate','lastClaimAt','invitedCount',
-            'invitedBy','invitedByName','pendingPassive','passiveLog',
-            'referralEarnings','lastPassivePayoutAt','lastPassivePayout'
-          ])) ||
-        // Админ может всё
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-      );
-      
-      // Удалять может только админ
-      allow delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // ============================
-    // NOTIFICATIONS
-    // ============================
-    match /notifications/{notificationId} {
-      allow read: if request.auth != null &&
-        (request.auth.uid == resource.data.userId ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true);
-      allow create: if request.auth != null;
-      allow update: if request.auth != null &&
-        request.auth.uid == resource.data.userId &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
-      allow delete: if request.auth != null &&
-        (request.auth.uid == resource.data.userId ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true);
-    }
-
-     // ============================
-    // BROADCASTS
-     // ============================
-    match /broadcasts/{broadcastId} {
-      allow read: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-      allow create, delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-      allow update: if request.auth != null && (
-        // Админ может обновлять любые поля
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
-        // Обычный пользователь может обновлять только viewCount
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']) &&
-         request.resource.data.viewCount == resource.data.viewCount + 1)
-      );
-    }
-
-    // ============================
-    // FEEDBACKS
-    // ============================
-    match /feedbacks/{feedbackId} {
-      allow read: if request.auth != null &&
-        (request.auth.uid == resource.data.userId ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true);
-      allow create: if request.auth != null;
-      allow update: if request.auth != null &&
-        (request.auth.uid == resource.data.userId ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true);
-      allow delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // ============================
-    // SUPPORT TICKETS
-    // ============================
-    match /supportTickets/{ticketId} {
-      allow read: if request.auth != null &&
-        (request.auth.uid == resource.data.userId ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true);
-      allow create: if request.auth != null;
-      allow update: if request.auth != null &&
-        (request.auth.uid == resource.data.userId ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true);
-      allow delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // ============================
-    // PUBLIC PROJECTS
-    // ============================
-    match /projects/{projectId} {
-      allow read: if true;
-      allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // ============================
-    // NEWSLETTER
-    // ============================
-    match /newsletter/{docId} {
-      allow read: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-      allow create: if true;
-      allow update, delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // ============================
-    // CONFIG (общий)
-    // ============================
-    match /config/{document} {
-      allow read: if true;
-      allow write: if request.auth != null &&
-        request.resource.data.diff(resource.data).changedKeys().hasOnly(['userCount']);
-      allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // ============================
-    // ROBINHOOD PUBLIC DATA
-    // ============================
-    match /robinhood_public_data/{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // ============================
-    // ARC PUBLIC DATA
-    // ============================
-    match /arc_public_data/{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // ============================
-    // ROBIN CONFIG
-    // ============================
-    match /robin_config/{document} {
-      allow read: if true;
-      allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // ============================
-    // ARC CONFIG
-    // ============================
-    match /arc_config/{document} {
-      allow read: if true;
-      allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // ============================
-    // REFERRALS
-    // ============================
-    match /referrals/{refId} {
-      allow read: if request.auth != null &&
-        (request.auth.uid == resource.data.invitedBy ||
-         request.auth.uid == resource.data.userId ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true);
-      allow create: if request.auth != null;
-    }
-
-    // ============================
-    // ✅ TEMPO CONFIG — нові значки NEW
-    // читають всі (навіть без логіну),
-    // пише тільки адмін
-    // ============================
-    match /tempo_config/{document} {
-      allow read: if true;
-      allow write: if request.auth != null && (
-        request.auth.uid == 'SAkz4mdW9reDaIsvqigCNZhEKJR2' ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-      );
-    }
-
-    // ============================
-    // ✅ TEMPO PUBLIC DATA — спільні дані
-    // NFT колекції, порядок, едіти
-    // читають всі, пише тільки адмін
-    // ============================
-    match /tempo_public_data/{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null && (
-        request.auth.uid == 'SAkz4mdW9reDaIsvqigCNZhEKJR2' ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-      );
-    }
-
-    // ============================
-    // FAUCETS (PUBLIC READ)
-    // ============================
-    match /faucets/{faucetId} {
-      // всем можно читать список кранов
-      allow read: if true;
- 
-      // создавать могут:
-      // - админы (любые краны)
-      // - пользователи (только со статусом pending)
-      allow create: if request.auth != null && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
-        (request.resource.data.status == 'pending' && 
-         request.resource.data.submittedBy == request.auth.uid)
-      );
- 
-      // удалять могут:
-      // - админ (любые краны)
-      // - автор (только свои pending предложения)
-      allow delete: if request.auth != null && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
-        (resource.data.status == 'pending' && 
-         resource.data.submittedBy == request.auth.uid)
-      ); 
-      allow update: if request.auth != null && (
-        // админ может менять всё
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-        // НЕ-админ: разрешаем только инкремент популярности clickCount на +1
-        || (
-          request.resource.data.diff(resource.data).changedKeys().hasOnly(['clickCount']) &&
-          request.resource.data.clickCount == resource.data.clickCount + 1
-        )
-        // НЕ-админ: разрешаем обновление рейтинга
-        || (
-          request.resource.data.diff(resource.data).changedKeys().hasOnly(['ratingAvg', 'ratingCount', 'updatedAt'])
-        )
-        // Автор предложения может редактировать только свои pending краны
-        || (
-          resource.data.status == 'pending' &&
-          resource.data.submittedBy == request.auth.uid &&
-          request.resource.data.status == 'pending' // статус остается pending
-        )
-        // Автор может создавать новые предложения на основе удаленных
-        || (
-          resource.data.status in ['deleted', 'rejected'] &&
-          resource.data.submittedBy == request.auth.uid &&
-          request.resource.data.status == 'pending' // новый статус pending
-        )
-      );
- 
-      // оценки (0–10) от юзеров
-      match /ratings/{uid} {
-        allow read: if true;
-        allow write: if request.auth != null && request.auth.uid == uid;
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        console.log('📚 Firestore data found, version:', data.version);
+        
+        // Проверяем версию данных для обратной совместимости
+        if (data.version === 2 && data.spins) {
+          // Оптимизированный формат - конвертируем обратно
+          localHistory = data.spins.map(item => ({
+            reward: item.r,
+            spentRGT: item.s,
+            isFree: item.f === 1,
+            ts: new Date(item.t)
+          }));
+          console.log('📚 Loaded optimized history from Firestore:', localHistory.length, 'records');
+        } else if (data.spins) {
+          // Старый формат для обратной совместимости
+          localHistory = data.spins.map(item => ({
+            ...item,
+            ts: new Date(item.ts)
+          }));
+          console.log('📚 Loaded legacy history from Firestore:', localHistory.length, 'records');
+        } else {
+          localHistory = [];
+          console.log('📚 No spins data found in Firestore');
+        }
+      } else {
+        localHistory = [];
+        console.log('📚 No history document found in Firestore');
       }
-    }
- 
-    // ============================
-    // REWARD TRANSACTIONS
-    // ============================
-    match /reward_transactions/{transactionId} {
-      // читать может только админ или автор транзакции
-      allow read: if request.auth != null && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
-        resource.data.userId == request.auth.uid
-      );
- 
-      // создавать может только админ
-      allow create: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true; 
-      // обновление и удаление - только админ
-      allow update, delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
- 
-    // ============================
-    // USER FAVORITES
-    // ============================
-    match /users/{userId}/faucetFavorites/{docId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
- 
-    match /users/{userId}/linkFavorites/{docId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
+      
+      // Обновляем интерфейс после загрузки
+      if (document.getElementById('historyList')) {
+        console.log('📚 Rendering history with', localHistory.length, 'records');
+        renderHistory();
+      }
+    }, (error) => {
+      console.error('📚 Firestore history listener error:', error);
+      localHistory = [];
+      if (document.getElementById('historyList')) {
+        renderHistory();
+      }
+    });
 
-    match /translations/{documentId} {
-      allow read: if true;
-      allow write: if request.auth != null && (
-        request.auth.uid == 'SAkz4mdW9reDaIsvqigCNZhEKJR2' ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-      );
-    }
-
-    // ============================
-    // WHEEL OF FORTUNE SPINS
-    // ============================
-    match /wheel_spins/{spinId} {
-      // Каждый может читать логи спинов (для лидерборда)
-      allow read: if request.auth != null;
-      // Создавать спины могут все (но в wheel-of-fortune.html проверяется логика)
-      allow create: if request.auth != null;
-      // Читать логи для статистики
-      allow list: if request.auth != null;
-    }
-
-    // ============================
-    // WHEEL OF FORTUNE JACKPOT
-    // ============================
-    match /wheel_jackpot/{month} {
-      // Все могут читать текущий джекпот
-      allow read: if request.auth != null;
-      // Создавать джекпот за новый месяц
-      allow create: if request.auth != null;
-      // Обновлять джекпот (добавлять потери, розыгрыш)
-      allow update: if request.auth != null;
-      // Удалять только админ
-      allow delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-    
-    // ============================
-    // WHEEL HISTORY (подколлекция пользователей)
-    // ============================
-    match /users/{userId}/wheelHistory/{docId} {
-      // Владелец может читать свою историю
-      allow read: if request.auth != null && request.auth.uid == userId;
-      // Владелец может создавать и обновлять свою историю
-      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
-      // Админ может читать все истории
-      allow read: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-      // Админ может управлять всеми историями
-      allow create, update, delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-    
-    // ============================
-    // ONLINE WHEEL GAMES
-    // ============================
-    match /onlineWheelGames/{gameId} {
-      // Все авторизованные могут читать игры
-      allow read: if request.auth != null;
-      // Создавать игры могут все авторизованные
-      allow create: if request.auth != null;
-      // Обновлять могут все авторизованные (для таймера и ставок)
-      allow update: if request.auth != null;
-      // Удалять только админы
-      allow delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // ============================
-    // ONLINE WHEEL STATS
-    // ============================
-    match /onlineWheelStats/{userId} {
-      // Все могут читать статистику (для лидерборда)
-      allow read: if request.auth != null;
-      // Создавать и обновлять свою статистику могут все
-      allow create, update: if request.auth != null && request.auth.uid == userId;
-      // Админ может управлять всей статистикой
-      allow create, update, delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    // ============================
-    // ONLINE WHEEL HISTORY
-    // ============================
-    match /onlineWheelHistory/{gameId} {
-      // Все могут читать историю игр
-      allow read: if request.auth != null;
-      // Создавать записи могут все авторизованные
-      allow create: if request.auth != null;
-      // Админ может управлять историей
-      allow update, delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    console.log('📚 Set up optimized Firestore history listener successfully');
+  } catch (error) {
+    console.warn('📚 Error setting up Firestore history listener:', error);
+    localHistory = [];
+    if (document.getElementById('historyList')) {
+      renderHistory();
     }
   }
 }
 
+// Функция сохранения истории в Firestore (оптимизированная)
+function saveHistoryToFirestore() {
+  if (!currentUser || !window.db || localHistory.length === 0) return;
+
+  try {
+    const { doc, setDoc } = window.__firestoreExports;
+    const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
+    
+    // Оптимизация 1: Ограничиваем последними 500 записями (вместо 1000)
+    const maxRecords = 500;
+    let historyToSave = localHistory.slice(0, maxRecords);
+    
+    // Оптимизация 2: Сжимаем данные - убираем лишние поля
+    historyToSave = historyToSave.map(item => ({
+      r: item.reward,           // reward -> r (экономия ~4 байта на запись)
+      s: item.spentRGT,         // spentRGT -> s
+      f: item.isFree ? 1 : 0,   // isFree -> f (boolean -> number)
+      t: item.ts.getTime()      // ts -> t (timestamp в ms вместо ISO строки)
+    }));
+    
+    // Оптимизация 3: Добавляем метаданные для анализа
+    const now = Date.now();
+    const stats = calculateStats(localHistory);
+    
+    setDoc(userHistoryRef, {
+      spins: historyToSave,
+      stats: {
+        totalSpins: stats.count,
+        totalProfit: stats.profit,
+        totalSpent: stats.spent,
+        lastUpdated: now,
+        recordCount: historyToSave.length
+      },
+      // Оптимизация 4: Разделяем по месяцам для быстрой загрузки
+      monthly: groupByMonth(localHistory.slice(0, maxRecords)),
+      version: 2 // для совместимости
+    }, { merge: true });
+    
+    console.log('💾 Saved optimized history to Firestore:', historyToSave.length, 'records');
+  } catch (error) {
+    console.warn('Error saving history to Firestore:', error);
+  }
+}
+
+// Оптимизация 5: Группировка по месяцам для быстрых фильтров
+function groupByMonth(history) {
+  const monthly = {};
+  history.forEach(item => {
+    const monthKey = `${item.ts.getFullYear()}-${String(item.ts.getMonth() + 1).padStart(2, '0')}`;
+    if (!monthly[monthKey]) {
+      monthly[monthKey] = {
+        count: 0,
+        profit: 0,
+        spent: 0,
+        spins: []
+      };
+    }
+    monthly[monthKey].count++;
+    monthly[monthKey].profit += (item.reward - item.spentRGT);
+    monthly[monthKey].spent += item.spentRGT;
+    monthly[monthKey].spins.push({
+      r: item.reward,
+      s: item.spentRGT,
+      f: item.isFree ? 1 : 0,
+      t: item.ts.getTime()
+    });
+  });
+  return monthly;
+}
+
+// Загружаем историю сразу после авторизации
+// loadLocalHistory(); // Убираем отсюда, будем вызывать в onAuthStateChanged
+
+// НЕ вызываем renderHistory здесь - история еще не загружена
+// if (document.getElementById('historyList')) {
+//   renderHistory();
+// }
+
+// ═══════════════════════════════════════════════════════════
+// CANVAS WHEEL
+// ═══════════════════════════════════════════════════════════
+const canvas  = document.getElementById('wheelCanvas');
+const ctx     = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const w = canvas.parentElement.offsetWidth;
+  canvas.width  = w;
+  canvas.height = w;
+  drawWheel();
+}
+
+function drawWheel() {
+  if (!ctx) return;
+  const W = canvas.width;
+  const cx = W / 2, cy = W / 2;
+  const R  = Math.max(0, cx - 8); // Защита от отрицательного радиуса
+  ctx.clearRect(0, 0, W, W);
+
+  const n = REWARDS.length;
+  const slice = (Math.PI * 2) / n;
+
+  for (let i = 0; i < n; i++) {
+    const a0 = slice * i + wheelAngle - Math.PI / 2;
+    const a1 = a0 + slice;
+
+    // Slice
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, a0, a1);
+    ctx.closePath();
+    ctx.fillStyle = COLORS[i];
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.25)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Text
+    const ta = a0 + slice / 2;
+    const tx = cx + Math.cos(ta) * R * 0.68;
+    const ty = cy + Math.sin(ta) * R * 0.68;
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate(ta + Math.PI / 2);
+    ctx.fillStyle = 'white';
+    ctx.font = `bold ${Math.max(11, W * 0.038)}px Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,.5)';
+    ctx.shadowBlur = 4;
+    ctx.fillText(REWARDS[i] + ' RGT', 0, 0);
+    ctx.restore();
+  }
+
+  // Outer ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(139,92,246,.7)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  // Center circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, R * 0.09, 0, Math.PI * 2);
+  ctx.fillStyle = '#0b0f19';
+  ctx.fill();
+  ctx.strokeStyle = '#8b5cf6';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+window.addEventListener('resize', () => { resizeCanvas(); });
+setTimeout(resizeCanvas, 100);
+
+// ═══════════════════════════════════════════════════════════
+// SPIN LOGIC
+// ═══════════════════════════════════════════════════════════
+function pickReward() {
+  const total = WEIGHTS.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < REWARDS.length; i++) {
+    r -= WEIGHTS[i];
+    if (r <= 0) return REWARDS[i];
+  }
+  return REWARDS[REWARDS.length - 1];
+}
+
+window.doSpin = async function() {
+  if (spinning) return;
+  if (!currentUser) {
+    showToastLocal('wof_need_login', 'Please log in to play');
+    return;
+  }
+
+  // IMPORTANT: Fresh load of userData before balance check
+  if (db) {
+    try {
+      const freshSnap = await getDoc(doc(db, COL_USERS, currentUser.uid));
+      if (freshSnap.exists()) {
+        userData = freshSnap.data();
+        window.userProfileData = userData;
+      }
+    } catch(e) {
+      console.warn('Failed to refresh userData before spin:', e);
+    }
+  }
+
+  const today = new Date().toDateString();
+  const wof   = userData.wof || {};
+  const usedToday = wof.lastSpinDate === today ? (wof.freeUsed || 0) : 0;
+  const freeLeft  = Math.max(0, DAILY_FREE - usedToday);
+
+  if (freeLeft === 0 && (userData.reagents || 0) < PAID_COST) {
+    showToastLocal('wof_not_enough', `Not enough RGT. Need ${PAID_COST} RGT`);
+    return;
+  }
+  const isFree = freeLeft > 0;
+  spinning = true;
+  document.getElementById('spinBtn').disabled = true;
+
+  const reward = pickReward();
+  const rewardIdx = REWARDS.indexOf(reward);
+
+  // Target angle: pointer is at top (−π/2). Slice center i → angle = (i + 0.5) * slice − π/2
+  const slice = (Math.PI * 2) / REWARDS.length;
+  const targetSliceAngle = -(rewardIdx + 0.5) * slice; // so that slice center aligns with top
+  const extraRotations   = Math.PI * 2 * (6 + Math.floor(Math.random() * 3));
+  const targetAngle      = targetSliceAngle + extraRotations;
+
+  const startAngle = wheelAngle;
+  const startTime  = performance.now();
+
+  function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
+
+  function animate(now) {
+    const t = Math.min((now - startTime) / SPIN_MS, 1);
+    wheelAngle = startAngle + (targetAngle - startAngle) * easeOut(t);
+    drawWheel();
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      wheelAngle = targetAngle % (Math.PI * 2);
+      spinning = false;
+      handleResult(reward, isFree);
+    }
+  }
+  requestAnimationFrame(animate);
+};
+
+// ═══════════════════════════════════════════════════════════
+// RESULT HANDLER
+// ═══════════════════════════════════════════════════════════
+async function handleResult(reward, isFree) {
+  const today = new Date().toDateString();
+  const wof   = { ...(userData.wof || {}) };
+
+  const usedToday  = wof.lastSpinDate === today ? (wof.freeUsed || 0) : 0;
+  const spentRGT   = isFree ? 0 : PAID_COST;
+  const netLoss    = Math.max(0, spentRGT - reward);
+  const netProfit  = reward - spentRGT;
+
+  // Update local userData
+  wof.totalSpins  = (wof.totalSpins  || 0) + 1;
+  wof.totalWon    = (wof.totalWon    || 0) + reward;
+  wof.totalLost   = (wof.totalLost   || 0) + netLoss;
+  wof.monthlyLoss = (wof.monthlyLoss || 0) + netLoss;
+  wof.freeUsed    = isFree ? usedToday + 1 : (wof.freeUsed || 0);
+  wof.lastSpinDate = today;
+  if (!isFree) {
+    userData.reagents = ((userData.reagents || 0) + netProfit);
+    // Также обновляем window.userProfileData для footer.js и account модали
+    if (window.userProfileData) {
+      window.userProfileData.reagents = userData.reagents;
+    }
+  }
+  userData.wof = wof;
+
+  // Add to jackpot if there was a loss
+  if (netLoss > 0) {
+    await addToJackpot(netLoss);
+  }
+
+  // Save to Firestore
+  try {
+    if (db && currentUser) {
+      const uRef = doc(db, COL_USERS, currentUser.uid);
+      const updates = {
+        'wof.totalSpins':   wof.totalSpins,
+        'wof.totalWon':     wof.totalWon,
+        'wof.totalLost':    wof.totalLost,
+        'wof.monthlyLoss':  wof.monthlyLoss,
+        'wof.freeUsed':     wof.freeUsed,
+        'wof.lastSpinDate': wof.lastSpinDate,
+      };
+      if (!isFree) {
+        updates['reagents'] = increment(netProfit);
+      }
+      await updateDoc(uRef, updates);
+
+      // Reload userData to sync balance
+      try {
+        const updatedSnap = await getDoc(uRef);
+        if (updatedSnap.exists()) {
+          userData = updatedSnap.data();
+          window.userProfileData = userData;
+        }
+      } catch(e) {}
+
+      // Log spin
+      await addDoc(collection(db, COL_WHEEL), {
+        uid:       currentUser.uid,
+        display:   currentUser.displayName || currentUser.email || '—',
+        reward,
+        spentRGT,
+        netLoss,
+        isFree,
+        ts:        serverTimestamp()
+      });
+    }
+  } catch(e) {
+    console.warn('WoF save error:', e);
+  }
+
+  // Local history
+  localHistory.unshift({ reward, spentRGT, isFree, ts: new Date() });
+  
+  // Ограничиваем размер истории
+  if (localHistory.length > 1000) {
+    localHistory = localHistory.slice(0, 1000);
+  }
+  
+  // Сохраняем в Firestore для синхронизации
+  saveHistoryToFirestore();
+  
+  renderHistory();
+
+  // Send notification to user
+  sendSpinNotification(reward, spentRGT, netProfit);
+
+  // UI update
+  updateStatsUI();
+  updateSpinsUI();
+  await loadLeaderboard();
+  await loadJackpot();
+
+  // Show result
+  showResult(reward, spentRGT, netProfit);
+}
+
+async function addToJackpot(loss) {
+  if (!db) return;
+  const now = new Date();
+  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  try {
+    const jRef = doc(db, COL_JACKPOT, month);
+    await runTransaction(db, async tx => {
+      const snap = await tx.get(jRef);
+      if (snap.exists()) {
+        tx.update(jRef, {
+          total: increment(loss),
+          [`players.${currentUser.uid}`]: increment(loss)
+        });
+      } else {
+        tx.set(jRef, {
+          month,
+          total: loss,
+          players: { [currentUser.uid]: loss },
+          drawn: false,
+          winner: null,
+          ts: serverTimestamp()
+        });
+      }
+    });
+  } catch(e) {
+    console.warn('addToJackpot error:', e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// RESULT MODAL
+// ═══════════════════════════════════════════════════════════
+function showResult(reward, spent, profit) {
+  const overlay = document.getElementById('resultOverlay');
+  const card    = document.getElementById('resultCard');
+  const emoji   = document.getElementById('resEmoji');
+  const title   = document.getElementById('resTitle');
+  const amount  = document.getElementById('resAmount');
+  const label   = document.getElementById('resLabel');
+
+  card.className = 'result-card';
+  const isEn = (window.currentLang === 'en');
+
+  if (profit > 0) {
+    card.classList.add('res-win');
+    if (reward === 100) {
+      emoji.textContent = '🎰';
+      title.textContent = isEn ? 'JACKPOT SPIN!' : 'МЕГА ВЫИГРЫШ!';
+      title.style.color = '#fbbf24';
+    } else if (reward >= 20) {
+      emoji.textContent = '🎉';
+      title.textContent = isEn ? 'Big Win!' : 'Большой выигрыш!';
+      title.style.color = '#34d399';
+    } else {
+      emoji.textContent = '✨';
+      title.textContent = isEn ? 'You Won!' : 'Вы выиграли!';
+      title.style.color = '#34d399';
+    }
+    amount.textContent = '+' + reward + ' RGT';
+    amount.style.background = 'linear-gradient(135deg,#34d399,#22d3ee)';
+    amount.style.backgroundClip = 'text';
+    amount.style.webkitBackgroundClip = 'text';
+    amount.style.webkitTextFillColor = 'transparent';
+    label.textContent = isEn ? `You spent ${spent} RGT and won ${reward} RGT` : `Потратили ${spent} RGT, выиграли ${reward} RGT`;
+  } else if (reward === spent) {
+    card.classList.add('res-win');
+    emoji.textContent = '🤝';
+    title.textContent = isEn ? 'Even!' : 'В ноль!';
+    title.style.color = '#fbbf24';
+    amount.textContent = reward + ' RGT';
+    amount.style.background = 'linear-gradient(135deg,#fbbf24,#f59e0b)';
+    amount.style.backgroundClip = 'text';
+    amount.style.webkitBackgroundClip = 'text';
+    amount.style.webkitTextFillColor = 'transparent';
+    label.textContent = isEn ? 'Got back what you spent!' : 'Вернули свою ставку!';
+  } else {
+    card.classList.add('res-lose');
+    emoji.textContent = reward === 0 ? '💸' : '😓';
+    title.textContent = isEn ? 'Not this time...' : 'Не повезло...';
+    title.style.color = '#f87171';
+    amount.textContent = profit + ' RGT';
+    amount.style.background = 'linear-gradient(135deg,#f87171,#ef4444)';
+    amount.style.backgroundClip = 'text';
+    amount.style.webkitBackgroundClip = 'text';
+    amount.style.webkitTextFillColor = 'transparent';
+    label.textContent = isEn ? `Won ${reward} RGT / Spent ${spent} RGT` : `Выиграли ${reward} RGT / Потратили ${spent} RGT`;
+  }
+
+  overlay.classList.add('show');
+  if (profit > 20) launchConfetti();
+}
+
+window.closeResult = function() {
+  document.getElementById('resultOverlay').classList.remove('show');
+  if (!spinning) document.getElementById('spinBtn').disabled = false;
+};
+
+// ═══════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+function sendSpinNotification(reward, spent, profit) {
+  if (!db || !currentUser) return;
+  const isEn = (window.currentLang === 'en');
+  let msg = '';
+  if (profit > 0) {
+    msg = isEn ? `🎉 You won ${reward} RGT on the wheel!` : `🎉 Вы выиграли ${reward} RGT на колесе!`;
+  } else if (profit === 0) {
+    msg = isEn ? `🤝 Wheel: even! Got back ${reward} RGT.` : `🤝 Колесо: в ноль! Вернули ${reward} RGT.`;
+  } else {
+    msg = isEn ? `😓 Wheel: won ${reward} RGT / spent ${spent} RGT.` : `😓 Колесо: выиграли ${reward} RGT / потратили ${spent} RGT.`;
+  }
+  try {
+    addDoc(collection(db, 'notifications'), {
+      userId: currentUser.uid,  // Используем userId как в index.html
+      type:   'wheel_spin',
+      message: msg,            // Используем message как в index.html
+      read:   false,
+      createdAt: serverTimestamp()  // Используем createdAt как в index.html
+    });
+  } catch(e) {
+    console.error('Error sending spin notification:', e);
+  }
+}
+
+function sendJackpotWinnerNotification(uid, amount) {
+  if (!db) return;
+  
+  // Получаем данные победителя для красивого отображения
+  const getWinnerData = async () => {
+    try {
+      const userSnap = await getDoc(doc(db, 'users', uid));
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      const winnerName = userData.displayName || userData.email || uid.substring(0, 8) + '...';
+      const winnerAvatar = userData.photoURL || userData.avatarUrl || '';
+      
+      const isEn = (window.currentLang === 'en');
+      const msg = isEn ? `🏆 Congratulations! You won the monthly jackpot: ${amount} RGT!` : `🏆 Поздравляем! Вы выиграли ежемесячный джекпот: ${amount} RGT!`;
+      
+      console.log('📧 Sending jackpot notification:', { uid, winnerName, amount, hasAvatar: !!winnerAvatar });
+      
+      await addDoc(collection(db, 'notifications'), {
+        userId: uid, // Обязательно передаем userId
+        type: 'jackpot_win',
+        message: msg,
+        winnerName: winnerName, // Добавляем имя победителя
+        amount: amount.toString(), // Добавляем сумму выигрыша
+        read: false,
+        createdAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error sending jackpot notification:', error);
+    }
+  };
+  
+  getWinnerData();
+}
+
+// ═══════════════════════════════════════════════════════════
+// JACKPOT
+// ═══════════════════════════════════════════════════════════
+async function loadJackpot() {
+  if (!db) return;
+  const now   = new Date();
+  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  // Days remaining
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const diff    = lastDay - now;
+  const days    = Math.floor(diff / 86400000);
+  const hours   = Math.floor((diff % 86400000) / 3600000);
+  const isEn    = (window.currentLang === 'en');
+
+  document.getElementById('jackpotTimer').textContent =
+    isEn ? `${days}d ${hours}h until draw` : `До розыгрыша: ${days} дн. ${hours} ч.`;
+
+  try {
+    const snap = await getDoc(doc(db, COL_JACKPOT, month));
+    const total = snap.exists() ? (snap.data().total || 0) : 0;
+    document.getElementById('jackpotAmt').textContent = total + ' RGT';
+
+    // Jackpot chance for current user
+    if (currentUser && snap.exists()) {
+      const players = snap.data().players || {};
+      const myLoss  = players[currentUser.uid] || 0;
+      const chance  = total > 0 ? ((myLoss / total) * 100).toFixed(1) : 0;
+      document.getElementById('stJackpotChance').textContent = chance + '%';
+    }
+
+    // Admin button
+    const adminBtn = document.getElementById('jackpotAdminBtn');
+    if (adminBtn) adminBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  } catch(e) {
+    console.warn('loadJackpot error:', e);
+  }
+}
+
+// ─── Admin: spin jackpot ───
+window.openJackpotSpin = async function() {
+  if (!isAdmin) return;
+  const now   = new Date();
+  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  try {
+    const snap = await getDoc(doc(db, COL_JACKPOT, month));
+    if (!snap.exists()) { 
+      if (typeof showToast === 'function') {
+        showToast('Нет данных джекпота за этот месяц');
+      } else {
+        alert('No jackpot data for this month');
+      }
+      return; 
+    }
+    const data = snap.data();
+    if (data.drawn) { 
+      if (typeof showToast === 'function') {
+        showToast('Джекпот уже разыгран в этом месяце');
+      } else {
+        alert('Jackpot already drawn this month');
+      }
+      return; 
+    }
+
+    const total   = data.total || 0;
+    const players = data.players || {};
+
+    if (total === 0 || Object.keys(players).length === 0) {
+      if (typeof showToast === 'function') {
+        showToast('Банк джекпота пуст');
+      } else {
+        alert('Jackpot pool is empty');
+      }
+      return;
+    }
+
+    // Создаем модальное окно для розыгрыша джекпота
+    createJackpotSpinModal(players, total, month, data);
+
+  } catch(e) {
+    console.error('Jackpot spin error:', e);
+    if (typeof showToast === 'function') {
+      showToast('Ошибка при загрузке джекпота');
+    }
+  }
+};
+
+// Функция создания модального окна для розыгрыша джекпота
+function createJackpotSpinModal(players, total, month, data) {
+  // Удаляем существующее модальное окно если есть
+  const existingModal = document.getElementById('jackpotSpinModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'jackpotSpinModal';
+  modal.innerHTML = `
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.95); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+      <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid rgba(34,211,238,0.3); border-radius: 20px; padding: 30px; max-width: 1200px; width: 95%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+          <h2 style="color: #22d3ee; font-size: 24px; font-weight: bold; display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-trophy"></i> Розыгрыш Джекпота
+          </h2>
+          <button onclick="closeJackpotModal()" style="background: none; border: none; color: #64748b; font-size: 28px; cursor: pointer; padding: 5px;">&times;</button>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; align-items: start;">
+          <!-- Таблица участников -->
+          <div>
+            <h3 style="color: #e2e8f0; font-size: 16px; margin-bottom: 15px;">📋 Участники и шансы</h3>
+            <div id="jackpotParticipants" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(148,163,184,0.2); border-radius: 12px; padding: 15px; max-height: 400px; overflow-y: auto;">
+              <!-- Участники будут добавлены через JavaScript -->
+            </div>
+            
+            <div style="margin-top: 15px; padding: 15px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px;">
+              <div style="color: #22c55e; font-size: 14px; font-weight: 600; margin-bottom: 8px;">💰 Общий банк джекпота</div>
+              <div id="jackpotTotalAmount" style="color: white; font-size: 20px; font-weight: 700;">${total} RGT</div>
+              <div id="jackpotTotalPlayers" style="color: #64748b; font-size: 12px; margin-top: 4px;">${Object.keys(players).length} участников</div>
+            </div>
+          </div>
+          
+          <!-- Адаптивное колесо -->
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <h3 style="color: #e2e8f0; font-size: 16px; margin-bottom: 15px;">🎯 Колесо фортуны</h3>
+            <div style="position: relative; width: 400px; height: 400px;">
+              <canvas id="jackpotWheelCanvas" width="400" height="400" style="border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"></canvas>
+              <!-- Стрелка -->
+              <div style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 40px solid #ef4444; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></div>
+            </div>
+            
+            <button id="jackpotSpinBtn" onclick="spinJackpotWheel()" style="margin-top: 25px; background: linear-gradient(145deg, #ef4444, #dc2626); border: none; color: white; padding: 15px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(239,68,68,0.3);">
+              🎰 Крутить колесо
+            </button>
+            
+            <div id="jackpotSpinResult" style="margin-top: 20px; text-align: center; display: none;">
+              <div style="color: #22d3ee; font-size: 18px; font-weight: 600; margin-bottom: 10px;">🏆 Победитель определен!</div>
+              <div id="jackpotWinnerInfo" style="color: white; font-size: 16px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Сохраняем данные для розыгрыша
+  window.jackpotData = { players, total, month, data };
+
+  // Заполняем таблицу участников
+  populateJackpotParticipants(players, total);
+
+  // Рисуем адаптивное колесо
+  drawJackpotWheel(players, total);
+
+  // Добавляем обработчик закрытия по ESC
+  const handleEscape = (e) => {
+    if (e.key === 'Escape') {
+      closeJackpotModal();
+      document.removeEventListener('keydown', handleEscape);
+    }
+  };
+  document.addEventListener('keydown', handleEscape);
+}
+
+// Функция заполнения таблицы участников
+async function populateJackpotParticipants(players, total) {
+  const container = document.getElementById('jackpotParticipants');
+  if (!container) return;
+
+  try {
+    // Получаем информацию о пользователях
+    const playerEntries = Object.entries(players);
+    const playersWithInfo = [];
+
+    for (const [uid, contribution] of playerEntries) {
+      try {
+        const userSnap = await getDoc(doc(db, COL_USERS, uid));
+        const userData = userSnap.exists() ? userSnap.data() : {};
+        const percentage = ((contribution / total) * 100).toFixed(2);
+        
+        // Генерируем цвет для пользователя
+        const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+        const colorIndex = playersWithInfo.length % colors.length;
+        const color = colors[colorIndex];
+
+        playersWithInfo.push({
+          uid,
+          contribution,
+          percentage,
+          name: userData.displayName || userData.email || uid.substring(0, 8) + '...',
+          color
+        });
+      } catch (error) {
+        console.warn('Error loading user data for:', uid);
+      }
+    }
+
+    // Сортируем по вкладу (убывание)
+    playersWithInfo.sort((a, b) => b.contribution - a.contribution);
+
+    // Создаем HTML таблицы
+    const tableHTML = playersWithInfo.map(player => `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; margin-bottom: 8px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 4px solid ${player.color};">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 12px; height: 12px; background: ${player.color}; border-radius: 50%;"></div>
+          <div>
+            <div style="color: white; font-size: 14px; font-weight: 500;">${player.name}</div>
+            <div style="color: #64748b; font-size: 12px;">${player.contribution} RGT</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="color: ${player.color}; font-size: 16px; font-weight: 700;">${player.percentage}%</div>
+          <div style="color: #64748b; font-size: 11px;">шанс победы</div>
+        </div>
+      </div>
+    `).join('');
+
+    container.innerHTML = tableHTML;
+
+    // Сохраняем информацию об участниках для колеса
+    window.jackpotPlayers = playersWithInfo;
+
+  } catch (error) {
+    console.error('Error populating participants:', error);
+    container.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 20px;">Ошибка загрузки участников</div>';
+  }
+}
+
+// Функция отрисовки адаптивного колеса джекпота
+function drawJackpotWheel(players, total) {
+  const canvas = document.getElementById('jackpotWheelCanvas');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = 180;
+
+  // Очищаем canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Создаем сегменты пропорционально вкладам
+  const segments = [];
+  let currentAngle = -Math.PI / 2; // Начинаем сверху
+
+  Object.entries(players).forEach(([uid, contribution], index) => {
+    const percentage = contribution / total;
+    const segmentAngle = percentage * Math.PI * 2;
+    
+    // Цвет для сегмента
+    const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+    const color = colors[index % colors.length];
+
+    segments.push({
+      uid,
+      contribution,
+      percentage,
+      color,
+      startAngle: currentAngle,
+      endAngle: currentAngle + segmentAngle
+    });
+
+    // Рисуем сегмент
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + segmentAngle);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Рисуем границу сегмента
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Добавляем текст с процентом если сегмент достаточно большой
+    if (segmentAngle > 0.2) {
+      const textAngle = currentAngle + segmentAngle / 2;
+      const textX = centerX + Math.cos(textAngle) * (radius * 0.7);
+      const textY = centerY + Math.sin(textAngle) * (radius * 0.7);
+      
+      ctx.save();
+      ctx.translate(textX, textY);
+      ctx.rotate(textAngle + Math.PI / 2);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${(percentage * 100).toFixed(1)}%`, 0, 0);
+      ctx.restore();
+    }
+
+    currentAngle += segmentAngle;
+  });
+
+  // Рисуем центральный круг
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+  ctx.fillStyle = '#1e293b';
+  ctx.fill();
+  ctx.strokeStyle = '#22d3ee';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Добавляем текст в центре
+  ctx.fillStyle = '#22d3ee';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('JACKPOT', centerX, centerY);
+
+  // Сохраняем сегменты для анимации
+  window.jackpotSegments = segments;
+}
+
+// Функция закрытия модального окна
+window.closeJackpotModal = function() {
+  const modal = document.getElementById('jackpotSpinModal');
+  if (modal) {
+    modal.remove();
+  }
+  window.jackpotData = null;
+  window.jackpotPlayers = null;
+  window.jackpotSegments = null;
+};
+
+// Функция прокрутки колеса джекпота
+window.spinJackpotWheel = function() {
+  if (!window.jackpotData || !window.jackpotSegments) return;
+
+  const spinBtn = document.getElementById('jackpotSpinBtn');
+  const resultDiv = document.getElementById('jackpotSpinResult');
+  const winnerInfo = document.getElementById('jackpotWinnerInfo');
+
+  // Блокируем кнопку
+  spinBtn.disabled = true;
+  spinBtn.textContent = '🎰 Крутится...';
+  resultDiv.style.display = 'none';
+
+  // Выбираем победителя на основе вкладов
+  const { players, total, month, data } = window.jackpotData;
+  const entries = Object.entries(players);
+  let rand = Math.random() * total;
+  let winnerUid = entries[entries.length - 1][0];
+  
+  for (const [uid, loss] of entries) {
+    rand -= loss;
+    if (rand <= 0) { 
+      winnerUid = uid; 
+      break; 
+    }
+  }
+
+  // Находим сегмент победителя
+  const winnerSegment = window.jackpotSegments.find(seg => seg.uid === winnerUid);
+  if (!winnerSegment) return;
+
+  // Анимация прокрутки (медленнее для интриги)
+  const canvas = document.getElementById('jackpotWheelCanvas');
+  const ctx = canvas.getContext('2d');
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  
+  let currentRotation = 0;
+  const targetRotation = Math.PI * 2 * (8 + Math.random() * 4); // 8-12 полных оборотов
+  const finalAngle = winnerSegment.startAngle + (winnerSegment.endAngle - winnerSegment.startAngle) / 2;
+  const totalRotation = targetRotation + (finalAngle + Math.PI / 2); // Выравниваем победителя с верхом
+  
+  const startTime = performance.now();
+  const duration = 8000; // 8 секунд для интриги
+
+  function animate(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Плавное замедление
+    const easeOut = 1 - Math.pow(1 - progress, 3);
+    currentRotation = totalRotation * easeOut;
+
+    // Перерисовываем колесо с поворотом
+    ctx.save();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(centerX, centerY);
+    ctx.rotate(currentRotation);
+    ctx.translate(-centerX, -centerY);
+    
+    // Перерисовываем сегменты
+    window.jackpotSegments.forEach(segment => {
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, 180, segment.startAngle, segment.endAngle);
+      ctx.closePath();
+      ctx.fillStyle = segment.color;
+      ctx.fill();
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Текст с процентами
+      if ((segment.endAngle - segment.startAngle) > 0.2) {
+        const textAngle = segment.startAngle + (segment.endAngle - segment.startAngle) / 2;
+        const textX = centerX + Math.cos(textAngle) * (180 * 0.7);
+        const textY = centerY + Math.sin(textAngle) * (180 * 0.7);
+        
+        ctx.save();
+        ctx.translate(textX, textY);
+        ctx.rotate(textAngle + Math.PI / 2);
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${(segment.percentage * 100).toFixed(1)}%`, 0, 0);
+        ctx.restore();
+      }
+    });
+
+    // Центральный круг
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+    ctx.fillStyle = '#1e293b';
+    ctx.fill();
+    ctx.strokeStyle = '#22d3ee';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.fillStyle = '#22d3ee';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('JACKPOT', centerX, centerY);
+
+    ctx.restore();
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      // Анимация завершена
+      spinBtn.disabled = false;
+      spinBtn.textContent = '🎰 Крутить колесо';
+      
+      // Показываем результат
+      showJackpotWinner(winnerUid, total);
+      
+      // Завершаем розыгрыш
+      finalizeJackpot(winnerUid, total, month, data);
+    }
+  }
+
+  requestAnimationFrame(animate);
+};
+
+// Функция отображения победителя (использует jackpotWinnerOverlay поверх модального окна)
+async function showJackpotWinner(winnerUid, amount) {
+  try {
+    const userSnap = await getDoc(doc(db, COL_USERS, winnerUid));
+    const userData = userSnap.exists() ? userSnap.data() : {};
+    const winnerName = userData.displayName || userData.email || winnerUid.substring(0, 8) + '...';
+    const winnerAvatar = userData.photoURL || userData.avatarUrl || '';
+
+    console.log('🏆 Showing jackpot winner:', { winnerName, amount, hasAvatar: !!winnerAvatar });
+
+    // Обновляем элементы в jackpotWinnerOverlay
+    const nameElement = document.getElementById('jwName');
+    const amountElement = document.getElementById('jwAmount');
+    const avatarElement = document.getElementById('jwAvatar');
+    
+    if (nameElement) nameElement.textContent = winnerName;
+    if (amountElement) amountElement.textContent = amount + ' RGT';
+    
+    if (avatarElement) {
+      if (winnerAvatar) {
+        avatarElement.src = winnerAvatar;
+        avatarElement.style.display = 'block';
+        avatarElement.onerror = function() {
+          this.style.display = 'none';
+          console.log('🖼️ Avatar failed to load, hiding');
+        };
+        console.log('🖼️ Avatar set to:', winnerAvatar);
+      } else {
+        avatarElement.style.display = 'none';
+        console.log('🖼️ No avatar, hiding element');
+      }
+    }
+    
+    // Показываем оверлей с высоким z-index поверх модального окна розыгрыша
+    const overlay = document.getElementById('jackpotWinnerOverlay');
+    if (overlay) {
+      overlay.style.zIndex = '30000'; // Еще выше чем модальное окно розыгрыша
+      overlay.classList.add('show');
+      console.log('🎯 Jackpot overlay shown on top with z-index:', overlay.style.zIndex);
+    }
+    
+    // Запускаем конфетти для эффекта
+    if (typeof launchConfetti === 'function') {
+      setTimeout(() => launchConfetti(100), 500); // Больше конфетти и с задержкой
+    }
+    
+  } catch (error) {
+    console.error('Error showing jackpot winner:', error);
+    
+    // Fallback - показываем в модальном окне если что-то пошло не так
+    const resultDiv = document.getElementById('jackpotSpinResult');
+    const winnerInfo = document.getElementById('jackpotWinnerInfo');
+    
+    if (resultDiv && winnerInfo) {
+      const userSnap = await getDoc(doc(db, COL_USERS, winnerUid));
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      const winnerName = userData.displayName || userData.email || winnerUid.substring(0, 8) + '...';
+
+      winnerInfo.innerHTML = `
+        <div style="font-size: 20px; font-weight: 700; color: #22d3ee; margin-bottom: 8px;">🏆 ${winnerName}</div>
+        <div style="font-size: 16px; color: #22c55e;">Выиграл: ${amount} RGT</div>
+      `;
+
+      resultDiv.style.display = 'block';
+    }
+  }
+}
+
+async function finalizeJackpot(winnerUid, amount, month, jpData) {
+  // Get winner info
+  let winnerName = '—';
+  let winnerAvatar = '';
+  try {
+    const uSnap = await getDoc(doc(db, COL_USERS, winnerUid));
+    if (uSnap.exists()) {
+      const d = uSnap.data();
+      winnerName   = d.displayName || d.email || winnerUid;
+      winnerAvatar = d.photoURL || d.avatarUrl || '';
+    }
+    // Award RGT to winner
+    await updateDoc(doc(db, COL_USERS, winnerUid), { reagents: increment(amount) });
+  } catch(e) {}
+
+  // Mark jackpot as drawn
+  try {
+    await updateDoc(doc(db, COL_JACKPOT, month), {
+      drawn:  true,
+      winner: winnerUid,
+      winnerName,
+      drawnAt: serverTimestamp()
+    });
+  } catch(e) {}
+
+  // Reset monthly losses for all players in batch
+  try {
+    const playerUids = Object.keys(jpData.players || {});
+    const chunkSize = 450;
+    for (let i = 0; i < playerUids.length; i += chunkSize) {
+      const chunk = playerUids.slice(i, i + chunkSize);
+      const batchWrite = writeBatch(db);
+      for (const uid of chunk) {
+        batchWrite.update(doc(db, COL_USERS, uid), { 'wof.monthlyLoss': 0 });
+      }
+      await batchWrite.commit();
+    }
+  } catch(e) {}
+
+  sendJackpotWinnerNotification(winnerUid, amount);
+}
+
+window.closeJackpotWinner = function() {
+  document.getElementById('jackpotWinnerOverlay').classList.remove('show');
+};
+
+// ═══════════════════════════════════════════════════════════
+// LEADERBOARD
+// ═══════════════════════════════════════════════════════════
+async function loadLeaderboard() {
+  const tbody = document.getElementById('lbBody');
+  if (!tbody) return;
+  if (!db) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:28px;color:var(--text-secondary);">Firebase not available</td></tr>';
+    return;
+  }
+  try {
+    const q   = query(collection(db, COL_USERS), orderBy('wof.totalWon', 'desc'), limit(10));
+    const snp = await getDocs(q);
+    tbody.innerHTML = '';
+    let rank = 1;
+    snp.forEach(d => {
+      const u  = d.data();
+      const w  = u.wof || {};
+      const nm = u.displayName || u.email || ('Player ' + rank);
+      const mw = w.maxSingleWin || w.totalWon || 0;
+      const tw = w.totalWon || 0;
+      const r  = document.createElement('tr');
+      r.innerHTML = `
+        <td><span class="rank-pill rank-${rank < 4 ? rank : ''}">${rank}</span></td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${nm}</td>
+        <td style="text-align:right;color:#fbbf24;font-weight:700;">${mw} RGT</td>
+        <td style="text-align:right;color:#a78bfa;font-weight:600;">${tw} RGT</td>`;
+      tbody.appendChild(r);
+      rank++;
+    });
+    if (snp.empty) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-secondary);"><i class="fas fa-trophy" style="font-size:32px;opacity:.3;display:block;margin-bottom:10px;"></i>No data yet</td></tr>';
+    }
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:28px;color:#f87171;">Error loading</td></tr>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function updateSpinsUI() {
+  const today    = new Date().toDateString();
+  const wof      = userData.wof || {};
+  const usedToday = wof.lastSpinDate === today ? (wof.freeUsed || 0) : 0;
+  const freeLeft  = Math.max(0, DAILY_FREE - usedToday);
+  const isEn      = (window.currentLang === 'en');
+
+  document.getElementById('freeLeft').textContent = freeLeft;
+  document.getElementById('freeTot').textContent  = DAILY_FREE;
+
+  // Dots
+  const dots = document.getElementById('spinDots');
+  if (dots) {
+    dots.innerHTML = '';
+    for (let i = 0; i < DAILY_FREE; i++) {
+      const d = document.createElement('div');
+      d.className = 'spin-dot' + (i < freeLeft ? ' on' : '');
+      dots.appendChild(d);
+    }
+  }
+
+  const btn   = document.getElementById('spinBtn');
+  const lbl   = document.getElementById('spinBtnLabel');
+  if (!btn || !lbl) return;
+
+  if (!currentUser) {
+    lbl.textContent = isEn ? 'LOG IN TO PLAY' : 'ВОЙДИТЕ В АККАУНТ';
+    btn.disabled = true;
+    return;
+  }
+  btn.disabled = spinning;
+  if (freeLeft > 0) {
+    lbl.textContent = isEn ? `SPIN FREE (${freeLeft} left)` : `КРУТИТЬ БЕСПЛАТНО (${freeLeft})`;
+  } else {
+    lbl.textContent = isEn ? `SPIN (${PAID_COST} RGT)` : `КРУТИТЬ (${PAID_COST} RGT)`;
+  }
+}
+
+function updateStatsUI() {
+  const wof = userData.wof || {};
+  document.getElementById('stTotalSpins').textContent = wof.totalSpins || 0;
+  document.getElementById('stTotalWon').textContent   = (wof.totalWon  || 0) + ' RGT';
+  document.getElementById('stTotalLost').textContent  = (wof.totalLost || 0) + ' RGT';
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!list) return;
+  
+  if (localHistory.length === 0) {
+    const isEn = (window.currentLang === 'en');
+    list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-secondary);"><i class="fas fa-history" style="font-size:36px;opacity:.3;display:block;margin-bottom:12px;"></i>${isEn ? 'No spins yet' : 'История пуста'}</div>`;
+    return;
+  }
+  
+  // Добавляем панель фильтров и статистики
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  
+  const weekSpins = localHistory.filter(h => h.ts >= weekAgo);
+  const monthSpins = localHistory.filter(h => h.ts >= monthAgo);
+  const allSpins = localHistory;
+  
+  const weekStats = calculateStats(weekSpins);
+  const monthStats = calculateStats(monthSpins);
+  const allStats = calculateStats(allSpins);
+  
+  list.innerHTML = `
+    <!-- Панель статистики -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
+      <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 12px;">
+        <div style="color: #22c55e; font-size: 11px; font-weight: 600; margin-bottom: 4px;">📅 За неделю</div>
+        <div style="color: white; font-size: 13px; font-weight: 700;">Заработано: +${weekStats.profit} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Потрачено: ${weekStats.spent} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Прокруток: ${weekStats.count}</div>
+      </div>
+      <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 12px;">
+        <div style="color: #3b82f6; font-size: 11px; font-weight: 600; margin-bottom: 4px;">📅 За месяц</div>
+        <div style="color: white; font-size: 13px; font-weight: 700;">Заработано: +${monthStats.profit} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Потрачено: ${monthStats.spent} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Прокруток: ${monthStats.count}</div>
+      </div>
+      <div style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3); border-radius: 12px; padding: 12px;">
+        <div style="color: #a855f7; font-size: 11px; font-weight: 600; margin-bottom: 4px;">📅 За все время</div>
+        <div style="color: white; font-size: 13px; font-weight: 700;">Заработано: +${allStats.profit} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Потрачено: ${allStats.spent} RGT</div>
+        <div style="color: #64748b; font-size: 11px;">Прокруток: ${allStats.count}</div>
+      </div>
+    </div>
+    
+    <!-- Фильтры и сортировка -->
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(139,92,246,0.2);">
+      <select id="timeFilter" onchange="filterHistory()" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">
+        <option value="all">📅 Все время</option>
+        <option value="week">📅 За неделю</option>
+        <option value="month">📅 За месяц</option>
+      </select>
+      <select id="sortFilter" onchange="filterHistory()" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">
+        <option value="newest">🆕 Новые</option>
+        <option value="oldest">📜 Старые</option>
+        <option value="profit">💰 По выигрышу</option>
+        <option value="loss">💸 По проигрышу</option>
+      </select>
+      <select id="typeFilter" onchange="filterHistory()" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">
+        <option value="all">🎲 Все</option>
+        <option value="wins">🏆 Только выигрыши</option>
+        <option value="losses">💸 Только проигрыши</option>
+        <option value="free">🆓 Бесплатные</option>
+      </select>
+      <button onclick="clearSpinHistory()" style="background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-left: auto;">
+        🗑️ Очистить историю
+      </button>
+    </div>
+    
+    <!-- Список истории -->
+    <div id="historyItems"></div>
+    
+    <!-- Пагинация -->
+    <div id="historyPagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 16px;"></div>
+  `;
+  
+  // Инициализация фильтров
+  window.currentHistoryPage = 1;
+  window.historyPageSize = 10;
+  filterHistory();
+}
+
+// Функция расчета статистики
+function calculateStats(spins) {
+  const totalSpent = spins.reduce((sum, h) => sum + (h.spentRGT || 0), 0);
+  const totalWon = spins.reduce((sum, h) => sum + (h.reward || 0), 0);
+  const profit = totalWon - totalSpent;
+  
+  return {
+    spent: totalSpent.toFixed(1),
+    profit: profit.toFixed(1),
+    count: spins.length
+  };
+}
+
+// Функция фильтрации и отображения истории
+window.filterHistory = function() {
+  const timeFilter = document.getElementById('timeFilter')?.value || 'all';
+  const sortFilter = document.getElementById('sortFilter')?.value || 'newest';
+  const typeFilter = document.getElementById('typeFilter')?.value || 'all';
+  
+  let filtered = [...localHistory];
+  
+  // Фильтр по времени
+  const now = new Date();
+  if (timeFilter === 'week') {
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    filtered = filtered.filter(h => h.ts >= weekAgo);
+  } else if (timeFilter === 'month') {
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    filtered = filtered.filter(h => h.ts >= monthAgo);
+  }
+  
+  // Фильтр по типу
+  if (typeFilter === 'wins') {
+    filtered = filtered.filter(h => h.reward > h.spentRGT);
+  } else if (typeFilter === 'losses') {
+    filtered = filtered.filter(h => h.reward < h.spentRGT);
+  } else if (typeFilter === 'free') {
+    filtered = filtered.filter(h => h.isFree);
+  }
+  
+  // Сортировка
+  if (sortFilter === 'oldest') {
+    filtered.sort((a, b) => a.ts - b.ts);
+  } else if (sortFilter === 'profit') {
+    filtered.sort((a, b) => (b.reward - b.spentRGT) - (a.reward - a.spentRGT));
+  } else if (sortFilter === 'loss') {
+    filtered.sort((a, b) => (a.reward - a.spentRGT) - (b.reward - b.spentRGT));
+  } else {
+    filtered.sort((a, b) => b.ts - a.ts);
+  }
+  
+  // Сохраняем отфильтрованные данные
+  window.filteredHistory = filtered;
+  renderHistoryPage();
+};
+
+// Функция отображения страницы истории
+window.renderHistoryPage = function() {
+  const itemsContainer = document.getElementById('historyItems');
+  const paginationContainer = document.getElementById('historyPagination');
+  
+  if (!itemsContainer || !paginationContainer) return;
+  
+  const filtered = window.filteredHistory || [];
+  const page = window.currentHistoryPage || 1;
+  const pageSize = window.historyPageSize || 10;
+  
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const pageItems = filtered.slice(startIndex, endIndex);
+  
+  if (pageItems.length === 0) {
+    itemsContainer.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">Нет записей для выбранных фильтров</div>';
+    paginationContainer.innerHTML = '';
+    return;
+  }
+  
+  itemsContainer.innerHTML = pageItems.map(h => {
+    const profit = h.reward - h.spentRGT;
+    const color = profit >= 0 ? '#34d399' : '#f87171';
+    const sign = profit >= 0 ? '+' : '';
+    const time = h.ts.toLocaleTimeString();
+    const date = h.ts.toLocaleDateString();
+    
+    return `<div class="history-item">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="font-size: 14px; color: white; font-weight: 600;">${h.reward} RGT</div>
+        ${h.isFree ? '<span style="background: rgba(34,197,94,0.2); color: #22c55e; padding: 2px 6px; border-radius: 4px; font-size: 10px;">🆓</span>' : ''}
+      </div>
+      <div style="font-size: 12px; color: var(--text-secondary);">${date} ${time}</div>
+      <div style="font-size: 13px; font-weight: 700; color: ${color};">${sign}${profit} RGT</div>
+    </div>`;
+  }).join('');
+  
+  // Пагинация
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  if (totalPages > 1) {
+    let paginationHTML = '';
+    
+    // Кнопка предыдущей
+    if (page > 1) {
+      paginationHTML += `<button onclick="changeHistoryPage(${page - 1})" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">←</button>`;
+    }
+    
+    // Номера страниц
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      const isActive = i === page;
+      paginationHTML += `<button onclick="changeHistoryPage(${i})" style="background: ${isActive ? 'rgba(139,92,246,0.3)' : 'rgba(139,92,246,0.1)'}; border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; ${isActive ? 'font-weight: bold;' : ''}">${i}</button>`;
+    }
+    
+    // Кнопка следующей
+    if (page < totalPages) {
+      paginationHTML += `<button onclick="changeHistoryPage(${page + 1})" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">→</button>`;
+    }
+    
+    paginationContainer.innerHTML = paginationHTML;
+  } else {
+    paginationContainer.innerHTML = '';
+  }
+};
+
+// Функция очистки истории
+window.clearSpinHistory = function() {
+  if (!confirm('Вы уверены, что хотите очистить всю историю прокруток? Это действие нельзя отменить.')) return;
+  
+  try {
+    // Очищаем локальную историю
+    localHistory = [];
+    
+    // Очищаем в Firestore
+    if (currentUser && window.db) {
+      const { doc, deleteDoc } = window.__firestoreExports;
+      const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
+      deleteDoc(userHistoryRef);
+    }
+    
+    // Обновляем интерфейс
+    renderHistory();
+    
+    if (typeof showToast === 'function') {
+      showToast('История прокруток очищена на всех устройствах');
+    }
+  } catch (error) {
+    console.error('Error clearing history:', error);
+    if (typeof showToast === 'function') {
+      showToast('Ошибка при очистке истории');
+    }
+  }
+};
+
+// Функция смены страницы
+window.changeHistoryPage = function(page) {
+  window.currentHistoryPage = page;
+  renderHistoryPage();
+};
+
+// Tabs
+window.switchTab = function(name, btn) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('tab-' + name);
+  if (el) el.style.display = '';
+  if (btn) btn.classList.add('active');
+};
+
+// Confetti
+function launchConfetti(count = 40) {
+  const colors = ['#8b5cf6','#ec4899','#fbbf24','#34d399','#22d3ee','#f87171'];
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.cssText = `
+      left:${Math.random() * 100}vw;
+      background:${colors[Math.floor(Math.random() * colors.length)]};
+      width:${6 + Math.random() * 8}px;
+      height:${6 + Math.random() * 8}px;
+      border-radius:${Math.random() > .5 ? '50%' : '2px'};
+      animation-delay:${Math.random() * .8}s;
+      animation-duration:${2.5 + Math.random() * 1.5}s;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 4500);
+  }
+}
+
+// Toast fallback
+function showToastLocal(key, fallback) {
+  if (typeof window.showToast === 'function') {
+    window.showToast(typeof window.t === 'function' ? window.t(key) || fallback : fallback);
+  } else {
+    console.log(fallback);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// HEADER AUTH UI UPDATE
+// ═══════════════════════════════════════════════════════════
+function updateHeaderAuthUI(user) {
+  const out = document.getElementById('loggedOutView');
+  const inn = document.getElementById('loggedInView');
+  if (out && inn) {
+    if (user) {
+      out.style.display = 'none';
+      inn.style.display = 'flex';
+      // Показываем кнопку сообщений при входе
+      const feedbackPanel = document.getElementById('generalFeedbackPanel');
+      if (feedbackPanel) feedbackPanel.classList.remove('hidden');
+    } else {
+      out.style.display = 'flex';
+      inn.style.display = 'none';
+      // Скрываем кнопку сообщений при выходе
+      const feedbackPanel = document.getElementById('generalFeedbackPanel');
+      if (feedbackPanel) feedbackPanel.classList.add('hidden');
+    }
+  }
+  const ava = document.getElementById('userAvatar');
+  const name = document.getElementById('userName');
+  const mobAva = document.getElementById('mobUserAvatar');
+  const mobOut = document.getElementById('mobLoggedOutView');
+  const mobInn = document.getElementById('mobLoggedInView');
+  
+  if (user) {
+    if (ava) ava.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+    if (name) name.textContent = user.displayName || (user.email ? user.email.split('@')[0] : 'Researcher');
+    if (mobAva) mobAva.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+    if (mobOut) mobOut.style.display = 'none';
+    if (mobInn) mobInn.style.display = 'flex';
+  } else {
+    if (mobOut) mobOut.style.display = 'block';
+    if (mobInn) mobInn.style.display = 'none';
+  }
+  
+  const adminPanel = document.getElementById('adminPanel');
+  if (adminPanel) adminPanel.style.display = isAdmin ? 'flex' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTH STATE
+// ═══════════════════════════════════════════════════════════
+if (auth) {
+  onAuthStateChanged(auth, async user => {
+    currentUser = user;
+    window.currentUser = user;
+    isAdmin = !!(user && user.uid === WOF_ADMIN_UID);
+    window.isAdmin = isAdmin;
+
+    // Обновляем заголовок с инфой об авторизации
+    updateHeaderAuthUI(user);
+
+    // Обновляем мобильные и десктопные кнопки администратора
+    if (typeof window.updateMobileAdminButtons === 'function') {
+      window.updateMobileAdminButtons();
+    }
+
+    // Показываем фиксированную админ-панель
+    const adminPanel = document.getElementById('fixedAdminPanel');
+    if (adminPanel) {
+      adminPanel.style.display = isAdmin ? 'flex' : 'none';
+    }
+
+    if (user && db) {
+      try {
+        const uSnap = await getDoc(doc(db, COL_USERS, user.uid));
+        userData = uSnap.exists() ? uSnap.data() : {};
+        // Экспортируем userData в window для footer.js и других скриптов
+        window.userProfileData = userData;
+      } catch(e) {
+        userData = {};
+        window.userProfileData = {};
+      }
+    } else {
+      userData = {};
+      window.userProfileData = {};
+    }
+
+    updateSpinsUI();
+    updateStatsUI();
+    await loadJackpot();
+    await loadLeaderboard();
+    
+    // Загружаем историю прокруток из Firestore
+    loadLocalHistory();
+    
+    // Load notifications for wheel
+    if (user && db && window.__firestoreExports) {
+      // Используем централизованную систему уведомлений
+      if (typeof window.loadNotifications === 'function') {
+        window.loadNotifications();
+      }
+    }
+    
+    // Обновляем бейдж уведомлений сразу при загрузке
+    updateNotificationBadge();
+
+    // Admin jackpot button
+    const ab = document.getElementById('jackpotAdminBtn');
+    if (ab) ab.style.display = isAdmin ? 'inline-block' : 'none';
+  });
+} else {
+  updateSpinsUI();
+}
+
+// Expose logout for header.js
+window.logout = async function() {
+  if (auth && typeof signOut === 'function') await signOut(auth);
+};
+
+// Функции аутентификации доступны из централизованной системы auth.js
+
+// Update translations on language change
+document.addEventListener('languageChanged', () => {
+  // Re-update all UI text with new language
+  if (typeof window.t === 'function') {
+    const updateTranslations = () => {
+      document.querySelectorAll('[data-translate]').forEach(el => {
+        const key = el.getAttribute('data-translate');
+        const translated = window.t(key);
+        if (translated && translated !== key) {
+          el.textContent = translated;
+        }
+      });
+    };
+    updateTranslations();
+  }
+});
+
+// Функции уведомлений доступны из централизованной системы header.js
+
+// Функция обновления счетчиков фильтров
+function updateFilterCounts(notifications) {
+  const counts = {
+    all: notifications.length,
+    games: notifications.filter(n => n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))).length,
+    jackpot_win: notifications.filter(n => n.type === 'jackpot_win').length,
+    admin: notifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game'))).length
+  };
+  
+  const unreadCounts = {
+    all: notifications.filter(n => !n.read).length,
+    games: notifications.filter(n => (n.type === 'wheel_spin' || n.type === 'faucet_claim' || n.type === 'game_reward' || (n.type && n.type.includes('game'))) && !n.read).length,
+    jackpot_win: notifications.filter(n => n.type === 'jackpot_win' && !n.read).length,
+    admin: notifications.filter(n => n.type !== 'wheel_spin' && n.type !== 'faucet_claim' && n.type !== 'game_reward' && n.type !== 'jackpot_win' && (!n.type || !n.type.includes('game')) && !n.read).length
+  };
+  
+  // Обновляем счетчики на кнопках
+  Object.keys(counts).forEach(filter => {
+    const countEl = document.getElementById(`filterCount-${filter}`);
+    if (countEl) {
+      countEl.textContent = counts[filter];
+    }
+  });
+  
+  // Обновляем бейджи непрочитанных
+  Object.keys(unreadCounts).forEach(filter => {
+    const badgeEl = document.getElementById(`unreadBadge-${filter}`);
+    if (badgeEl) {
+      const count = unreadCounts[filter];
+      if (count > 0) {
+        badgeEl.textContent = count > 99 ? '99+' : count;
+        badgeEl.style.display = 'flex';
+      } else {
+        badgeEl.style.display = 'none';
+      }
+    }
+  });
+}
+
+// Функция отметки отфильтрованных уведомлений как прочитанные
+window.markFilteredNotificationsAsRead = async function() {
+  const filtered = window.filteredNotifications || [];
+  const unreadFiltered = filtered.filter(n => !n.read);
+  
+  if (unreadFiltered.length === 0) {
+    if (typeof showToast === 'function') {
+      showToast('Нет непрочитанных уведомлений в текущем фильтре');
+    }
+    return;
+  }
+  
+  try {
+    const { updateDoc, doc } = window.__firestoreExports;
+    
+    for (const notif of unreadFiltered) {
+      await updateDoc(doc(window.db, "notifications", notif.id), {
+        read: true
+      });
+      // Мгновенно обновляем локальный массив
+      notif.read = true;
+    }
+    
+    // Обновляем бейдж
+    updateNotificationBadge();
+    
+    // Обновляем текущий фильтр
+    const currentFilter = window.currentFilter || 'all';
+    filterNotifications(currentFilter);
+    
+    if (typeof showToast === 'function') {
+      showToast(`Отмечено как прочитанные: ${unreadFiltered.length} уведомлений`);
+    }
+  } catch (error) {
+    console.error('Error marking filtered notifications as read:', error);
+    if (typeof showToast === 'function') {
+      showToast('Ошибка при отметке уведомлений');
+    }
+  }
+};
+
+// Функция очистки отфильтрованных уведомлений
+window.clearFilteredNotifications = async function() {
+  const filtered = window.filteredNotifications || [];
+  
+  if (filtered.length === 0) {
+    if (typeof showToast === 'function') {
+      showToast('Нет уведомлений в текущем фильтре');
+    }
+    return;
+  }
+  
+  const filterName = window.currentFilter === 'all' ? 'все уведомления' : 'уведомления из текущего фильтра';
+  if (!confirm(`Вы уверены, что хотите удалить ${filtered.length} ${filterName}?`)) return;
+  
+  try {
+    const { deleteDoc, doc } = window.__firestoreExports;
+    
+    if (!deleteDoc || !doc) {
+      console.error('Firestore deleteDoc or doc function not available');
+      if (typeof showToast === 'function') {
+        showToast('Ошибка: функции Firestore недоступны');
+      }
+      return;
+    }
+    
+    for (const notif of filtered) {
+      await deleteDoc(doc(window.db, "notifications", notif.id));
+      // Удаляем из локального массива
+      const index = window.allNotifications.findIndex(n => n.id === notif.id);
+      if (index > -1) {
+        window.allNotifications.splice(index, 1);
+      }
+    }
+    
+    // Обновляем бейдж
+    updateNotificationBadge();
+    
+    // Обновляем текущий фильтр
+    const currentFilter = window.currentFilter || 'all';
+    filterNotifications(currentFilter);
+    
+    if (typeof showToast === 'function') {
+      showToast(`Удалено: ${filtered.length} уведомлений`);
+    }
+  } catch (error) {
+    console.error('Error clearing filtered notifications:', error);
+    if (typeof showToast === 'function') {
+      showToast('Ошибка при удалении уведомлений');
+    }
+  }
+};
+
+  // Функции уведомлений доступны из централизованной системы header.js
+
+// Функция загрузки уведомлений для колеса
+async function loadNotificationsForWheel() {
+  if (!window.db || !currentUser) {
+    const listEl = document.getElementById('notificationsList');
+    if (listEl) {
+      listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Недоступно без авторизации</p>';
+    }
+    return;
+  }
+  
+  // Проверяем доступность Firestore функций
+  if (!window.__firestoreExports) {
+    console.warn('Firestore exports not ready, retrying in 500ms...');
+    setTimeout(loadNotificationsForWheel, 500);
+    return;
+  }
+  
+  try {
+    const { collection, query, where, orderBy, onSnapshot } = window.__firestoreExports;
+    
+    if (!collection || !query || !where || !orderBy || !onSnapshot) {
+      console.error('Required Firestore functions not available:', { collection, query, where, orderBy, onSnapshot });
+      const listEl = document.getElementById('notificationsList');
+      if (listEl) {
+        listEl.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка: функции Firestore недоступны</p>';
+      }
+      return;
+    }
+    
+    const q = query(
+      collection(window.db, "notifications"),
+      where("userId", "==", currentUser.uid),
+      orderBy("createdAt", "desc")
+    );
+    
+    onSnapshot(q, (snapshot) => {
+      const notifications = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        data.id = doc.id;
+        notifications.push(data);
+        console.log('📨 Loaded notification:', { id: data.id, type: data.type, message: data.message?.substring(0, 50) });
+      });
+      
+      console.log('📨 Total loaded notifications:', notifications.length);
+      window.allNotifications = notifications; // Сохраняем полный массив
+      window.notifications = notifications; // Для совместимости
+      
+      // Автоматически обновляем бейдж при изменениях
+      updateNotificationBadge();
+      
+      // Если модальное окно открыто, обновляем его
+      if (document.getElementById('notificationsModalOverlay')) {
+        const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+        filterNotifications(activeFilter);
+      } else {
+        renderNotificationsInWheel(notifications);
+      }
+      
+      // Обновляем счетчики если модальное окно открыто
+      if (document.getElementById('notificationsModalOverlay')) {
+        updateFilterCounts(notifications);
+      }
+    });
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+    const listEl = document.getElementById('notificationsList');
+    if (listEl) {
+      listEl.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Ошибка загрузки уведомлений</p>';
+    }
+  }
+}
+
+// Функция отображения уведомлений для колеса
+function renderNotificationsInWheel(notifications) {
+  const listEl = document.getElementById('notificationsList');
+  if (!listEl) return;
+  
+  if (notifications.length === 0) {
+    listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Нет уведомлений</p>';
+    return;
+  }
+  
+  listEl.innerHTML = notifications.map(notif => {
+    const messageWithLinks = (notif.message || notif.msg || '').replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #60a5fa; text-decoration: underline;">$1</a>');
+    const isUnread = !notif.read;
+    
+    // Определяем тип и иконку
+    let typeIcon = '📢';
+    let typeLabel = 'Уведомление';
+    
+    console.log('🏷️ Processing notification type:', notif.type, 'for ID:', notif.id);
+    
+    if (notif.type === 'wheel_spin') {
+      typeIcon = '🎰';
+      typeLabel = 'Колесо фортуны';
+    } else if (notif.type === 'jackpot_win') {
+      typeIcon = '🏆';
+      typeLabel = 'Джекпот';
+    } else if (notif.type === 'faucet_claim') {
+      typeIcon = '🚰';
+      typeLabel = 'Кран';
+    } else if (notif.type === 'game_reward') {
+      typeIcon = '🎮';
+      typeLabel = 'Игра';
+    } else if (notif.type === 'feedback_reply') {
+      typeIcon = '💬';
+      typeLabel = 'Ответ на сообщение';
+    } else if (notif.type === 'admin' || notif.type === 'broadcast' || notif.type === 'announcement') {
+      typeIcon = '🛡️';
+      typeLabel = 'Администрация';
+    } else if (notif.type === 'reward') {
+      typeIcon = '🎁';
+      typeLabel = 'Поощрение';
+    } else if (notif.type === 'newsletter' || notif.type === 'subscription') {
+      typeIcon = '📧';
+      typeLabel = 'Рассылка';
+    } else if (!notif.type) {
+      typeIcon = '📢';
+      typeLabel = 'Уведомление';
+    } else {
+      // Для всех остальных типов
+      typeIcon = '📢';
+      typeLabel = notif.type.charAt(0).toUpperCase() + notif.type.slice(1);
+    }
+    
+    return `
+      <div style="background: rgba(30,37,56,0.6); border: 1px solid ${isUnread ? 'rgba(34,211,238,0.4)' : 'rgba(34,211,238,0.2)'}; border-radius: 12px; padding: 16px; margin-bottom: 12px; ${isUnread ? 'border-left: 3px solid #22d3ee;' : ''} ${notif.type === 'jackpot_win' ? 'cursor: pointer; transition: all 0.3s;' : ''}" data-notif-id="${notif.id}" ${notif.type === 'jackpot_win' ? `onclick="window.showJackpotWinnerFromNotification({id: '${notif.id}', userId: '${notif.userId || ''}', winnerName: '${notif.winnerName || ''}', amount: '${notif.amount || '0'}', message: '${notif.message || ''}'})"` : ''}>
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+          <h4 style="color: ${notif.type === 'jackpot_win' ? '#22c55e' : '#22d3ee'}; font-size: 14px; font-weight: 600; margin: 0;">
+            ${typeIcon} ${typeLabel}
+            ${notif.type === 'jackpot_win' ? '<span style="margin-left: 8px; font-size: 12px; color: #22c55e;">🎉 Нажмите для подробностей</span>' : ''}
+          </h4>
+          ${isUnread ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
+        </div>
+        <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${messageWithLinks}</p>
+        <p style="color: #64748b; font-size: 11px; margin: 0;">${formatNotificationDate(notif.createdAt)}</p>
+        ${isUnread && notif.type !== 'jackpot_win' ? `<button onclick="event.stopPropagation(); markNotificationAsReadWheel('${notif.id}')" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
+      </div>
+    `;
+  }).join('');
+  
+  // Сохраняем уведомления глобально для обновления бейджа
+  window.notifications = notifications;
+  updateNotificationBadge();
+}
+
+// Функции уведомлений доступны из централизованной системы header.js
+
+// Функция для отображения уведомлений в модальном окне
+function renderNotificationsInModal() {
+  const listEl = document.getElementById('notificationsList');
+  if (!listEl) return;
+  
+  const notifications = window.notifications || [];
+  
+  if (notifications.length === 0) {
+    listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Нет уведомлений</p>';
+    return;
+  }
+  
+  listEl.innerHTML = notifications.map(notif => `
+    <div style="background: rgba(30,37,56,0.6); border: 1px solid rgba(34,211,238,0.2); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+        <h4 style="color: #22d3ee; font-size: 14px; font-weight: 600; margin: 0;">${notif.title || 'Уведомление'}</h4>
+        ${!notif.read ? '<span style="background: #22d3ee; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">NEW</span>' : ''}
+      </div>
+      <p style="color: #f1f5f9; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">${notif.message}</p>
+      <p style="color: #64748b; font-size: 11px; margin: 0;">${new Date(notif.createdAt).toLocaleString()}</p>
+      ${!notif.read ? `<button onclick="markNotificationAsRead('${notif.id}'); renderNotificationsInModal();" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #22d3ee; cursor: pointer; font-size: 11px; padding: 4px 8px; border-radius: 4px; margin-top: 8px;">Отметить как прочитанное</button>` : ''}
+    </div>
+  `).join('');
+}
+
+// Функции уведомлений доступны из централизованной системы header.js
+
+// Функция для отображения модального окна выигрыша джекпота из уведомлений (использует существующий jackpotWinnerOverlay)
+window.showJackpotWinnerFromNotification = async function(notification) {
+  try {
+    // Сначала закрываем модальное окно уведомлений чтобы оно не мешало
+    const notificationsModal = document.getElementById('notificationsModalOverlay');
+    if (notificationsModal) {
+      notificationsModal.remove();
+    }
+    
+    // Получаем данные пользователя
+    let winnerName = notification.winnerName || 'Пользователь';
+    let winnerAvatar = '';
+    
+    // Всегда получаем свежие данные пользователя для аватарки
+    if (notification.userId) {
+      try {
+        const userSnap = await getDoc(doc(db, 'users', notification.userId));
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          winnerName = userData.displayName || userData.email || notification.userId.substring(0, 8) + '...';
+          winnerAvatar = userData.photoURL || userData.avatarUrl || '';
+          
+          // Добавляем отладочную информацию
+          console.log('👤 User data loaded:', { winnerName, winnerAvatar: winnerAvatar ? 'exists' : 'none' });
+        }
+      } catch (userError) {
+        console.warn('Error loading user data:', userError);
+      }
+    }
+    
+    // Обновляем элементы в существующем оверлее
+    const nameElement = document.getElementById('jwName');
+    const amountElement = document.getElementById('jwAmount');
+    const avatarElement = document.getElementById('jwAvatar');
+    
+    if (nameElement) nameElement.textContent = winnerName;
+    if (amountElement) amountElement.textContent = (notification.amount || '0') + ' RGT';
+    
+    if (avatarElement) {
+      if (winnerAvatar) {
+        avatarElement.src = winnerAvatar;
+        avatarElement.style.display = 'block';
+        avatarElement.onerror = function() {
+          this.style.display = 'none';
+          console.log('🖼️ Avatar failed to load, hiding');
+        };
+        console.log('🖼️ Avatar set to:', winnerAvatar);
+      } else {
+        avatarElement.style.display = 'none';
+        console.log('🖼️ No avatar, hiding element');
+      }
+    }
+    
+    // Показываем оверлей с высоким z-index
+    const overlay = document.getElementById('jackpotWinnerOverlay');
+    if (overlay) {
+      overlay.style.zIndex = '20000'; // Устанавливаем высокий z-index
+      overlay.classList.add('show');
+      console.log('🎯 Jackpot overlay shown with z-index:', overlay.style.zIndex);
+    }
+    
+    // Запускаем конфетти для эффекта
+    if (typeof launchConfetti === 'function') {
+      setTimeout(() => launchConfetti(80), 300); // Небольшая задержка для эффекта
+    }
+    
+    // Автоматически помечаем уведомление как прочитанное
+    if (notification.id && typeof markNotificationAsReadWheel === 'function') {
+      markNotificationAsReadWheel(notification.id);
+    }
+    
+  } catch (error) {
+    console.error('Error showing jackpot winner from notification:', error);
+  }
+};
+function updateNotificationBadge() {
+  const badge = document.getElementById('notificationBadge');
+  if (!badge) return;
+  
+  const unreadCount = (window.allNotifications || []).filter(n => !n.read).length;
+  
+  if (unreadCount > 0) {
+    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+    badge.textContent = '0';
+  }
+}
+
+// Инициализация слушателя сообщений при загрузке страницы (только если пользователь уже авторизован)
+if (currentUser && db) {
+  // Используем функцию из header.js
+  if (typeof initFeedbacksListener === 'function') {
+    initFeedbacksListener(currentUser.uid);
+  }
+}
+</script>
+
+<!-- Фиксированная админ-панель -->
+<div id="fixedAdminPanel" style="position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,37,56,0.95));border-top:1px solid rgba(139,92,246,0.3);backdrop-filter:blur(10px);padding:10px 20px;z-index:1000;display:none;align-items:center;justify-content:space-between;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <span style="color:#a78bfa;font-size:12px;font-weight:600;"><i class="fas fa-shield" style="margin-right:6px;"></i>Admin Panel</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div id="deskAdminBtns" style="display:flex;align-items:center;gap:6px;"></div>
+  </div>
+</div>
+
+<!-- Login Modal создается централизованно через auth-modal.js -->
+
+  <script>
+// ═══════════════════════════════════════════════════════
+// 🎮 ONLINE WHEEL OF FORTUNE FUNCTIONS
+// ═══════════════════════════════════════════════════════
+
+// Глобальные переменные для онлайн-режима
+let currentGameMode = 'solo';
+let onlineGame = {
+  participants: [],
+  prizePool: 0,
+  timeLeft: 0,
+  bettingOpen: false,
+  gameCount: 0 // Изменено с currentRound на gameCount
+};
+
+// Функции переключения режимов
+function switchToSolo() {
+  console.log('🔄 Switching to solo mode...');
+  currentGameMode = 'solo';
+  
+  // Обновляем стили кнопок
+  updateModeButtons('solo');
+  
+  // Скрываем онлайн-контейнер
+  const onlineContainer = document.getElementById('onlineModeContainer');
+  if (onlineContainer) {
+    onlineContainer.style.display = 'none';
+  }
+  
+  // Показываем основной контейнер
+  const mainGrid = document.querySelector('.main-grid');
+  if (mainGrid) {
+    mainGrid.style.display = 'grid';
+  }
+  
+  // Показываем баннер джекпота
+  const jackpotBanner = document.getElementById('jackpotBanner');
+  if (jackpotBanner) {
+    jackpotBanner.style.display = 'block';
+  }
+  
+  if (typeof showToast === 'function') {
+    showToast('Switched to Solo Mode', 'success');
+  }
+}
+
+function switchToOnline() {
+  console.log('🔄 Switching to online mode...');
+  currentGameMode = 'online';
+  
+  // Обновляем стили кнопок
+  updateModeButtons('online');
+  
+  // Скрываем основной контейнер
+  const mainGrid = document.querySelector('.main-grid');
+  if (mainGrid) {
+    mainGrid.style.display = 'none';
+  }
+  
+  // Скрываем баннер джекпота
+  const jackpotBanner = document.getElementById('jackpotBanner');
+  if (jackpotBanner) {
+    jackpotBanner.style.display = 'none';
+  }
+  
+  // Показываем онлайн-контейнер
+  const onlineContainer = document.getElementById('onlineModeContainer');
+  if (onlineContainer) {
+    onlineContainer.style.display = 'block';
+  }
+  
+  // Инициализируем онлайн-игру
+  initOnlineGame();
+  
+  if (typeof showToast === 'function') {
+    showToast('Switched to Online Mode', 'success');
+  }
+}
+
+// Обновление стилей кнопок режимов
+function updateModeButtons(activeMode) {
+  const soloBtn = document.getElementById('soloModeBtn');
+  const onlineBtn = document.getElementById('onlineModeBtn');
+  
+  if (soloBtn && onlineBtn) {
+    if (activeMode === 'solo') {
+      // Solo активен
+      soloBtn.style.background = 'linear-gradient(135deg,#8b5cf6,#7c3aed)';
+      soloBtn.style.color = 'white';
+      onlineBtn.style.background = 'transparent';
+      onlineBtn.style.color = 'var(--text-secondary)';
+    } else {
+      // Online активен
+      soloBtn.style.background = 'transparent';
+      soloBtn.style.color = 'var(--text-secondary)';
+      onlineBtn.style.background = 'linear-gradient(135deg,#8b5cf6,#7c3aed)';
+      onlineBtn.style.color = 'white';
+    }
+  }
+}
+
+// Инициализация онлайн-игры
+function initOnlineGame() {
+  console.log('🎮 Initializing online game...');
+  
+  // Ждем загрузки Firebase функций
+  if (typeof window.doc === 'undefined' || typeof window.getDoc === 'undefined') {
+    console.log('⏳ Firebase functions not ready, waiting...');
+    setTimeout(() => initOnlineGame(), 500);
+    return;
+  }
+  
+  // Отладочная информация о доступных Firestore инстансах
+  console.log('🔍 Debug - available Firestore instances:');
+  console.log('  window.firestore:', typeof window.firestore);
+  console.log('  window.db:', typeof window.db);
+  console.log('  window.wofDb:', typeof window.wofDb);
+  
+  // Проверяем доступность Firestore разными способами
+  let firestore = null;
+  if (typeof window.firestore !== 'undefined') {
+    firestore = window.firestore;
+    console.log('✅ Using window.firestore');
+  } else if (typeof window.db !== 'undefined') {
+    firestore = window.db;
+    console.log('✅ Using window.db');
+  } else if (typeof window.wofDb !== 'undefined') {
+    firestore = window.wofDb;
+    console.log('✅ Using window.wofDb');
+  }
+  
+  if (!firestore) {
+    console.log('⏳ Firestore not ready, waiting...');
+    setTimeout(() => initOnlineGame(), 1000);
+    return;
+  }
+  
+  // Проверяем что Firestore имеет правильные методы для v9+
+  console.log('🔍 Firestore methods check:');
+  console.log('  collection:', typeof firestore.collection);
+  console.log('  doc:', typeof firestore.doc);
+  console.log('  getDoc:', typeof window.getDoc);
+  console.log('  setDoc:', typeof window.setDoc);
+  console.log('  doc (global):', typeof window.doc);
+  
+  // Устанавливаем глобальную переменную
+  window.firestore = firestore;
+  console.log('✅ Firestore is available for online game');
+  
+  // Загружаем данные из Firebase
+  loadOnlineGameData();
+  
+  // Обновляем баланс пользователя
+  updateUserBalance();
+  
+  // Инициализация онлайн-колеса
+  initOnlineWheel();
+  
+  // Устанавливаем Firebase listener для реального времени
+  setupFirebaseListener();
+  
+  // Обновление UI
+  updateOnlineUI();
+}
+
+// Установка Firebase listener для реального времени
+function setupFirebaseListener() {
+  console.log('🔥 Setting up Firebase listener for real-time updates...');
+  
+  // Проверяем доступность Firebase
+  if (typeof window.firestore === 'undefined' || typeof window.doc === 'undefined' || typeof window.onSnapshot === 'undefined') {
+    console.log('⚠️ Firebase not available, using polling');
+    // Fallback к polling с интервалом 5 секунд
+    setInterval(() => {
+      if (onlineGame.bettingOpen) {
+        loadOnlineGameData();
+      }
+    }, 5000);
+    return;
+  }
+  
+  try {
+    // Используем правильный синтаксис для Firebase v9+
+    const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
+    
+    const unsubscribe = window.onSnapshot(gameDocRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        
+        // Обновляем локальные данные только если есть изменения
+        if (JSON.stringify(data) !== JSON.stringify(onlineGame)) {
+          onlineGame = { ...onlineGame, ...data };
+          console.log('🔄 Real-time update received:', data);
+          updateOnlineUI();
+          
+          // Если игра активна и идет таймер, запускаем локальный таймер
+          if (data.bettingOpen && data.timeLeft > 0 && !bettingTimer) {
+            startBettingTimer(data.timeLeft);
+          }
+        }
+      }
+    }, (error) => {
+      console.error('❌ Firebase listener error:', error);
+      console.log('🔄 Falling back to polling');
+      // Fallback к polling при ошибке
+      setInterval(() => {
+        if (onlineGame.bettingOpen) {
+          loadOnlineGameData();
+        }
+      }, 5000);
+    });
+    
+    console.log('✅ Firebase listener set up successfully');
+    
+  } catch (error) {
+    console.error('❌ Error setting up Firebase listener:', error);
+    console.log('🔄 Falling back to polling');
+    // Fallback к polling при ошибке
+    setInterval(() => {
+      if (onlineGame.bettingOpen) {
+        loadOnlineGameData();
+      }
+    }, 5000);
+  }
+}
+
+// Таймер для фазы ставок с реальным временем
+let bettingTimer = null;
+
+function startBettingTimer(timeLeft = 60) {
+  if (bettingTimer) {
+    clearInterval(bettingTimer);
+  }
+  
+  console.log(`⏰ Starting betting timer: ${timeLeft} seconds`);
+  
+  bettingTimer = setInterval(() => {
+    if (onlineGame.timeLeft > 0) {
+      onlineGame.timeLeft--;
+      
+      // Обновляем время в Firebase
+      if (typeof window.firestore !== 'undefined' && typeof window.doc !== 'undefined' && typeof window.setDoc === 'function') {
+        const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
+        window.setDoc(gameDocRef, {
+          timeLeft: onlineGame.timeLeft,
+          endTime: new Date(Date.now() + onlineGame.timeLeft * 1000).toISOString()
+        }, { merge: true });
+      }
+      
+      // Обновляем UI
+      updateOnlineUI();
+    } else {
+      // Время вышло - заканчиваем фазу ставок
+      clearInterval(bettingTimer);
+      bettingTimer = null;
+      console.log('⏰ Betting time expired!');
+      endBettingPhase();
+    }
+  }, 1000);
+}
+
+// Загрузка данных онлайн-игры из Firebase
+function loadOnlineGameData() {
+  console.log('📦 Loading online game data...');
+  console.log('🔍 Current window.firestore:', typeof window.firestore);
+  console.log('🔍 Available Firebase functions:');
+  console.log('  collection:', typeof window.firestore?.collection);
+  console.log('  doc:', typeof window.firestore?.doc);
+  console.log('  getDoc:', typeof window.getDoc);
+  console.log('  setDoc:', typeof window.setDoc);
+  console.log('  doc (global):', typeof window.doc);
+  
+  // Ждем загрузки Firebase функций
+  if (typeof window.doc === 'undefined' || typeof window.getDoc === 'undefined') {
+    console.log('⏳ Firebase functions not ready for game data, waiting...');
+    setTimeout(() => loadOnlineGameData(), 500);
+    return;
+  }
+  
+  // Проверяем доступность Firebase с правильным синтаксисом v9+
+  if (typeof window.firestore !== 'undefined' && typeof window.getDoc === 'function') {
+    console.log('✅ Using Firebase v9+ syntax for online game data');
+    
+    // Используем правильный синтаксис для создания document reference
+    const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
+    
+    window.getDoc(gameDocRef).then((doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        onlineGame = { ...onlineGame, ...data };
+        console.log('📦 Loaded global online game data:', data);
+        updateOnlineUI();
+        
+        // Если игра активна и идет таймер, запускаем локальный таймер
+        if (data.bettingOpen && data.timeLeft > 0) {
+          startBettingTimer(data.timeLeft);
+        }
+      } else {
+        console.log('📦 No global game exists, creating new one');
+        // Создаем новую глобальную игру
+        createNewGlobalGame();
+      }
+    }).catch((error) => {
+      console.error('❌ Error loading global online game data:', error);
+      console.log('🔄 Falling back to localStorage');
+      // Fallback к localStorage
+      loadFromLocalStorage();
+    });
+  } else {
+    console.log('⚠️ Firebase v9+ functions not available, using localStorage');
+    console.log('🔍 Firestore type:', typeof window.firestore);
+    console.log('🔍 getDoc type:', typeof window.getDoc);
+    console.log('🔍 doc type:', typeof window.doc);
+    // Fallback к localStorage если Firebase недоступен
+    loadFromLocalStorage();
+  }
+}
+
+// Создание новой глобальной игры
+function createNewGlobalGame() {
+  const now = new Date();
+  onlineGame = {
+    participants: [],
+    prizePool: 0,
+    timeLeft: 0,
+    bettingOpen: false,
+    gameCount: 1,
+    createdBy: window.currentUser?.uid || 'anonymous',
+    createdAt: now.toISOString(),
+    startTime: null, // Время начала фазы ставок
+    endTime: null // Время окончания фазы ставок
+  };
+  
+  saveOnlineGameData();
+  updateOnlineUI();
+  console.log('🎮 Created new global game:', onlineGame);
+}
+
+// Загрузка из localStorage как fallback
+function loadFromLocalStorage() {
+  try {
+    const savedData = localStorage.getItem('onlineWheelGame');
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      onlineGame = { ...onlineGame, ...data };
+      console.log('📦 Loaded online game data from localStorage:', data);
+    }
+  } catch (error) {
+    console.error('❌ Error loading online game data from localStorage:', error);
+  }
+}
+
+// Сохранение данных онлайн-игры в Firebase
+function saveOnlineGameData() {
+  console.log('💾 Saving online game data...');
+  console.log('🔍 Available Firebase functions:');
+  console.log('  setDoc:', typeof window.setDoc);
+  console.log('  doc:', typeof window.firestore?.doc);
+  
+  // Проверяем доступность Firebase с правильным синтаксисом v9+
+  if (typeof window.firestore !== 'undefined' && typeof window.setDoc === 'function') {
+    console.log('✅ Using Firebase v9+ syntax for saving game data');
+    
+    // Используем правильный синтаксис для создания document reference
+    const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
+    
+    window.setDoc(gameDocRef, onlineGame).then(() => {
+      console.log('💾 Saved global online game data to Firebase');
+    }).catch((error) => {
+      console.error('❌ Error saving global online game data to Firebase:', error);
+      // Fallback к localStorage
+      saveToLocalStorage();
+    });
+  } else {
+    console.log('⚠️ Firebase v9+ functions not available, using localStorage');
+    console.log('🔍 Firestore type:', typeof window.firestore);
+    console.log('🔍 setDoc type:', typeof window.setDoc);
+    // Fallback к localStorage если Firebase недоступен
+    saveToLocalStorage();
+  }
+}
+
+// Сохранение в localStorage как fallback
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem('onlineWheelGame', JSON.stringify(onlineGame));
+    console.log('💾 Saved online game data to localStorage');
+  } catch (error) {
+    console.error('❌ Error saving online game data to localStorage:', error);
+  }
+}
+
+// Обновление баланса пользователя
+function updateUserBalance() {
+  console.log('💰 Updating user balance...');
+  console.log('🔍 Current user:', window.currentUser?.uid);
+  console.log('🔍 Available Firebase functions:');
+  console.log('  getDoc:', typeof window.getDoc);
+  console.log('  setDoc:', typeof window.setDoc);
+  console.log('  doc:', typeof window.firestore?.doc);
+  console.log('  doc (global):', typeof window.doc);
+  
+  const balanceEl = document.getElementById('onlineUserBalance');
+  if (!balanceEl) return;
+  
+  // Ждем загрузки Firebase функций
+  if (typeof window.doc === 'undefined' || typeof window.getDoc === 'undefined') {
+    console.log('⏳ Firebase functions not ready for balance, waiting...');
+    setTimeout(() => updateUserBalance(), 500);
+    return;
+  }
+  
+  // Получаем баланс пользователя из Firebase с правильным синтаксисом v9+
+  if (typeof window.firestore !== 'undefined' && typeof window.getDoc === 'function' && window.currentUser) {
+    console.log('✅ Using Firebase v9+ syntax for user balance');
+    
+    // Используем коллекцию 'users' и поле 'reagents' как в faucet.html
+    const userDocRef = window.doc(window.firestore, 'users', window.currentUser.uid);
+    
+    window.getDoc(userDocRef).then((doc) => {
+      let balance = 0;
+      
+      if (doc.exists()) {
+        const userData = doc.data();
+        balance = userData.reagents || userData.balance || userData.rgt || 0;
+        console.log('💰 User balance from Firebase (reagents):', balance);
+      } else {
+        console.log('💰 No user data in Firebase, using 0 balance');
+        balance = 0; // Не используем тестовый баланс
+        
+        // Создаем документ пользователя
+        window.setDoc(userDocRef, {
+          displayName: window.currentUser.displayName || 'Anonymous',
+          reagents: 0,
+          createdAt: new Date().toISOString()
+        });
+      }
+      
+      // Обновляем UI
+      balanceEl.textContent = `Balance: ${balance} RGT`;
+      
+      // Сохраняем в глобальную переменную для других функций
+      window.currentUserRGT = balance;
+      
+    }).catch((error) => {
+      console.error('❌ Error loading user balance from Firebase:', error);
+      console.log('🔄 Falling back to other sources');
+      // Fallback к другим источникам
+      loadBalanceFromOtherSources();
+    });
+  } else {
+    console.log('⚠️ Firebase v9+ functions or user not available, using fallback');
+    console.log('🔍 Firestore type:', typeof window.firestore);
+    console.log('🔍 getDoc type:', typeof window.getDoc);
+    console.log('🔍 doc type:', typeof window.doc);
+    console.log('🔍 Current user:', window.currentUser?.uid);
+    // Fallback к другим источникам
+    loadBalanceFromOtherSources();
+  }
+}
+
+// Загрузка баланса из других источников как fallback
+function loadBalanceFromOtherSources() {
+  const balanceEl = document.getElementById('onlineUserBalance');
+  if (!balanceEl) return;
+  
+  let balance = 0;
+  
+  // Пытаемся получить баланс из разных источников
+  if (typeof window.userRGT !== 'undefined' && window.userRGT > 0) {
+    balance = window.userRGT;
+  } else if (typeof window.currentUserRGT !== 'undefined' && window.currentUserRGT > 0) {
+    balance = window.currentUserRGT;
+  } else if (typeof userBalance !== 'undefined' && userBalance > 0) {
+    balance = userBalance;
+  } else {
+    // Проверяем localStorage
+    const storedRGT = localStorage.getItem('userRGT');
+    if (storedRGT) {
+      balance = parseInt(storedRGT) || 0;
+    }
+  }
+  
+  // Для демонстрации если баланс все еще 0
+  if (balance === 0) {
+    balance = 0; // Не используем тестовый баланс
+  }
+  
+  balanceEl.textContent = `Balance: ${balance} RGT`;
+  window.currentUserRGT = balance;
+  console.log('💰 User balance from fallback sources:', balance);
+}
+
+// Обновление баланса пользователя в Firebase (при выигрыше/проигрыше)
+function updateUserBalanceInFirebase(amount, isWin = false) {
+  if (!window.currentUser || typeof window.firestore === 'undefined' || typeof window.updateDoc !== 'function') {
+    console.log('⚠️ Cannot update balance - Firebase or user not available');
+    return Promise.resolve();
+  }
+  
+  console.log(`💰 Updating user balance in Firebase: ${isWin ? '+' : '-'}${amount} RGT`);
+  
+  const userDocRef = window.doc(window.firestore, 'users', window.currentUser.uid);
+  
+  // Используем increment для атомарного обновления
+  return window.updateDoc(userDocRef, {
+    reagents: window.increment(isWin ? amount : -amount),
+    updatedAt: new Date().toISOString()
+  }).then(() => {
+    console.log(`✅ Balance updated: ${isWin ? '+' : '-'}${amount} RGT`);
+    // Обновляем локальный баланс
+    window.currentUserRGT = (window.currentUserRGT || 0) + (isWin ? amount : -amount);
+    
+    // Обновляем UI
+    const balanceEl = document.getElementById('onlineUserBalance');
+    if (balanceEl) {
+      balanceEl.textContent = `Balance: ${window.currentUserRGT} RGT`;
+    }
+  }).catch((error) => {
+    console.error('❌ Error updating user balance:', error);
+  });
+}
+
+// Цвета для участников колеса
+const participantColors = [
+  '#8b5cf6', // Фиолетовый
+  '#22d3ee', // Голубой  
+  '#f59e0b', // Оранжевый
+  '#10b981', // Зеленый
+  '#ef4444', // Красный
+  '#f97316', // Ярко-оранжевый
+  '#06b6d4', // Циановый
+  '#84cc16', // Лаймовый
+  '#a855f7', // Пурпурный
+  '#ec4899'  // Розовый
+];
+
+// Получение цвета для участника
+function getParticipantColor(index) {
+  return participantColors[index % participantColors.length];
+}
+
+// Инициализация онлайн-колеса
+function initOnlineWheel() {
+  const canvas = document.getElementById('onlineWheelCanvas');
+  if (!canvas) {
+    console.warn('⚠️ Online wheel canvas not found');
+    return;
+  }
+  
+  const ctx = canvas.getContext('2d');
+  canvas.width = 400;
+  canvas.height = 400;
+  
+  drawOnlineWheel(0); // Добавляем параметр вращения
+}
+
+// Рисование онлайн-колеса с динамическими секторами
+function drawOnlineWheel(rotation = 0) {
+  const canvas = document.getElementById('onlineWheelCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  
+  canvas.width = 400;
+  canvas.height = 400;
+  
+  const width = canvas.width;
+  const height = canvas.height;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = Math.min(width, height) / 2 - 10;
+  
+  // Очистка canvas
+  ctx.clearRect(0, 0, width, height);
+  
+  // Сохраняем состояние контекста
+  ctx.save();
+  
+  // Применяем вращение
+  ctx.translate(centerX, centerY);
+  ctx.rotate((rotation * Math.PI) / 180);
+  ctx.translate(-centerX, -centerY);
+  
+  // Если нет участников - рисуем пустое колесо
+  if (onlineGame.participants.length === 0) {
+    // Рисуем один большой сектор - ожидание игроков
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.closePath();
+    
+    // Градиент для пустого колеса
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
+    gradient.addColorStop(1, 'rgba(139, 92, 246, 0.1)');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    ctx.strokeStyle = '#1e2538';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Текст ожидания
+    ctx.fillStyle = '#8b5cf6';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Waiting for players...', centerX, centerY);
+    
+    ctx.restore();
+    return;
+  }
+  
+  // Рассчитываем проценты каждого участника
+  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+  let currentAngle = -Math.PI / 2; // Начинаем сверху
+  
+  onlineGame.participants.forEach((participant, index) => {
+    const percentage = participant.bet / totalBets;
+    const angle = percentage * Math.PI * 2;
+    const color = getParticipantColor(index);
+    
+    // Рисуем сектор с градиентом
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + angle);
+    ctx.closePath();
+    
+    // Градиент для сектора
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, color + 'ff');
+    gradient.addColorStop(0.7, color + 'cc');
+    gradient.addColorStop(1, color + '88');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    // Рисуем границу сектора
+    ctx.strokeStyle = '#1e2538';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Рисуем внутреннюю границу для лучшей видимости
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius * 0.95, currentAngle, currentAngle + angle);
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    // Текст с именем и процентом
+    const textAngle = currentAngle + angle / 2;
+    const textX = centerX + Math.cos(textAngle) * (radius * 0.65);
+    const textY = centerY + Math.sin(textAngle) * (radius * 0.65);
+    
+    ctx.save();
+    ctx.translate(textX, textY);
+    ctx.rotate(textAngle + Math.PI / 2);
+    
+    // Тень для текста
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
+    
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(participant.displayName || 'Player', 0, 0);
+    
+    ctx.font = '10px Arial';
+    ctx.fillText(`${(percentage * 100).toFixed(1)}%`, 0, 15);
+    
+    ctx.restore();
+    
+    currentAngle += angle;
+  });
+  
+  // Рисуем центральную кнопку с градиентом
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 35, 0, Math.PI * 2);
+  ctx.closePath();
+  
+  const buttonGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 35);
+  buttonGradient.addColorStop(0, '#8b5cf6');
+  buttonGradient.addColorStop(0.7, '#7c3aed');
+  buttonGradient.addColorStop(1, '#6d28d9');
+  ctx.fillStyle = buttonGradient;
+  ctx.fill();
+  
+  ctx.strokeStyle = '#1e2538';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  
+  // Внутренняя граница кнопки
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 14px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('SPIN', centerX, centerY);
+  
+  // Рисуем стрелку
+  ctx.restore();
+  
+  // Стрелка (не вращается)
+  ctx.save();
+  
+  // Тень для стрелки
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
+  
+  ctx.beginPath();
+  ctx.moveTo(centerX + radius + 15, centerY);
+  ctx.lineTo(centerX + radius - 15, centerY - 20);
+  ctx.lineTo(centerX + radius - 15, centerY + 20);
+  ctx.closePath();
+  
+  const arrowGradient = ctx.createLinearGradient(centerX + radius - 15, centerY - 20, centerX + radius + 15, centerY);
+  arrowGradient.addColorStop(0, '#ef4444');
+  arrowGradient.addColorStop(0.5, '#dc2626');
+  arrowGradient.addColorStop(1, '#b91c1c');
+  ctx.fillStyle = arrowGradient;
+  ctx.fill();
+  
+  ctx.strokeStyle = '#1e2538';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  
+  // Внутренняя граница стрелки
+  ctx.beginPath();
+  ctx.moveTo(centerX + radius + 12, centerY);
+  ctx.lineTo(centerX + radius - 12, centerY - 17);
+  ctx.lineTo(centerX + radius - 12, centerY + 17);
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  
+  ctx.restore();
+}
+
+// Обновление онлайн UI
+function updateOnlineUI() {
+  // Обновление призового пула
+  const prizePoolEl = document.getElementById('onlinePrizePool');
+  if (prizePoolEl) {
+    prizePoolEl.textContent = `${onlineGame.prizePool} RGT`;
+  }
+  
+  // Обновление времени
+  const timeLeftEl = document.getElementById('onlineTimeLeft');
+  if (timeLeftEl) {
+    if (onlineGame.timeLeft > 0) {
+      const minutes = Math.floor(onlineGame.timeLeft / 60);
+      const seconds = onlineGame.timeLeft % 60;
+      timeLeftEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    } else {
+      timeLeftEl.textContent = '--:--';
+    }
+  }
+  
+  // Обновление раунда
+  const roundEl = document.getElementById('onlineRound');
+  if (roundEl) {
+    roundEl.textContent = onlineGame.gameCount;
+  }
+  
+  // Обновление списка участников
+  updateParticipantsList();
+  
+  // Обновление статистики
+  updateOnlineStats();
+}
+
+// Обновление списка участников
+function updateParticipantsList() {
+  const participantsList = document.getElementById('onlineParticipantsList');
+  const participantCount = document.getElementById('onlineParticipantCount');
+  
+  if (!participantsList) return;
+  
+  participantCount.textContent = onlineGame.participants.length;
+  
+  if (onlineGame.participants.length === 0) {
+    participantsList.innerHTML = `
+      <div style="text-align:center;padding:20px;color:var(--text-secondary);">
+        <i class="fas fa-user-friends" style="font-size:24px;opacity:0.3;margin-bottom:8px;"></i>
+        <div>No participants yet</div>
+      </div>
+    `;
+    return;
+  }
+  
+  // Рассчитываем проценты
+  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+  
+  // Сортируем участников по шансам на победу (по убыванию)
+  const sortedParticipants = [...onlineGame.participants].sort((a, b) => b.bet - a.bet);
+  
+  participantsList.innerHTML = sortedParticipants.map((participant, index) => {
+    const percentage = totalBets > 0 ? ((participant.bet / totalBets) * 100).toFixed(1) : 0;
+    const winChance = onlineGame.participants.length > 1 ? percentage : 0;
+    const originalIndex = onlineGame.participants.findIndex(p => p.uid === participant.uid);
+    const color = getParticipantColor(originalIndex);
+    
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:${color}15;border:1px solid ${color}30;border-radius:8px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,${color},${color}dd);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">
+            ${participant.displayName ? participant.displayName.charAt(0).toUpperCase() : 'A'}
+          </div>
+          <div>
+            <div style="font-size:14px;color:white;font-weight:600;">${participant.displayName || 'Anonymous'}</div>
+            <div style="font-size:12px;color:${color};">Bet: ${participant.bet} RGT</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:14px;color:${color};font-weight:600;">${participant.bet} RGT</div>
+          <div style="font-size:11px;color:#22d3ee;">${winChance}% win</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Обновление онлайн статистики
+function updateOnlineStats() {
+  const totalBetsEl = document.getElementById('onlineTotalBets');
+  const activePlayersEl = document.getElementById('onlineActivePlayers');
+  
+  if (totalBetsEl) {
+    const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+    totalBetsEl.textContent = totalBets;
+  }
+  
+  if (activePlayersEl) {
+    activePlayersEl.textContent = onlineGame.participants.length;
+  }
+  
+  // Обновляем лидерборд
+  updateOnlineLeaderboard();
+}
+
+// Обновление онлайн-лидерборда
+let lastLeaderboardUpdate = 0;
+const LEADERBOARD_UPDATE_INTERVAL = 5000; // 5 секунд между обновлениями
+
+async function updateOnlineLeaderboard() {
+  const now = Date.now();
+  if (now - lastLeaderboardUpdate < LEADERBOARD_UPDATE_INTERVAL) {
+    console.log('⏰ Skipping leaderboard update (too frequent)');
+    return;
+  }
+  
+  lastLeaderboardUpdate = now;
+  console.log('🏆 Updating online leaderboard...');
+  
+  const leaderboardEl = document.getElementById('onlineLeaderboard');
+  if (!leaderboardEl) return;
+  
+  // Проверяем доступность Firebase
+  if (typeof window.firestore === 'undefined' || typeof window.doc === 'undefined' || typeof window.getDoc === 'undefined') {
+    console.log('⚠️ Firestore not available for leaderboard, using empty data');
+    leaderboardEl.innerHTML = `
+      <div style="text-align:center;color:#a0aec0;padding:40px;">
+        <i class="fas fa-trophy" style="font-size:48px;margin-bottom:16px;opacity:0.3;"></i>
+        <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Leaderboard</div>
+        <div style="font-size:14px;">No data available</div>
+      </div>
+    `;
+    return;
+  }
+  
+  try {
+    console.log('🔍 Trying to load onlineWheelStats collection...');
+    
+    // Проверяем доступность collection функции
+    if (typeof window.collection === 'undefined') {
+      console.log('⚠️ window.collection not available, using global collection');
+      
+      // Используем глобальную функцию collection
+      const statsCollectionRef = window.collection(window.firestore, 'onlineWheelStats');
+      const statsSnapshot = await window.getDocs(statsCollectionRef);
+      
+      console.log(`📊 Found ${statsSnapshot.size} documents in onlineWheelStats`);
+      
+      const leaderboardData = [];
+      
+      statsSnapshot.forEach((doc) => {
+        const data = doc.data();
+        console.log(`📋 Processing user: ${data.displayName}, Winnings: ${data.totalWinnings || 0}`);
+        
+        leaderboardData.push({
+          uid: doc.id,
+          displayName: data.displayName || 'Anonymous',
+          photoURL: data.photoURL || '',
+          totalGames: data.totalGames || 0,
+          totalWins: data.totalWins || 0,
+          totalWinnings: data.totalWinnings || 0,
+          totalBets: data.totalBets || 0,
+          lastPlayed: data.lastPlayed,
+          winRate: data.totalGames > 0 ? ((data.totalWins / data.totalGames) * 100).toFixed(1) : '0.0'
+        });
+      });
+      
+      console.log(`🏆 Processed ${leaderboardData.length} players for leaderboard`);
+      
+      // Сортируем по общим выигрышам
+      leaderboardData.sort((a, b) => b.totalWinnings - a.totalWinnings);
+      
+      // Ограничиваем топ-10
+      const topPlayers = leaderboardData.slice(0, 10);
+      
+      if (topPlayers.length === 0) {
+        console.log('⚠️ No players found in leaderboard');
+        leaderboardEl.innerHTML = `
+          <div style="text-align:center;color:#a0aec0;padding:40px;">
+            <i class="fas fa-trophy" style="font-size:48px;margin-bottom:16px;opacity:0.3;"></i>
+            <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Leaderboard</div>
+            <div style="font-size:14px;">No games played yet</div>
+          </div>
+        `;
+        return;
+      }
+      
+      console.log(`🥇 Top player: ${topPlayers[0].displayName} with ${topPlayers[0].totalWinnings} RGT`);
+      
+      // Генерируем HTML для лидерборда
+      const leaderboardHTML = topPlayers.map((player, index) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+        
+        return `
+          <div style="display:flex;align-items:center;padding:12px;border-bottom:1px solid rgba(148,163,184,0.1);background:${index < 3 ? 'linear-gradient(135deg,rgba(251,191,36,0.1),rgba(251,191,36,0.05))' : 'transparent'};">
+            <div style="width:40px;text-align:center;font-weight:700;color:${index < 3 ? '#f59e0b' : '#a0aec0'};font-size:16px;">${medal}</div>
+            <div style="flex:1;display:flex;align-items:center;gap:12px;">
+              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:white;">
+                ${player.photoURL ? `<img src="${player.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='${player.displayName ? player.displayName.charAt(0).toUpperCase() : 'A'}';">` : (player.displayName ? player.displayName.charAt(0).toUpperCase() : 'A')}
+              </div>
+              <div style="flex:1;">
+                <div style="font-weight:600;color:white;margin-bottom:2px;">${player.displayName}</div>
+                <div style="font-size:12px;color:#a0aec0;">
+                  Games: ${player.totalGames} | Wins: ${player.totalWins} (${player.winRate}%)
+                </div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:700;color:#10b981;font-size:16px;">${player.totalWinnings} RGT</div>
+              <div style="font-size:12px;color:#a0aec0;">Total Won</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      leaderboardEl.innerHTML = `
+        <div style="background:#1e293b;border-radius:12px;border:1px solid rgba(148,163,184,0.2);overflow:hidden;">
+          <div style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;padding:16px;text-align:center;">
+            <i class="fas fa-trophy" style="font-size:24px;margin-right:8px;"></i>
+            <span style="font-weight:700;font-size:18px;">Top Players</span>
+          </div>
+          <div style="max-height:400px;overflow-y:auto;">
+            ${leaderboardHTML}
+          </div>
+        </div>
+      `;
+      
+      console.log('✅ Online leaderboard updated successfully');
+      return;
+    }
+    
+    // Стандартный подход если collection доступен
+    const statsCollectionRef = window.collection(window.firestore, 'onlineWheelStats');
+    const statsSnapshot = await window.getDocs(statsCollectionRef);
+    
+    console.log(`📊 Found ${statsSnapshot.size} documents in onlineWheelStats`);
+    
+    const leaderboardData = [];
+    
+    statsSnapshot.forEach((doc) => {
+      const data = doc.data();
+      console.log(`📋 Processing user: ${data.displayName}, Winnings: ${data.totalWinnings || 0}`);
+      
+      leaderboardData.push({
+        uid: doc.id,
+        displayName: data.displayName || 'Anonymous',
+        photoURL: data.photoURL || '',
+        totalGames: data.totalGames || 0,
+        totalWins: data.totalWins || 0,
+        totalWinnings: data.totalWinnings || 0,
+        totalBets: data.totalBets || 0,
+        lastPlayed: data.lastPlayed,
+        winRate: data.totalGames > 0 ? ((data.totalWins / data.totalGames) * 100).toFixed(1) : '0.0'
+      });
+    });
+    
+    console.log(`🏆 Processed ${leaderboardData.length} players for leaderboard`);
+    
+    // Сортируем по общим выигрышам
+    leaderboardData.sort((a, b) => b.totalWinnings - a.totalWinnings);
+    
+    // Ограничиваем топ-10
+    const topPlayers = leaderboardData.slice(0, 10);
+    
+    if (topPlayers.length === 0) {
+      console.log('⚠️ No players found in leaderboard');
+      leaderboardEl.innerHTML = `
+        <div style="text-align:center;color:#a0aec0;padding:40px;">
+          <i class="fas fa-trophy" style="font-size:48px;margin-bottom:16px;opacity:0.3;"></i>
+          <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Leaderboard</div>
+          <div style="font-size:14px;">No games played yet</div>
+        </div>
+      `;
+      return;
+    }
+    
+    console.log(`🥇 Top player: ${topPlayers[0].displayName} with ${topPlayers[0].totalWinnings} RGT`);
+    
+    // Генерируем HTML для лидерборда
+    const leaderboardHTML = topPlayers.map((player, index) => {
+      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+      
+      return `
+        <div style="display:flex;align-items:center;padding:12px;border-bottom:1px solid rgba(148,163,184,0.1);background:${index < 3 ? 'linear-gradient(135deg,rgba(251,191,36,0.1),rgba(251,191,36,0.05))' : 'transparent'};">
+          <div style="width:40px;text-align:center;font-weight:700;color:${index < 3 ? '#f59e0b' : '#a0aec0'};font-size:16px;">${medal}</div>
+          <div style="flex:1;display:flex;align-items:center;gap:12px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:white;">
+              ${player.photoURL ? `<img src="${player.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='${player.displayName ? player.displayName.charAt(0).toUpperCase() : 'A'}';">` : (player.displayName ? player.displayName.charAt(0).toUpperCase() : 'A')}
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:600;color:white;margin-bottom:2px;">${player.displayName}</div>
+              <div style="font-size:12px;color:#a0aec0;">
+                Games: ${player.totalGames} | Wins: ${player.totalWins} (${player.winRate}%)
+              </div>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:700;color:#10b981;font-size:16px;">${player.totalWinnings} RGT</div>
+            <div style="font-size:12px;color:#a0aec0;">Total Won</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    leaderboardEl.innerHTML = `
+      <div style="background:#1e293b;border-radius:12px;border:1px solid rgba(148,163,184,0.2);overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;padding:16px;text-align:center;">
+          <i class="fas fa-trophy" style="font-size:24px;margin-right:8px;"></i>
+          <span style="font-weight:700;font-size:18px;">Top Players</span>
+        </div>
+        <div style="max-height:400px;overflow-y:auto;">
+          ${leaderboardHTML}
+        </div>
+      </div>
+    `;
+    
+    console.log('✅ Online leaderboard updated successfully');
+    
+  } catch (error) {
+    console.error('❌ Error updating online leaderboard:', error);
+    leaderboardEl.innerHTML = `
+      <div style="text-align:center;color:#ef4444;padding:40px;">
+        <i class="fas fa-exclamation-triangle" style="font-size:48px;margin-bottom:16px;"></i>
+        <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Error</div>
+        <div style="font-size:14px;">Failed to load leaderboard</div>
+      </div>
+    `;
+  }
+}
+
+// Сохранение игры в историю
+function saveGameToHistory(winner, realWinAmount) {
+  if (typeof window.firestore !== 'undefined' && typeof window.firestore.collection === 'function') {
+    const historyRef = window.firestore.collection('onlineWheelHistory').doc(`game_${Date.now()}`);
+    
+    const historyEntry = {
+      gameId: onlineGame.gameCount,
+      winner: {
+        uid: winner.uid,
+        displayName: winner.displayName,
+        bet: winner.bet,
+        winAmount: realWinAmount
+      },
+      participants: onlineGame.participants.map(p => ({
+        uid: p.uid,
+        displayName: p.displayName,
+        bet: p.bet
+      })),
+      totalPrize: onlineGame.prizePool,
+      timestamp: new Date().toISOString(),
+      gameData: {
+        participantCount: onlineGame.participants.length,
+        duration: onlineGame.endTime ? new Date(onlineGame.endTime).getTime() - new Date(onlineGame.startTime).getTime() : null
+      }
+    };
+    
+    historyRef.set(historyEntry).then(() => {
+      console.log('📜 Game saved to history:', historyEntry);
+    }).catch((error) => {
+      console.error('❌ Error saving game to history:', error);
+    });
+  }
+}
+
+// Сохранение статистики игроков
+async function savePlayerStats(winner, winAmount) {
+  console.log('📊 Saving player stats...');
+  
+  // Проверяем доступность Firebase
+  if (typeof window.firestore === 'undefined' || typeof window.doc === 'undefined' || typeof window.setDoc === 'undefined') {
+    console.log('⚠️ Firestore not available for stats, skipping');
+    return;
+  }
+  
+  // Обновляем статистику для всех участников
+  for (const participant of onlineGame.participants) {
+    try {
+      const statsDocRef = window.doc(window.firestore, 'onlineWheelStats', participant.uid);
+      
+      // Получаем текущую статистику
+      const statsDoc = await window.getDoc(statsDocRef);
+      let currentStats = {
+        totalGames: 0,
+        totalWins: 0,
+        totalWinnings: 0,
+        totalBets: 0,
+        displayName: participant.displayName || 'Anonymous',
+        photoURL: participant.photoURL || '',
+        lastPlayed: new Date().toISOString()
+      };
+      
+      if (statsDoc.exists()) {
+        currentStats = statsDoc.data();
+      }
+      
+      // Обновляем статистику
+      currentStats.totalGames += 1;
+      currentStats.totalBets += participant.bet;
+      
+      // Если это победитель - обновляем статистику побед
+      if (participant.uid === winner.uid) {
+        currentStats.totalWins += 1;
+        currentStats.totalWinnings += winAmount;
+      }
+      
+      currentStats.lastPlayed = new Date().toISOString();
+      
+      // Сохраняем обновленную статистику
+      await window.setDoc(statsDocRef, currentStats);
+      
+      console.log(`📊 Stats saved for ${participant.displayName}: Games: ${currentStats.totalGames}, Wins: ${currentStats.totalWins}, Winnings: ${currentStats.totalWinnings}`);
+      
+    } catch (error) {
+      console.error(`❌ Error saving stats for ${participant.displayName}:`, error);
+      // Продолжаем с другими игроками даже если один не сохранился
+    }
+  }
+  
+  // Обновляем лидерборд с задержкой
+  setTimeout(() => {
+    updateOnlineLeaderboard();
+  }, 2000);
+}
+
+// Функции для ставок
+function addToOnlineBet(amount) {
+  const betInput = document.getElementById('onlineBetAmount');
+  if (betInput) {
+    const currentBet = parseInt(betInput.value) || 0;
+    betInput.value = currentBet + amount;
+  }
+}
+
+function setMaxOnlineBet() {
+  const betInput = document.getElementById('onlineBetAmount');
+  const balanceEl = document.getElementById('onlineUserBalance');
+  
+  if (betInput && balanceEl) {
+    // Получаем баланс из текста (например, "Balance: 1000 RGT")
+    const balanceText = balanceEl.textContent;
+    const balance = parseInt(balanceText.match(/\d+/)?.[0] || 0);
+    betInput.value = balance;
+  }
+}
+
+function placeOnlineBet() {
+  const betInput = document.getElementById('onlineBetAmount');
+  if (!betInput) return;
+  
+  const betAmount = parseInt(betInput.value);
+  if (!betAmount || betAmount <= 0) {
+    if (typeof showToast === 'function') {
+      showToast('Please enter a valid bet amount', 'warning');
+    }
+    return;
+  }
+  
+  // Симуляция размещения ставки
+  const currentUser = window.currentUser;
+  if (currentUser) {
+    // Проверяем баланс
+    const userBalance = window.currentUserRGT || 0;
+    if (betAmount > userBalance) {
+      if (typeof showToast === 'function') {
+        showToast(`Insufficient balance! You have ${userBalance} RGT`, 'error');
+      }
+      return;
+    }
+    
+    // Ищем существующего участника
+    const existingParticipant = onlineGame.participants.find(p => p.uid === currentUser.uid);
+    
+    if (existingParticipant) {
+      // Увеличиваем существующую ставку
+      if (!onlineGame.bettingOpen) {
+        if (typeof showToast === 'function') {
+          showToast('Betting phase not started yet. Wait for more players!', 'info');
+        }
+        return;
+      }
+      
+      // Проверяем баланс для увеличения ставки
+      const userBalance = window.currentUserRGT || 0;
+      if (betAmount > userBalance) {
+        if (typeof showToast === 'function') {
+          showToast(`Insufficient balance! You have ${userBalance} RGT`, 'error');
+        }
+        return;
+      }
+      
+      existingParticipant.bet += betAmount;
+      onlineGame.prizePool += betAmount;
+      
+      // Вычитаем ставку из баланса в Firebase
+      updateUserBalanceInFirebase(betAmount, false).then(() => {
+        console.log('💰 Bet amount deducted from balance');
+      });
+      
+      if (typeof showToast === 'function') {
+        showToast(`Bet increased: +${betAmount} RGT (Total: ${existingParticipant.bet} RGT)`, 'success');
+      }
+    } else {
+      // Добавляем нового участника
+      onlineGame.participants.push({
+        uid: currentUser.uid,
+        displayName: currentUser.displayName || 'You',
+        bet: betAmount,
+        photoURL: currentUser.photoURL
+      });
+      
+      onlineGame.prizePool += betAmount;
+      
+      // Вычитаем ставку из баланса в Firebase
+      updateUserBalanceInFirebase(betAmount, false).then(() => {
+        console.log('💰 Bet amount deducted from balance');
+      });
+      
+      // Если это первый участник - начинаем игру (без таймера)
+      if (onlineGame.participants.length === 1) {
+        startNewGame();
+      }
+      // Если второй участник - начинаем фазу ставок с таймером
+      else if (onlineGame.participants.length === 2 && !onlineGame.bettingOpen) {
+        startBettingPhase();
+      }
+      
+      if (typeof showToast === 'function') {
+        showToast(`Bet placed: ${betAmount} RGT`, 'success');
+      }
+    }
+    
+    // Обновляем UI
+    updateOnlineUI();
+    
+    // Сохраняем данные
+    saveOnlineGameData();
+    
+    // Очищаем поле ставки
+    betInput.value = '';
+  } else {
+    if (typeof showToast === 'function') {
+      showToast('Please login to place bets', 'warning');
+    }
+  }
+}
+
+// Начало новой игры при первой ставке
+function startNewGame() {
+  console.log('🎮 Starting new game with first player...');
+  const now = new Date();
+  
+  onlineGame.startTime = now.toISOString();
+  // НЕ устанавливаем endTime - ждем второго участника
+  onlineGame.bettingOpen = false; // Пока не открыто для ставок
+  onlineGame.timeLeft = 0;
+  
+  updateGameStatus('Waiting for more players to join...');
+  
+  // Сохраняем в Firebase
+  saveOnlineGameData();
+}
+
+// Начало фазы ставок
+function startBettingPhase() {
+  console.log('🎮 Starting betting phase...');
+  const now = new Date();
+  
+  onlineGame.bettingOpen = true;
+  onlineGame.endTime = new Date(now.getTime() + 60000).toISOString(); // +1 минута
+  onlineGame.timeLeft = 60;
+  
+  // Обновляем статус игры
+  updateGameStatus('Betting phase active! 60 seconds remaining...');
+  
+  // Запускаем локальный таймер
+  startBettingTimer();
+  
+  // Сохраняем в Firebase
+  saveOnlineGameData();
+}
+
+// Окончание фазы ставок и запуск колеса
+function endBettingPhase() {
+  console.log('🎮 Ending betting phase, spinning wheel...');
+  onlineGame.bettingOpen = false;
+  
+  if (onlineGame.participants.length < 2) {
+    // Недостаточно участников - сбрасываем игру
+    updateGameStatus('Not enough participants. Game reset. Waiting for players...');
+    console.log('🔄 Not enough participants, resetting game...');
+    
+    // Создаем новую игру
+    setTimeout(() => {
+      resetOnlineGame();
+    }, 3000);
+    
+    return;
+  }
+  
+  // Запускаем вращение колеса
+  spinOnlineWheel();
+}
+
+// Вращение онлайн-колеса
+function spinOnlineWheel() {
+  const canvas = document.getElementById('onlineWheelCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+  
+  // Рассчитываем вероятности
+  const probabilities = onlineGame.participants.map(p => ({
+    participant: p,
+    probability: p.bet / totalBets
+  }));
+  
+  // Выбираем победителя
+  const random = Math.random();
+  let accumulator = 0;
+  let winner = null;
+  
+  for (const prob of probabilities) {
+    accumulator += prob.probability;
+    if (random <= accumulator) {
+      winner = prob.participant;
+      break;
+    }
+  }
+  
+  if (!winner) {
+    winner = probabilities[probabilities.length - 1].participant;
+  }
+  
+  console.log(`🎯 Selected winner: ${winner.displayName} with probability: ${winner.bet / totalBets}`);
+  
+  // Рассчитываем точный угол для остановки на победителе
+  const winnerIndex = onlineGame.participants.indexOf(winner);
+  const segmentAngle = (Math.PI * 2) / onlineGame.participants.length;
+  const winnerStartAngle = winnerIndex * segmentAngle;
+  const winnerCenterAngle = winnerStartAngle + segmentAngle / 2;
+  
+  // Добавляем несколько полных оборотов для эффекта
+  const targetRotation = 360 * 6 + (winnerCenterAngle * 180 / Math.PI);
+  
+  console.log(`🎯 Target angle for winner: ${targetRotation} winner center: ${winnerCenterAngle * 180 / Math.PI}`);
+  
+  let currentRotation = 0;
+  const spinDuration = 12000; // 12 секунд для медленной прокрутки
+  const startTime = Date.now();
+  
+  const animateSpin = () => {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / spinDuration, 1);
+    
+    // Плавное замедление в конце
+    const easeOut = 1 - Math.pow(1 - progress, 3);
+    currentRotation = targetRotation * easeOut;
+    
+    // Рисуем колесо
+    drawOnlineWheel(currentRotation);
+    
+    if (progress < 1) {
+      requestAnimationFrame(animateSpin);
+    } else {
+      // Показываем результаты с задержкой для драмы
+      setTimeout(() => {
+        showOnlineWinner(winner);
+      }, 1000);
+    }
+  };
+  
+  animateSpin();
+}
+
+// Показ победителя онлайн-игры
+function showOnlineWinner(winner) {
+  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+  const winChance = ((winner.bet / totalBets) * 100).toFixed(1);
+  
+  // Рассчитываем реальный выигрыш (весь призовой пул)
+  const realWinAmount = totalBets; // Весь призовой пул идет победителю
+  
+  // Сохраняем игру в историю
+  saveGameToHistory(winner, realWinAmount);
+  
+  // Сохраняем статистику игроков (только если есть права)
+  if (typeof window.firestore !== 'undefined' && typeof window.doc !== 'undefined') {
+    savePlayerStats(winner, realWinAmount).catch(error => {
+      console.log('⚠️ Stats save failed (permissions issue):', error);
+    });
+  }
+  
+  // Обновляем баланс победителя в Firebase
+  if (winner.uid === window.currentUser?.uid) {
+    updateUserBalanceInFirebase(realWinAmount, true).then(() => {
+      console.log('💰 Winner balance updated in Firebase');
+    });
+  }
+  
+  // Получаем цвет победителя
+  const winnerIndex = onlineGame.participants.indexOf(winner);
+  const winnerColor = getParticipantColor(winnerIndex);
+  
+  // Создаем модальное окно победителя
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.4s ease-out;
+  `;
+  
+  modal.innerHTML = `
+    <div style="
+      background: linear-gradient(145deg, #1a1f2e 0%, #2d3748 50%, #1e2538 100%);
+      border-radius: 24px;
+      padding: 40px;
+      text-align: center;
+      max-width:480px;
+      width:90%;
+      border: 2px solid ${winnerColor};
+      box-shadow: 
+        0 0 40px rgba(139,92,246,0.3),
+        0 20px 40px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+      animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    ">
+      <!-- Технологичный фон -->
+      <div style="
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+          radial-gradient(circle at 30% 30%, rgba(139,92,246,0.1) 0%, transparent 50%),
+          radial-gradient(circle at 70% 70%, rgba(16,185,129,0.1) 0%, transparent 50%);
+        pointer-events: none;
+      "></div>
+      
+      <!-- Контент -->
+      <div style="position: relative; z-index: 1;">
+        <!-- Анимированный иконка победы -->
+        <div style="
+          font-size: 60px;
+          margin-bottom: 20px;
+          animation: bounce 1s ease-out infinite alternate;
+          text-shadow: 0 0 20px rgba(139,92,246,0.6);
+        ">🎉</div>
+        
+        <!-- Заголовок с градиентом -->
+        <div style="
+          font-size: 28px;
+          font-weight: 900;
+          background: linear-gradient(135deg, #8b5cf6, #10b981);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin-bottom: 15px;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+        ">WINNER</div>
+        
+        <!-- Аватар победителя -->
+        <div style="
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          margin: 0 auto 20px;
+          background: linear-gradient(135deg, ${winnerColor}, ${winnerColor}dd);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 32px;
+          font-weight: 900;
+          color: white;
+          box-shadow: 
+            0 0 30px rgba(139,92,246,0.4),
+            0 10px 25px rgba(0,0,0,0.3),
+            inset 0 2px 0 rgba(255,255,255,0.2);
+          border: 3px solid rgba(255,255,255,0.1);
+          position: relative;
+          animation: glow 2s ease-in-out infinite alternate;
+        ">
+          <div style="
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, transparent, ${winnerColor}, transparent);
+            animation: rotate 3s linear infinite;
+            z-index: -1;
+          "></div>
+          ${winner.photoURL ? `<img src="${winner.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='${winner.displayName ? winner.displayName.charAt(0).toUpperCase() : 'W'}';">` : (winner.displayName ? winner.displayName.charAt(0).toUpperCase() : 'W')}
+        </div>
+        
+        <!-- Имя победителя -->
+        <div style="
+          font-size: 22px;
+          color: ${winnerColor};
+          font-weight: 700;
+          margin-bottom: 20px;
+          text-shadow: 0 0 15px rgba(139,92,246,0.5);
+        ">${winner.displayName || 'Anonymous'}</div>
+        
+        <!-- Информация о выигрыше -->
+        <div style="
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 15px;
+          margin-bottom: 25px;
+        ">
+          <!-- Шанс выигрыша -->
+          <div style="
+            background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(139,92,246,0.05));
+            border: 1px solid rgba(139,92,246,0.3);
+            border-radius: 16px;
+            padding: 20px 15px;
+            backdrop-filter: blur(10px);
+          ">
+            <div style="
+              font-size: 12px;
+              color: #a0aec0;
+              margin-bottom: 8px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            ">Win Chance</div>
+            <div style="
+              font-size: 24px;
+              font-weight: 700;
+              color: ${winnerColor};
+              text-shadow: 0 0 10px rgba(139,92,246,0.6);
+            ">${winChance}%</div>
+          </div>
+          
+          <!-- Общий выигрыш -->
+          <div style="
+            background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05));
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 16px;
+            padding: 20px 15px;
+            backdrop-filter: blur(10px);
+          ">
+            <div style="
+              font-size: 12px;
+              color: #a0aec0;
+              margin-bottom: 8px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            ">Winnings</div>
+            <div style="
+              font-size: 24px;
+              font-weight: 700;
+              color: #10b981;
+              text-shadow: 0 0 10px rgba(16,185,129,0.6);
+              animation: pulse 2s ease-in-out infinite;
+            ">${realWinAmount} RGT</div>
+          </div>
+        </div>
+        
+        <!-- Кнопка -->
+        <button onclick="this.parentElement.parentElement.parentElement.remove(); resetOnlineGame();" style="
+          background: linear-gradient(135deg, ${winnerColor}, ${winnerColor}dd);
+          border: none;
+          border-radius: 16px;
+          color: white;
+          font-weight: 700;
+          font-size: 16px;
+          padding: 16px 40px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 
+            0 8px 25px rgba(139,92,246,0.4),
+            inset 0 2px 0 rgba(255,255,255,0.2);
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          position: relative;
+          overflow: hidden;
+        ">
+          <span style="position: relative; z-index: 1;">Play Again</span>
+          <div style="
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+          "></div>
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Добавляем анимации
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+      from { 
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-15px) scale(1.05); }
+    }
+    
+    @keyframes glow {
+      0% { box-shadow: 0 0 30px rgba(139,92,246,0.4), 0 10px 25px rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.2); }
+      100% { box-shadow: 0 0 40px rgba(139,92,246,0.6), 0 10px 25px rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.3); }
+    }
+    
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(139,92,246,0.5), inset 0 2px 0 rgba(255,255,255,0.3);
+    }
+    
+    button:hover div {
+      left: 100%;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// Сброс онлайн-игры для нового раунда
+function resetOnlineGame() {
+  console.log('🔄 Resetting online game for new round...');
+  
+  // Создаем новую глобальную игру
+  const now = new Date();
+  onlineGame = {
+    participants: [],
+    prizePool: 0,
+    timeLeft: 0,
+    bettingOpen: false,
+    gameCount: (onlineGame.gameCount || 0) + 1,
+    createdBy: window.currentUser?.uid || 'anonymous',
+    createdAt: now.toISOString(),
+    startTime: null,
+    endTime: null
+  };
+  
+  updateOnlineUI();
+  updateGameStatus('Waiting for players...');
+  
+  // Сохраняем данные
+  saveOnlineGameData();
+}
+
+// Обновление статуса игры
+function updateGameStatus(message) {
+  const statusEl = document.getElementById('onlineGameStatus');
+  if (statusEl) {
+    statusEl.innerHTML = `
+      <div style="font-size:14px;color:#22d3ee;font-weight:600;margin-bottom:8px;">${message}</div>
+      <div style="font-size:12px;color:var(--text-secondary);">Place your bets to join!</div>
+    `;
+  }
+}
+
+// Ensure login functions are available after DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔐 Setting up login functions...');
+  
+  // Make Firebase Auth functions available globally
+  if (window.auth && typeof window.auth !== 'undefined') {
+    console.log('🔐 Firebase Auth functions available from auth.js');
+  } else {
+    console.error('🔐 Firebase Auth not available');
+  }
+  
+  // Инициализируем модальное окно если доступна функция
+  if (typeof window.initLoginModal === 'function') {
+    console.log('🎨 Initializing login modal...');
+    window.initLoginModal();
+  }
+  
+  // Инициализируем правильные стили кнопок режимов
+  updateModeButtons('solo');
+  
+  // Ждем загрузки модулей и проверяем функцию входа
+  setTimeout(() => {
+    console.log('🔍 Checking login modal function...');
+    console.log('openLoginModal available:', typeof openLoginModal);
+    console.log('openLoginModal function:', openLoginModal);
+    
+    // Если функция не доступна, создаем простую заглушку
+    if (typeof openLoginModal !== 'function') {
+      console.warn('⚠️ openLoginModal not available, creating fallback...');
+      window.openLoginModal = function() {
+        console.log('🔐 Login modal fallback called');
+        if (typeof showToast === 'function') {
+          showToast('Login functionality is being prepared...', 'info');
+        }
+      };
+    }
+  }, 1000); // Даем 1 секунду на загрузку модулей
+  
+  // Функции аутентификации доступны из централизованной системы auth.js
+  
+  // Простые функции для модального окна
+  window.closeLoginModal = function() {
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('active');
+    }
+  };
+  
+  window.showLoginTab = function(tab) {
+    const emailForm = document.getElementById('emailLoginForm');
+    const googleForm = document.getElementById('googleLoginForm');
+    const emailTab = document.getElementById('emailLoginTab');
+    const googleTab = document.getElementById('googleLoginTab');
+    
+    if (tab === 'email') {
+      emailForm.style.display = 'block';
+      googleForm.style.display = 'none';
+      emailTab.classList.add('active');
+      googleTab.classList.remove('active');
+    } else {
+      emailForm.style.display = 'none';
+      googleForm.style.display = 'block';
+      emailTab.classList.remove('active');
+      googleTab.classList.add('active');
+    }
+  };
+  
+  window.loginWithEmail = function() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+      if (typeof showToast === 'function') {
+        showToast('Please enter email and password', 'warning');
+      }
+      return;
+    }
+    
+    // Здесь будет логика входа через email
+    console.log('🔐 Email login:', email);
+    if (typeof showToast === 'function') {
+      showToast('Email login functionality coming soon...', 'info');
+    }
+  };
+  
+  window.loginWithGoogle = function() {
+    // Здесь будет логика входа через Google
+    console.log('🔐 Google login requested');
+    if (typeof showToast === 'function') {
+      showToast('Google login functionality coming soon...', 'info');
+    }
+  };
+  
+  window.showRegisterModal = function() {
+    if (typeof showToast === 'function') {
+      showToast('Registration functionality coming soon...', 'info');
+    }
+  };
+});
+</script>
+
+</body>
+</html>
