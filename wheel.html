@@ -1646,14 +1646,85 @@ function drawJackpotWheel(players, total) {
   ctx.stroke();
 
   // Добавляем текст в центре
-  ctx.fillStyle = '#22d3ee';
-  ctx.font = 'bold 16px sans-serif';
+  ctx.fillStyle = '#a78bfa';
+  ctx.font = 'bold 16px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('JACKPOT', centerX, centerY);
+  ctx.fillText('EMPTY', centerX, centerY - 8);
+  ctx.font = '11px Arial';
+  ctx.fillStyle = '#64748b';
+  ctx.fillText('Place bet to start', centerX, centerY + 8);
+}
 
-  // Сохраняем сегменты для анимации
-  window.jackpotSegments = segments;
+// Рисование пустого онлайн колеса с улучшенным дизайном
+function drawEmptyOnlineWheel(ctx, centerX, centerY, radius) {
+  // Внешний декоративный круг
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius + 5, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(139, 92, 246, 0.2)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Основной круг с градиентом
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.closePath();
+  
+  const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+  gradient.addColorStop(0, 'rgba(139, 92, 246, 0.4)');
+  gradient.addColorStop(0.5, 'rgba(139, 92, 246, 0.2)');
+  gradient.addColorStop(1, 'rgba(139, 92, 246, 0.1)');
+  ctx.fillStyle = gradient;
+  ctx.fill();
+  
+  // Граница
+  ctx.strokeStyle = '#1e2538';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  
+  // Декоративные линии
+  for (let i = 0; i < 8; i++) {
+    const angle = (i * Math.PI * 2) / 8;
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.lineTo(
+      centerX + Math.cos(angle) * radius * 0.8,
+      centerY + Math.sin(angle) * radius * 0.8
+    );
+    ctx.strokeStyle = 'rgba(139, 92, 246, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  
+  // Центр
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 40, 0, Math.PI * 2);
+  
+  const centerGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 40);
+  centerGradient.addColorStop(0, '#2d3748');
+  centerGradient.addColorStop(0.7, '#1e2538');
+  centerGradient.addColorStop(1, '#151b2b');
+  ctx.fillStyle = centerGradient;
+  ctx.fill();
+  
+  ctx.strokeStyle = '#8b5cf6';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  
+  ctx.strokeStyle = 'rgba(139, 92, 246, 0.5)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Текст в центре
+  ctx.fillStyle = '#a78bfa';
+  ctx.font = 'bold 16px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('EMPTY', centerX, centerY - 8);
+  ctx.font = '11px Arial';
+  ctx.fillStyle = '#64748b';
+  ctx.fillText('Place bet to start', centerX, centerY + 8);
 }
 
 // Функция закрытия модального окна
@@ -3084,24 +3155,19 @@ function startBettingTimer(timeLeft = 60) {
   bettingTimer = setInterval(() => {
     if (onlineGame.timeLeft > 0) {
       onlineGame.timeLeft--;
-      
-      // Обновляем время в Firebase
-      if (typeof window.firestore !== 'undefined' && typeof window.doc !== 'undefined' && typeof window.setDoc === 'function') {
-        const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
-        window.setDoc(gameDocRef, {
-          timeLeft: onlineGame.timeLeft,
-          endTime: new Date(Date.now() + onlineGame.timeLeft * 1000).toISOString()
-        }, { merge: true });
-      }
-      
-      // Обновляем UI
-      updateOnlineUI();
-    } else {
-      // Время вышло - заканчиваем фазу ставок
       clearInterval(bettingTimer);
       bettingTimer = null;
-      console.log('⏰ Betting time expired!');
-      endBettingPhase();
+      
+      if (onlineGame.participants.length >= 2) {
+        console.log('⏰ Timer ended, spinning wheel automatically...');
+        endBettingPhase();
+      } else {
+        console.log('⏰ Timer ended but not enough participants');
+        updateGameStatus('Not enough participants. Game reset. Waiting for players...');
+        setTimeout(() => {
+          resetOnlineGame();
+        }, 3000);
+      }
     }
   }, 1000);
 }
@@ -3409,9 +3475,37 @@ const participantColors = [
   '#ec4899'  // Розовый
 ];
 
-// Получение цвета для участника
+// Получение уникального цвета для участника
 function getParticipantColor(index) {
-  return participantColors[index % participantColors.length];
+  const colors = [
+    '#8b5cf6', // фиолетовый
+    '#3b82f6', // синий
+    '#10b981', // зеленый
+    '#f59e0b', // желтый
+    '#ef4444', // красный
+    '#ec4899', // розовый
+    '#06b6d4', // голубой
+    '#84cc16', // лаймовый
+    '#f97316', // оранжевый
+    '#6366f1', // индиго
+  ];
+  return colors[index % colors.length];
+}
+
+// Получение цвета для участника на основе UID
+function getParticipantColorByUid(uid) {
+  // Генерируем цвет на основе UID для консистентности
+  let hash = 0;
+  for (let i = 0; i < uid.length; i++) {
+    hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  const colors = [
+    '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
+    '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+  ];
+  
+  return colors[Math.abs(hash) % colors.length];
 }
 
 // Инициализация онлайн-колеса
@@ -4112,7 +4206,7 @@ async function placeOnlineBet() {
       displayName: window.currentUser.displayName || 'Anonymous',
       photoURL: window.currentUser.photoURL || '',
       bet: betAmount,
-      color: getParticipantColor(onlineGame.participants.length),
+      color: getParticipantColorByUid(window.currentUser.uid),
       joinTime: new Date().toISOString()
     };
     
@@ -4203,6 +4297,14 @@ function startBettingPhase() {
   
   // Сохраняем в Firebase
   saveOnlineGameData();
+  
+  // Автоматически запускаем колесо после окончания таймера
+  setTimeout(() => {
+    if (onlineGame.bettingOpen && onlineGame.participants.length >= 2) {
+      console.log('⏰ Timer ended, spinning wheel automatically...');
+      endBettingPhase();
+    }
+  }, 60000); // 60 секунд
 }
 
 // Окончание фазы ставок и запуск колеса
