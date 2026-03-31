@@ -3635,11 +3635,11 @@ function placeOnlineBet() {
       
       onlineGame.prizePool += betAmount;
       
-      // Если это первый участник - начинаем игру
+      // Если это первый участник - начинаем игру (без таймера)
       if (onlineGame.participants.length === 1) {
         startNewGame();
       }
-      // Если второй участник - начинаем фазу ставок
+      // Если второй участник - начинаем фазу ставок с таймером
       else if (onlineGame.participants.length === 2 && !onlineGame.bettingOpen) {
         startBettingPhase();
       }
@@ -3670,14 +3670,11 @@ function startNewGame() {
   const now = new Date();
   
   onlineGame.startTime = now.toISOString();
-  onlineGame.endTime = new Date(now.getTime() + 60000).toISOString(); // +1 минута
-  onlineGame.bettingOpen = true;
-  onlineGame.timeLeft = 60;
+  // НЕ устанавливаем endTime - ждем второго участника
+  onlineGame.bettingOpen = false; // Пока не открыто для ставок
+  onlineGame.timeLeft = 0;
   
-  updateGameStatus('Betting phase started! 60 seconds to join!');
-  
-  // Запускаем локальный таймер
-  startBettingTimer(60);
+  updateGameStatus('Waiting for more players to join...');
   
   // Сохраняем в Firebase
   saveOnlineGameData();
@@ -3686,17 +3683,20 @@ function startNewGame() {
 // Начало фазы ставок
 function startBettingPhase() {
   console.log('🎮 Starting betting phase...');
+  const now = new Date();
+  
   onlineGame.bettingOpen = true;
-  onlineGame.timeLeft = 60; // 1 минута
+  onlineGame.endTime = new Date(now.getTime() + 60000).toISOString(); // +1 минута
+  onlineGame.timeLeft = 60;
   
   // Обновляем статус игры
   updateGameStatus('Betting phase active! 60 seconds remaining...');
   
+  // Запускаем локальный таймер
+  startBettingTimer();
+  
   // Сохраняем в Firebase
   saveOnlineGameData();
-  
-  // Запускаем локальный таймер
-  startBettingTimer(60);
 }
 
 // Окончание фазы ставок и запуск колеса
@@ -3705,12 +3705,19 @@ function endBettingPhase() {
   onlineGame.bettingOpen = false;
   
   if (onlineGame.participants.length < 2) {
-    // Недостаточно участников
-    updateGameStatus('Not enough participants. Waiting for more players...');
+    // Недостаточно участников - сбрасываем игру
+    updateGameStatus('Not enough participants. Game reset. Waiting for players...');
+    console.log('🔄 Not enough participants, resetting game...');
+    
+    // Создаем новую игру
+    setTimeout(() => {
+      resetOnlineGame();
+    }, 3000);
+    
     return;
   }
   
-  // Показываем модальное окно с результатами
+  // Запускаем вращение колеса
   spinOnlineWheel();
 }
 
