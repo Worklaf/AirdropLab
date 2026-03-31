@@ -714,6 +714,7 @@ try {
   // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
   window.auth = auth;
   window.db   = db;
+  window.firestore = db; // Добавляем для онлайн-режима
   window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot };
   window.__authExports = { onAuthStateChanged, signOut };
   console.log('✅ WoF Firebase initialized');
@@ -2926,6 +2927,13 @@ function updateModeButtons(activeMode) {
 function initOnlineGame() {
   console.log('🎮 Initializing online game...');
   
+  // Ждем загрузки Firebase
+  if (typeof window.firestore === 'undefined') {
+    console.log('⏳ Firebase not ready, waiting...');
+    setTimeout(() => initOnlineGame(), 1000);
+    return;
+  }
+  
   // Загружаем данные из Firebase
   loadOnlineGameData();
   
@@ -3131,8 +3139,8 @@ function updateUserBalance() {
         balance = userData.balance || userData.rgt || 0;
         console.log('💰 User balance from Firebase:', balance);
       } else {
-        console.log('💰 No user data in Firebase, using defaults');
-        balance = 1000; // Тестовый баланс
+        console.log('💰 No user data in Firebase, using 0 balance');
+        balance = 0; // Не используем тестовый баланс
       }
       
       // Обновляем UI
@@ -3147,7 +3155,8 @@ function updateUserBalance() {
       loadBalanceFromOtherSources();
     });
   } else {
-    // Fallback к другим источникам если Firebase недоступен
+    console.log('⚠️ Firebase or user not available, using fallback');
+    // Fallback к другим источникам
     loadBalanceFromOtherSources();
   }
 }
@@ -3530,6 +3539,8 @@ function renderOnlineLeaderboard(stats) {
 // Сохранение статистики игрока
 function savePlayerStats(winner, totalPrize) {
   if (typeof window.firestore !== 'undefined' && winner) {
+    console.log('💾 Saving player stats to Firebase...');
+    
     const statsRef = window.firestore.collection('onlineWheelStats').doc(winner.uid);
     
     statsRef.get().then((doc) => {
@@ -3551,10 +3562,10 @@ function savePlayerStats(winner, totalPrize) {
       };
       
       statsRef.set(updatedStats).then(() => {
-        console.log('💾 Player stats saved:', updatedStats);
+        console.log('💾 Winner stats saved:', updatedStats);
         updateOnlineLeaderboard();
       }).catch((error) => {
-        console.error('❌ Error saving player stats:', error);
+        console.error('❌ Error saving winner stats:', error);
       });
     });
     
@@ -3579,10 +3590,16 @@ function savePlayerStats(winner, totalPrize) {
             lastPlayed: new Date().toISOString()
           };
           
-          participantStatsRef.set(updatedStats);
+          participantStatsRef.set(updatedStats).then(() => {
+            console.log('💾 Participant stats saved:', updatedStats);
+          }).catch((error) => {
+            console.error('❌ Error saving participant stats:', error);
+          });
         });
       }
     });
+  } else {
+    console.log('⚠️ Firebase not available, skipping stats save');
   }
 }
 
@@ -3786,12 +3803,19 @@ function spinOnlineWheel() {
     winner = probabilities[probabilities.length - 1].participant;
   }
   
-  // Анимация вращения
+  // Медленная анимация вращения с интригой
   let rotation = 0;
-  const targetRotation = 360 * 5 + Math.random() * 360; // 5 полных оборотов + случайный угол
+  const targetRotation = 360 * 8 + Math.random() * 360; // 8 полных оборотов + случайный угол
+  const duration = 8000; // 8 секунд для полной интриги
+  const startTime = Date.now();
   
   const animateSpin = () => {
-    rotation += 15;
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Замедление в конце (ease-out)
+    const easeProgress = 1 - Math.pow(1 - progress, 3);
+    rotation = targetRotation * easeProgress;
     
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -3802,11 +3826,13 @@ function spinOnlineWheel() {
     
     ctx.restore();
     
-    if (rotation < targetRotation) {
+    if (progress < 1) {
       requestAnimationFrame(animateSpin);
     } else {
-      // Показываем результаты
-      showOnlineWinner(winner);
+      // Показываем результаты с задержкой для драмы
+      setTimeout(() => {
+        showOnlineWinner(winner);
+      }, 1000);
     }
   };
   
