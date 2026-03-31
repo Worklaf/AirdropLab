@@ -17,7 +17,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, increment, collection, query, orderBy, limit, getDocs, addDoc, writeBatch, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     
     // Делаем доступным глобально
     window.initializeApp = initializeApp;
@@ -36,6 +36,15 @@
     window.updateDoc = updateDoc;
     window.serverTimestamp = serverTimestamp;
     window.increment = increment;
+    window.collection = collection;
+    window.query = query;
+    window.orderBy = orderBy;
+    window.limit = limit;
+    window.getDocs = getDocs;
+    window.addDoc = addDoc;
+    window.writeBatch = writeBatch;
+    window.runTransaction = runTransaction;
+    window.onSnapshot = onSnapshot;
     
     console.log('🔥 Firebase SDK loaded as modules');
   </script>
@@ -4622,37 +4631,15 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Функции аутентификации доступны из централизованной системы auth.js
   
-  // Простые функции для модального окна
-  window.closeLoginModal = function() {
-    const modal = document.getElementById('loginModal');
-    if (modal) {
-      modal.style.display = 'none';
-      modal.classList.remove('active');
-    }
-  };
-  
+  // Простые функции для совместимости с auth-modal.js
   window.showLoginTab = function(tab) {
-    const emailForm = document.getElementById('emailLoginForm');
-    const googleForm = document.getElementById('googleLoginForm');
-    const emailTab = document.getElementById('emailLoginTab');
-    const googleTab = document.getElementById('googleLoginTab');
-    
-    if (tab === 'email') {
-      emailForm.style.display = 'block';
-      googleForm.style.display = 'none';
-      emailTab.classList.add('active');
-      googleTab.classList.remove('active');
-    } else {
-      emailForm.style.display = 'none';
-      googleForm.style.display = 'block';
-      emailTab.classList.remove('active');
-      googleTab.classList.add('active');
-    }
+    console.log('🔐 showLoginTab called with tab:', tab);
+    // Эта функция может быть полезна для auth-modal.js
   };
   
   window.loginWithEmail = function() {
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+    const email = document.getElementById('emailInput')?.value;
+    const password = document.getElementById('passInput')?.value;
     
     if (!email || !password) {
       if (typeof window.showToast === 'function') {
@@ -4661,24 +4648,27 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    // Здесь будет логика входа через email
-    console.log('🔐 Email login:', email);
-    if (typeof window.showToast === 'function') {
-      window.showToast('Email login functionality coming soon...', 'info');
+    // Используем функцию из auth.js
+    if (typeof window.handleEmailAuth === 'function') {
+      window.handleEmailAuth({ preventDefault: () => {} });
     }
   };
   
   window.loginWithGoogle = function() {
-    // Здесь будет логика входа через Google
-    console.log('🔐 Google login requested');
-    if (typeof window.showToast === 'function') {
-      window.showToast('Google login functionality coming soon...', 'info');
+    // Используем функцию из auth.js
+    if (typeof window.loginGoogle === 'function') {
+      window.loginGoogle();
+    } else {
+      console.log('🔐 Google login function not available');
     }
   };
   
   window.showRegisterModal = function() {
-    if (typeof window.showToast === 'function') {
-      window.showToast('Registration functionality coming soon...', 'info');
+    // Используем функцию из auth.js
+    if (typeof window.toggleRegisterMode === 'function') {
+      window.toggleRegisterMode();
+    } else {
+      console.log('🔐 Register function not available');
     }
   };
 }); // Закрываем document.addEventListener
