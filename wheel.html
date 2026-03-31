@@ -456,7 +456,7 @@
               <div style="font-size:20px;font-weight:900;color:#22d3ee;" id="onlineTimeLeft">--:--</div>
             </div>
             <div>
-              <div style="font-size:12px;color:var(--text-secondary);">Round</div>
+              <div style="font-size:12px;color:var(--text-secondary);">Game</div>
               <div style="font-size:20px;font-weight:900;color:#8b5cf6;" id="onlineRound">0</div>
             </div>
           </div>
@@ -2812,7 +2812,7 @@ let onlineGame = {
   prizePool: 0,
   timeLeft: 0,
   bettingOpen: false,
-  currentRound: 0
+  gameCount: 0 // Изменено с currentRound на gameCount
 };
 
 // Функции переключения режимов
@@ -2905,6 +2905,9 @@ function updateModeButtons(activeMode) {
 function initOnlineGame() {
   console.log('🎮 Initializing online game...');
   
+  // Загружаем данные из localStorage если есть
+  loadOnlineGameData();
+  
   // Обновляем баланс пользователя
   updateUserBalance();
   
@@ -2916,21 +2919,50 @@ function initOnlineGame() {
   
   // Симуляция данных для демонстрации
   setTimeout(() => {
-    // Добавляем тестового участника
-    onlineGame.participants.push({
-      uid: 'demo1',
-      displayName: 'Demo Player',
-      bet: 50,
-      photoURL: null
-    });
-    
-    // Устанавливаем призовой пул
-    onlineGame.prizePool = 150;
-    onlineGame.currentRound = 1;
-    onlineGame.timeLeft = 45;
+    // Добавляем тестового участника только если его еще нет
+    if (!onlineGame.participants.find(p => p.uid === 'demo1')) {
+      onlineGame.participants.push({
+        uid: 'demo1',
+        displayName: 'Demo Player',
+        bet: 50,
+        photoURL: null
+      });
+      
+      // Устанавливаем призовой пул
+      onlineGame.prizePool = 150;
+      onlineGame.gameCount = 1;
+      onlineGame.timeLeft = 45;
+      
+      // Сохраняем данные
+      saveOnlineGameData();
+    }
     
     updateOnlineUI();
   }, 1000);
+}
+
+// Загрузка данных онлайн-игры из localStorage
+function loadOnlineGameData() {
+  try {
+    const savedData = localStorage.getItem('onlineWheelGame');
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      onlineGame = { ...onlineGame, ...data };
+      console.log('📦 Loaded online game data:', data);
+    }
+  } catch (error) {
+    console.error('❌ Error loading online game data:', error);
+  }
+}
+
+// Сохранение данных онлайн-игры в localStorage
+function saveOnlineGameData() {
+  try {
+    localStorage.setItem('onlineWheelGame', JSON.stringify(onlineGame));
+    console.log('💾 Saved online game data');
+  } catch (error) {
+    console.error('❌ Error saving online game data:', error);
+  }
 }
 
 // Обновление баланса пользователя
@@ -2941,7 +2973,7 @@ function updateUserBalance() {
   // Получаем баланс пользователя из разных источников
   let balance = 0;
   
-  // Проверяем глобальную переменную
+  // Проверяем глобальные переменные из wheel-of-fortune
   if (typeof userBalance !== 'undefined' && userBalance > 0) {
     balance = userBalance;
   }
@@ -2951,13 +2983,27 @@ function updateUserBalance() {
     balance = window.currentUser.balance;
   }
   
+  // Проверяем переменные из других скриптов
+  if (typeof window.userRGT !== 'undefined' && window.userRGT > 0) {
+    balance = window.userRGT;
+  }
+  
+  if (typeof window.currentUserRGT !== 'undefined' && window.currentUserRGT > 0) {
+    balance = window.currentUserRGT;
+  }
+  
   // Проверяем localStorage
   const storedBalance = localStorage.getItem('userBalance');
   if (storedBalance) {
     balance = parseFloat(storedBalance);
   }
   
-  // Для демонстрации устанавливаем тестовый баланс
+  const storedRGT = localStorage.getItem('userRGT');
+  if (storedRGT) {
+    balance = parseFloat(storedRGT);
+  }
+  
+  // Для демонстрации если баланс все еще 0
   if (balance === 0) {
     balance = 1000; // Тестовый баланс
   }
@@ -3121,7 +3167,7 @@ function updateOnlineUI() {
   // Обновление раунда
   const roundEl = document.getElementById('onlineRound');
   if (roundEl) {
-    roundEl.textContent = onlineGame.currentRound;
+    roundEl.textContent = onlineGame.gameCount;
   }
   
   // Обновление списка участников
@@ -3228,40 +3274,53 @@ function placeOnlineBet() {
   // Симуляция размещения ставки
   const currentUser = window.currentUser;
   if (currentUser) {
-    // Проверяем, не ставил ли уже этот пользователь
+    // Ищем существующего участника
     const existingParticipant = onlineGame.participants.find(p => p.uid === currentUser.uid);
+    
     if (existingParticipant) {
-      if (typeof showToast === 'function') {
-        showToast('You already placed a bet in this round', 'warning');
+      // Увеличиваем существующую ставку
+      if (!onlineGame.bettingOpen) {
+        if (typeof showToast === 'function') {
+          showToast('Betting phase not started yet. Wait for more players!', 'info');
+        }
+        return;
       }
-      return;
-    }
-    
-    // Добавляем участника в игру
-    onlineGame.participants.push({
-      uid: currentUser.uid,
-      displayName: currentUser.displayName || 'You',
-      bet: betAmount,
-      photoURL: currentUser.photoURL
-    });
-    
-    // Обновляем призовой пул
-    onlineGame.prizePool += betAmount;
-    
-    // Проверяем, нужно ли начать игру
-    if (onlineGame.participants.length >= 2 && !onlineGame.bettingOpen) {
-      startBettingPhase();
+      
+      existingParticipant.bet += betAmount;
+      onlineGame.prizePool += betAmount;
+      
+      if (typeof showToast === 'function') {
+        showToast(`Bet increased: +${betAmount} RGT (Total: ${existingParticipant.bet} RGT)`, 'success');
+      }
+    } else {
+      // Добавляем нового участника
+      onlineGame.participants.push({
+        uid: currentUser.uid,
+        displayName: currentUser.displayName || 'You',
+        bet: betAmount,
+        photoURL: currentUser.photoURL
+      });
+      
+      onlineGame.prizePool += betAmount;
+      
+      // Проверяем, нужно ли начать игру
+      if (onlineGame.participants.length >= 2 && !onlineGame.bettingOpen) {
+        startBettingPhase();
+      }
+      
+      if (typeof showToast === 'function') {
+        showToast(`Bet placed: ${betAmount} RGT`, 'success');
+      }
     }
     
     // Обновляем UI
     updateOnlineUI();
     
+    // Сохраняем данные
+    saveOnlineGameData();
+    
     // Очищаем поле ставки
     betInput.value = '';
-    
-    if (typeof showToast === 'function') {
-      showToast(`Bet placed: ${betAmount} RGT`, 'success');
-    }
   } else {
     if (typeof showToast === 'function') {
       showToast('Please login to place bets', 'warning');
@@ -3431,10 +3490,13 @@ function resetOnlineGame() {
   onlineGame.prizePool = 0;
   onlineGame.timeLeft = 0;
   onlineGame.bettingOpen = false;
-  onlineGame.currentRound++;
+  onlineGame.gameCount++;
   
   updateOnlineUI();
   updateGameStatus('Waiting for players...');
+  
+  // Сохраняем данные
+  saveOnlineGameData();
 }
 
 // Обновление статуса игры
