@@ -2927,12 +2927,25 @@ function updateModeButtons(activeMode) {
 function initOnlineGame() {
   console.log('🎮 Initializing online game...');
   
-  // Ждем загрузки Firebase
-  if (typeof window.firestore === 'undefined') {
-    console.log('⏳ Firebase not ready, waiting...');
+  // Проверяем доступность Firestore разными способами
+  let firestore = null;
+  if (typeof window.firestore !== 'undefined') {
+    firestore = window.firestore;
+  } else if (typeof window.db !== 'undefined') {
+    firestore = window.db;
+  } else if (typeof window.wofDb !== 'undefined') {
+    firestore = window.wofDb;
+  }
+  
+  if (!firestore) {
+    console.log('⏳ Firestore not ready, waiting...');
     setTimeout(() => initOnlineGame(), 1000);
     return;
   }
+  
+  // Устанавливаем глобальную переменную
+  window.firestore = firestore;
+  console.log('✅ Firestore is available for online game');
   
   // Загружаем данные из Firebase
   loadOnlineGameData();
@@ -3177,39 +3190,24 @@ function loadBalanceFromOtherSources() {
   
   let balance = 0;
   
-  // Проверяем глобальные переменные из wheel-of-fortune
-  if (typeof userBalance !== 'undefined' && userBalance > 0) {
-    balance = userBalance;
-  }
-  
-  // Проверяем window.currentUser
-  if (window.currentUser && window.currentUser.balance) {
-    balance = window.currentUser.balance;
-  }
-  
-  // Проверяем переменные из других скриптов
+  // Пытаемся получить баланс из разных источников
   if (typeof window.userRGT !== 'undefined' && window.userRGT > 0) {
     balance = window.userRGT;
-  }
-  
-  if (typeof window.currentUserRGT !== 'undefined' && window.currentUserRGT > 0) {
+  } else if (typeof window.currentUserRGT !== 'undefined' && window.currentUserRGT > 0) {
     balance = window.currentUserRGT;
-  }
-  
-  // Проверяем localStorage
-  const storedBalance = localStorage.getItem('userBalance');
-  if (storedBalance) {
-    balance = parseFloat(storedBalance);
-  }
-  
-  const storedRGT = localStorage.getItem('userRGT');
-  if (storedRGT) {
-    balance = parseFloat(storedRGT);
+  } else if (typeof userBalance !== 'undefined' && userBalance > 0) {
+    balance = userBalance;
+  } else {
+    // Проверяем localStorage
+    const storedRGT = localStorage.getItem('userRGT');
+    if (storedRGT) {
+      balance = parseInt(storedRGT) || 0;
+    }
   }
   
   // Для демонстрации если баланс все еще 0
   if (balance === 0) {
-    balance = 1000; // Тестовый баланс
+    balance = 0; // Не используем тестовый баланс
   }
   
   balanceEl.textContent = `Balance: ${balance} RGT`;
@@ -3362,6 +3360,22 @@ function drawOnlineWheel(ctx, width, height) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('SPIN', centerX, centerY);
+  
+  // Рисуем стрелку сверху
+  ctx.save();
+  ctx.translate(centerX, 20);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(-15, -20);
+  ctx.lineTo(0, -15);
+  ctx.lineTo(15, -20);
+  ctx.closePath();
+  ctx.fillStyle = '#ef4444';
+  ctx.fill();
+  ctx.strokeStyle = '#dc2626';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
 }
 
 // Обновление онлайн UI
@@ -3848,9 +3862,30 @@ function spinOnlineWheel() {
     winner = probabilities[probabilities.length - 1].participant;
   }
   
+  console.log('🎯 Selected winner:', winner.displayName, 'with probability:', accumulator);
+  
+  // Рассчитываем точный угол для победителя
+  const winnerIndex = onlineGame.participants.findIndex(p => p.uid === winner.uid);
+  const winnerPercentage = winner.bet / totalBets;
+  const sliceAngle = winnerPercentage * 360;
+  
+  // Начинаем с верха (12 часов)
+  let currentAngle = 0;
+  for (let i = 0; i < winnerIndex; i++) {
+    currentAngle += (onlineGame.participants[i].bet / totalBets) * 360;
+  }
+  
+  // Добавляем половину сектора победителя для центра
+  const winnerCenterAngle = currentAngle + (sliceAngle / 2);
+  
+  // Рассчитываем целевой угол так, чтобы стрелка указывала на центр сектора победителя
+  // Стрелка находится сверху, поэтому нужно чтобы сектор победителя был вверху
+  const targetAngle = 360 * 8 + (360 - winnerCenterAngle + 90); // 8 оборотов + точное позиционирование
+  
+  console.log('🎯 Target angle for winner:', targetAngle, 'winner center:', winnerCenterAngle);
+  
   // Медленная анимация вращения с интригой
   let rotation = 0;
-  const targetRotation = 360 * 8 + Math.random() * 360; // 8 полных оборотов + случайный угол
   const duration = 8000; // 8 секунд для полной интриги
   const startTime = Date.now();
   
@@ -3860,7 +3895,7 @@ function spinOnlineWheel() {
     
     // Замедление в конце (ease-out)
     const easeProgress = 1 - Math.pow(1 - progress, 3);
-    rotation = targetRotation * easeProgress;
+    rotation = targetAngle * easeProgress;
     
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
