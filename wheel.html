@@ -17,13 +17,7 @@
  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import {
-      getFirestore, initializeFirestore,
-      collection, doc, getDoc, setDoc, getDocs,
-      updateDoc, addDoc, deleteDoc, query, orderBy, limit, where,
-      serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    
+        
     // Делаем доступным глобально
     window.initializeApp = initializeApp;
     window.getAuth = getAuth;
@@ -340,12 +334,12 @@
     
     <!-- Mode Switch Buttons -->
     <div style="display:flex;gap:8px;">
-      <button id="soloModeBtn" onclick="typeof switchToSolo === 'function' && switchToSolo()" style="padding:8px 16px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:8px;color:white;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
-        <i class="fas fa-user" style="margin-right:6px;"></i>Solo
-      </button>
-      <button id="onlineModeBtn" onclick="typeof switchToOnline === 'function' && switchToOnline()" style="padding:8px 16px;background:transparent;border:none;border-radius:8px;color:var(--text-secondary);font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
-        <i class="fas fa-users" style="margin-right:6px;"></i>Online
-      </button>
+      <button id="soloModeBtn" onclick="window.switchToSolo && window.switchToSolo()" style="padding:8px 16px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;border-radius:8px;color:white;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
+  <i class="fas fa-user" style="margin-right:6px;"></i>Solo
+</button>
+<button id="onlineModeBtn" onclick="window.switchToOnline && window.switchToOnline()" style="padding:8px 16px;background:transparent;border:none;border-radius:8px;color:var(--text-secondary);font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;">
+  <i class="fas fa-users" style="margin-right:6px;"></i>Online
+</button>
     </div>
   </div>
 
@@ -723,9 +717,14 @@ try {
   collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, 
   query, orderBy, limit, where, serverTimestamp, increment, 
   runTransaction, writeBatch, arrayUnion, onSnapshot,
-  // Добавляем недостающие функции для онлайн системы
   initializeFirestore, getFirestore
 };
+window.__authExports = { onAuthStateChanged, signOut };
+
+// Исправление для Firebase Auth
+window.getAuth = getAuth;
+window.onAuthStateChanged = onAuthStateChanged;
+window.signOut = signOut;
   window.__authExports = { onAuthStateChanged, signOut };
   console.log('✅ WoF Firebase initialized');
   
@@ -4056,6 +4055,68 @@ function updateModeButtons(activeMode) {
 // Экспорт функций в глобальную область
 window.switchToSolo = switchToSolo;
 window.switchToOnline = switchToOnline;
+    // ═══════════════════════════════════════════════════════════
+// 🔧 ЭКСПОРТ ФУНКЦИЙ ПЕРЕКЛЮЧЕНИЯ РЕЖИМОВ
+// ═══════════════════════════════════════════════════════════
+
+// Убедимся что функции доступны глобально
+if (typeof window.switchToSolo !== 'function') {
+  window.switchToSolo = function() {
+    console.log('🔄 Switching to solo mode...');
+    currentGameMode = 'solo';
+    
+    // Отключаем реал-тайм слушатели
+    if (realTimeListener) {
+      realTimeListener();
+      realTimeListener = null;
+    }
+    
+    // Останавливаем таймер
+    if (bettingTimer) {
+      clearInterval(bettingTimer);
+      bettingTimer = null;
+    }
+    
+    updateModeButtons('solo');
+    
+    const onlineContainer = document.getElementById('onlineModeContainer');
+    const mainGrid = document.querySelector('.main-grid');
+    const jackpotBanner = document.getElementById('jackpotBanner');
+    
+    if (onlineContainer) onlineContainer.style.display = 'none';
+    if (mainGrid) mainGrid.style.display = 'grid';
+    if (jackpotBanner) jackpotBanner.style.display = 'block';
+    
+    showToastLocal('wof_solo_mode', 'Switched to Solo Mode');
+  };
+}
+
+if (typeof window.switchToOnline !== 'function') {
+  window.switchToOnline = function() {
+    console.log('🔄 Switching to online mode...');
+    currentGameMode = 'online';
+    
+    updateModeButtons('online');
+    
+    const mainGrid = document.querySelector('.main-grid');
+    const jackpotBanner = document.getElementById('jackpotBanner');
+    const onlineContainer = document.getElementById('onlineModeContainer');
+    
+    if (mainGrid) mainGrid.style.display = 'none';
+    if (jackpotBanner) jackpotBanner.style.display = 'none';
+    if (onlineContainer) onlineContainer.style.display = 'block';
+    
+    // Инициализируем онлайн систему
+    initOnlineSystem();
+    
+    showToastLocal('wof_online_mode', 'Switched to Online Mode');
+  };
+}
+
+console.log('🔧 Mode switch functions exported:', {
+  switchToSolo: typeof window.switchToSolo,
+  switchToOnline: typeof window.switchToOnline
+});
 </script>
 
 </body>
