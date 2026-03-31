@@ -18,6 +18,12 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import {
+  getFirestore, initializeFirestore,
+  collection, doc, getDoc, setDoc, getDocs,
+  updateDoc, addDoc, deleteDoc, query, orderBy, limit, where,
+  serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     
     // Делаем доступным глобально
     window.initializeApp = initializeApp;
@@ -714,7 +720,11 @@ try {
   // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
   window.auth = auth;
   window.db   = db;
-  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot };
+  window.__firestoreExports = { 
+  collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, 
+  query, orderBy, limit, where, serverTimestamp, increment, 
+  runTransaction, writeBatch, arrayUnion, onSnapshot 
+};
   window.__authExports = { onAuthStateChanged, signOut };
   console.log('✅ WoF Firebase initialized');
   
@@ -2259,12 +2269,6 @@ function launchConfetti(count = 40) {
 
 // Toast fallback
 function showToastLocal(key, fallback) {
-  if (typeof window.showToast === 'function') {
-    window.showToast(typeof window.t === 'function' ? window.t(key) || fallback : fallback);
-  } else {
-    console.log(fallback);
-  }
-}
 
 // ═══════════════════════════════════════════════════════════
 // HEADER AUTH UI UPDATE
@@ -2822,6 +2826,59 @@ if (currentUser && db) {
 <!-- Login Modal создается централизованно через auth-modal.js -->
 
   <script>
+    // ═══════════════════════════════════════════════════════════
+// 🛠️ FUNCTION AVAILABILITY CHECKS AND FALLBACKS
+// ═══════════════════════════════════════════════════════════
+
+// Глобальная функция для безопасного показа уведомлений
+window.showToastLocal = function(key, fallback) {
+  try {
+    if (typeof window.showToast === 'function') {
+      const message = (typeof window.t === 'function' ? window.t(key) : null) || fallback;
+      window.showToast(message);
+    } else if (typeof showToast === 'function') {
+      const message = (typeof window.t === 'function' ? window.t(key) : null) || fallback;
+      showToast(message);
+    } else {
+      alert(fallback);
+      console.log('Toast:', fallback);
+    }
+  } catch (error) {
+    console.error('Error showing toast:', error);
+    alert(fallback);
+  }
+};
+
+// Проверка доступности Firebase функций
+function checkFirebaseReady() {
+  const requiredFunctions = ['runTransaction', 'writeBatch', 'collection', 'doc', 'updateDoc', 'onSnapshot'];
+  
+  if (!window.__firestoreExports) {
+    console.error('❌ Firestore exports not available');
+    return false;
+  }
+  
+  for (const func of requiredFunctions) {
+    if (!window.__firestoreExports[func]) {
+      console.error(`❌ ${func} not available in Firestore exports`);
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+// Функция ожидания готовности Firebase
+async function waitForFirebaseReady(maxAttempts = 10) {
+  for (let i = 0; i < maxAttempts; i++) {
+    if (checkFirebaseReady()) {
+      return true;
+    }
+    console.log(`⏳ Waiting for Firebase... attempt ${i + 1}/${maxAttempts}`);
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  return false;
+}
 // ═══════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════
 // 🎮 REAL ONLINE WHEEL OF FORTUNE SYSTEM
@@ -2948,7 +3005,18 @@ window.switchToOnline = function() {
 // Инициализация онлайн системы
 async function initOnlineSystem() {
   if (!currentUser || !db) {
-    showToastLocal('wof_need_login', 'Please log in to play online');
+    if (typeof showToastLocal === 'function') {
+      showToastLocal('wof_need_login', 'Please log in to play online');
+    } else {
+      alert('Please log in to play online');
+    }
+    return;
+  }
+
+  // Проверяем доступность Firestore функций
+  if (!window.__firestoreExports) {
+    console.error('❌ Firestore exports not ready');
+    alert('Database not ready. Please refresh the page.');
     return;
   }
 
@@ -3152,7 +3220,11 @@ window.setMaxOnlineBet = async function() {
 
 window.placeOnlineBet = async function() {
   if (!currentUser) {
-    showToastLocal('wof_need_login', 'Please log in to place bets');
+    if (typeof showToastLocal === 'function') {
+      showToastLocal('wof_need_login', 'Please log in to place bets');
+    } else {
+      alert('Please log in to place bets');
+    }
     return;
   }
 
@@ -3160,16 +3232,33 @@ window.placeOnlineBet = async function() {
   const betAmount = parseInt(betInput.value);
   
   if (!betAmount || betAmount <= 0) {
-    showToastLocal('wof_invalid_bet', 'Please enter a valid bet amount');
+    if (typeof showToastLocal === 'function') {
+      showToastLocal('wof_invalid_bet', 'Please enter a valid bet amount');
+    } else {
+      alert('Please enter a valid bet amount');
+    }
     return;
   }
 
   // Проверяем баланс
   const currentBalance = await getRealUserBalance();
   if (betAmount > currentBalance) {
-    showToastLocal('wof_insufficient_balance', 'Insufficient RGT balance');
+    if (typeof showToastLocal === 'function') {
+      showToastLocal('wof_insufficient_balance', 'Insufficient RGT balance');
+    } else {
+      alert('Insufficient RGT balance');
+    }
     return;
   }
+
+  // Проверяем доступность runTransaction
+  if (!window.__firestoreExports || !window.__firestoreExports.runTransaction) {
+    console.error('❌ runTransaction not available');
+    alert('Database functions not available. Please refresh the page.');
+    return;
+  }
+
+  const { runTransaction } = window.__firestoreExports;
 
   try {
     await runTransaction(db, async (transaction) => {
@@ -3529,8 +3618,11 @@ async function finishOnlineGame() {
     resetLocalGameState();
 
   } catch (error) {
-    console.error('❌ Error finishing game:', error);
+  console.error('❌ Error finishing game:', error);
+  if (typeof showToastLocal === 'function') {
     showToastLocal('wof_game_error', 'Error finishing game');
+  } else {
+    alert('Error finishing game');
   }
 }
 
