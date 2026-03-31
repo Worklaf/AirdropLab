@@ -3317,6 +3317,30 @@ function loadBalanceFromOtherSources() {
   console.log('💰 User balance from fallback sources:', balance);
 }
 
+// Получение баланса пользователя из Firebase
+async function getUserBalanceFromFirebase() {
+  if (!window.currentUser || typeof window.firestore === 'undefined' || typeof window.getDoc !== 'function') {
+    console.log('⚠️ Cannot get balance - Firebase or user not available');
+    return 0;
+  }
+  
+  try {
+    const userDocRef = window.doc(window.firestore, 'users', window.currentUser.uid);
+    const userDoc = await window.getDoc(userDocRef);
+    
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      return userData.balance || 0;
+    } else {
+      console.log('⚠️ User document not found');
+      return 0;
+    }
+  } catch (error) {
+    console.error('❌ Error getting user balance:', error);
+    return 0;
+  }
+}
+
 // Обновление баланса пользователя в Firebase (при выигрыше/проигрыше)
 function updateUserBalanceInFirebase(amount, isWin = false) {
   if (!window.currentUser || typeof window.firestore === 'undefined' || typeof window.updateDoc !== 'function') {
