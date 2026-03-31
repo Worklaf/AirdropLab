@@ -2905,6 +2905,9 @@ function updateModeButtons(activeMode) {
 function initOnlineGame() {
   console.log('🎮 Initializing online game...');
   
+  // Обновляем баланс пользователя
+  updateUserBalance();
+  
   // Инициализация онлайн-колеса
   initOnlineWheel();
   
@@ -2930,6 +2933,39 @@ function initOnlineGame() {
   }, 1000);
 }
 
+// Обновление баланса пользователя
+function updateUserBalance() {
+  const balanceEl = document.getElementById('onlineUserBalance');
+  if (!balanceEl) return;
+  
+  // Получаем баланс пользователя из разных источников
+  let balance = 0;
+  
+  // Проверяем глобальную переменную
+  if (typeof userBalance !== 'undefined' && userBalance > 0) {
+    balance = userBalance;
+  }
+  
+  // Проверяем window.currentUser
+  if (window.currentUser && window.currentUser.balance) {
+    balance = window.currentUser.balance;
+  }
+  
+  // Проверяем localStorage
+  const storedBalance = localStorage.getItem('userBalance');
+  if (storedBalance) {
+    balance = parseFloat(storedBalance);
+  }
+  
+  // Для демонстрации устанавливаем тестовый баланс
+  if (balance === 0) {
+    balance = 1000; // Тестовый баланс
+  }
+  
+  balanceEl.textContent = `Balance: ${balance} RGT`;
+  console.log('💰 User balance updated:', balance);
+}
+
 // Инициализация онлайн-колеса
 function initOnlineWheel() {
   const canvas = document.getElementById('onlineWheelCanvas');
@@ -2942,23 +2978,11 @@ function initOnlineWheel() {
   canvas.width = 400;
   canvas.height = 400;
   
-  // Сектора для онлайн-колеса
-  const sectors = [
-    { label: '1 RGT', value: 1, color: '#10b981' },
-    { label: '2 RGT', value: 2, color: '#22d3ee' },
-    { label: '3 RGT', value: 3, color: '#8b5cf6' },
-    { label: '4 RGT', value: 4, color: '#ec4899' },
-    { label: '10 RGT', value: 10, color: '#f59e0b' },
-    { label: '20 RGT', value: 20, color: '#ef4444' },
-    { label: '50 RGT', value: 50, color: '#a855f7' },
-    { label: '100 RGT', value: 100, color: '#fbbf24' }
-  ];
-  
-  drawOnlineWheel(ctx, canvas.width, canvas.height, sectors);
+  drawOnlineWheel(ctx, canvas.width, canvas.height);
 }
 
-// Рисование онлайн-колеса
-function drawOnlineWheel(ctx, width, height, sectors) {
+// Рисование онлайн-колеса с динамическими секторами
+function drawOnlineWheel(ctx, width, height) {
   const centerX = width / 2;
   const centerY = height / 2;
   const radius = Math.min(width, height) / 2 - 10;
@@ -2966,43 +2990,91 @@ function drawOnlineWheel(ctx, width, height, sectors) {
   // Очистка canvas
   ctx.clearRect(0, 0, width, height);
   
-  // Рисование секторов
-  const anglePerSector = (Math.PI * 2) / sectors.length;
-  
-  sectors.forEach((sector, index) => {
-    const startAngle = index * anglePerSector - Math.PI / 2;
-    const endAngle = (index + 1) * anglePerSector - Math.PI / 2;
-    
-    // Создание градиента
-    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-    gradient.addColorStop(0, sector.color + 'cc');
-    gradient.addColorStop(1, sector.color);
-    
-    // Рисование сектора
+  // Если нет участников - рисуем пустое колесо
+  if (onlineGame.participants.length === 0) {
+    // Рисуем один большой сектор - ожидание игроков
     ctx.beginPath();
     ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
     ctx.closePath();
+    
+    // Градиент для пустого колеса
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
+    gradient.addColorStop(1, 'rgba(139, 92, 246, 0.1)');
     ctx.fillStyle = gradient;
     ctx.fill();
     
-    // Рисование границы
+    // Граница
     ctx.strokeStyle = '#1e2538';
     ctx.lineWidth = 3;
     ctx.stroke();
     
-    // Рисование текста
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.rotate(startAngle + anglePerSector / 2);
+    // Текст в центре
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 16px Arial';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px Arial';
-    ctx.fillText(sector.label, radius / 2, 0);
-    ctx.restore();
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Waiting for players...', centerX, centerY);
+    
+    return;
+  }
+  
+  // Рассчитываем проценты каждого участника
+  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+  const colors = ['#8b5cf6', '#22d3ee', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#a855f7', '#fbbf24'];
+  
+  let currentAngle = -Math.PI / 2; // Начинаем сверху
+  
+  onlineGame.participants.forEach((participant, index) => {
+    const percentage = totalBets > 0 ? (participant.bet / totalBets) : 0;
+    const angleSize = percentage * Math.PI * 2;
+    
+    // Создаем градиент для участника
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    const color = colors[index % colors.length];
+    gradient.addColorStop(0, color + 'cc');
+    gradient.addColorStop(1, color);
+    
+    // Рисуем сектор участника
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + angleSize);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    // Граница сектора
+    ctx.strokeStyle = '#1e2538';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Добавляем текст с именем и процентом
+    if (percentage > 0.05) { // Показываем текст только если сектор достаточно большой
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(currentAngle + angleSize / 2);
+      
+      // Имя участника
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const displayName = participant.displayName || 'Anonymous';
+      const shortName = displayName.length > 10 ? displayName.substring(0, 10) + '...' : displayName;
+      ctx.fillText(shortName, radius * 0.6, -8);
+      
+      // Процент
+      ctx.font = '10px Arial';
+      ctx.fillText(`${(percentage * 100).toFixed(1)}%`, radius * 0.6, 8);
+      
+      ctx.restore();
+    }
+    
+    currentAngle += angleSize;
   });
   
-  // Рисование центральной окружности
+  // Рисуем центральную окружность
   ctx.beginPath();
   ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
   ctx.fillStyle = '#1e2538';
@@ -3011,12 +3083,19 @@ function drawOnlineWheel(ctx, width, height, sectors) {
   ctx.lineWidth = 4;
   ctx.stroke();
   
-  // Рисование текста в центре
+  // Текст в центре
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 16px Arial';
+  ctx.font = 'bold 14px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('SPIN', centerX, centerY);
+  
+  if (onlineGame.participants.length < 2) {
+    ctx.fillText('Waiting...', centerX, centerY);
+  } else if (onlineGame.bettingOpen) {
+    ctx.fillText(`${onlineGame.timeLeft}s`, centerX, centerY);
+  } else {
+    ctx.fillText('Ready!', centerX, centerY);
+  }
 }
 
 // Обновление онлайн UI
@@ -3071,20 +3150,31 @@ function updateParticipantsList() {
     return;
   }
   
-  participantsList.innerHTML = onlineGame.participants.map(participant => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:rgba(139,92,246,.05);border-radius:8px;margin-bottom:8px;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">
-          ${participant.displayName ? participant.displayName.charAt(0).toUpperCase() : 'A'}
+  // Рассчитываем проценты
+  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+  
+  participantsList.innerHTML = onlineGame.participants.map(participant => {
+    const percentage = totalBets > 0 ? ((participant.bet / totalBets) * 100).toFixed(1) : 0;
+    const winChance = onlineGame.participants.length > 1 ? percentage : 0;
+    
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:rgba(139,92,246,.05);border-radius:8px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;">
+            ${participant.displayName ? participant.displayName.charAt(0).toUpperCase() : 'A'}
+          </div>
+          <div>
+            <div style="font-size:14px;color:white;font-weight:600;">${participant.displayName || 'Anonymous'}</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Bet: ${participant.bet} RGT</div>
+          </div>
         </div>
-        <div>
-          <div style="font-size:14px;color:white;font-weight:600;">${participant.displayName || 'Anonymous'}</div>
-          <div style="font-size:12px;color:var(--text-secondary);">Bet: ${participant.bet} RGT</div>
+        <div style="text-align:right;">
+          <div style="font-size:14px;color:#f59e0b;font-weight:600;">${participant.bet} RGT</div>
+          <div style="font-size:11px;color:#22d3ee;">${winChance}% win</div>
         </div>
       </div>
-      <div style="font-size:14px;color:#f59e0b;font-weight:600;">${participant.bet} RGT</div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 // Обновление онлайн статистики
@@ -3138,6 +3228,15 @@ function placeOnlineBet() {
   // Симуляция размещения ставки
   const currentUser = window.currentUser;
   if (currentUser) {
+    // Проверяем, не ставил ли уже этот пользователь
+    const existingParticipant = onlineGame.participants.find(p => p.uid === currentUser.uid);
+    if (existingParticipant) {
+      if (typeof showToast === 'function') {
+        showToast('You already placed a bet in this round', 'warning');
+      }
+      return;
+    }
+    
     // Добавляем участника в игру
     onlineGame.participants.push({
       uid: currentUser.uid,
@@ -3148,6 +3247,11 @@ function placeOnlineBet() {
     
     // Обновляем призовой пул
     onlineGame.prizePool += betAmount;
+    
+    // Проверяем, нужно ли начать игру
+    if (onlineGame.participants.length >= 2 && !onlineGame.bettingOpen) {
+      startBettingPhase();
+    }
     
     // Обновляем UI
     updateOnlineUI();
@@ -3162,6 +3266,185 @@ function placeOnlineBet() {
     if (typeof showToast === 'function') {
       showToast('Please login to place bets', 'warning');
     }
+  }
+}
+
+// Начало фазы ставок
+function startBettingPhase() {
+  console.log('🎮 Starting betting phase...');
+  onlineGame.bettingOpen = true;
+  onlineGame.timeLeft = 60; // 1 минута
+  
+  // Обновляем статус игры
+  updateGameStatus('Betting phase active! 60 seconds remaining...');
+  
+  // Запускаем таймер
+  const timerInterval = setInterval(() => {
+    onlineGame.timeLeft--;
+    
+    // Обновляем колесо
+    const canvas = document.getElementById('onlineWheelCanvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      drawOnlineWheel(ctx, canvas.width, canvas.height);
+    }
+    
+    // Обновляем время в UI
+    const timeLeftEl = document.getElementById('onlineTimeLeft');
+    if (timeLeftEl) {
+      const minutes = Math.floor(onlineGame.timeLeft / 60);
+      const seconds = onlineGame.timeLeft % 60;
+      timeLeftEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    if (onlineGame.timeLeft <= 0) {
+      clearInterval(timerInterval);
+      endBettingPhase();
+    }
+  }, 1000);
+}
+
+// Окончание фазы ставок и запуск колеса
+function endBettingPhase() {
+  console.log('🎮 Ending betting phase, spinning wheel...');
+  onlineGame.bettingOpen = false;
+  
+  if (onlineGame.participants.length < 2) {
+    // Недостаточно участников
+    updateGameStatus('Not enough participants. Waiting for more players...');
+    return;
+  }
+  
+  // Показываем модальное окно с результатами
+  spinOnlineWheel();
+}
+
+// Вращение онлайн-колеса
+function spinOnlineWheel() {
+  const canvas = document.getElementById('onlineWheelCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+  
+  // Рассчитываем вероятности
+  const probabilities = onlineGame.participants.map(p => ({
+    participant: p,
+    probability: p.bet / totalBets
+  }));
+  
+  // Выбираем победителя
+  const random = Math.random();
+  let accumulator = 0;
+  let winner = null;
+  
+  for (const prob of probabilities) {
+    accumulator += prob.probability;
+    if (random <= accumulator) {
+      winner = prob.participant;
+      break;
+    }
+  }
+  
+  if (!winner) {
+    winner = probabilities[probabilities.length - 1].participant;
+  }
+  
+  // Анимация вращения
+  let rotation = 0;
+  const targetRotation = 360 * 5 + Math.random() * 360; // 5 полных оборотов + случайный угол
+  
+  const animateSpin = () => {
+    rotation += 15;
+    
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    
+    drawOnlineWheel(ctx, canvas.width, canvas.height);
+    
+    ctx.restore();
+    
+    if (rotation < targetRotation) {
+      requestAnimationFrame(animateSpin);
+    } else {
+      // Показываем результаты
+      showOnlineWinner(winner);
+    }
+  };
+  
+  animateSpin();
+}
+
+// Показ победителя онлайн-игры
+function showOnlineWinner(winner) {
+  const totalBets = onlineGame.participants.reduce((sum, p) => sum + p.bet, 0);
+  const winPercentage = ((winner.bet / totalBets) * 100).toFixed(1);
+  
+  // Создаем модальное окно победителя
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  
+  modal.innerHTML = `
+    <div style="background: linear-gradient(135deg, #1e2538, #2d3748); border: 2px solid #8b5cf6; border-radius: 20px; padding: 40px; max-width: 500px; text-align: center; box-shadow: 0 25px 50px rgba(139, 92, 246, 0.3);">
+      <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
+      <h2 style="color: white; font-size: 28px; font-weight: 900; margin-bottom: 16px;">Online Wheel Winner!</h2>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px;">
+          ${winner.displayName ? winner.displayName.charAt(0).toUpperCase() : 'W'}
+        </div>
+        <div>
+          <div style="color: #a78bfa; font-size: 20px; font-weight: 700;">${winner.displayName || 'Anonymous'}</div>
+          <div style="color: #22d3ee; font-size: 14px;">Win chance: ${winPercentage}%</div>
+        </div>
+      </div>
+      <div style="color: #f59e0b; font-size: 32px; font-weight: 900; margin-bottom: 20px;">${onlineGame.prizePool} RGT</div>
+      <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 24px;">Total prize pool won!</div>
+      <button onclick="this.closest('div').parentElement.remove(); resetOnlineGame();" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; border-radius: 10px; color: white; font-weight: 700; padding: 12px 24px; cursor: pointer;">
+        Awesome!
+      </button>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Обновляем статистику
+  updateOnlineStats();
+}
+
+// Сброс онлайн-игры для нового раунда
+function resetOnlineGame() {
+  console.log('🔄 Resetting online game for new round...');
+  onlineGame.participants = [];
+  onlineGame.prizePool = 0;
+  onlineGame.timeLeft = 0;
+  onlineGame.bettingOpen = false;
+  onlineGame.currentRound++;
+  
+  updateOnlineUI();
+  updateGameStatus('Waiting for players...');
+}
+
+// Обновление статуса игры
+function updateGameStatus(message) {
+  const statusEl = document.getElementById('onlineGameStatus');
+  if (statusEl) {
+    statusEl.innerHTML = `
+      <div style="font-size:14px;color:#22d3ee;font-weight:600;margin-bottom:8px;">${message}</div>
+      <div style="font-size:12px;color:var(--text-secondary);">Place your bets to join!</div>
+    `;
   }
 }
 
