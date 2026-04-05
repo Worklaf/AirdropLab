@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Translation Consistency Checker — translation-check.md → HTML</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#22d3ee;
+      --text:#e6eef6; --success:#16a34a; --warn:#f59e0b; --danger:#ef4444;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%}
+    body{
+      margin:0; background:linear-gradient(180deg,#071026 0%, #071827 100%);
+      color:var(--text); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      padding:28px;
+    }
+    .wrap{max-width:980px;margin:0 auto;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:28px;box-shadow:0 6px 30px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+    h1{margin:0 0 8px;font-size:22px}
+    p.lead{margin:0 0 18px;color:var(--muted)}
+    h2{margin-top:22px;margin-bottom:8px;font-size:16px;color:var(--accent)}
+    h3{margin:18px 0 8px;font-size:14px}
+    pre{background:#071827;border:1px solid rgba(255,255,255,0.03);padding:14px;border-radius:8px;overflow:auto;color:var(--text);font-size:13px;line-height:1.5}
+    code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace}
+    .note{background:rgba(34,211,238,0.06);border-left:4px solid var(--accent);padding:10px;border-radius:6px;color:var(--muted);margin:12px 0}
+    .warn{background:rgba(245,158,11,0.06);border-left:4px solid var(--warn);padding:10px;border-radius:6px;color:var(--muted);margin:12px 0}
+    .danger{background:rgba(239,68,68,0.06);border-left:4px solid var(--danger);padding:10px;border-radius:6px;color:var(--muted);margin:12px 0}
+    ul{margin:8px 0 12px 20px;color:var(--muted)}
+    .footer{margin-top:20px;color:var(--muted);font-size:13px}
+    .btn{display:inline-block;background:var(--accent);color:#04202a;padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:8px}
+    .small{font-size:13px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap" role="main">
+    <h1>Translation Consistency Checker</h1>
+    <p class="lead">HTML‑страница с полной инструкцией и единым скриптом для проверки консистентности переводов (RU / ES / TR / EN). Скопируйте содержимое блока <code>&lt;script&gt;</code> и выполните в консоли браузера после вставки объекта <code>translations</code>.</p>
+
+    <h2>Кратко</h2>
+    <ul>
+      <li>Проверяет количество ключей в каждом языке.</li>
+      <li>Находит ключи, которые есть в <code>ru</code>, но отсутствуют в <code>es</code>, <code>tr</code>, <code>en</code>.</li>
+      <li>Находит лишние ключи в переводах (есть в переводе, но нет в <code>ru</code>).</li>
+      <li>Выводит русские значения для пропущенных ключей — удобно копировать для перевода.</li>
+      <li>Безопасно обрабатывает отсутствие английского блока (<code>en</code> может быть пустым).</li>
+    </ul>
+
+    <h2>Важное предупреждение</h2>
+    <div class="warn">
+      <strong>Перед запуском:</strong> в консоли должен быть определён полный объект <code>translations</code>. Если вставить только часть — появится ошибка <code>ReferenceError: translations is not defined</code>.
+    </div>
+
+    <h2>Подготовка</h2>
+    <p class="small">Откройте DevTools → Console и вставьте ваш объект переводов целиком. Пример структуры (замените комментарии реальными данными):</p>
+    <pre><code class="language-js">// Пример: вставьте ваш реальный объект translations целиком
+const translations = {
+  ru: {
+    /* все ключи и значения на русском */
+  },
+  es: {
+    /* все ключи и значения на испанском */
+  },
+  tr: {
+    /* все ключи и значения на турецком */
+  },
+  en: {
+    /* все ключи и значения на английском или {} если нет */
+  }
+};</code></pre>
+
+    <h2>Единый скрипт проверки</h2>
+    <p class="small">Скопируйте и выполните этот блок <strong>после</strong> того, как вставили объект <code>translations</code> в консоль.</p>
+
+    <pre><code class="language-js">// === Translation Consistency Checker (выполнить в консоли) ===
+
+// 1) Собираем ключи (безопасно обрабатываем отсутствие en)
+const ruKeys = Object.keys(translations.ru || {});
+const esKeys = Object.keys(translations.es || {});
+const trKeys = Object.keys(translations.tr || {});
+const enKeys = Object.keys(translations.en || {});
+
+// 2) Количество ключей
+console.log("RU keys:", ruKeys.length);
+console.log("ES keys:", esKeys.length);
+console.log("TR keys:", trKeys.length);
+console.log("EN keys:", enKeys.length);
+
+// 3) Пропущенные ключи (есть в RU, но нет в переводах)
+const missingInEs = ruKeys.filter(k => !esKeys.includes(k));
+const missingInTr = ruKeys.filter(k => !trKeys.includes(k));
+const missingInEn = ruKeys.filter(k => !enKeys.includes(k));
+
+console.log("❌ Отсутствуют в ES:", missingInEs);
+console.log("❌ Отсутствуют в TR:", missingInTr);
+console.log("❌ Отсутствуют в EN:", missingInEn);
+
+// 4) Лишние ключи (есть в переводах, но нет в RU)
+const extraInEs = esKeys.filter(k => !ruKeys.includes(k));
+const extraInTr = trKeys.filter(k => !ruKeys.includes(k));
+const extraInEn = enKeys.filter(k => !ruKeys.includes(k));
+
+console.log("⚠️ Лишние в ES:", extraInEs);
+console.log("⚠️ Лишние в TR:", extraInTr);
+console.log("⚠️ Лишние в EN:", extraInEn);
+
+// 5) Вывод русских значений для пропущенных ключей (удобно копировать для перевода)
+console.log("=== RU → ES: пропущенные строки ===");
+missingInEs.forEach(k => console.log(`${k}:`, translations.ru[k]));
+
+console.log("=== RU → TR: пропущенные строки ===");
+missingInTr.forEach(k => console.log(`${k}:`, translations.ru[k]));
+
+console.log("=== RU → EN: пропущенные строки ===");
+missingInEn.forEach(k => console.log(`${k}:`, translations.ru[k]));
+
+// 6) Компактный свод в виде объекта (если нужно скопировать в файл)
+const report = {
+  counts: { ru: ruKeys.length, es: esKeys.length, tr: trKeys.length, en: enKeys.length },
+  missing: { es: missingInEs, tr: missingInTr, en: missingInEn },
+  extra: { es: extraInEs, tr: extraInTr, en: extraInEn }
+};
+console.log("=== Summary object ===");
+console.log(report);
+
+// === Конец скрипта ===</code></pre>
+
+    <h2>Как читать результаты</h2>
+    <ul>
+      <li><strong>RU keys</strong> — эталонное количество ключей в русском блоке.</li>
+      <li><strong>Отсутствуют в ES/TR/EN</strong> — ключи, которые есть в <code>ru</code>, но отсутствуют в переводе; их нужно перевести.</li>
+      <li><strong>Лишние в ES/TR/EN</strong> — ключи, которые есть в переводе, но отсутствуют в <code>ru</code>; возможно устаревшие или ошибочные.</li>
+      <li><strong>RU → ...</strong> — выводит пары <code>ключ: русская строка</code> для всех пропущенных ключей; удобно копировать и переводить.</li>
+    </ul>
+
+    <h2>Пошаговая инструкция</h2>
+    <ol>
+      <li>Откройте файл переводов (например, <code>languages.js</code> или <code>translations.js</code>).</li>
+      <li>Откройте браузер → DevTools → <strong>Console</strong>.</li>
+      <li>Скопируйте и вставьте в консоль весь объект <code>translations</code> (см. раздел «Подготовка»), нажмите Enter.</li>
+      <li>Скопируйте и выполните блок «Единый скрипт проверки».</li>
+      <li>Проанализируйте вывод: сначала — количества, затем — списки «Отсутствуют» и «Лишние», затем — секции «RU → ...».</li>
+      <li>Внесите переводы в соответствующие блоки <code>es</code>, <code>tr</code>, <code>en</code> и повторите проверку.</li>
+    </ol>
+
+    <h2>Частые ошибки и решения</h2>
+    <div class="danger">
+      <strong>ReferenceError: translations is not defined</strong><br>
+      Причина: в консоли не определён объект <code>translations</code> (вставлен не весь объект).<br>
+      Решение: вставьте весь объект <code>translations</code> целиком и затем выполните скрипт.
+    </div>
+
+    <div class="note">
+      <strong>Синтаксические ошибки при вставке объекта</strong><br>
+      Убедитесь, что объект корректен с точки зрения JavaScript: закрытые кавычки, запятые, отсутствие комментариев в JSON‑стиле. Если используете JSON, удалите JS‑комментарии.
+    </div>
+
+    <h2>Рекомендации и лучшие практики</h2>
+    <ul>
+      <li>Храните <code>translation-check.md</code> рядом с файлом переводов в репозитории.</li>
+      <li>Перед коммитом переводов запускайте этот скрипт, чтобы убедиться в синхронизации ключей.</li>
+      <li>При добавлении новых ключей в <code>ru</code> — добавляйте заглушки в <code>es</code> и <code>tr</code> (например пустые строки), чтобы не накапливать большой список пропусков.</li>
+      <li>Для автоматизации можно создать Node.js‑скрипт или GitHub Action; при желании — могу помочь с этим.</li>
+    </ul>
+
+    <div class="footer">
+      <div class="small">Сохраните эту страницу как <code>translation-check.html</code> или скопируйте содержимое в репозиторий как <code>translation-check.md</code> (MD) — в HTML‑формате удобно держать инструкцию локально.</div>
+      <div style="margin-top:10px"><a class="btn" href="#" onclick="copyScript()">Скопировать скрипт в буфер</a></div>
+      <div style="margin-top:8px" class="small">Кнопка копирует блок скрипта (для удобства). Откройте DevTools → Console и вставьте скопированный скрипт после вставки <code>translations</code>.</div>
+    </div>
+  </div>
+
+  <script>
+    // Кнопка "Скопировать скрипт" — копирует JS‑блок проверки в буфер обмена
+    function copyScript(){
+      const script = `// === Translation Consistency Checker (выполнить в консоли) ===
+
+const ruKeys = Object.keys(translations.ru || {});
+const esKeys = Object.keys(translations.es || {});
+const trKeys = Object.keys(translations.tr || {});
+const enKeys = Object.keys(translations.en || {});
+
+console.log("RU keys:", ruKeys.length);
+console.log("ES keys:", esKeys.length);
+console.log("TR keys:", trKeys.length);
+console.log("EN keys:", enKeys.length);
+
+const missingInEs = ruKeys.filter(k => !esKeys.includes(k));
+const missingInTr = ruKeys.filter(k => !trKeys.includes(k));
+const missingInEn = ruKeys.filter(k => !enKeys.includes(k));
+
+console.log("❌ Отсутствуют в ES:", missingInEs);
+console.log("❌ Отсутствуют в TR:", missingInTr);
+console.log("❌ Отсутствуют в EN:", missingInEn);
+
+const extraInEs = esKeys.filter(k => !ruKeys.includes(k));
+const extraInTr = trKeys.filter(k => !ruKeys.includes(k));
+const extraInEn = enKeys.filter(k => !ruKeys.includes(k));
+
+console.log("⚠️ Лишние в ES:", extraInEs);
+console.log("⚠️ Лишние в TR:", extraInTr);
+console.log("⚠️ Лишние в EN:", extraInEn);
+
+console.log("=== RU → ES: пропущенные строки ===");
+missingInEs.forEach(k => console.log(\`\${k}:\`, translations.ru[k]));
+
+console.log("=== RU → TR: пропущенные строки ===");
+missingInTr.forEach(k => console.log(\`\${k}:\`, translations.ru[k]));
+
+console.log("=== RU → EN: пропущенные строки ===");
+missingInEn.forEach(k => console.log(\`\${k}:\`, translations.ru[k]));
+
+const report = {
+  counts: { ru: ruKeys.length, es: esKeys.length, tr: trKeys.length, en: enKeys.length },
+  missing: { es: missingInEs, tr: missingInTr, en: missingInEn },
+  extra: { es: extraInEs, tr: extraInTr, en: extraInEn }
+};
+console.log("=== Summary object ===");
+console.log(report);`;
+      navigator.clipboard.writeText(script).then(()=>{
+        alert('Скрипт скопирован в буфер обмена. Вставьте его в консоль после определения translations.');
+      }, ()=>{ alert('Не удалось скопировать. Скопируйте вручную из страницы.'); });
+    }
+  </script>
+</body>
+</html>
