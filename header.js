@@ -3209,7 +3209,7 @@ function initFeedbacksListener(uid) {
     content.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h3 style="color: #22d3ee; font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-          <i class="fas fa-bell"></i> Уведомления
+          <i class="fas fa-bell"></i> ${t('notifications')}
         </h3>
         <button onclick="window.closeNotificationsModal()" style="background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer; padding: 4px;">&times;</button>
       </div>
@@ -3220,7 +3220,7 @@ function initFeedbacksListener(uid) {
         <div style="position: relative;">
           <span id="unreadBadge-all" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
           <button onclick="filterNotifications('all')" class="filter-btn active" data-filter="all" style="background: rgba(34,211,238,0.2); border: 1px solid #22d3ee; color: #e2e8f0; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            📋 Все <span id="filterCount-all" class="filter-count" style="background: rgba(255,255,255,0.15); color: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+            📋 ${t('all')} <span id="filterCount-all" class="filter-count" style="background: rgba(255,255,255,0.15); color: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
           </button>
         </div>
         
@@ -3228,7 +3228,7 @@ function initFeedbacksListener(uid) {
         <div style="position: relative;">
           <span id="unreadBadge-games" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
           <button onclick="filterNotifications('games')" class="filter-btn" data-filter="games" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            🎮 Игры <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+            🎮 ${t('menu_games')} <span id="filterCount-games" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
           </button>
         </div>
         
@@ -3236,7 +3236,7 @@ function initFeedbacksListener(uid) {
         <div style="position: relative;">
           <span id="unreadBadge-jackpot_win" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
           <button onclick="filterNotifications('jackpot_win')" class="filter-btn" data-filter="jackpot_win" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            🏆 Джекпот <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+            🏆 ${t('jackpot_win')} <span id="filterCount-jackpot_win" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
           </button>
         </div>
         
@@ -3244,17 +3244,17 @@ function initFeedbacksListener(uid) {
         <div style="position: relative;">
           <span id="unreadBadge-admin" class="unread-filter-badge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid rgba(15,23,42,0.8);">0</span>
           <button onclick="filterNotifications('admin')" class="filter-btn" data-filter="admin" style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            🛡️ Админ <span id="filterCount-admin" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
+            🛡️ ${t('admin')} <span id="filterCount-admin" class="filter-count" style="background: rgba(255,255,255,0.1); color: #94a3b8; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin-left: 2px;">0</span>
           </button>
         </div>
         
         <!-- Кнопки управления -->
         <div style="margin-left: auto; display: flex; gap: 8px;">
           <button onclick="markFilteredNotificationsAsRead()" style="background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            ✓ Прочитать все
+            ✓ ${t('notifications_mark_read')}
           </button>
           <button onclick="clearFilteredNotifications()" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;">
-            🗑️ Очистить все
+            🗑️ ${t('notifications_clear_all')}
           </button>
         </div>
       </div>
@@ -3263,7 +3263,7 @@ function initFeedbacksListener(uid) {
       <div id="notificationsList" style="max-height: 400px; overflow-y: auto;">
         <div style="text-align: center; padding: 40px; color: #94a3b8;">
           <i class="fas fa-bell" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
-          Загрузка уведомлений...
+          ${t('loading_notifications')}...
         </div>
       </div>
     `;
@@ -3401,7 +3401,7 @@ function initFeedbacksListener(uid) {
         listEl.innerHTML = `
           <div style="text-align: center; color: #ef4444; padding: 40px;">
             <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px;"></i>
-            <div>Ошибка загрузки уведомлений</div>
+            <div>${t('notifications_load_error')}</div>
           </div>
         `;
       }
@@ -3490,7 +3490,7 @@ function initFeedbacksListener(uid) {
       listEl.innerHTML = `
         <div style="text-align: center; color: #94a3b8; padding: 40px;">
           <i class="fas fa-bell-slash" style="font-size: 24px; margin-bottom: 10px;"></i>
-          <div>У вас пока нет уведомлений</div>
+          <div>${t('no_notifications')}</div>
         </div>
       `;
       return;
@@ -3499,53 +3499,53 @@ function initFeedbacksListener(uid) {
     listEl.innerHTML = notifications.map(notif => {
       const isUnread = !notif.read;
       let typeIcon = '📢';
-      let typeLabel = 'Уведомление';
+      let typeLabel = t('notifications');
       let filterType = 'all';
       
       // Улучшенная логика отображения с конкретными названиями для разных типов
       if (notif.type === 'jackpot_win') {
         typeIcon = '🏆';
-        typeLabel = 'Джекпот';
+        typeLabel = t('jackpot_win');
         filterType = 'jackpot_win';
       } else if (notif.type === 'wheel_spin') {
         typeIcon = '🎡';
-        typeLabel = 'Колесо фортуны';
+        typeLabel = t('wheel_of_fortune');
         filterType = 'games';
       } else if (notif.type === 'faucet_claim') {
         typeIcon = '💰';
-        typeLabel = 'Кран';
+        typeLabel = t('faucets');
         filterType = 'games';
       } else if (notif.type === 'game_reward' || (notif.type && notif.type.includes('game'))) {
         typeIcon = '🎰';
-        typeLabel = 'Игра';
+        typeLabel = t('menu_games');
         filterType = 'games';
       } else if (notif.type === 'info') {
         typeIcon = 'ℹ️';
-        typeLabel = 'Информация';
+        typeLabel = t('info');
         filterType = 'admin';
       } else if (notif.type === 'success') {
         typeIcon = '✅';
-        typeLabel = 'Успех';
+        typeLabel = t('success');
         filterType = 'admin';
       } else if (notif.type === 'warning') {
         typeIcon = '⚠️';
-        typeLabel = 'Важно';
+        typeLabel = t('important');
         filterType = 'admin';
       } else if (notif.type === 'promo') {
         typeIcon = '🎁';
-        typeLabel = 'Акция';
+        typeLabel = t('promo');
         filterType = 'admin';
       } else if (notif.type === 'referral') {
         typeIcon = '🔗';
-        typeLabel = 'Реферальная';
+        typeLabel = t('referral_program');
         filterType = 'admin';
       } else if (notif.type !== 'wheel_spin' && notif.type !== 'faucet_claim' && notif.type !== 'game_reward' && notif.type !== 'jackpot_win' && (!notif.type || !notif.type.includes('game'))) {
         typeIcon = '📢';
-        typeLabel = 'Система';
+        typeLabel = t('system');
         filterType = 'admin';
       } else if (!notif.type) {
         typeIcon = '📢';
-        typeLabel = 'Уведомление';
+        typeLabel = t('notification');
         filterType = 'all';
       } else {
         typeIcon = '📢';
