@@ -848,6 +848,107 @@ passive_credited_to_upstream: 'Начислено вышестоящим по ц
     crypto_news: 'Kripto Haberleri',
     analytics_news: 'Analiz Haberleri',
     ai_news: 'Yapay Zeka Haberleri',
+
+    // ============ FOOTER — ACCOUNT ============
+    footer_account_not_logged: 'Giriş Yapılmadı',
+    footer_account_login_desc: 'Profilinizi yönetmek için giriş yapın',
+    footer_account_firstname: 'Ad',
+    footer_account_lastname: 'Soyad',
+    footer_account_username: 'Kullanıcı Adı',
+    footer_account_telegram: 'Telegram',
+    footer_account_birthdate: 'Doğum Tarihi',
+    footer_account_gender: 'Cinsiyet',
+    footer_account_male: 'Erkek',
+    footer_account_female: 'Kadın',
+    footer_account_other_gender: 'Diğer',
+    footer_account_country: 'Ülke',
+    footer_account_bio: 'Hakkımda',
+    footer_account_bio_placeholder: 'Kendinizden bahsedin...',
+    footer_account_cancel: 'İptal',
+    footer_account_save: 'Kaydet',
+    footer_account_saved: 'Profil kaydedildi!',
+    footer_account_saved_local: 'Profil yerel olarak kaydedildi',
+    footer_account_photo: 'Fotoğraf güncellendi!',
+    footer_solana_placeholder: 'Solana adresiniz...',
+    footer_evm_hint: '(Ethereum, BSC, Polygon...)',
+    footer_evm_label: 'EVM Adresi',
+    footer_solana_label: 'Solana Adresi',
+    
+    // ============ FOOTER — ACCOUNT EXTRA FIELDS ============
+    footer_address: 'adres',
+    footer_crypto_wallets: 'Kripto Adresleri',
+    footer_social_networks: 'Sosyal Ağlar',
+    account_select_country: 'Ülke seçin veya yazın...',
+    account_country_other_input: 'Ülke adını girin',
+    account_crypto_addresses: 'Kripto Adresleri',
+    account_evm_address: 'EVM Adresi',
+    account_evm_hint: '(Ethereum, BSC, Polygon...)',
+    account_sol_address: 'Solana Adresi',
+    account_sol_placeholder: 'Solana adresiniz...',
+    account_social_networks: 'Sosyal Ağlar',
+    account_city: 'Şehir',
+    account_city_placeholder: 'Şehriniz',
+
+    // ============ FOOTER — LEGAL MODALS ============
+    footer_legal_updated: 'Güncellendi:',
+    footer_legal_close: 'Kapat',
+    legal_terms_title: 'Hizmet Şartları',
+    legal_privacy_title: 'Gizlilik Politikası',
+    legal_cookie_title: 'Çerez Politikası',
+    legal_disclaimer_title: 'Yasal Uyarı',
+    legal_updated_date: '07 Mart 2026',
+    legal_close_btn: 'Kapat',
+
+    // ============ REFERRAL PROGRAM ============
+    account_ref_program: 'Referans Programı',
+    account_your_ref_code: 'Referans kodunuz',
+    account_invited_count: 'Davetli',
+    account_people_short: 'kişi',
+    account_invited_by: 'Davet eden:',
+    account_enter_ref_code: 'Referans kodunu girin',
+    account_apply: 'Uygula',
+    account_ref_bonus_text: 'Alırsınız',
+    account_ref_bonus_amount: '+25 Reagent',
+    account_generating: 'Oluşturuluyor...',
+    account_invited_label: 'kişi',
+    invited_by_label: 'Davet eden:',
+    ref_code_input_placeholder: 'AL-XXXXXX',
+    ref_code_copied: 'Referans kodu kopyalandı!',
+    copy_failed: 'Kopyalama başarısız',
+    ref_wrong_format: 'Geçersiz kod formatı (AL-XXXXXX)',
+    ref_login_required: 'Lütfen giriş yapın',
+    ref_not_found: 'Kod bulunamadı',
+    ref_own_code: 'Kendi kodunuzu kullanamazsınız',
+    ref_applied: '🧪 Kod uygulandı! Sizin için +50 Reagent ve davet eden için +25!',
+    ref_error: 'Hata: ',
+
+    // ============ REAGENTS ============
+    reagents_title: 'Reagentlar',
+    reagents_section_title: 'Reagentlar',
+    reagents_rgt_unit: 'RGT',
+    account_balance_label: 'Bakiyeniz',
+    account_streak_label: 'Seri',
+    account_days_short: 'gün',
+    account_get_reagents: 'Reagent Talep Et',
+
+    // ============ CLAIM MODAL ============
+    claim_title: 'Günlük Reagentlar',
+    claim_updated_utc: '00:00 UTC de sıfırlanır',
+    claim_loading: 'Yükleniyor...',
+    claim_error_close: 'Kapat',
+    claim_balance_label: 'Bakiyeniz',
+    claim_streak_label: 'Seri',
+    claim_streak_broken_title: 'Seri sıfırlandı!',
+    claim_streak_broken_desc: 'Bir gün kaçırdınız. Yeniden başlıyoruz!',
+    claim_week_progress: 'Haftalık ilerleme',
+    claim_until_bonus: '{days}-gün bonusuna kadar',
+    claim_days_left: '{days} gün',
+    claim_today_reward: 'Bugün alacaksınız',
+    claim_streak_will_be: 'Seri olacak:',
+    claim_get_btn: 'Reagent Talep Et',
+    claim_claiming: 'Talep ediliyor...',
+    claim_already_title: 'Zaten talep edildi!',
+    claim_next_at: 'Sonraki talep açılır',
   },
 
   es: {
@@ -949,6 +1050,107 @@ passive_credited_to_upstream: 'Начислено вышестоящим по ц
     crypto_news: 'Noticias Cripto',
     analytics_news: 'Noticias de Análisis',
     ai_news: 'Noticias de IA',
+
+    // ============ FOOTER — ACCOUNT ============
+    footer_account_not_logged: 'No Iniciado Sesión',
+    footer_account_login_desc: 'Inicia sesión para gestionar tu perfil',
+    footer_account_firstname: 'Nombre',
+    footer_account_lastname: 'Apellido',
+    footer_account_username: 'Nombre de Usuario',
+    footer_account_telegram: 'Telegram',
+    footer_account_birthdate: 'Fecha de Nacimiento',
+    footer_account_gender: 'Género',
+    footer_account_male: 'Masculino',
+    footer_account_female: 'Femenino',
+    footer_account_other_gender: 'Otro',
+    footer_account_country: 'País',
+    footer_account_bio: 'Acerca de Mí',
+    footer_account_bio_placeholder: 'Cuéntanos sobre ti...',
+    footer_account_cancel: 'Cancelar',
+    footer_account_save: 'Guardar',
+    footer_account_saved: '¡Perfil guardado!',
+    footer_account_saved_local: 'Perfil guardado localmente',
+    footer_account_photo: '¡Foto actualizada!',
+    footer_solana_placeholder: 'Tu dirección Solana...',
+    footer_evm_hint: '(Ethereum, BSC, Polygon...)',
+    footer_evm_label: 'Dirección EVM',
+    footer_solana_label: 'Dirección Solana',
+    
+    // ============ FOOTER — ACCOUNT EXTRA FIELDS ============
+    footer_address: 'dirección',
+    footer_crypto_wallets: 'Direcciones Cripto',
+    footer_social_networks: 'Redes Sociales',
+    account_select_country: 'Selecciona o escribe país...',
+    account_country_other_input: 'Ingresa nombre del país',
+    account_crypto_addresses: 'Direcciones Cripto',
+    account_evm_address: 'Dirección EVM',
+    account_evm_hint: '(Ethereum, BSC, Polygon...)',
+    account_sol_address: 'Dirección Solana',
+    account_sol_placeholder: 'Tu dirección Solana...',
+    account_social_networks: 'Redes Sociales',
+    account_city: 'Ciudad',
+    account_city_placeholder: 'Tu ciudad',
+
+    // ============ FOOTER — LEGAL MODALS ============
+    footer_legal_updated: 'Actualizado:',
+    footer_legal_close: 'Cerrar',
+    legal_terms_title: 'Términos de Servicio',
+    legal_privacy_title: 'Política de Privacidad',
+    legal_cookie_title: 'Política de Cookies',
+    legal_disclaimer_title: 'Descargo de Responsabilidad',
+    legal_updated_date: '07 de Marzo 2026',
+    legal_close_btn: 'Cerrar',
+
+    // ============ REFERRAL PROGRAM ============
+    account_ref_program: 'Programa de Referidos',
+    account_your_ref_code: 'Tu código de referido',
+    account_invited_count: 'Invitados',
+    account_people_short: 'personas',
+    account_invited_by: 'Invitado por:',
+    account_enter_ref_code: 'Ingresa código de referido',
+    account_apply: 'Aplicar',
+    account_ref_bonus_text: 'Recibes',
+    account_ref_bonus_amount: '+25 Reactivos',
+    account_generating: 'Generando...',
+    account_invited_label: 'personas',
+    invited_by_label: 'Invitado por:',
+    ref_code_input_placeholder: 'AL-XXXXXX',
+    ref_code_copied: '¡Código de referido copiado!',
+    copy_failed: 'Error al copiar',
+    ref_wrong_format: 'Formato de código inválido (AL-XXXXXX)',
+    ref_login_required: 'Por favor inicia sesión',
+    ref_not_found: 'Código no encontrado',
+    ref_own_code: 'No puedes usar tu propio código',
+    ref_applied: '🧪 ¡Código aplicado! +50 Reactivos para ti y +25 para el referidor!',
+    ref_error: 'Error: ',
+
+    // ============ REAGENTS ============
+    reagents_title: 'Reactivos',
+    reagents_section_title: 'Reactivos',
+    reagents_rgt_unit: 'RGT',
+    account_balance_label: 'Tu balance',
+    account_streak_label: 'Racha',
+    account_days_short: 'días',
+    account_get_reagents: 'Reclamar Reactivos',
+
+    // ============ CLAIM MODAL ============
+    claim_title: 'Reactivos Diarios',
+    claim_updated_utc: 'Reinicia a las 00:00 UTC',
+    claim_loading: 'Cargando...',
+    claim_error_close: 'Cerrar',
+    claim_balance_label: 'Tu balance',
+    claim_streak_label: 'Racha',
+    claim_streak_broken_title: '¡Racha reiniciada!',
+    claim_streak_broken_desc: '¡Perdiste un día! Empezando de nuevo!',
+    claim_week_progress: 'Progreso semanal',
+    claim_until_bonus: 'Hasta bonus de {days} días',
+    claim_days_left: '{days} días',
+    claim_today_reward: 'Hoy recibirás',
+    claim_streak_will_be: 'La racha será:',
+    claim_get_btn: 'Reclamar Reactivos',
+    claim_claiming: 'Reclamando...',
+    claim_already_title: '¡Ya reclamado!',
+    claim_next_at: 'Siguiente reclamación abre a',
   },
 
   en: {
@@ -1706,6 +1908,35 @@ let currentLang = localStorage.getItem('airdropLabLang') || 'ru';
 // Функция перевода
 function t(key) {
   return translations[currentLang]?.[key] || translations['ru'][key] || key;
+}
+
+// Инициализация при загрузке страницы
+function initializeLanguage() {
+  // Устанавливаем язык в HTML
+  document.documentElement.lang = currentLang;
+  
+  // Загружаем проекты для текущего языка (если не русский)
+  if (currentLang === 'en') {
+    loadProjectsFromJSON('projects_en');
+  } else if (currentLang === 'tr') {
+    loadProjectsFromJSON('projects_tr');
+  } else if (currentLang === 'es') {
+    loadProjectsFromJSON('projects_es');
+  }
+  
+  // Обновляем интерфейс
+  updateAllTranslations();
+  updateLanguageButton();
+  
+  // Обновляем глобальную переменную
+  window.currentLang = currentLang;
+}
+
+// Вызываем инициализацию при загрузке страницы
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeLanguage);
+} else {
+  initializeLanguage();
 }
 
 // Установить язык
