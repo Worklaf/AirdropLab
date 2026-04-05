@@ -117,10 +117,10 @@
 
               <div class="relative" id="langDropdown">
                 <button onclick="toggleLangDropdown()" id="langBtn"
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg border transition-all hover:scale-105 hover:bg-slate-800/50">
+                  class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-600/50 bg-slate-800/50 backdrop-blur-sm transition-all hover:border-slate-500/70 hover:bg-slate-700/60 hover:shadow-lg hover:shadow-slate-900/20">
                   <span class="lang-flag text-sm fi fi-ua"></span>
-                  <span class="lang-text text-xs font-medium">RU</span>
-                  <i class="fas fa-chevron-down text-xs text-slate-400 ml-1"></i>
+                  <span class="lang-text text-xs font-medium text-slate-300">RU</span>
+                  <i class="fas fa-chevron-down text-xs text-slate-400 ml-1 transition-transform group-hover:rotate-180"></i>
                 </button>
                 
                 <!-- Выпадающий список языков -->
@@ -300,12 +300,13 @@
 
             <div class="relative" id="mobLangDropdown">
             <button onclick="toggleMobLangDropdown()" id="mobLangBtn"
-              style="display:flex;align-items:center;gap:3px;padding:4px 8px;border-radius:8px;
-                     border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);
-                     cursor:pointer;font-size:10px;font-weight:700;color:#fff;white-space:nowrap;z-index:9999;">
-              <span class="mob-lang-flag fi fi-ua" style="font-size:0.9rem;"></span>
+              style="display:flex;align-items:center;gap:2px;padding:3px 6px;border-radius:6px;
+                     border:1px solid rgba(71,85,105,0.5);background:rgba(30,41,59,0.8);backdrop-filter:blur(4px);
+                     cursor:pointer;font-size:9px;font-weight:600;color:#cbd5e1;white-space:nowrap;
+                     transition:all 0.2s ease;">
+              <span class="mob-lang-flag fi fi-ua" style="font-size:0.8rem;"></span>
               <span class="mob-lang-text">RU</span>
-              <i class="fas fa-chevron-down text-xs" style="margin-left:1px;"></i>
+              <i class="fas fa-chevron-down text-xs" style="margin-left:1px;transition:transform 0.2s ease;"></i>
             </button>
             
             <!-- Мобильное меню языков -->
