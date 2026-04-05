@@ -1012,16 +1012,16 @@ window.openFeedbackModal = function(projId, projName) {
     const catSelect = document.getElementById('feedbackCategory');
     if (catSelect) {
       catSelect.innerHTML = `
-        <option value="technical">🔧 Техническая проблема</option>
-        <option value="account">👤 Проблема с аккаунтом</option>
-        <option value="question">❓ Вопрос</option>
-        <option value="suggestion">💡 Предложение</option>
-        <option value="partnership">🤝 Партнёрство</option>
-        <option value="other">💬 Другое</option>
+        <option value="technical">' + t('cat_technical') + '</option>
+        <option value="account">' + t('cat_account') + '</option>
+        <option value="question">' + t('question') + '</option>
+        <option value="suggestion">' + t('suggestion') + '</option>
+        <option value="partnership">' + t('cat_partnership') + '</option>
+        <option value="other">' + t('other') + '</option>
       `;
     }
     const feedbackText = document.getElementById('feedbackText');
-    if (feedbackText) feedbackText.placeholder = 'Опишите вашу проблему подробно...';
+    if (feedbackText) feedbackText.placeholder = t('feedback_placeholder_support');
   } else {
     if (projectLabel) projectLabel.textContent = 'Проект: ';
     if (projectNameEl) {
@@ -1034,10 +1034,10 @@ window.openFeedbackModal = function(projId, projName) {
     const catSelect = document.getElementById('feedbackCategory');
     if (catSelect) {
       catSelect.innerHTML = `
-        <option value="suggestion">💡 Предложение</option>
-        <option value="bug">🐛 Ошибка</option>
-        <option value="question">❓ Вопрос</option>
-        <option value="other">💬 Другое</option>
+        <option value="suggestion">💡 ${t('suggestion')}</option>
+        <option value="bug">🐛 ${t('bug')}</option>
+        <option value="question">❓ ${t('question')}</option>
+        <option value="other">💬 ${t('other')}</option>
       `;
     }
     const feedbackText = document.getElementById('feedbackText');
@@ -1131,17 +1131,17 @@ window.closeFeedbackModal = function() {
   // Возвращаем стандартный заголовок
   const titleEl = document.getElementById('feedbackModalTitle');
   if (titleEl) {
-    titleEl.innerHTML = '<i class="fas fa-comments text-purple-400"></i><span id="feedbackModalTitle" data-translate="feedback">Обратная связь</span>';
+    titleEl.innerHTML = '<i class="fas fa-comments text-purple-400"></i><span id="feedbackModalTitle" data-translate="feedback">' + t('feedback') + '</span>';
   }
 
   // Возвращаем стандартные категории
   const catSelect = document.getElementById('feedbackCategory');
   if (catSelect) {
     catSelect.innerHTML = `
-      <option value="suggestion">💡 Предложение</option>
-      <option value="bug">🐛 Ошибка</option>
-      <option value="question">❓ Вопрос</option>
-      <option value="other">💬 Другое</option>
+      <option value="suggestion">💡 ${t('suggestion')}</option>
+      <option value="bug">🐛 ${t('bug')}</option>
+      <option value="question">❓ ${t('question')}</option>
+      <option value="other">💬 ${t('other')}</option>
     `;
   }
 
@@ -1168,13 +1168,13 @@ window.renderFeedbackList = function() {
 
   // Словарь тем
   const categoryLabels = {
-    suggestion: '💡 Предложение',
-    bug: '🐛 Ошибка',
-    question: '❓ Вопрос',
-    other: '💬 Другое',
-    technical: '🔧 Тех. проблема',
-    account: '👤 Аккаунт',
-    partnership: '🤝 Партнёрство'
+    suggestion: '💡 ' + t('suggestion'),
+    bug: '🐛 ' + t('bug'),
+    question: '❓ ' + t('question'),
+    other: '💬 ' + t('other'),
+    technical: '🔧 ' + t('cat_technical'),
+    account: '👤 ' + t('cat_account'),
+    partnership: '🤝 ' + t('cat_partnership')
   };
 
   container.innerHTML = adminFeedbacks.map((item) => {
@@ -1313,13 +1313,13 @@ window.openFeedbackFromList = function(docId, projectId, projectName) {
   // Находим данные фидбека для темы
   const fb = adminFeedbacks.find(f => f.id === docId);
   const categoryLabels = {
-    suggestion: '💡 Предложение',
-    bug: '🐛 Ошибка',
-    question: '❓ Вопрос',
-    other: '💬 Другое',
-    technical: '🔧 Техническая проблема',
-    account: '👤 Проблема с аккаунтом',
-    partnership: '🤝 Партнёрство'
+    suggestion: '💡 ' + t('suggestion'),
+    bug: '🐛 ' + t('bug'),
+    question: '❓ ' + t('question'),
+    other: '💬 ' + t('other'),
+    technical: '🔧 ' + t('cat_technical'),
+    account: '👤 ' + t('cat_account'),
+    partnership: '🤝 ' + t('cat_partnership')
   };
   const categoryLabel = fb?.category ? (categoryLabels[fb.category] || fb.category) : '';
 
