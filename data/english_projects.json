@@ -578,6 +578,54 @@
       "createdAt": "2026-02-08T20:54:28.333Z"
     },
     {
+      "id": "dfusion_ai_972480",
+      "guideUrl": "",
+      "name": "dFusion AI",
+      "referralLink": "",
+      "twitterUrl": "https://x.com/dFusionAI?hzet=dszqupsbol",
+      "priority": "normal",
+      "createdAt": "2026-03-31T14:06:12.480Z",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/dfusion-ai-activity1144",
+      "image": "https://images.cryptorank.io/coins/d_fusion_ai1758208995136.png",
+      "hasDaily": false,
+      "description": "dFusion is a decentralized intelligent network designed to transform fragmented data into structured information for AI. The project focuses on content quality and authenticity, enabling communities to create specialized sub-networks in areas such as finance and law. Instead of a power race, the protocol introduces a new economic model where data ownership and validation are rewarded with tokens. The platform offers tools for businesses, providing corporate clients with secure access to analytics via API. This way, the system forms the fundamental infrastructure for the development of independent digital agents.",
+      "status": "active",
+      "deleted": false,
+      "categories": [
+        "Ambassador Program",
+        "Form Filling",
+        "Testnet"
+      ],
+      "lastUpdated": "2026-03-23",
+      "activities": [
+        {
+          "id": "act_1774967023345",
+          "createdAt": "2026-03-31T14:23:43.345Z",
+          "status": "active",
+          "date": "2026-03-23",
+          "title": "Points Farming",
+          "categories": [
+            "Testnet"
+          ],
+          "endDate": "",
+          "description": "dFusion [announced](https://x.com/dFusionAI/status/1970518597832261878) the launch of their testnet. You can earn points by creating and uploading unique data. You can also make requests to the AI and leave detailed feedback on the received responses.\n\n* Points are converted to $DFSN tokens on TGE\n* The reward size directly depends on the total size of the subnet dataset. The newer and smaller the subnet, the higher the multiplier for earned points\n* Works uploaded to subnets must be unique\n* Owning a subnet provides passive income without the need to upload data and enables monetization\n\n1. Go to the [website](https://testnet.dfusion.ai/signup?ReferralCode=4ubp7fqu) and connect your wallet. Create an account\n\n2. In the Upload tab, select a subnet and familiarize yourself with the content rules you can create and upload. Click on a suitable subnet\n![image](https://images.cryptorank.io/image-hub/zvzaa1774960414727.jpg)\n\n3. Upload a file with unique data on the selected topic\n![image](https://images.cryptorank.io/image-hub/fasfasdas1774960419034.jpg)\n\n4. Click the search button and create a new chat. Ask a question on a topic of interest to you\n![image](https://images.cryptorank.io/image-hub/dsafasrq1774960422805.jpg)\n\n5. After reviewing the response, leave detailed feedback\nYou receive points for each interaction with the chat\n![image](https://images.cryptorank.io/image-hub/wqr_12311774960429034.jpg)\n\n6. Invite other users\n![image](https://images.cryptorank.io/image-hub/dasfqwrqwrq1774964054386.jpg)\n\n7. You can [purchase](https://testnet.dfusion.ai/purchase-subnet) a subnet and launch it\n![image](https://images.cryptorank.io/image-hub/dassafvzxvcz1774963782983.jpg)"
+        },
+        {
+          "endDate": "",
+          "description": "dFusion [announced](https://x.com/dFusionAI/status/2023405550294413817) the launch of the dFusion X ambassador program. You can fill out the form and apply to participate and receive rewards for invited users\n\n \n1. Go to the [form](https://docs.google.com/forms/d/e/1FAIpQLSdyvwETfMsnM2BG-cIa2uxhrL76w1XOMPXbHiWTQDvcsAYcLg/viewform) and fill it out\n![image](https://images.cryptorank.io/image-hub/ar_12412311774965753943.jpg)",
+          "categories": [
+            "Ambassador Program",
+            "Form Filling"
+          ],
+          "title": "Ambassador Program",
+          "status": "active",
+          "date": "2026-03-16",
+          "createdAt": "2026-04-04T19:59:36.566Z",
+          "id": "act_1775332776566"
+        }
+      ]
+    },
+    {
       "id": "euphoria_794573",
       "referralLink": "https://euphoria.finance/",
       "categories": [
@@ -2425,53 +2473,66 @@
     },
     {
       "id": "quip_network_885695",
-      "deleted": false,
+      "description": "The Quip Network is a base-layer protocol that adds post-quantum security to existing blockchains and forms a decentralized infrastructure for quantum computing.\n\nIt presents QUIP as secure, composable inputs for transactions, similar to enhanced vaults that package classical assets with post-quantum signatures, using algorithms such as WOTS+, to protect against future quantum attacks.\n\nUsers deposit funds into QUIP-enabled contracts or wallets, creating states for proposals, approvals, bids, and timeouts, enabling atomic cross-network operations without altering the underlying chains.\n\nKey components include:\n\n* Seamless integration with networks like Bitcoin or Ethereum via wallet extensions or smart contracts, supporting compatibility without protocol changes.\n* The QUIP token for incentivizing validation, staking, nominations, and executing quantum tasks;\n* Validators (full nodes) and canary nodes (lightweight attestation);\n* Quantum clusters performing verifiable quantum tasks (e.g., hash mining, key recovery) using classical or quantum processors.",
+      "hasDaily": true,
       "image": "https://img.cryptorank.io/coins/quip_network1770813552953.png",
-      "lastUpdated": "2026-03-26",
       "cryptoRankUrl": "",
-      "priority": "normal",
-      "categories": [
-        "Social Activity",
-        "Testnet"
-      ],
       "createdAt": "2026-02-12T10:08:05.695Z",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "description": "The Quip Network is a base-layer protocol that adds post-quantum security to existing blockchains and forms a decentralized infrastructure for quantum computing.\n\nIt presents QUIP as secure, composable inputs for transactions, similar to enhanced vaults that package classical assets with post-quantum signatures, using algorithms such as WOTS+, to protect against future quantum attacks.\n\nUsers deposit funds into QUIP-enabled contracts or wallets, creating states for proposals, approvals, bids, and timeouts, enabling atomic cross-network operations without altering the underlying chains.\n\nKey components include:\n\n* Seamless integration with networks like Bitcoin or Ethereum via wallet extensions or smart contracts, supporting compatibility without protocol changes.\n* The QUIP token for incentivizing validation, staking, nominations, and executing quantum tasks;\n* Validators (full nodes) and canary nodes (lightweight attestation);\n* Quantum clusters performing verifiable quantum tasks (e.g., hash mining, key recovery) using classical or quantum processors.",
-      "status": "active",
+      "priority": "normal",
+      "twitterUrl": "https://x.com/quipnetwork",
+      "referralLink": "https://quest.quip.network/airdrop?referral_code=MM0U33UJ",
       "name": "Quip Network",
+      "guideUrl": "",
+      "lastUpdated": "2026-04-02",
       "activities": [
         {
+          "title": "Farm points",
           "date": "2026-02-10",
+          "status": "active",
+          "id": "act_1770890882162",
           "categories": [
             "Social Activity",
             "Testnet"
           ],
-          "description": "Quip Network [announced](https://x.com/quipnetwork/status/2021244222842761455) the launch of quests. You can earn Quip points by completing social tasks. These points can later be converted into the $QUIP token.\n\n1. Go to the [website](https://quest.quip.network/airdrop?referral_code=MM0U33UJ) and connect your wallet.\n\n2. Open your [profile settings](https://quest.quip.network/airdrop?editProfile=1&modalTab=social) and connect your social media accounts.\n![](https://img.cryptorank.io/image-hub/34123211770816817758.jpg)\n\n3. Invite friends and complete daily tasks.\n![](https://img.cryptorank.io/image-hub/3214123123211770816986772.jpg)",
-          "status": "active",
-          "id": "act_1770890882162",
-          "title": "Farm points"
+          "description": "Quip Network [announced](https://x.com/quipnetwork/status/2021244222842761455) the launch of quests. You can earn Quip points by completing social tasks. These points can later be converted into the $QUIP token.\n\n1. Go to the [website](https://quest.quip.network/airdrop?referral_code=MM0U33UJ) and connect your wallet.\n\n2. Open your [profile settings](https://quest.quip.network/airdrop?editProfile=1&modalTab=social) and connect your social media accounts.\n![](https://img.cryptorank.io/image-hub/34123211770816817758.jpg)\n\n3. Invite friends and complete daily tasks.\n![](https://img.cryptorank.io/image-hub/3214123123211770816986772.jpg)"
         },
         {
-          "date": "2026-03-26",
-          "endDate": "",
-          "categories": [
-            "Social Activity"
-          ],
           "id": "act_1774806801369",
           "title": "Quip Mindshare Season 1",
           "status": "active",
-          "description": "Quip [announced](https://x.com/quipnetwork/status/2037245742562369993?s=20) the launch of a program for content creators. You can participate in the first season, contribute to the development of the ecosystem by completing tasks on X, and receive a portion of the reward pool.\n\n• As part of the first season, $100,000 in $QUIP tokens has been allocated for the TGE.\nRewards will be paid out in native $QUIP tokens to the top 315 creators.\n\n1. Go to the [website](https://quest.quip.network/airdrop?referral_code=MM0U33UJ) and connect your wallet. Start completing tasks.\n\n2. Publish high-quality content with the @QuipNetwork tag and engage with QUIP on X.\nReceiving active feedback has the greatest impact on your ranking.\n\n3. Open the [Mindshare](https://mindshare.quip.network/) page and track your progress\n![image](https://images.cryptorank.io/image-hub/sadasasfa1774624989641.jpg)",
-          "createdAt": "2026-03-29T17:53:21.369Z"
+          "date": "2026-03-26",
+          "createdAt": "2026-03-29T17:53:21.369Z",
+          "categories": [
+            "Social Activity"
+          ],
+          "endDate": "",
+          "description": "Quip [announced](https://x.com/quipnetwork/status/2037245742562369993?s=20) the launch of a program for content creators. You can participate in the first season, contribute to the development of the ecosystem by completing tasks on X, and receive a portion of the reward pool.\n\n• As part of the first season, $100,000 in $QUIP tokens has been allocated for the TGE.\nRewards will be paid out in native $QUIP tokens to the top 315 creators.\n\n1. Go to the [website](https://quest.quip.network/airdrop?referral_code=MM0U33UJ) and connect your wallet. Start completing tasks.\n\n2. Publish high-quality content with the @QuipNetwork tag and engage with QUIP on X.\nReceiving active feedback has the greatest impact on your ranking.\n\n3. Open the [Mindshare](https://mindshare.quip.network/) page and track your progress\n![image](https://images.cryptorank.io/image-hub/sadasasfa1774624989641.jpg)"
+        },
+        {
+          "id": "act_1775332502188",
+          "createdAt": "2026-04-04T19:55:02.188Z",
+          "title": "Node",
+          "date": "2026-04-02",
+          "status": "active",
+          "endDate": "",
+          "categories": [
+            "Node"
+          ],
+          "description": "Quip Network [announced](https://x.com/quipnetwork/status/2039705643519791302) the launch of their testnet. You can set up and run a node. Participating in the testnet is rewarded, and having a node can be one of the criteria or multipliers for receiving an increased allocation.\n\n1. Go to [GitBook](https://quip.gitbook.io/docs/nodes/run-a-node-testnet) and follow the instructions to launch a node.\n\n![image](https://images.cryptorank.io/image-hub/fasrqwer_11775228593895.jpg)"
         }
       ],
-      "hasDaily": true,
-      "guideUrl": "",
       "updatedAt": {
         "seconds": 1774440678,
         "nanoseconds": 205000000
       },
-      "referralLink": "https://quest.quip.network/airdrop?referral_code=MM0U33UJ",
-      "twitterUrl": "https://x.com/quipnetwork"
+      "categories": [
+        "Node",
+        "Social Activity",
+        "Testnet"
+      ],
+      "deleted": false,
+      "status": "active"
     },
     {
       "id": "robinhood_382133",
