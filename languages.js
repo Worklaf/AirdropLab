@@ -1629,8 +1629,15 @@ function updateLanguageButton() {
     const flag = deskLang.querySelector('.lang-flag');
     const text = deskLang.querySelector('.lang-text');
     
-    // Обновляем флаг и текст
-    if (flag) flag.textContent = getLanguageFlag(currentLang);
+    // Обновляем флаг - заменяем классы
+    if (flag) {
+      // Удаляем все классы флагов
+      flag.className = flag.className.replace(/fi-\w+/g, '');
+      // Добавляем новый класс флага
+      flag.classList.add('fi', getLanguageFlag(currentLang));
+    }
+    
+    // Обновляем текст
     if (text) text.textContent = currentLang.toUpperCase();
   }
   
@@ -1638,8 +1645,15 @@ function updateLanguageButton() {
     const mobFlag = mobLangBtn.querySelector('.mob-lang-flag');
     const mobText = mobLangBtn.querySelector('.mob-lang-text');
     
-    // Обновляем флаг и текст
-    if (mobFlag) mobFlag.textContent = getLanguageFlag(currentLang);
+    // Обновляем флаг - заменяем классы
+    if (mobFlag) {
+      // Удаляем все классы флагов
+      mobFlag.className = mobFlag.className.replace(/fi-\w+/g, '');
+      // Добавляем новый класс флага
+      mobFlag.classList.add('fi', getLanguageFlag(currentLang));
+    }
+    
+    // Обновляем текст
     if (mobText) mobText.textContent = currentLang.toUpperCase();
   }
 }
@@ -1647,12 +1661,12 @@ function updateLanguageButton() {
 // Функция получения флага языка
 function getLanguageFlag(lang) {
   const flags = {
-    'ru': '🇺🇦',
-    'en': '🇺🇸', 
-    'tr': '🇹🇷',
-    'es': '🇪🇸'
+    'ru': 'fi-ua',
+    'en': 'fi-gb', 
+    'tr': 'fi-tr',
+    'es': 'fi-es'
   };
-  return flags[lang] || '🌐';
+  return flags[lang] || 'fi-ua';
 }
 
 // Переключение языка
