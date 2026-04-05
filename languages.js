@@ -271,7 +271,7 @@ const translations = {
     no_description: 'Нет описания',
     leave_feedback: 'Оставить отзыв',
     last_activity_date: 'Дата последней активности',
-    mark_complete: 'Завершить',
+    mark_complete: 'Отметить',
     add_favorites: 'Избранное',
     deleted_count: 'Удаленных',
     no_deleted_projects: 'Нет удаленных проектов',
@@ -748,6 +748,106 @@ passive_credited_to_upstream: 'Начислено вышестоящим по ц
     project_label: 'Проект: ',
     support_label_chat: 'Support',
   },
+
+  tr: {
+    // ============ MAIN UI ============
+    loading: 'YÜKLENİYOR...',
+    experimental_zone: 'Deneysel Bölge',
+    admin_mode: 'Yönetici Modu',
+    active: 'Aktif',
+    new: 'Yeni',
+    in_work: 'İşlemde',
+    done: 'Tamamlandı',
+    new_test: 'Yeni Test',
+    admin: 'Admin',
+    login: 'Giriş',
+    login_btn: 'Giriş Yap',
+    in_system: 'Sistemde',
+    filters: 'Filtreler',
+    all_projects: 'Tüm Projeler',
+    unvisited: 'Ziyaret Edilmedi',
+    today: 'Bugün',
+    yesterday: 'Dün',
+    active_filter: 'Aktif',
+    daily_filter: 'Günlük',
+    favorites: 'Favoriler',
+    completed: 'Tamamlanan',
+    archive: 'Arşiv',
+    categories: 'Kategoriler',
+    all: 'Tümü',
+    all_categories: 'Tüm Kategoriler',
+    search_placeholder: 'Projeleri ara...',
+    
+    // ============ HEADER MENU ============
+    menu_activities: 'Aktiviteler',
+    menu_guides: 'Rehberler',
+    menu_community: 'Topluluk',
+    menu_calendar: 'Takvim',
+    menu_exchanges: 'Borsalar',
+    menu_news: 'Haberler',
+    menu_tools: 'Araçlar',
+    menu_games: 'Oyunlar',
+    menu_learning: 'Öğrenme',
+    menu_in_development: 'Bu bölüm geliştirme aşamasında',
+    menu_coming_soon: 'Çok Yakında!',
+    
+    // ============ HEADER SPECIFIC UI ============
+    version_label: 'v2.0',
+    default_user_name: 'Araştırmacı',
+    admin_badge_label: 'Admin',
+    profile_tooltip: 'Profil',
+    crypto_ticker_attribution: 'Coins by Cryptorank'
+  },
+
+  es: {
+    // ============ MAIN UI ============
+    loading: 'CARGANDO LABORATORIO...',
+    experimental_zone: 'Zona Experimental',
+    admin_mode: 'Modo Admin',
+    active: 'Activo',
+    new: 'Nuevo',
+    in_work: 'En Progreso',
+    done: 'Completado',
+    new_test: 'Nueva Prueba',
+    admin: 'Admin',
+    login: 'Iniciar Sesión',
+    login_btn: 'Iniciar',
+    in_system: 'En el Sistema',
+    filters: 'Filtros',
+    all_projects: 'Todos los Proyectos',
+    unvisited: 'No Visitado',
+    today: 'Hoy',
+    yesterday: 'Ayer',
+    active_filter: 'Activo',
+    daily_filter: 'Diario',
+    favorites: 'Favoritos',
+    completed: 'Completado',
+    archive: 'Archivo',
+    categories: 'Categorías',
+    all: 'Todos',
+    all_categories: 'Todas las Categorías',
+    search_placeholder: 'Buscar proyectos...',
+    
+    // ============ HEADER MENU ============
+    menu_activities: 'Actividades',
+    menu_guides: 'Guías',
+    menu_community: 'Comunidad',
+    menu_calendar: 'Calendario',
+    menu_exchanges: 'Intercambios',
+    menu_news: 'Noticias',
+    menu_tools: 'Herramientas',
+    menu_games: 'Juegos',
+    menu_learning: 'Aprendizaje',
+    menu_in_development: 'Esta sección está en desarrollo',
+    menu_coming_soon: '¡Próximamente!',
+    
+    // ============ HEADER SPECIFIC UI ============
+    version_label: 'v2.0',
+    default_user_name: 'Investigador',
+    admin_badge_label: 'Admin',
+    profile_tooltip: 'Perfil',
+    crypto_ticker_attribution: 'Coins by Cryptorank'
+  }
 
   en: {
     // ============ MAIN UI ============
@@ -1654,22 +1754,33 @@ function updateLanguageButton() {
   // Цветовой индикатор
   if (currentLang === 'en') {
     langBtn.classList.add('lang-active');
-  } else {
-    langBtn.classList.remove('lang-active');
-  }
 }
 
-// Переключение языка
-window.toggleLang = function() {
-  if (currentLang === 'ru') {
-    setLanguage('en');
-  } else {
-    setLanguage('ru');
-    if (window.resetToDefaultDataSource) {
-      window.resetToDefaultDataSource();
-    }
-  }
-};
+// Функция получения флага языка
+function getLanguageFlag(lang) {
+  const flags = {
+    'ru': '🇺🇦',
+    'en': '🇺🇸', 
+    'tr': '🇹🇷',
+    'es': '🇪🇸'
+  };
+  return flags[lang] || '🌐';
+}
+
+// Функция переключения языка
+function toggleLang() {
+  // Получаем все доступные языки
+  const availableLangs = ['ru', 'en', 'tr', 'es'];
+  
+  // Находим индекс текущего языка
+  const currentIndex = availableLangs.indexOf(currentLang);
+  
+  // Переключаем на следующий язык
+  const nextIndex = (currentIndex + 1) % availableLangs.length;
+  const nextLang = availableLangs[nextIndex];
+  
+  setLanguage(nextLang);
+}
 
 // Функция для установки английских данных проектов
 window.setEnglishProjectsData = function(englishProjects) {
