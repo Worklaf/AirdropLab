@@ -124,7 +124,7 @@
                 </button>
                 
                 <!-- Выпадающий список языков -->
-                <div id="langMenu" class="absolute top-full right-0 mt-2 w-44 bg-slate-800 border border-slate-700 rounded-lg shadow-xl hidden z-[9999]">
+                <div id="langMenu" class="fixed top-full right-0 mt-2 w-44 bg-slate-800 border border-slate-700 rounded-lg shadow-xl hidden z-[99999]" style="position: fixed !important;">
                   <div class="py-1">
                     <button onclick="setLanguage('ru'); closeLangDropdown();" 
                       class="lang-option flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700 transition-colors">
@@ -309,7 +309,7 @@
             </button>
             
             <!-- Мобильное меню языков -->
-            <div id="mobLangMenu" class="absolute top-full right-0 mt-2 w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-xl hidden z-[9999]">
+            <div id="mobLangMenu" class="fixed top-full right-0 mt-2 w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-xl hidden z-[99999]" style="position: fixed !important;">
               <div class="py-1">
                 <button onclick="setLanguage('ru'); closeMobLangDropdown();" 
                   class="mob-lang-option flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-slate-700 transition-colors">
@@ -1084,7 +1084,16 @@
 // Функции управления выпадающим меню языков
 function toggleLangDropdown() {
   const menu = document.getElementById('langMenu');
-  if (menu) {
+  const button = document.getElementById('langBtn');
+  
+  if (menu && button) {
+    // Получаем позицию кнопки
+    const rect = button.getBoundingClientRect();
+    
+    // Устанавливаем позицию меню точно под кнопкой
+    menu.style.top = rect.bottom + 'px';
+    menu.style.left = (rect.right - 176) + 'px'; // 176px = ширина меню
+    
     menu.classList.toggle('hidden');
   }
 }
@@ -1098,7 +1107,16 @@ function closeLangDropdown() {
 
 function toggleMobLangDropdown() {
   const menu = document.getElementById('mobLangMenu');
-  if (menu) {
+  const button = document.getElementById('mobLangBtn');
+  
+  if (menu && button) {
+    // Получаем позицию кнопки
+    const rect = button.getBoundingClientRect();
+    
+    // Устанавливаем позицию меню точно под кнопкой
+    menu.style.top = rect.bottom + 'px';
+    menu.style.left = (rect.right - 160) + 'px'; // 160px = ширина мобильного меню
+    
     menu.classList.toggle('hidden');
   }
 }
