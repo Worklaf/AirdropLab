@@ -949,6 +949,58 @@ passive_credited_to_upstream: 'Начислено вышестоящим по ц
     claim_claiming: 'Talep ediliyor...',
     claim_already_title: 'Zaten talep edildi!',
     claim_next_at: 'Sonraki talep açılır',
+
+    // ============ ADMIN MODALS ============
+    export_json: 'Tüm Veriyi Dışa Aktar',
+    view_deleted: 'Silinmişleri Görüntüle',
+    deleted_projects: 'Silinmiş Projeler',
+    restore: 'Geri Yükle',
+    delete_permanent: 'Kalıcı Olarak Sil',
+
+    // ============ TOAST MESSAGES ============
+    task_completed: 'Görev tamamlandı!',
+    task_uncompleted: 'Tamamlanmamış olarak işaretlendi',
+    added_favorites: 'Eklendi!',
+    removed_favorites: 'Kaldırıldı',
+    login_required: 'Lütfen giriş yapın',
+    link_not_found: 'Link bulunamadı',
+    saved: 'Kaydedildi!',
+    deleted: 'Silindi',
+    restored: 'Geri yüklendi!',
+    error_occurred: 'Hata',
+    exported: 'Dışa aktarıldı',
+    uploaded: 'Yüklendi',
+    enter_message: 'Mesaj girin',
+    enter_name: 'İsim girin',
+    confirm_delete: 'Arşive taşınsın mı?',
+    confirm_restore: 'Proje geri yüklensin mi?',
+    enter_link: 'Link ekleyin',
+    no_access: 'Erişim yok',
+    only_admin: 'Sadece admin',
+    copied: 'Kopyalandı!',
+
+    // ============ HERO ============
+    hero_title: 'Kripto Fırsatları Laboratuvarı',
+    hero_subtitle: 'AirdropLab, en umut verici airdropları araştırmak, test etmek ve katılmak için merkezinizdir.',
+    start_research: 'Araştırmaya Başla',
+    collapse_hero: 'Hoş Geldini Daralt',
+    expand_hero: 'Hoş Geldini Genişlet',
+
+    // ============ COMMON ============
+    yes: 'Evet',
+    no: 'Hayır',
+    ok: 'Tamam',
+    back: 'Geri',
+    preview: 'Önizleme',
+    view: 'Görüntüle',
+    edit: 'Düzenle',
+    no_description: 'Açıklama yok',
+    leave_feedback: 'Geri bildirim bırak',
+    last_activity_date: 'Son aktivite tarihi',
+    mark_complete: 'Tamamlandı olarak işaretle',
+    add_favorites: 'Favorilere ekle',
+    deleted_count: 'Silindi',
+    no_deleted_projects: 'Silinmiş proje yok',
   },
 
   es: {
@@ -1151,6 +1203,58 @@ passive_credited_to_upstream: 'Начислено вышестоящим по ц
     claim_claiming: 'Reclamando...',
     claim_already_title: '¡Ya reclamado!',
     claim_next_at: 'Siguiente reclamación abre a',
+
+    // ============ ADMIN MODALS ============
+    export_json: 'Exportar Todos los Datos',
+    view_deleted: 'Ver Eliminados',
+    deleted_projects: 'Proyectos Eliminados',
+    restore: 'Restaurar',
+    delete_permanent: 'Eliminar Permanentemente',
+
+    // ============ TOAST MESSAGES ============
+    task_completed: '¡Tarea completada!',
+    task_uncompleted: 'Marcada como incompleta',
+    added_favorites: '¡Agregado!',
+    removed_favorites: 'Eliminado',
+    login_required: 'Por favor inicia sesión',
+    link_not_found: 'Enlace no encontrado',
+    saved: '¡Guardado!',
+    deleted: 'Eliminado',
+    restored: '¡Restaurado!',
+    error_occurred: 'Error',
+    exported: 'Exportado',
+    uploaded: 'Subido',
+    enter_message: 'Ingresa mensaje',
+    enter_name: 'Ingresa nombre',
+    confirm_delete: '¿Mover al archivo?',
+    confirm_restore: '¿Restaurar proyecto?',
+    enter_link: 'Insertar enlace',
+    no_access: 'Sin acceso',
+    only_admin: 'Solo admin',
+    copied: '¡Copiado!',
+
+    // ============ HERO ============
+    hero_title: 'Laboratorio de Oportunidades Cripto',
+    hero_subtitle: 'AirdropLab es tu centro para investigar, probar y participar en los airdrops más prometedores.',
+    start_research: 'Comenzar Investigación',
+    collapse_hero: 'Contraer Bienvenida',
+    expand_hero: 'Expandir Bienvenida',
+
+    // ============ COMMON ============
+    yes: 'Sí',
+    no: 'No',
+    ok: 'OK',
+    back: 'Atrás',
+    preview: 'Vista Previa',
+    view: 'Ver',
+    edit: 'Editar',
+    no_description: 'Sin descripción',
+    leave_feedback: 'Dejar retroalimentación',
+    last_activity_date: 'Fecha de última actividad',
+    mark_complete: 'Marcar completa',
+    add_favorites: 'Agregar a favoritos',
+    deleted_count: 'Eliminado',
+    no_deleted_projects: 'No hay proyectos eliminados',
   },
 
   en: {
@@ -1915,27 +2019,37 @@ function initializeLanguage() {
   // Устанавливаем язык в HTML
   document.documentElement.lang = currentLang;
   
-  // Загружаем проекты для текущего языка (если не русский)
-  if (currentLang === 'en') {
-    loadProjectsFromJSON('projects_en');
-  } else if (currentLang === 'tr') {
-    loadProjectsFromJSON('projects_tr');
-  } else if (currentLang === 'es') {
-    loadProjectsFromJSON('projects_es');
-  }
-  
   // Обновляем интерфейс
   updateAllTranslations();
   updateLanguageButton();
   
   // Обновляем глобальную переменную
   window.currentLang = currentLang;
+  
+  console.log('Language initialized:', currentLang);
+  
+  // Загружаем проекты с небольшой задержкой чтобы все функции были доступны
+  setTimeout(() => {
+    if (currentLang === 'en') {
+      loadProjectsFromJSON('projects_en');
+    } else if (currentLang === 'tr') {
+      loadProjectsFromJSON('projects_tr');
+    } else if (currentLang === 'es') {
+      loadProjectsFromJSON('projects_es');
+    } else {
+      // Для русского языка сбрасываем на Firebase
+      if (window.resetToDefaultDataSource) {
+        window.resetToDefaultDataSource();
+      }
+    }
+  }, 500);
 }
 
 // Вызываем инициализацию при загрузке страницы
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeLanguage);
-} else {
+document.addEventListener('DOMContentLoaded', initializeLanguage);
+
+// Также вызываем если DOM уже загружен
+if (document.readyState !== 'loading') {
   initializeLanguage();
 }
 
