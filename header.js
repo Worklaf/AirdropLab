@@ -115,10 +115,40 @@
                 </button>
               </div>
 
-              <button onclick="typeof toggleLang==='function'&&toggleLang()" id="langBtn"
-                class="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all hover:scale-105">
-                <span class="lang-flag text-2xl">🇺🇦</span>
-              </button>
+              <div class="relative" id="langDropdown">
+                <button onclick="toggleLangDropdown()" id="langBtn"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all hover:scale-105 hover:bg-slate-800/50">
+                  <span class="lang-flag text-xl">🇺🇦</span>
+                  <span class="lang-text text-sm font-medium">RU</span>
+                  <i class="fas fa-chevron-down text-xs text-slate-400 ml-1"></i>
+                </button>
+                
+                <!-- Выпадающий список языков -->
+                <div id="langMenu" class="absolute top-full right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl hidden z-50">
+                  <div class="py-1">
+                    <button onclick="setLanguage('ru'); closeLangDropdown();" 
+                      class="lang-option flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-slate-700 transition-colors">
+                      <span class="text-xl">🇺🇦</span>
+                      <span class="text-sm">Русский</span>
+                    </button>
+                    <button onclick="setLanguage('en'); closeLangDropdown();" 
+                      class="lang-option flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-slate-700 transition-colors">
+                      <span class="text-xl">🇺🇸</span>
+                      <span class="text-sm">English</span>
+                    </button>
+                    <button onclick="setLanguage('tr'); closeLangDropdown();" 
+                      class="lang-option flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-slate-700 transition-colors">
+                      <span class="text-xl">🇹🇷</span>
+                      <span class="text-sm">Türkçe</span>
+                    </button>
+                    <button onclick="setLanguage('es'); closeLangDropdown();" 
+                      class="lang-option flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-slate-700 transition-colors">
+                      <span class="text-xl">🇪🇸</span>
+                      <span class="text-sm">Español</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               <!-- ДИНАМИЧЕСКИЕ КНОПКИ АДМИНА -->
 <div id="adminPanel" class="flex gap-2 items-center border-l border-slate-700/50 pl-3 ml-1" style="display:none;">
@@ -130,7 +160,7 @@
     <!-- Кнопки вставляет JS -->
   </div>
   <span class="px-2.5 py-1 bg-gradient-to-r from-cyan-600 to-cyan-500 rounded-md text-[10px] font-black text-white uppercase">
-    <i class="fas fa-user-shield mr-1"></i><span data-translate="admin_badge_label">Admin</span>
+    <i class="fas fa-user-shield mr-1"></i>Admin
   </span>
 </div>
 
@@ -144,7 +174,7 @@
                 </div>
                 <div id="loggedInView" class="hidden flex items-center gap-3">
                   <div class="text-right hidden sm:block cursor-pointer" id="userNameWrapper">
-                    <div id="userName" class="text-xs font-bold text-white hover:text-cyan-400 transition-colors" data-translate="default_user_name">Researcher</div>
+                    <div id="userName" class="text-xs font-bold text-white hover:text-cyan-400 transition-colors">Researcher</div>
                     <div class="text-[10px] text-emerald-400 flex items-center justify-end gap-1.5">
                       <span class="relative flex h-1.5 w-1.5">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -193,7 +223,7 @@
               </div>
               <div id="mobLoggedInView" style="display:none;align-items:center;gap:6px;" class="flex">
                 <div style="position:relative;flex-shrink:0;cursor:pointer;"
-                  onclick="var d=document.getElementById('userAvatarWrapper');if(d)d.click();" data-translate-title="profile_tooltip">
+                  onclick="var d=document.getElementById('userAvatarWrapper');if(d)d.click();" title="Профиль">
                   <div style="position:absolute;inset:-2px;background:linear-gradient(135deg,#22d3ee,#3b82f6);border-radius:50%;filter:blur(4px);opacity:0.5;"
                        onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.5'"></div>
                   <img id="mobUserAvatar" src="" style="position:relative;width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(34,211,238,0.5);">
@@ -258,13 +288,6 @@
                 style="display:none;position:absolute;top:-4px;right:-4px;min-width:15px;height:15px;
                        background:linear-gradient(135deg,#8b5cf6,#ec4899);border-radius:999px;
                        font-size:8px;font-weight:700;color:white;align-items:center;justify-content:center;padding:0 2px;"></span>
-            </button>
-
-            <button onclick="typeof toggleLang==='function'&&toggleLang()" id="mobLangBtn"
-              style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:10px;
-                     border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);
-                     cursor:pointer;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;">
-              <span class="mob-lang-flag" style="font-size:1.2rem;">🇺🇦</span>
             </button>
 
             <button id="mobAddBtn" onclick="typeof openAddModal==='function'&&openAddModal()"
@@ -740,11 +763,9 @@
       var currentLang = localStorage.getItem('airdropLabLang') || 'ru';
       
       if (subscribed) {
-        var subscribedText = typeof t === 'function' 
-          ? t('notify_subscribed_text')
-          : (currentLang === 'en' 
-            ? 'You are subscribed — we will notify you at launch!'
-            : 'Вы подписаны — уведомим при запуске!');
+        var subscribedText = currentLang === 'en' 
+          ? 'You are subscribed — we will notify you at launch!'
+          : 'Вы подписаны — уведомим при запуске!';
         area.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;'
           + 'padding:12px;border-radius:12px;background:rgba(52,211,153,0.08);'
           + 'border:1px solid rgba(52,211,153,0.2);">'
@@ -752,11 +773,9 @@
           + '<span style="color:#34d399;font-size:13px;font-weight:600;">' + subscribedText + '</span>'
           + '</div>';
       } else {
-        var notifyText = typeof t === 'function'
-          ? t('notify_me_on_launch')
-          : (currentLang === 'en' 
-            ? 'Notify me on launch'
-            : 'Уведомить меня о запуске');
+        var notifyText = currentLang === 'en' 
+          ? 'Notify me on launch'
+          : 'Уведомить меня о запуске';
         area.innerHTML = '<button id="csNotifyBtn" onclick="window.csRequestNotify()"'
           + ' style="width:100%;padding:13px;border-radius:12px;cursor:pointer;'
           + 'background:linear-gradient(135deg,rgba(34,211,238,0.15),rgba(139,92,246,0.15));'
@@ -777,9 +796,7 @@
       var btn = document.getElementById('csNotifyBtn');
       if (btn) {
         var currentLang = localStorage.getItem('airdropLabLang') || 'ru';
-        var connectingText = typeof t === 'function'
-          ? t('connecting_status')
-          : (currentLang === 'en' ? 'Connecting...' : 'Подключаемся...');
+        var connectingText = currentLang === 'en' ? 'Connecting...' : 'Подключаемся...';
         btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#22d3ee;"></i><span>' + connectingText + '</span>';
         btn.disabled = true;
       }
@@ -792,11 +809,9 @@
           if (p === 'granted') {
             var currentLang = localStorage.getItem('airdropLabLang') || 'ru';
             var notificationTitle = 'AirdropLab';
-            var notificationBody = typeof t === 'function'
-              ? t('notify_subscribed_notification')
-              : (currentLang === 'en' 
-                ? 'You are subscribed! We will notify you when the section launches 🚀'
-                : 'Вы подписаны! Уведомим при запуске раздела 🚀');
+            var notificationBody = currentLang === 'en' 
+              ? 'You are subscribed! We will notify you when the section launches 🚀'
+              : 'Вы подписаны! Уведомим при запуске раздела 🚀';
             new Notification(notificationTitle, {
               body: notificationBody,
               icon: '/favicon.ico'
@@ -951,6 +966,7 @@
           mobLangBtn.style.borderColor  = active ? 'rgba(34,197,94,0.5)'  : 'rgba(239,68,68,0.3)';
         }
       }
+      if (deskLang) new MutationObserver(syncLang).observe(deskLang, { attributes:true, subtree:true, childList:true, characterData:true });
       setTimeout(syncLang, 200);
       setTimeout(syncLang, 600);
 
@@ -965,13 +981,13 @@
           || txt.toLowerCase().includes('сброс')
           || txt.toLowerCase().includes('reset');
         if (isClaimed) {
-          var lbl = (window.currentLang === 'en') ? (typeof t === 'function' ? t('claimed_label') : 'Claimed') : (typeof t === 'function' ? t('claimed_label') : 'Готово');
+          var lbl = (window.currentLang === 'en') ? 'Claimed' : 'Готово';
           mobClaim.innerHTML = '🔒 <span style="font-size:11px;">' + lbl + '</span>';
           mobClaim.style.background   = 'rgba(71,85,105,0.2)';
           mobClaim.style.borderColor  = 'rgba(71,85,105,0.35)';
           mobClaim.style.color        = '#64748b';
         } else {
-          var lbl = (window.currentLang === 'en') ? (typeof t === 'function' ? t('claim_label') : 'Claim') : (typeof t === 'function' ? t('claim_label') : 'Клейм');
+          var lbl = (window.currentLang === 'en') ? 'Claim' : 'Клейм';
           mobClaim.innerHTML = '🧪 <span style="font-size:11px;">' + lbl + '</span>';
           mobClaim.style.background   = 'rgba(8,145,178,0.2)';
           mobClaim.style.borderColor  = 'rgba(34,211,238,0.3)';
@@ -1027,6 +1043,49 @@
   }
 
 })();
+
+// Функции управления выпадающим меню языков
+function toggleLangDropdown() {
+  const menu = document.getElementById('langMenu');
+  if (menu) {
+    menu.classList.toggle('hidden');
+  }
+}
+
+function closeLangDropdown() {
+  const menu = document.getElementById('langMenu');
+  if (menu) {
+    menu.classList.add('hidden');
+  }
+}
+
+function toggleMobLangDropdown() {
+  const menu = document.getElementById('mobLangMenu');
+  if (menu) {
+    menu.classList.toggle('hidden');
+  }
+}
+
+function closeMobLangDropdown() {
+  const menu = document.getElementById('mobLangMenu');
+  if (menu) {
+    menu.classList.add('hidden');
+  }
+}
+
+// Закрывать меню при клике вне его
+document.addEventListener('click', function(event) {
+  const langDropdown = document.getElementById('langDropdown');
+  const mobLangDropdown = document.getElementById('mobLangDropdown');
+  
+  if (langDropdown && !langDropdown.contains(event.target)) {
+    closeLangDropdown();
+  }
+  
+  if (mobLangDropdown && !mobLangDropdown.contains(event.target)) {
+    closeMobLangDropdown();
+  }
+});
 
 // ════════════════════════════════════════════════════
 // Функции для работы с мобильными админскими кнопками
@@ -1097,40 +1156,12 @@ window.updateMobileAdminButtons = function() {
 
   deskAdminBtns.innerHTML = buttonsHTML;
   mobAdminBtns.innerHTML = mobButtonsHTML;
-  
-  // Update button titles with translations
-  const updateButtonTitles = () => {
-    const lang = typeof window.t === 'function' ? window.t : (k) => k;
-    const titleMap = {
-      'Статистика': lang('btn_statistics'),
-      'Загрузить': lang('btn_upload'),
-      'Экспорт': lang('btn_export'),
-      'Экспорт кранов': lang('btn_export_faucets'),
-      'Импорт кранов': lang('btn_import_faucets'),
-      'Удалённые': lang('btn_deleted'),
-      'Режим редактирования': lang('btn_edit_mode'),
-      'Показать скрытые': lang('btn_show_hidden'),
-      'Импорт': lang('btn_import'),
-      'Режим': lang('btn_mode'),
-      'Удалить': lang('delete_btn')
-    };
-    
-    document.querySelectorAll('[title]').forEach(btn => {
-      const title = btn.getAttribute('title');
-      if (titleMap[title]) {
-        btn.setAttribute('title', titleMap[title]);
-      }
-    });
-  };
-  
-  setTimeout(updateButtonTitles, 10);
 };
 
 // Функции для экспорта/импорта данных
 window.exportFaucetData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
-    if (typeof showToast === 'function') showToast(msg); else alert(msg);
+    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
     return;
   }
   
@@ -1155,9 +1186,9 @@ window.exportFaucetData = function() {
       URL.revokeObjectURL(url);
       
       if (typeof showToast === 'function') {
-        showToast(typeof t === 'function' ? t('faucets_exported').replace('{count}', faucetsData.length) : `Экспортировано ${faucetsData.length} кранов!`);
+        showToast(`Экспортировано ${faucetsData.length} кранов!`);
       } else {
-        alert(typeof t === 'function' ? t('faucets_exported').replace('{count}', faucetsData.length) : `Экспортировано ${faucetsData.length} кранов!`);
+        alert(`Экспортировано ${faucetsData.length} кранов!`);
       }
     };
     
@@ -1200,7 +1231,7 @@ window.exportFaucetData = function() {
               console.log('Using localStorage fallback');
               exportData(JSON.parse(storedData));
             } else {
-              throw new Error(typeof t === 'function' ? t('no_faucet_export_data') : 'Нет данных для экспорта ни в Firebase, ни в localStorage');
+              throw new Error('Нет данных для экспорта ни в Firebase, ни в localStorage');
             }
           });
         return;
@@ -1213,23 +1244,22 @@ window.exportFaucetData = function() {
       console.log('Using localStorage data');
       exportData(JSON.parse(storedData));
     } else {
-      throw new Error(typeof t === 'function' ? t('no_export_data') : 'Нет данных для экспорта');
+      throw new Error('Нет данных для экспорта');
     }
     
   } catch (error) {
     console.error('Ошибка экспорта кранов:', error);
     if (typeof showToast === 'function') {
-      showToast((typeof t === 'function' ? t('export_error') : 'Ошибка экспорта: ') + error.message);
+      showToast('Ошибка экспорта: ' + error.message);
     } else {
-      alert((typeof t === 'function' ? t('export_error') : 'Ошибка экспорта: ') + error.message);
+      alert('Ошибка экспорта: ' + error.message);
     }
   }
 };
 
 window.importFaucetData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
-    if (typeof showToast === 'function') showToast(msg); else alert(msg);
+    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
     return;
   }
   
@@ -1254,7 +1284,7 @@ window.importFaucetData = function() {
         
         // Проверяем структуру данных
         if (!Array.isArray(faucetsData)) {
-          throw new Error(typeof t === 'function' ? t('invalid_faucet_format') : 'Некорректный формат данных - ожидается массив кранов');
+          throw new Error('Некорректный формат данных - ожидается массив кранов');
         }
         
         // Сохраняем в localStorage как бэкап
@@ -1313,11 +1343,10 @@ window.importFaucetData = function() {
             batch.commit().then(() => {
               console.log(`✅ Сохранено ${faucetsData.length} кранов в Firebase`);
               
-              const msg = typeof t === 'function' ? t('faucets_imported_firebase').replace('{count}', faucetsData.length) : `Импортировано ${faucetsData.length} кранов в Firebase!`;
               if (typeof showToast === 'function') {
-                showToast(msg);
+                showToast(`Импортировано ${faucetsData.length} кранов в Firebase!`);
               } else {
-                alert(msg);
+                alert(`Импортировано ${faucetsData.length} кранов в Firebase!`);
               }
               
               // Если на faucet.html, перезагружаем данные
@@ -1328,41 +1357,37 @@ window.importFaucetData = function() {
               }
             }).catch(error => {
               console.error('Ошибка сохранения в Firebase:', error);
-              const msg = typeof t === 'function' ? t('faucets_saved_local_firebase_error').replace('{count}', faucetsData.length).replace('{error}', error.message) : `Сохранено локально ${faucetsData.length} кранов. Ошибка Firebase: ${error.message}`;
               if (typeof showToast === 'function') {
-                showToast(msg);
+                showToast(`Сохранено локально ${faucetsData.length} кранов. Ошибка Firebase: ${error.message}`);
               } else {
-                alert(msg);
+                alert(`Сохранено локально ${faucetsData.length} кранов. Ошибка Firebase: ${error.message}`);
               }
             });
           } else {
             // Firebase доступен но функции не готовы
             console.log('Firebase available but functions not ready');
-            const msg = typeof t === 'function' ? t('faucets_imported_local').replace('{count}', faucetsData.length) : `Импортировано ${faucetsData.length} кранов локально`;
             if (typeof showToast === 'function') {
-              showToast(msg);
+              showToast(`Импортировано ${faucetsData.length} кранов локально`);
             } else {
-              alert(msg);
+              alert(`Импортировано ${faucetsData.length} кранов локально`);
             }
           }
         } else {
           // Firebase недоступен
           console.log('Firebase not available, using localStorage only');
-          const msg = typeof t === 'function' ? t('faucets_imported_localstorage').replace('{count}', faucetsData.length) : `Импортировано ${faucetsData.length} кранов в localStorage`;
           if (typeof showToast === 'function') {
-            showToast(msg);
+            showToast(`Импортировано ${faucetsData.length} кранов в localStorage`);
           } else {
-            alert(msg);
+            alert(`Импортировано ${faucetsData.length} кранов в localStorage`);
           }
         }
         
       } catch (error) {
         console.error('Ошибка импорта кранов:', error);
-        const msg = typeof t === 'function' ? t('import_error').replace('{error}', error.message) : 'Ошибка импорта: ' + error.message;
         if (typeof showToast === 'function') {
-          showToast(msg);
+          showToast('Ошибка импорта: ' + error.message);
         } else {
-          alert(msg);
+          alert('Ошибка импорта: ' + error.message);
         }
       }
     };
@@ -1415,31 +1440,27 @@ async function saveFaucetsToFirebase(faucetsData) {
 
 window.exportGuidesData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
-    if (typeof showToast === 'function') showToast(msg); else alert(msg);
+    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
     return;
   }
   // Здесь будет логика экспорта данных по гайдам
-  const msg = typeof t === 'function' ? t('guides_export_message') : 'Экспорт данных гайдов...';
   if (typeof showToast === 'function') {
-    showToast(msg);
+    showToast('Экспорт данных гайдов...');
   } else {
-    alert(msg);
+    alert('Экспорт данных гайдов...');
   }
 };
 
 window.importGuidesData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
-    if (typeof showToast === 'function') showToast(msg); else alert(msg);
+    if (typeof showToast === 'function') showToast('Нет доступа'); else alert('Нет доступа');
     return;
   }
   // Здесь будет логика импорта данных по гайдам
-  const msg = typeof t === 'function' ? t('guides_import_message') : 'Импорт данных гайдов...';
   if (typeof showToast === 'function') {
-    showToast(msg);
+    showToast('Импорт данных гайдов...');
   } else {
-    alert(msg);
+    alert('Импорт данных гайдов...');
   }
 };
 
@@ -1452,9 +1473,8 @@ window.importGuidesData = function() {
 // ================================================
 window.importAllData = function() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) {
-    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
-    if (typeof showToast === 'function') showToast(msg); 
-    else alert(msg);
+    if (typeof showToast === 'function') showToast('Нет доступа'); 
+    else alert('Нет доступа');
     return;
   }
   
@@ -1479,21 +1499,20 @@ window.importAllData = function() {
         } else if (raw.data && Array.isArray(raw.data)) {
           projectsToImport = raw.data;
         } else {
-          throw new Error(typeof t === 'function' ? t('invalid_json_format') : 'Неверный формат JSON. Ожидается массив проектов или объект с полем "projects"');
+          throw new Error('Неверный формат JSON. Ожидается массив проектов или объект с полем "projects"');
         }
 
         if (projectsToImport.length === 0) {
-          throw new Error(typeof t === 'function' ? t('no_projects_in_file') : 'В файле нет проектов');
+          throw new Error('В файле нет проектов');
         }
 
         if (!window.db || !window.__firestoreExports) {
-          throw new Error(typeof t === 'function' ? t('firebase_not_initialized') : 'Firebase не инициализирован');
+          throw new Error('Firebase не инициализирован');
         }
 
         const { collection, doc, setDoc, serverTimestamp } = window.__firestoreExports;
         
-        const loadMsg = typeof t === 'function' ? t('loading_projects_modal').replace('{count}', projectsToImport.length) : `Загрузка ${projectsToImport.length} проектов...`;
-        if (typeof showToast === 'function') showToast(loadMsg);
+        showToast(`Загрузка ${projectsToImport.length} проектов...`);
 
         for (const p of projectsToImport) {
           const id = p.id || ('project_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));
@@ -1506,14 +1525,13 @@ window.importAllData = function() {
           }, { merge: true });
         }
 
-        const successMsg = typeof t === 'function' ? t('projects_imported_success').replace('{count}', projectsToImport.length) : `✅ Успешно импортировано ${projectsToImport.length} проектов!`;
-        if (typeof showToast === 'function') showToast(successMsg);
+        showToast(`✅ Успешно импортировано ${projectsToImport.length} проектов!`);
         setTimeout(() => location.reload(), 1500);
 
       } catch (error) {
         console.error('Ошибка импорта проектов:', error);
         if (typeof showToast === 'function') {
-          showToast((typeof t === 'function' ? 'Ошибка: ' : 'Ошибка: ') + error.message);
+          showToast('Ошибка: ' + error.message);
         } else {
           alert('Ошибка: ' + error.message);
         }
@@ -1591,20 +1609,18 @@ if (typeof window !== 'undefined') {
 // ════════════════════════════════════════════════════
 window.openStats = function() { 
   if (!currentUser) { 
-    const msg = typeof t === 'function' ? t('login_prompt') : 'Войдите';
     if (typeof showToast === 'function') {
-      showToast(msg); 
+      showToast('Войдите'); 
     } else {
-      alert(msg);
+      alert('Войдите');
     }
     return; 
   } 
   if (currentUser.uid !== ADMIN_UID) { 
-    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
     if (typeof showToast === 'function') {
-      showToast(msg); 
+      showToast('Нет доступа'); 
     } else {
-      alert(msg);
+      alert('Нет доступа');
     }
     return; 
   } 
@@ -1613,11 +1629,10 @@ window.openStats = function() {
 
 window.openDeletedProjects = function() { 
   if (!isAdminMode) { 
-    const msg = typeof t === 'function' ? t('only_admin') : 'Только для админа';
     if (typeof showToast === 'function') {
-      showToast(msg); 
+      showToast('Только для админа'); 
     } else {
-      alert(msg);
+      alert('Только для админа');
     }
     return; 
   }
@@ -1632,20 +1647,18 @@ window.openDeletedProjects = function() {
 
 window.migrateToFirestore = function() { 
   if (!currentUser) { 
-    const msg = typeof t === 'function' ? t('login_prompt') : 'Войдите';
     if (typeof showToast === 'function') {
-      showToast(msg); 
+      showToast('Войдите'); 
     } else {
-      alert(msg);
+      alert('Войдите');
     }
     return; 
   }
   if (currentUser.uid !== ADMIN_UID) { 
-    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
     if (typeof showToast === 'function') {
-      showToast(msg); 
+      showToast('Нет доступа'); 
     } else {
-      alert(msg);
+      alert('Нет доступа');
     }
     return; 
   }
@@ -1683,9 +1696,8 @@ window.migrateToFirestore = function() {
           
           batch.commit().then(() => {
             console.log(`✅ Мигрировано ${projects.length} проектов в Firebase`);
-            const msg = typeof t === 'function' ? t('projects_migrated_firebase').replace('{count}', projects.length) : `Мигрировано ${projects.length} проектов в Firebase!`;
             if (typeof showToast === 'function') {
-              showToast(msg);
+              showToast(`Мигрировано ${projects.length} проектов в Firebase!`);
             }
           }).catch(error => {
             console.error('Migration error:', error);
@@ -1694,15 +1706,13 @@ window.migrateToFirestore = function() {
             }
           });
         } else {
-          const msg = typeof t === 'function' ? t('firebase_functions_unavailable') : 'Firebase функции недоступны';
           if (typeof showToast === 'function') {
-            showToast(msg);
+            showToast('Firebase функции недоступны');
           }
         }
       } else {
-        const msg = typeof t === 'function' ? t('migrating_projects').replace('{count}', projects.length) : `Миграция ${projects.length} проектов...`;
         if (typeof showToast === 'function') {
-          showToast(msg);
+          showToast(`Миграция ${projects.length} проектов...`);
         }
       }
     } catch (error) {
@@ -1712,29 +1722,26 @@ window.migrateToFirestore = function() {
       }
     }
   } else {
-    const msg = typeof t === 'function' ? t('no_migration_data') : 'Нет данных для миграции';
     if (typeof showToast === 'function') {
-      showToast(msg);
+      showToast('Нет данных для миграции');
     }
   }
 };
 
 window.exportAllData = function() { 
   if (!currentUser) { 
-    const msg = typeof t === 'function' ? t('login_prompt') : 'Войдите';
     if (typeof showToast === 'function') {
-      showToast(msg); 
+      showToast('Войдите'); 
     } else {
-      alert(msg);
+      alert('Войдите');
     }
     return; 
   }
   if (currentUser.uid !== ADMIN_UID) { 
-    const msg = typeof t === 'function' ? t('no_access') : 'Нет доступа';
     if (typeof showToast === 'function') {
-      showToast(msg); 
+      showToast('Нет доступа'); 
     } else {
-      alert(msg);
+      alert('Нет доступа');
     }
     return; 
   }
@@ -1755,9 +1762,8 @@ window.exportAllData = function() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      const msg = typeof t === 'function' ? t('projects_exported').replace('{count}', projects.length) : `Экспортировано ${projects.length} проектов`;
       if (typeof showToast === 'function') {
-        showToast(msg);
+        showToast(`Экспортировано ${projects.length} проектов`);
       }
     } catch (error) {
       console.error('Export error:', error);
@@ -1766,9 +1772,8 @@ window.exportAllData = function() {
       }
     }
   } else {
-    const msg = typeof t === 'function' ? t('no_export_data') : 'Нет данных для экспорта';
     if (typeof showToast === 'function') {
-      showToast(msg);
+      showToast('Нет данных для экспорта');
     }
   }
 };
@@ -1963,11 +1968,10 @@ window.openFeedbackListModal = function() {
   }
   
   if (!window.currentUser) { 
-    const msg = typeof t === 'function' ? t('login_prompt') : 'Войдите';
     if (typeof showToast === 'function') {
-      showToast(msg);
+      showToast('Войдите');
     } else if (typeof toast === 'function') {
-      toast(msg);
+      toast('Войдите');
     }
     if (typeof openLoginModal === 'function') openLoginModal(); 
     return; 
@@ -3966,7 +3970,7 @@ function initFeedbacksListener(uid) {
     
     if (user) {
       if (ava) ava.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
-      if (name) name.textContent = user.displayName || (user.email ? user.email.split('@')[0] : (typeof window.t === 'function' ? window.t('default_user_name') : 'Researcher'));
+      if (name) name.textContent = user.displayName || (user.email ? user.email.split('@')[0] : 'Researcher');
       if (mobAva) mobAva.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
       if (mobOut) mobOut.style.display = 'none';
       if (mobInn) mobInn.style.display = 'flex';
