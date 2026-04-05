@@ -1716,8 +1716,13 @@ function setLanguage(lang) {
     document.documentElement.lang = lang;
     updateAllTranslations();
     
+    // Загружаем проекты для соответствующего языка
     if (lang === 'en') {
-      loadEnglishProjects();
+      loadProjectsFromJSON('projects_en');
+    } else if (lang === 'tr') {
+      loadProjectsFromJSON('projects_tr');
+    } else if (lang === 'es') {
+      loadProjectsFromJSON('projects_es');
     } else {
       // Сбрасываем на источник по умолчанию для русского языка
       if (window.resetToDefaultDataSource) {
@@ -1747,22 +1752,28 @@ function setLanguage(lang) {
 }
 
 
-// Загрузка английских проектов
-async function loadEnglishProjects() {
-  console.log('Loading English projects...');
+// Загрузка проектов из JSON файла для конкретного языка
+async function loadProjectsFromJSON(langCode) {
+  console.log(`Loading ${langCode} projects...`);
   try {
-    const response = await fetch('./data/english_projects.json');
+    const response = await fetch(`./data/${langCode}.json`);
     if (response.ok) {
       const data = await response.json();
       if (data.projects && window.setEnglishProjectsData) {
         window.setEnglishProjectsData(data.projects);
+        console.log(`Successfully loaded ${data.projects.length} ${langCode} projects`);
       }
     } else {
-      console.log('English projects file not found');
+      console.log(`${langCode} projects file not found`);
     }
   } catch (e) {
-    console.log('Error loading English projects:', e);
+    console.log(`Error loading ${langCode} projects:`, e);
   }
+}
+
+// Сохраняем старую функцию для совместимости
+async function loadEnglishProjects() {
+  return loadProjectsFromJSON('projects_en');
 }
 
 // Обновление всех переводов на странице
