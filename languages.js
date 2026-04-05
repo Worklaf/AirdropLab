@@ -271,7 +271,7 @@ const translations = {
     no_description: 'Нет описания',
     leave_feedback: 'Оставить отзыв',
     last_activity_date: 'Дата последней активности',
-    mark_complete: 'Отметить',
+    mark_complete: 'Завершить',
     add_favorites: 'Избранное',
     deleted_count: 'Удаленных',
     no_deleted_projects: 'Нет удаленных проектов',
@@ -748,106 +748,6 @@ passive_credited_to_upstream: 'Начислено вышестоящим по ц
     project_label: 'Проект: ',
     support_label_chat: 'Support',
   },
-
-  tr: {
-    // ============ MAIN UI ============
-    loading: 'YÜKLENİYOR...',
-    experimental_zone: 'Deneysel Bölge',
-    admin_mode: 'Yönetici Modu',
-    active: 'Aktif',
-    new: 'Yeni',
-    in_work: 'İşlemde',
-    done: 'Tamamlandı',
-    new_test: 'Yeni Test',
-    admin: 'Admin',
-    login: 'Giriş',
-    login_btn: 'Giriş Yap',
-    in_system: 'Sistemde',
-    filters: 'Filtreler',
-    all_projects: 'Tüm Projeler',
-    unvisited: 'Ziyaret Edilmedi',
-    today: 'Bugün',
-    yesterday: 'Dün',
-    active_filter: 'Aktif',
-    daily_filter: 'Günlük',
-    favorites: 'Favoriler',
-    completed: 'Tamamlanan',
-    archive: 'Arşiv',
-    categories: 'Kategoriler',
-    all: 'Tümü',
-    all_categories: 'Tüm Kategoriler',
-    search_placeholder: 'Projeleri ara...',
-    
-    // ============ HEADER MENU ============
-    menu_activities: 'Aktiviteler',
-    menu_guides: 'Rehberler',
-    menu_community: 'Topluluk',
-    menu_calendar: 'Takvim',
-    menu_exchanges: 'Borsalar',
-    menu_news: 'Haberler',
-    menu_tools: 'Araçlar',
-    menu_games: 'Oyunlar',
-    menu_learning: 'Öğrenme',
-    menu_in_development: 'Bu bölüm geliştirme aşamasında',
-    menu_coming_soon: 'Çok Yakında!',
-    
-    // ============ HEADER SPECIFIC UI ============
-    version_label: 'v2.0',
-    default_user_name: 'Araştırmacı',
-    admin_badge_label: 'Admin',
-    profile_tooltip: 'Profil',
-    crypto_ticker_attribution: 'Coins by Cryptorank'
-  },
-
-  es: {
-    // ============ MAIN UI ============
-    loading: 'CARGANDO LABORATORIO...',
-    experimental_zone: 'Zona Experimental',
-    admin_mode: 'Modo Admin',
-    active: 'Activo',
-    new: 'Nuevo',
-    in_work: 'En Progreso',
-    done: 'Completado',
-    new_test: 'Nueva Prueba',
-    admin: 'Admin',
-    login: 'Iniciar Sesión',
-    login_btn: 'Iniciar',
-    in_system: 'En el Sistema',
-    filters: 'Filtros',
-    all_projects: 'Todos los Proyectos',
-    unvisited: 'No Visitado',
-    today: 'Hoy',
-    yesterday: 'Ayer',
-    active_filter: 'Activo',
-    daily_filter: 'Diario',
-    favorites: 'Favoritos',
-    completed: 'Completado',
-    archive: 'Archivo',
-    categories: 'Categorías',
-    all: 'Todos',
-    all_categories: 'Todas las Categorías',
-    search_placeholder: 'Buscar proyectos...',
-    
-    // ============ HEADER MENU ============
-    menu_activities: 'Actividades',
-    menu_guides: 'Guías',
-    menu_community: 'Comunidad',
-    menu_calendar: 'Calendario',
-    menu_exchanges: 'Intercambios',
-    menu_news: 'Noticias',
-    menu_tools: 'Herramientas',
-    menu_games: 'Juegos',
-    menu_learning: 'Aprendizaje',
-    menu_in_development: 'Esta sección está en desarrollo',
-    menu_coming_soon: '¡Próximamente!',
-    
-    // ============ HEADER SPECIFIC UI ============
-    version_label: 'v2.0',
-    default_user_name: 'Investigador',
-    admin_badge_label: 'Admin',
-    profile_tooltip: 'Perfil',
-    crypto_ticker_attribution: 'Coins by Cryptorank'
-  }
 
   en: {
     // ============ MAIN UI ============
@@ -1705,6 +1605,7 @@ if (typeof window.updateComingSoonTranslations === 'function') {
   updateDateFilterMonths();
 }
 
+// Обновляем переводы в модальных окнах feedback
 // Обновление переводов в модальных окнах feedback
 function updateFeedbackModalTranslations() {
   // Обновляем форму нового обращения
@@ -1719,78 +1620,56 @@ function updateFeedbackModalTranslations() {
   }
 }
 
-// Функция переключения языка
-function toggleLang() {
-  // Получаем все доступные языки
-  const availableLangs = ['ru', 'en', 'tr', 'es'];
-  
-  // Находим индекс текущего языка
-  const currentIndex = availableLangs.indexOf(currentLang);
-  
-  // Переключаем на следующий язык
-  const nextIndex = (currentIndex + 1) % availableLangs.length;
-  const nextLang = availableLangs[nextIndex];
-  
-  setLanguage(nextLang);
-}
-
-// Функция обновления языковой кнопки
+// Обновляем отображение кнопки языка
 function updateLanguageButton() {
-  const deskLang = document.getElementById('langBtn');
-  const mobLangBtn = document.getElementById('mobLangBtn');
+  const langBtn = document.getElementById('langBtn');
+  if (!langBtn) return;
   
-  if (deskLang) {
-    const flag = deskLang.querySelector('.lang-flag');
-    const text = deskLang.querySelector('.lang-text');
-    
-    // Обновляем флаг и текст
-    if (flag) flag.textContent = getLanguageFlag(currentLang);
-    if (text) text.textContent = currentLang.toUpperCase();
-    
-    // Обновляем стили для активного языка
-    deskLang.classList.toggle('lang-active', currentLang !== 'ru');
+  // Британский флаг - более реалистичный SVG
+  const ukFlagSVG = `
+    <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg" width="36" height="18" style="border-radius:2px;">
+      <clipPath id="t">
+        <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/>
+      </clipPath>
+      <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+      <path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#t)" stroke="#C8102E" stroke-width="4"/>
+      <path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/>
+      <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/>
+    </svg>
+  `;
+  
+  const flagSpan = langBtn.querySelector('.lang-flag');
+  const textSpan = langBtn.querySelector('.lang-text');
+  
+  if (flagSpan) {
+    flagSpan.innerHTML = ukFlagSVG;
   }
   
-  if (mobLangBtn) {
-    const mobFlag = mobLangBtn.querySelector('.mob-lang-flag');
-    const mobText = mobLangBtn.querySelector('.mob-lang-text');
-    
-    // Обновляем флаг и текст
-    if (mobFlag) mobFlag.textContent = getLanguageFlag(currentLang);
-    if (mobText) mobText.textContent = currentLang.toUpperCase();
-    
-    // Обновляем стили для мобильной кнопки
-    const isActive = currentLang !== 'ru';
-    mobLangBtn.style.background = isActive ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.1)';
-    mobLangBtn.style.borderColor = isActive ? 'rgba(34,197,94,0.5)' : 'rgba(239,68,68,0.3)';
+  // Текст ON/OFF
+  if (textSpan) {
+    textSpan.textContent = currentLang === 'en' ? 'ON' : 'OFF';
+  }
+  
+  // Цветовой индикатор
+  if (currentLang === 'en') {
+    langBtn.classList.add('lang-active');
+  } else {
+    langBtn.classList.remove('lang-active');
   }
 }
 
-// Функция получения флага языка
-function getLanguageFlag(lang) {
-  const flags = {
-    'ru': '🇺🇦',
-    'en': '🇺🇸', 
-    'tr': '🇹🇷',
-    'es': '🇪🇸'
-  };
-  return flags[lang] || '🌐';
-}
-
-// Функция переключения языка
-function toggleLang() {
-  // Получаем все доступные языки
-  const availableLangs = ['ru', 'en', 'tr', 'es'];
-  
-  // Находим индекс текущего языка
-  const currentIndex = availableLangs.indexOf(currentLang);
-  
-  // Переключаем на следующий язык
-  const nextIndex = (currentIndex + 1) % availableLangs.length;
-  const nextLang = availableLangs[nextIndex];
-  
-  setLanguage(nextLang);
-}
+// Переключение языка
+window.toggleLang = function() {
+  if (currentLang === 'ru') {
+    setLanguage('en');
+  } else {
+    setLanguage('ru');
+    if (window.resetToDefaultDataSource) {
+      window.resetToDefaultDataSource();
+    }
+  }
+};
 
 // Функция для установки английских данных проектов
 window.setEnglishProjectsData = function(englishProjects) {
