@@ -1516,6 +1516,11 @@ function setLanguage(lang) {
     
     if (lang === 'en') {
       loadEnglishProjects();
+    } else {
+      // Сбрасываем на источник по умолчанию для русского языка
+      if (window.resetToDefaultDataSource) {
+        window.resetToDefaultDataSource();
+      }
     }
     
     updateLanguageButton();
@@ -1675,6 +1680,7 @@ window.toggleLang = function() {
     setLanguage('en');
   } else {
     setLanguage('ru');
+    // Сбрасываем на источник по умолчанию для русского языка
     if (window.resetToDefaultDataSource) {
       window.resetToDefaultDataSource();
     }
