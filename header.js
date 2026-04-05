@@ -117,7 +117,11 @@
 
               <div class="relative" id="langDropdown">
                 <button onclick="toggleLangDropdown()" id="langBtn"
-                  class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-600/50 bg-slate-800/50 backdrop-blur-sm transition-all hover:border-slate-500/70 hover:bg-slate-700/60 hover:shadow-lg hover:shadow-slate-900/20">
+                  class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-600/50 bg-slate-800/50 backdrop-blur-sm transition-all hover:border-slate-500/70 hover:bg-slate-700/60 hover:shadow-lg hover:shadow-slate-900/20"
+                  style="background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6)) !important; 
+                         border: 1px solid rgba(71,85,105,0.5) !important;
+                         backdrop-filter: blur(8px) !important;
+                         box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;">
                   <span class="lang-flag text-sm fi fi-ua"></span>
                   <span class="lang-text text-xs font-medium text-slate-300">RU</span>
                   <i class="fas fa-chevron-down text-xs text-slate-400 ml-1 transition-transform group-hover:rotate-180"></i>
@@ -301,9 +305,11 @@
             <div class="relative" id="mobLangDropdown">
             <button onclick="toggleMobLangDropdown()" id="mobLangBtn"
               style="display:flex;align-items:center;gap:2px;padding:3px 6px;border-radius:6px;
-                     border:1px solid rgba(71,85,105,0.5);background:rgba(30,41,59,0.8);backdrop-filter:blur(4px);
+                     border:1px solid rgba(71,85,105,0.5) !important;
+                     background:linear-gradient(135deg, rgba(30,41,59,0.9), rgba(30,41,59,0.7)) !important;
+                     backdrop-filter:blur(8px) !important;
                      cursor:pointer;font-size:9px;font-weight:600;color:#cbd5e1;white-space:nowrap;
-                     transition:all 0.2s ease;">
+                     transition:all 0.2s ease;box-shadow:0 2px 10px rgba(0,0,0,0.2) !important;">
               <span class="mob-lang-flag fi fi-ua" style="font-size:0.8rem;"></span>
               <span class="mob-lang-text">RU</span>
               <i class="fas fa-chevron-down text-xs" style="margin-left:1px;transition:transform 0.2s ease;"></i>
