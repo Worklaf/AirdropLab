@@ -706,33 +706,84 @@ try {
   window.auth = auth;
   window.db   = db;
   window.firestore = db; // Добавляем для онлайн-режима
-  window.__firestoreExports = { 
-    collection: (path) => db.collection(path), 
-    doc: (path) => db.doc(path), 
-    getDoc: (ref) => ref.get(), 
-    setDoc: (ref, data) => ref.set(data), 
-    getDocs: (query) => query.get(), 
-    updateDoc: (ref, data) => ref.update(data), 
-    addDoc: (collection, data) => collection.add(data), 
-    deleteDoc: (ref) => ref.delete(), 
-    query: (collection, ...constraints) => {
-      let q = collection;
-      constraints.forEach(constraint => {
-        q = q.where(constraint.field, constraint.operator, constraint.value);
+  // Правильные экспорты для совместимости с v9+ синтаксисом
+  window.__firestoreExports = {
+    collection: (db, path, ...pathSegments) => {
+      if (typeof db === 'string') {
+        // Если первый аргумент строка, используем глобальный db
+        return window.db.collection(db, path, ...pathSegments);
+      }
+      return db.collection(path, ...pathSegments);
+    },
+    doc: (db, path, ...pathSegments) => {
+      if (typeof db === 'string') {
+        // Если первый аргумент строка, используем глобальный db
+        return window.db.doc(db, path, ...pathSegments);
+      }
+      return db.doc(path, ...pathSegments);
+    },
+    getDoc: (docRef) => docRef.get(),
+    setDoc: (docRef, data, options) => docRef.set(data, options),
+    getDocs: (queryRef) => queryRef.get(),
+    updateDoc: (docRef, data) => docRef.update(data),
+    addDoc: (collectionRef, data) => collectionRef.add(data),
+    deleteDoc: (docRef) => docRef.delete(),
+    query: (collectionRef, ...queryConstraints) => {
+      let query = collectionRef;
+      queryConstraints.forEach(constraint => {
+        if (constraint.type === 'where') {
+          query = query.where(constraint.field, constraint.op, constraint.value);
+        } else if (constraint.type === 'orderBy') {
+          query = query.orderBy(constraint.field, constraint.direction);
+        } else if (constraint.type === 'limit') {
+          query = query.limit(constraint.limit);
+        }
       });
-      return q;
-    }, 
-    orderBy: (field, direction) => ({ field, direction }), 
-    limit: (n) => ({ limit: n }), 
-    where: (field, op, value) => ({ field, operator: op, value }), 
-    serverTimestamp: () => firebase.firestore.FieldValue.serverTimestamp(), 
-    increment: (n) => firebase.firestore.FieldValue.increment(n), 
-    runTransaction: (fn) => db.runTransaction(fn), 
-    writeBatch: () => db.batch(), 
-    arrayUnion: (elements) => firebase.firestore.FieldValue.arrayUnion(elements), 
-    onSnapshot: (ref, callback) => ref.onSnapshot(callback) 
+      return query;
+    },
+    where: (field, op, value) => ({ type: 'where', field, op, value }),
+    orderBy: (field, direction) => ({ type: 'orderBy', field, direction }),
+    limit: (limit) => ({ type: 'limit', limit }),
+    serverTimestamp: () => firebase.firestore.FieldValue.serverTimestamp(),
+    increment: (n) => firebase.firestore.FieldValue.increment(n),
+    runTransaction: (db, updateFunction) => db.runTransaction(updateFunction),
+    writeBatch: (db) => db.batch(),
+    arrayUnion: (...elements) => firebase.firestore.FieldValue.arrayUnion(...elements),
+    onSnapshot: (docRef, callback, options) => docRef.onSnapshot(callback, options)
   };
   window.__authExports = { onAuthStateChanged: (callback) => auth.onAuthStateChanged(callback), signOut: () => auth.signOut() };
+  
+  // Добавляем глобальные функции для прямого использования
+  window.collection = (path, ...pathSegments) => db.collection(path, ...pathSegments);
+  window.doc = (path, ...pathSegments) => db.doc(path, ...pathSegments);
+  window.getDoc = (docRef) => docRef.get();
+  window.setDoc = (docRef, data, options) => docRef.set(data, options);
+  window.getDocs = (queryRef) => queryRef.get();
+  window.updateDoc = (docRef, data) => docRef.update(data);
+  window.addDoc = (collectionRef, data) => collectionRef.add(data);
+  window.deleteDoc = (docRef) => docRef.delete();
+  window.query = (collectionRef, ...queryConstraints) => {
+    let query = collectionRef;
+    queryConstraints.forEach(constraint => {
+      if (constraint.type === 'where') {
+        query = query.where(constraint.field, constraint.op, constraint.value);
+      } else if (constraint.type === 'orderBy') {
+        query = query.orderBy(constraint.field, constraint.direction);
+      } else if (constraint.type === 'limit') {
+        query = query.limit(constraint.limit);
+      }
+    });
+    return query;
+  };
+  window.where = (field, op, value) => ({ type: 'where', field, op, value });
+  window.orderBy = (field, direction) => ({ type: 'orderBy', field, direction });
+  window.limit = (limit) => ({ type: 'limit', limit });
+  window.serverTimestamp = () => firebase.firestore.FieldValue.serverTimestamp();
+  window.increment = (n) => firebase.firestore.FieldValue.increment(n);
+  window.runTransaction = (updateFunction) => db.runTransaction(updateFunction);
+  window.writeBatch = () => db.batch();
+  window.arrayUnion = (...elements) => firebase.firestore.FieldValue.arrayUnion(...elements);
+  window.onSnapshot = (docRef, callback, options) => docRef.onSnapshot(callback, options);
   
   // Инициализируем экспорты для header.js
   if (typeof window.initFirebaseExports === 'function') {
@@ -1047,8 +1098,8 @@ window.doSpin = async function() {
   // IMPORTANT: Fresh load of userData before balance check
   if (db) {
     try {
-      const freshSnap = await db.collection(COL_USERS).doc(window.currentUser.uid).get();
-      if (freshSnap.exists) {
+      const freshSnap = await window.getDoc(window.doc(COL_USERS, window.currentUser.uid));
+      if (freshSnap.exists()) {
         userData = freshSnap.data();
         window.userProfileData = userData;
       }
@@ -1135,7 +1186,7 @@ async function handleResult(reward, isFree) {
   // Save to Firestore
   try {
     if (db && window.currentUser) {
-      const uRef = db.collection(COL_USERS).doc(window.currentUser.uid);
+      const uRef = window.doc(COL_USERS, window.currentUser.uid);
       const updates = {
         'wof.totalSpins':   wof.totalSpins,
         'wof.totalWon':     wof.totalWon,
@@ -1145,28 +1196,28 @@ async function handleResult(reward, isFree) {
         'wof.lastSpinDate': wof.lastSpinDate,
       };
       if (!isFree) {
-        updates['reagents'] = firebase.firestore.FieldValue.increment(netProfit);
+        updates['reagents'] = window.increment(netProfit);
       }
-      await uRef.update(updates);
+      await window.updateDoc(uRef, updates);
 
       // Reload userData to sync balance
       try {
-        const updatedSnap = await uRef.get();
-        if (updatedSnap.exists) {
+        const updatedSnap = await window.getDoc(uRef);
+        if (updatedSnap.exists()) {
           userData = updatedSnap.data();
           window.userProfileData = userData;
         }
       } catch(e) {}
 
       // Log spin
-      await db.collection(COL_WHEEL).add({
+      await window.addDoc(window.collection(COL_WHEEL), {
         uid:       window.currentUser.uid,
         display:   window.currentUser.displayName || window.currentUser.email || '—',
         reward,
         spentRGT,
         netLoss,
         isFree,
-        ts:        firebase.firestore.FieldValue.serverTimestamp()
+        ts:        window.serverTimestamp()
       });
     }
   } catch(e) {
@@ -1204,22 +1255,22 @@ async function addToJackpot(loss) {
   const now = new Date();
   const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   try {
-    const jRef = db.collection(COL_JACKPOT).doc(month);
-    await db.runTransaction(async tx => {
-      const snap = await tx.get(jRef);
-      if (snap.exists) {
-        tx.update(jRef, {
-          total: firebase.firestore.FieldValue.increment(loss),
-          [`players.${window.currentUser.uid}`]: firebase.firestore.FieldValue.increment(loss)
+    const jRef = window.doc(COL_JACKPOT, month);
+    await window.runTransaction(async tx => {
+      const snap = await window.getDoc(jRef);
+      if (snap.exists()) {
+        await window.updateDoc(jRef, {
+          total: window.increment(loss),
+          [`players.${window.currentUser.uid}`]: window.increment(loss)
         });
       } else {
-        tx.set(jRef, {
+        await window.setDoc(jRef, {
           month,
           total: loss,
           players: { [window.currentUser.uid]: loss },
           drawn: false,
           winner: null,
-          ts: firebase.firestore.FieldValue.serverTimestamp()
+          ts: window.serverTimestamp()
         });
       }
     });
@@ -1311,12 +1362,12 @@ function sendSpinNotification(reward, spent, profit) {
     msg = isEn ? `😓 Wheel: won ${reward} RGT / spent ${spent} RGT.` : `😓 Колесо: выиграли ${reward} RGT / потратили ${spent} RGT.`;
   }
   try {
-    db.collection('notifications').add({
+    await window.addDoc(window.collection('notifications'), {
       userId: window.currentUser.uid,  // Используем userId как в index.html
       type:   'wheel_spin',
       message: msg,            // Используем message как в index.html
       read:   false,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()  // Используем createdAt как в index.html
+      createdAt: window.serverTimestamp()  // Используем createdAt как в index.html
     });
   } catch(e) {
     console.error('Error sending spin notification:', e);
@@ -1375,12 +1426,12 @@ async function loadJackpot() {
     isEn ? `${days}d ${hours}h until draw` : `До розыгрыша: ${days} дн. ${hours} ч.`;
 
   try {
-    const snap = await db.collection(COL_JACKPOT).doc(month).get();
-    const total = snap.exists ? (snap.data().total || 0) : 0;
+    const snap = await window.getDoc(window.doc(COL_JACKPOT, month));
+    const total = snap.exists() ? (snap.data().total || 0) : 0;
     document.getElementById('jackpotAmt').textContent = total + ' RGT';
 
     // Jackpot chance for current user
-    if (window.currentUser && snap.exists) {
+    if (window.currentUser && snap.exists()) {
       const players = snap.data().players || {};
       const myLoss  = players[window.currentUser.uid] || 0;
       const chance  = total > 0 ? ((myLoss / total) * 100).toFixed(1) : 0;
