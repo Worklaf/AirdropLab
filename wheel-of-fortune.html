@@ -691,7 +691,19 @@ try {
     auth = firebase.auth();
     try {
       db = firebase.firestore();
-      db.enablePersistence({ cacheSizeBytes: 5000000 });
+      // Используем multi-tab synchronization для решения проблемы с persistence
+      db.enablePersistence({ 
+        synchronizeTabs: true,
+        cacheSizeBytes: 5000000 
+      }).catch((err) => {
+        if (err.code === 'failed-precondition') {
+          console.warn('🔥 Firestore persistence: Multiple tabs open, falling back to memory cache');
+        } else if (err.code === 'unimplemented') {
+          console.warn('🔥 Firestore persistence: Browser doesn\'t support persistence');
+        } else {
+          console.warn('🔥 Firestore persistence error:', err);
+        }
+      });
     } catch(e) {
       console.warn('WoF: Firestore init failed, will retry:', e);
       db = null;
@@ -718,7 +730,36 @@ try {
   
   // Инициализируем экспорты для header.js
   if (typeof window.initFirebaseExports === 'function') {
-    window.initFirebaseExports({ db, auth, firebase });
+    window.initFirebaseExports({
+      db: db,
+      auth: auth,
+      firebase: firebase,
+      collection: (path) => db.collection(path),
+      doc: (path) => db.doc(path),
+      getDoc: (docRef) => docRef.get(),
+      getDocs: (queryRef) => queryRef.get(),
+      addDoc: (collectionRef, data) => collectionRef.add(data),
+      updateDoc: (docRef, data) => docRef.update(data),
+      setDoc: (docRef, data) => docRef.set(data),
+      deleteDoc: (docRef) => docRef.delete(),
+      query: (collectionRef, ...constraints) => {
+        let q = collectionRef;
+        constraints.forEach(c => {
+          if (c.type === 'where') q = q.where(c.field, c.op, c.value);
+          else if (c.type === 'orderBy') q = q.orderBy(c.field, c.direction);
+          else if (c.type === 'limit') q = q.limit(c.limit);
+        });
+        return q;
+      },
+      where: (field, op, value) => ({ type: 'where', field, op, value }),
+      orderBy: (field, direction) => ({ type: 'orderBy', field, direction }),
+      limit: (limit) => ({ type: 'limit', limit }),
+      serverTimestamp: () => firebase.firestore.FieldValue.serverTimestamp(),
+      increment: (n) => firebase.firestore.FieldValue.increment(n),
+      writeBatch: () => db.batch(),
+      runTransaction: (fn) => db.runTransaction(fn),
+      onSnapshot: (docRef, callback) => docRef.onSnapshot(callback)
+    });
   }
   
   console.log('✅ WoF Firebase initialized');
