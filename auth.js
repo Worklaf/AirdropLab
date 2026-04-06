@@ -52,7 +52,7 @@ async function initAuth() {
     }
 
     // Отслеживаем изменения состояния аутентификации
-    onAuthStateChanged(auth, async user => {
+    window.onAuthStateChanged(auth, async user => {
       currentUser = user;
       window.currentUser = user;
       isAdmin = user && user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
