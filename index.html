@@ -1491,6 +1491,7 @@ onAuthStateChanged(auth, async function(user) {
     }
 
     if (user) {
+        console.log('👤 User logged in:', user.uid);
         currentUser = user;
         window.currentUser = user;
         await saveUserData(user);
@@ -1541,6 +1542,10 @@ onAuthStateChanged(auth, async function(user) {
         // ✅ Загружаем состояние hero из Firestore
         await loadHeroStateFromFirestore(user.uid);
 
+        // ✅ ВЫЗЫВАЕМ loadData ТОЛЬКО ПОСЛЕ полной инициализации Firebase и авторизации
+        console.log('📂 Loading projects from Firebase...');
+        loadData();
+
         // ✅ ВЫЗЫВАЕМ activateAdminMode ТОЛЬКО ПОСЛЕ полной загрузки данных
         if (user.uid === ADMIN_UID) activateAdminMode();
 
@@ -1551,6 +1556,7 @@ onAuthStateChanged(auth, async function(user) {
         document.dispatchEvent(new CustomEvent('authStateReady',  { detail: { user } }));
 
     } else {
+        console.log('🚪 User logged out');
         currentUser   = null;
         window.currentUser = null;
         userFavorites = [];
@@ -1692,9 +1698,13 @@ function createSuccessRipple(button) {
 const EXTERNAL_DATA_URL = './data/projects.json';
 
 document.addEventListener('DOMContentLoaded', function() { 
+  console.log('📊 DOMContentLoaded - initializing...');
   checkAndAutoEndActivities();
   setInterval(checkAndAutoEndActivities, 60 * 60 * 1000);
-  loadData(); 
+  
+  // ✅ НЕ вызываем loadData здесь - только через authStateChanged
+  // loadData() будет вызвана в onAuthStateChanged ПОСЛЕ инициализации Firebase
+  
   setupSearchListener();
   
   // Принудительно обновляем бейдж уведомлений после загрузки
@@ -2277,22 +2287,33 @@ window.openGuideFromDetail = function() { if(currentDetailId) { const project = 
 // Найдите и замените:
 function activateAdminMode() {
   if (!currentUser || currentUser.uid !== ADMIN_UID) return;
+  
+  // ✅ ЗАЩИТА: проверяем существование элементов
+  const adminPanel = document.getElementById('adminPanel');
+  const publicInfo = document.getElementById('publicInfo');
+  const modeIndicator = document.getElementById('modeIndicator');
+  
+  if (!adminPanel || !publicInfo || !modeIndicator) {
+    // Элементы еще не загружены, повторим попытку
+    setTimeout(activateAdminMode, 100);
+    return;
+  }
+  
   isAdminMode = true;
-  document.getElementById('adminPanel').style.display = 'flex';
+  adminPanel.style.display = 'flex';
   document.getElementById('generalFeedbackPanel').classList.remove('hidden');
   const deletedCount = projects.filter(p => p.deleted).length;
 
   // ← data-translate чтобы updateAllTranslations() подхватывал при смене языка
-  document.getElementById('publicInfo').innerHTML =
+  publicInfo.innerHTML =
     '<i class="fas fa-shield-alt"></i><span>' +
     '<span data-translate="admin_mode">' + t('admin_mode') + '</span>' +
     ' • <span data-translate="deleted_count">' + t('deleted_count') + '</span>: ' + deletedCount +
     '</span>';
 
-  const indicator = document.getElementById('modeIndicator');
-  indicator.setAttribute('data-translate', 'admin_mode'); // ← добавляем атрибут
-  indicator.textContent = t('admin_mode');
-  indicator.classList.add('text-purple-400', 'font-bold');
+  modeIndicator.setAttribute('data-translate', 'admin_mode'); // ← добавляем атрибут
+  modeIndicator.textContent = t('admin_mode');
+  modeIndicator.classList.add('text-purple-400', 'font-bold');
   applyFilters();
 }
 
@@ -2780,10 +2801,23 @@ function updateCounts(filtered) {
 }
 
 function updateStats(filtered) {
-  document.getElementById('statActive').textContent = filtered.filter(function(p) { const projectCompleted = userCompleted.includes(p.id + '_project'); const hasActivities = p.activities && p.activities.length > 0; const allActivitiesCompleted = hasActivities && p.activities.every(a => userCompleted.includes(p.id + '_' + a.id)); return !(projectCompleted || allActivitiesCompleted); }).length;
-  document.getElementById('statToday').textContent = filtered.filter(function(p) { return isProjectOrActivityToday(p); }).length;
-  document.getElementById('statFavorites').textContent = filtered.filter(function(p) { return userFavorites.includes(p.id); }).length;
-  document.getElementById('statCompleted').textContent = filtered.filter(function(p) { const projectCompleted = userCompleted.includes(p.id + '_project'); const hasActivities = p.activities && p.activities.length > 0; const allActivitiesCompleted = hasActivities && p.activities.every(a => userCompleted.includes(p.id + '_' + a.id)); return projectCompleted || allActivitiesCompleted; }).length;
+  // ✅ ЗАЩИТА: проверяем существование элементов перед обновлением
+  const statActive = document.getElementById('statActive');
+  const statToday = document.getElementById('statToday');
+  const statFavorites = document.getElementById('statFavorites');
+  const statCompleted = document.getElementById('statCompleted');
+  
+  if (!statActive || !statToday || !statFavorites || !statCompleted) {
+    // Элементы еще не загружены (header.js еще не инъектировал их)
+    // Повторим попытку через 100ms
+    setTimeout(() => updateStats(filtered), 100);
+    return;
+  }
+
+  statActive.textContent = filtered.filter(function(p) { const projectCompleted = userCompleted.includes(p.id + '_project'); const hasActivities = p.activities && p.activities.length > 0; const allActivitiesCompleted = hasActivities && p.activities.every(a => userCompleted.includes(p.id + '_' + a.id)); return !(projectCompleted || allActivitiesCompleted); }).length;
+  statToday.textContent = filtered.filter(function(p) { return isProjectOrActivityToday(p); }).length;
+  statFavorites.textContent = filtered.filter(function(p) { return userFavorites.includes(p.id); }).length;
+  statCompleted.textContent = filtered.filter(function(p) { const projectCompleted = userCompleted.includes(p.id + '_project'); const hasActivities = p.activities && p.activities.length > 0; const allActivitiesCompleted = hasActivities && p.activities.every(a => userCompleted.includes(p.id + '_' + a.id)); return projectCompleted || allActivitiesCompleted; }).length;
 }
 
 function isToday(dateString) { if (!dateString) return false; return new Date(dateString).toDateString() === new Date().toDateString(); }
