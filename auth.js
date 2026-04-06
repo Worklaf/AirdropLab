@@ -24,20 +24,12 @@ async function initAuth() {
   console.log('🔐 Initializing centralized auth system...');
   
   try {
-    // Проверяем доступность Firebase
-    if (typeof firebase === 'undefined' || typeof firebase.auth !== 'function') {
-      console.warn('🔐 Firebase SDK not available');
-      return;
-    }
-    
     // Используем существующий Firebase app или создаем новый
-    if (firebase.apps.length > 0) {
-      console.log('🔐 Firebase уже инициализирован, используем существующий app');
-      auth = firebase.auth();
+    if (window.firebaseApp) {
+      auth = window.getAuth(window.firebaseApp);
     } else if (window.firebaseConfig) {
-      console.log('🔐 Инициализируем Firebase и создаем auth');
-      const app = firebase.initializeApp(window.firebaseConfig);
-      auth = app.auth();
+      const app = window.initializeApp(window.firebaseConfig);
+      auth = window.getAuth(app);
       window.firebaseApp = app;
     } else {
       console.warn('🔐 No Firebase config available');
@@ -60,7 +52,7 @@ async function initAuth() {
     }
 
     // Отслеживаем изменения состояния аутентификации
-    auth.onAuthStateChanged(async user => {
+    onAuthStateChanged(auth, async user => {
       currentUser = user;
       window.currentUser = user;
       isAdmin = user && user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
@@ -151,8 +143,7 @@ window.closeLoginModal = function() {
 
 window.loginGoogle = async function() {
   try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await auth.signInWithPopup(provider);
+    await signInWithPopup(auth, new GoogleAuthProvider());
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход: Google');
@@ -167,8 +158,7 @@ window.loginGoogle = async function() {
 
 window.loginTwitter = async function() {
   try {
-    const provider = new firebase.auth.TwitterAuthProvider();
-    await auth.signInWithPopup(provider);
+    await signInWithPopup(auth, new TwitterAuthProvider());
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход: Twitter');
@@ -194,7 +184,7 @@ window.handleEmailAuth = async function(event) {
   }
   
   try {
-    await auth.signInWithEmailAndPassword(email, password);
+    await signInWithEmailAndPassword(auth, email, password);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход выполнен');
@@ -220,7 +210,7 @@ window.handleRegister = async function(event) {
   }
   
   try {
-    await auth.createUserWithEmailAndPassword(email, password);
+    await createUserWithEmailAndPassword(auth, email, password);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Аккаунт создан!');
@@ -251,7 +241,7 @@ window.toggleRegisterMode = function() {
 // Функция выхода
 window.logout = async function() {
   try {
-    await auth.signOut();
+    await signOut(auth);
     currentUser = null;
     window.currentUser = null;
     isAdmin = false;
