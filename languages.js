@@ -3181,7 +3181,8 @@ function updateAllTranslations() {
   // Переводы для элементов с data-translate
   document.querySelectorAll('[data-translate]').forEach(el => {
     const key = el.getAttribute('data-translate');
-    const translated = t(key);
+    // Проверяем доступность функции t()
+    const translated = (typeof t === 'function') ? t(key) : key;
     if (translated && translated !== key) {
       if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
         el.placeholder = translated;
