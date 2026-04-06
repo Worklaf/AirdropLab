@@ -1,18 +1,16 @@
 // ═══════════════════════════════════════════════════════
 // 📦 CENTRALIZED AUTHENTICATION SYSTEM
-// ═══════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════
 // Единая система входа для всех страниц сайта
 // Подключается: <script src="auth.js"></script>
-// ═════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 
-// Используем глобальные функции Firebase из module loader
-// import {
-//   getAuth, onAuthStateChanged, signOut, signInWithPopup,
-//   GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword,
-//   createUserWithEmailAndPassword
-// } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-// import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+// Импорт Firebase Auth функций
+import {
+  getAuth, onAuthStateChanged, signOut, signInWithPopup,
+  GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // Глобальные переменные для аутентификации
 let auth = null;
@@ -26,10 +24,10 @@ async function initAuth() {
   try {
     // Используем существующий Firebase app или создаем новый
     if (window.firebaseApp) {
-      auth = window.getAuth(window.firebaseApp);
+      auth = getAuth(window.firebaseApp);
     } else if (window.firebaseConfig) {
-      const app = window.initializeApp(window.firebaseConfig);
-      auth = window.getAuth(app);
+      const app = initializeApp(window.firebaseConfig);
+      auth = getAuth(app);
       window.firebaseApp = app;
     } else {
       console.warn('🔐 No Firebase config available');
@@ -58,21 +56,6 @@ async function initAuth() {
       isAdmin = user && user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
       
       console.log('🔐 Auth state changed:', { user: user?.uid, isAdmin });
-      
-      // Кэшируем пользователя в localStorage для мгновенного восстановления при перезагрузке
-      if (user) {
-        const userData = {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL
-        };
-        localStorage.setItem('firebaseUser', JSON.stringify(userData));
-        localStorage.setItem('__cache_isAdmin', isAdmin ? 'true' : 'false');
-      } else {
-        localStorage.removeItem('firebaseUser');
-        localStorage.removeItem('__cache_isAdmin');
-      }
       
       // Обновляем UI на всех страницах
       updateAuthUI();
