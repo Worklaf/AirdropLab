@@ -16,7 +16,6 @@
 
 // Глобальные переменные для аутентификации
 let auth = null;
-let currentUser = null;
 let isAdmin = false;
 
 // Инициализация аутентификации
@@ -43,7 +42,6 @@ async function initAuth() {
     // Проверяем текущего пользователя при загрузке
     const immediateUser = auth.currentUser;
     if (immediateUser) {
-      currentUser = immediateUser;
       window.currentUser = immediateUser;
       isAdmin = immediateUser.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
       updateAuthUI();
@@ -51,7 +49,6 @@ async function initAuth() {
 
     // Отслеживаем изменения состояния аутентификации
     auth.onAuthStateChanged(async user => {
-      currentUser = user;
       window.currentUser = user;
       isAdmin = user && user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
       
@@ -91,7 +88,7 @@ function updateAuthUI() {
   const loggedOutElements = document.querySelectorAll('.auth-logged-out');
   const loggedInElements = document.querySelectorAll('.auth-logged-in');
   
-  if (currentUser) {
+  if (window.currentUser) {
     // Пользователь вошел - скрываем кнопки входа, показываем профиль
     loggedOutElements.forEach(el => el.style.display = 'none');
     loggedInElements.forEach(el => el.style.display = 'flex');
@@ -107,12 +104,12 @@ function updateAuthUI() {
 
 // Обновление информации о пользователе
 function updateUserInfo() {
-  if (!currentUser) return;
+  if (!window.currentUser) return;
   
   // Avatar
   const avatarElements = document.querySelectorAll('.user-avatar');
   avatarElements.forEach(el => {
-    el.src = currentUser.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+    el.src = window.currentUser.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
     el.onerror = function() {
       this.src = 'https://www.gravatar.com/avatar/?d=mp';
     };
@@ -121,13 +118,13 @@ function updateUserInfo() {
   // Name
   const nameElements = document.querySelectorAll('.user-name');
   nameElements.forEach(el => {
-    el.textContent = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
+    el.textContent = window.currentUser.displayName || (window.currentUser.email ? window.currentUser.email.split('@')[0] : 'User');
   });
   
   // Email
   const emailElements = document.querySelectorAll('.user-email');
   emailElements.forEach(el => {
-    el.textContent = currentUser.email || '';
+    el.textContent = window.currentUser.email || '';
   });
 }
 
@@ -255,7 +252,6 @@ window.toggleRegisterMode = function() {
 window.logout = async function() {
   try {
     await firebase.auth().signOut();
-    currentUser = null;
     window.currentUser = null;
     isAdmin = false;
     updateAuthUI();
@@ -270,11 +266,11 @@ window.logout = async function() {
 
 // Проверка состояния аутентификации
 window.isLoggedIn = function() {
-  return currentUser !== null;
+  return window.currentUser !== null;
 };
 
 window.getCurrentUser = function() {
-  return currentUser;
+  return window.currentUser;
 };
 
 window.isAdminUser = function() {
