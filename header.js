@@ -1168,7 +1168,10 @@ window.updateMobileAdminButtons = function() {
 
   if (!mobAdminBtns || !deskAdminBtns) return;
 
-  var isAdmin = window.currentUser && window.currentUser.uid === ADMIN_UID;
+  // ✅ ПРОВЕРКА АДМИНА ИЗ ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ ИЛИ КЭША
+  var isAdmin = (window.currentUser && window.currentUser.uid === ADMIN_UID) || 
+                (localStorage.getItem('__cache_isAdmin') === 'true' && window.isAdmin);
+  
   if (!isAdmin) {
     mobAdminBtns.style.display = 'none';
     deskAdminBtns.innerHTML = '';
@@ -1176,6 +1179,8 @@ window.updateMobileAdminButtons = function() {
     if (mobAddBtn) mobAddBtn.style.display = 'none';
     return;
   }
+  
+  console.log('✅ Admin buttons rendering with isAdmin =', isAdmin);
   mobAdminBtns.style.display = 'flex';
 
   var isMainPage = window.location.pathname.endsWith('/') ||
