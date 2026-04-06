@@ -3118,8 +3118,14 @@ function updateProfileModalLanguage(lang) {
       const textElement = profileLangBtn.querySelector('#profileLangText');
       
       if (flagElement && textElement) {
-        const flagDisplay = window.getFlagDisplay ? window.getFlagDisplay(lang) : { flag: '<span class="fi fi-ua"></span>', text: 'РУС' };
-        flagElement.innerHTML = flagDisplay.flag;
+        const flagDisplay = window.getFlagDisplay ? window.getFlagDisplay(lang) : { flag: '<span class="fi fi-ua"></span>', text: 'Русский' };
+        
+        // Полностью заменяем содержимое флага
+        flagElement.className = flagDisplay.flag.includes('fi-ru') ? 'fi fi-ua' : 
+                               flagDisplay.flag.includes('fi-gb') ? 'fi fi-gb' :
+                               flagDisplay.flag.includes('fi-tr') ? 'fi fi-tr' :
+                               flagDisplay.flag.includes('fi-es') ? 'fi fi-es' : 'fi fi-ua';
+        
         textElement.textContent = flagDisplay.text;
       }
     }
@@ -3309,12 +3315,12 @@ function updateLanguageButton() {
 // Функция получения флага языка
 function getLanguageFlag(lang) {
   const flags = {
-    'ru': 'fi-ua',
+    'ru': 'fi-ru',
     'en': 'fi-gb', 
     'tr': 'fi-tr',
     'es': 'fi-es'
   };
-  return flags[lang] || 'fi-ua';
+  return flags[lang] || 'fi-ru';
 }
 
 // Переключение языка
@@ -3347,6 +3353,18 @@ window.resetToDefaultDataSource = function() {
 
 // Функция перевода (доступна глобально)
 window.t = t;
+
+// Глобальная функция для получения флага и названия языка
+window.getFlagDisplay = function(lang) {
+  const languages = {
+    ru: { flag: '<span class="fi fi-ua"></span>', text: 'Русский' },
+    en: { flag: '<span class="fi fi-gb"></span>', text: 'English' },
+    de: { flag: '<span class="fi fi-de"></span>', text: 'Deutsch' },
+    es: { flag: '<span class="fi fi-es"></span>', text: 'Español' },
+    tr: { flag: '<span class="fi fi-tr"></span>', text: 'Türkçe' }
+  };
+  return languages[lang] || { flag: '<span class="fi fi-ua"></span>', text: 'Русский' };
+};
 
 // Экспортируем функцию для обновления языка в модальном окне
 window.updateProfileModalLanguage = updateProfileModalLanguage;
