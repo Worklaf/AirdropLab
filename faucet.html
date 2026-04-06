@@ -3496,10 +3496,29 @@ async function setUserRating(faucetId, newRating) {
   });
 }
 
-// Глобальная функция для уведомлений
+// Глобальная функция для уведомлений (совместимость с index.html)
+window.showToast = function(msg) { 
+  const translatedMsg = (typeof t === 'function') ? (t(msg) || msg) : msg;
+  const toastEl = document.getElementById('toast'); 
+  if (toastEl) {
+    const toastMessageEl = document.getElementById('toastMessage');
+    if (toastMessageEl) {
+      toastMessageEl.textContent = translatedMsg; 
+      toastEl.classList.remove('translate-y-20', 'opacity-0'); 
+      setTimeout(function() { toastEl.classList.add('translate-y-20', 'opacity-0'); }, 3000); 
+    }
+  } else {
+    console.log('Toast:', translatedMsg);
+  }
+};
+
+// Fallback функция для обратной совместимости
 window.toast = function(message) {
-  console.log('Toast:', message);
-  // Можно добавить визуальное уведомление если нужно
+  if (typeof showToast === 'function') {
+    showToast(message);
+  } else {
+    console.log('Toast:', message);
+  }
 };
 
 // Сделать функцию глобальной
@@ -4358,6 +4377,11 @@ window.updateEditFieldsVisibility = updateEditFieldsVisibility;
   display: none !important;
 }
 </style>
+
+<!-- Toast уведомления (как в index.html) -->
+<div id="toast" class="fixed bottom-4 right-4 bg-slate-800 border border-slate-700 text-white px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+  <i class="fas fa-check-circle text-emerald-400"></i><span id="toastMessage">Действие выполнено</span>
+</div>
 
 <script src="footer.js"></script>
 
