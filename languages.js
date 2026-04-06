@@ -3108,6 +3108,32 @@ if (document.readyState !== 'loading') {
   initializeLanguage();
 }
 
+// Функция для обновления языка в модальном окне профиля
+function updateProfileModalLanguage(lang) {
+  try {
+    // Обновляем флаг и текст в кнопке профиля
+    const profileLangBtn = document.getElementById('profileLangBtn');
+    if (profileLangBtn) {
+      const flagElement = profileLangBtn.querySelector('#profileLangFlag');
+      const textElement = profileLangBtn.querySelector('#profileLangText');
+      
+      if (flagElement && textElement) {
+        const flagDisplay = window.getFlagDisplay ? window.getFlagDisplay(lang) : { flag: '<span class="fi fi-ua"></span>', text: 'РУС' };
+        flagElement.innerHTML = flagDisplay.flag;
+        textElement.textContent = flagDisplay.text;
+      }
+    }
+    
+    // Обновляем селектор языка в модальном окне
+    const profileLangSelect = document.getElementById('profileLanguage');
+    if (profileLangSelect) {
+      profileLangSelect.value = lang;
+    }
+  } catch (error) {
+    console.warn('Ошибка обновления языка в модальном окне:', error);
+  }
+}
+
 // Установить язык
 function setLanguage(lang) {
   if (translations[lang]) {
