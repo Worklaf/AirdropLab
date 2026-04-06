@@ -25,9 +25,11 @@ async function initAuth() {
   
   try {
     // Используем существующий Firebase app или создаем новый
-    if (window.firebaseApp) {
-      auth = window.firebaseApp.auth();
+    if (firebase.apps.length > 0) {
+      console.log('🔐 Firebase уже инициализирован, используем существующий app');
+      auth = firebase.auth();
     } else if (window.firebaseConfig) {
+      console.log('🔐 Инициализируем Firebase и создаем auth');
       const app = firebase.initializeApp(window.firebaseConfig);
       auth = app.auth();
       window.firebaseApp = app;
