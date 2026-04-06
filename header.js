@@ -1,6 +1,37 @@
 // ============================================================
 // header.js — AirdropLab (Desktop unchanged + Mobile rows)
 // ============================================================
+
+// ════════════════════════════════════════════════════
+// Функция восстановления кэшированного состояния при загрузке страницы
+// ════════════════════════════════════════════════════
+window.restoreCachedState = function() {
+  try {
+    // Читаем кэширован ное состояние пользователя из localStorage
+    const cachedUserData = localStorage.getItem('firebaseUser');
+    if (cachedUserData) {
+      try {
+        const userData = JSON.parse(cachedUserData);
+        // Восстанавливаем глобальные переменные из кэша
+        window.currentUser = userData;
+        
+        // Восстанавливаем состояние авторизации
+        const isAdminCached = localStorage.getItem('__cache_isAdmin') === 'true';
+        window.isAdmin = isAdminCached;
+        
+        console.log('✅ Cached user state restored:', userData.email, 'isAdmin:', isAdminCached);
+        return true;
+      } catch (e) {
+        console.error('❌ Failed to parse cached user data:', e);
+        return false;
+      }
+    }
+  } catch (e) {
+    console.error('❌ Error restoring cached state:', e);
+  }
+  return false;
+};
+
 (function () {
 
   function injectHeader() {
