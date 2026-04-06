@@ -3121,7 +3121,7 @@ function updateProfileModalLanguage(lang) {
         const flagDisplay = window.getFlagDisplay ? window.getFlagDisplay(lang) : { flag: '<span class="fi fi-ua"></span>', text: 'Русский' };
         
         // Полностью заменяем содержимое флага
-        flagElement.className = flagDisplay.flag.includes('fi-ru') ? 'fi fi-ua' : 
+        flagElement.className = flagDisplay.flag.includes('fi-ua') ? 'fi fi-ua' : 
                                flagDisplay.flag.includes('fi-gb') ? 'fi fi-gb' :
                                flagDisplay.flag.includes('fi-tr') ? 'fi fi-tr' :
                                flagDisplay.flag.includes('fi-es') ? 'fi fi-es' : 'fi fi-ua';
@@ -3315,12 +3315,12 @@ function updateLanguageButton() {
 // Функция получения флага языка
 function getLanguageFlag(lang) {
   const flags = {
-    'ru': 'fi-ru',
+    'ru': 'fi-ua',
     'en': 'fi-gb', 
     'tr': 'fi-tr',
     'es': 'fi-es'
   };
-  return flags[lang] || 'fi-ru';
+  return flags[lang] || 'fi-ua';
 }
 
 // Переключение языка
