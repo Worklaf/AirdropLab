@@ -8,11 +8,6 @@
   <link rel="alternate icon" href="assets/favicon.ico">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- CENTRALIZED AUTHENTICATION SYSTEM -->
-  <script src="auth.js"></script>
-  <script src="auth-modal.js"></script>
-  
   <link rel="stylesheet" href="styles.css">
   <script src="languages.js"></script>
   <script src="header.js"></script>
@@ -460,7 +455,43 @@
   </div>
 </div>
 
-<!-- Login Modal теперь создается централизованно через auth-modal.js -->
+<!-- Login Modal (needed for this page) -->
+<div id="loginModal" class="fixed inset-0 z-[10002] items-center justify-center p-4" style="display:none;background:rgba(0,0,0,0.82);backdrop-filter:blur(10px);">
+  <div class="modal-box" style="max-width:460px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h2 style="font-size:16px;font-weight:800;color:#f1f5f9;" data-translate="login_title">Вход</h2>
+      <button onclick="closeLoginModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;">&times;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button onclick="loginGoogle()" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid rgba(34,211,238,0.35);background:rgba(34,211,238,0.08);color:#e2e8f0;font-weight:800;cursor:pointer;">
+        <i class="fab fa-google" style="color:#22d3ee;"></i><span data-translate="login_btn">Войти</span> (Google)
+      </button>
+      <button onclick="loginTwitter()" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid rgba(59,130,246,0.35);background:rgba(59,130,246,0.10);color:#e2e8f0;font-weight:800;cursor:pointer;">
+        <i class="fab fa-twitter" style="color:#60a5fa;"></i><span data-translate="login_btn">Войти</span> (Twitter)
+      </button>
+      <div style="display:flex;align-items:center;gap:10px;margin:6px 0;">
+        <div style="height:1px;background:rgba(255,255,255,0.08);flex:1;"></div>
+        <div style="font-size:10px;color:#64748b;" data-translate="or_email">ИЛИ EMAIL</div>
+        <div style="height:1px;background:rgba(255,255,255,0.08);flex:1;"></div>
+      </div>
+      <form onsubmit="event.preventDefault(); window.loginEmail();">
+        <input class="ae-input" id="emailInput" type="email" data-translate="email" placeholder="Email">
+        <input class="ae-input" id="passInput" type="password" data-translate="password" placeholder="Пароль">
+        <div style="display:flex;gap:10px;">
+          <button type="submit" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid rgba(34,211,238,0.35);background:rgba(30,37,56,0.8);color:#e2e8f0;font-weight:800;cursor:pointer;">
+            <i class="fas fa-sign-in-alt" style="margin-right:6px;color:#22d3ee;"></i><span data-translate="login_btn">Войти</span>
+          </button>
+          <button type="button" onclick="window.registerEmail()" style="padding:10px 14px;border-radius:10px;border:1px solid rgba(34,211,238,0.25);background:rgba(34,211,238,0.08);color:#22d3ee;font-weight:900;cursor:pointer;">
+            <span data-translate="register">Регистрация</span>
+          </button>
+        </div>
+      </form>
+      <div style="font-size:11px;color:#64748b;line-height:1.5;" data-translate="faucets_login_hint">
+        Вход нужен для избранного и рейтингов.
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Rating modal (all users) -->
 <script>
@@ -2644,11 +2675,68 @@ window.updateUserLanguage = async function(language) {
 // Отметить уведомление как прочитанное - теперь используется из common.js
 // markNotificationAsRead удалена, используется markNotificationAsReadWheel из common.js
 
-// Функции аутентификации вынесены в централизованную систему auth.js
-// openLoginModal, closeLoginModal, loginGoogle, loginTwitter, loginEmail, registerEmail, logout
-// теперь доступны глобально из auth.js
+// Auth modal helpers
+function openLoginModal() {
+  const m = document.getElementById('loginModal');
+  if (!m) return;
+  m.style.display = 'flex';
+  m.classList.add('active');
+}
+function closeLoginModal() {
+  const m = document.getElementById('loginModal');
+  if (!m) return;
+  m.style.display = 'none';
+  m.classList.remove('active');
+}
+window.openLoginModal = openLoginModal;
+window.closeLoginModal = closeLoginModal;
+window.loginGoogle = async function() {
+  if (!window.auth) {
+    alert((window.currentLang==='en')?'Firebase not available':'Firebase недоступен');
+    return;
+  }
+  try { await signInWithPopup(window.auth, new GoogleAuthProvider()); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
+  catch(e) { alert(e.message); }
+};
+window.loginTwitter = async function() {
+  if (!window.auth) {
+    alert((window.currentLang==='en')?'Firebase not available':'Firebase недоступен');
+    return;
+  }
+  try { await signInWithPopup(window.auth, new TwitterAuthProvider()); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
+  catch(e) { alert(e.message); }
+};
+window.loginEmail = async function() {
+  if (!window.auth) {
+    alert((window.currentLang==='en')?'Firebase not available':'Firebase недоступен');
+    return;
+  }
+  const email = (document.getElementById('emailInput')?.value || '').trim();
+  const pass  = (document.getElementById('passInput')?.value || '').trim();
+  if (!email || !pass) { alert((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); return; }
+  try { await signInWithEmailAndPassword(window.auth, email, pass); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
+  catch(e) { alert(e.message); }
+};
+window.registerEmail = async function() {
+  if (!window.auth) {
+    alert((window.currentLang==='en')?'Firebase not available':'Firebase недоступен');
+    return;
+  }
+  const email = (document.getElementById('emailInput')?.value || '').trim();
+  const pass  = (document.getElementById('passInput')?.value || '').trim();
+  if (!email || !pass) { alert((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); return; }
+  try { await createUserWithEmailAndPassword(window.auth, email, pass); closeLoginModal(); toast((window.currentLang==='en')?'Account created':'Аккаунт создан'); }
+  catch(e) { alert(e.message); }
+};
+window.logout = function() { 
+  if (window.auth) signOut(window.auth); 
+};
 
-// Header auth UI sync - оставлено, так как это часть UI страницы
+document.getElementById('loginModal').addEventListener('click', function(e) {
+  if (e.target === this) closeLoginModal();
+});
+
+// Header auth UI sync
 function updateHeaderAuthUI(user) {
   const out = document.getElementById('loggedOutView');
   const inn = document.getElementById('loggedInView');
