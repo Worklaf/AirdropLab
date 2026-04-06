@@ -3541,6 +3541,11 @@ function closeFaucetModal() {
 
 // Обработчики языковых кнопок
 document.addEventListener('DOMContentLoaded', function() {
+  // Создаем модальное окно входа
+  if (typeof createLoginModal === 'function') {
+    createLoginModal();
+  }
+  
   // Инициализируем аутентификацию
   if (typeof initAuth === 'function') {
     initAuth();
