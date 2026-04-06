@@ -611,9 +611,6 @@ window.updateRatingDisplay = updateRatingDisplay;
   </div>
 </div>
 
-<!-- Firebase Configuration -->
-<script src="config/firebase-config.js"></script>
-
 <!-- Firebase и приложение -->
 <script type="module">
 // ═══════════════════════════════════════════
@@ -996,93 +993,75 @@ console.log('🔧 Firebase Config Debug:', {
   apiKeyLength: firebaseConfig?.apiKey?.length || 0
 });
 
-// Firebase imports
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  signInWithPopup,
-  GoogleAuthProvider,
-  TwitterAuthProvider
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {
-  getFirestore,
-  initializeFirestore,
-  collection,
-  doc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  setDoc,
-  getDoc,
-  query,
-  where,
-  limit,
-  orderBy,
-  serverTimestamp,
-  increment,
-  runTransaction,
-  writeBatch,
-  onSnapshot,
-  arrayUnion
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-// Проверяем доступность Firebase
-if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === "test" || firebaseConfig.apiKey === "disabled") {
-  console.log('⚠️ Firebase недоступен, используем локальный режим');
-  window.auth = null;
-  window.db = null;
-  window.currentUser = null;
-  window.loadFaucetsFromFirestore = async function() {
-    return [];
-  };
-} else {
+// Используем глобальные Firebase переменные из загруженных SDK
+if (typeof firebase !== 'undefined' && firebaseConfig) {
   console.log('✅ Firebase доступен, инициализируем...');
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  let db;
-  try {
-    db = initializeFirestore(app, {
-      cacheSizeBytes: 10000000 // 10MB
-    });
-    console.log('✅ Firestore успешно инициализирован');
-  } catch (e) {
-    console.warn('⚠️ Firestore инициализация не удалась, используем стандартную:', e);
-    db = getFirestore(app);
-  }
-
-  // Глобальные переменные Firebase
+  
+  // Получаем Firebase сервисы
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  
+  // Экспортируем глобально для других скриптов
   window.auth = auth;
   window.db = db;
-  window.currentUser = null;
-
-  // Provide globals for other modules
-  window.__firestoreExports = {
-    collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-    query, where, orderBy, onSnapshot, serverTimestamp, increment, runTransaction, arrayUnion
+  
+  // Экспортируем функции для совместимости
+  window.__authExports = { 
+    onAuthStateChanged: auth.onAuthStateChanged.bind(auth), 
+    signOut: auth.signOut.bind(auth)
   };
-  window.__authExports = { onAuthStateChanged, signOut };
+  
+  console.log('✅ Firestore успешно инициализирован');
+} else {
+  console.log('🔥 Firebase недоступен, работаем без аутентификации');
 }
 
-  // Provide globals for other modules (reagents.js expects these)
-  window.db = db;
-  window.auth = auth;
-  window.__firestoreExports = {
-    collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-    query, where, orderBy, limit, writeBatch, serverTimestamp, onSnapshot
+// Firestore функции для совместимости
+if (typeof firebase !== 'undefined' && firebase.firestore) {
+  const firestore = firebase.firestore();
+  
+  // Экспортируем Firestore функции
+  window.collection = firestore.collection.bind(firestore);
+  window.doc = firestore.doc.bind(firestore);
+  window.getDoc = async (ref) => {
+    const snap = await ref.get();
+    return { exists: snap.exists, data: () => snap.data(), id: snap.id };
   };
+  window.getDocs = async (ref) => {
+    const snap = await ref.get();
+    return { docs: snap.docs.map(doc => ({ exists: true, data: () => doc.data(), id: doc.id })) };
+  };
+  window.addDoc = async (ref, data) => {
+    const result = await ref.add(data);
+    return { id: result.id };
+  };
+  window.updateDoc = async (ref, data) => {
+    await ref.update(data);
+  };
+  window.deleteDoc = async (ref) => {
+    await ref.delete();
+  };
+  window.query = firestore.query.bind(firestore);
+  window.where = firestore.where.bind(firestore);
+  window.orderBy = firestore.orderBy.bind(firestore);
+  window.serverTimestamp = firestore.FieldValue.serverTimestamp;
+  window.increment = firestore.FieldValue.increment;
+  window.onSnapshot = firestore.onSnapshot.bind(firestore);
+}
 
-  // Инициализируем Firebase экспорты для common.js
-  if (typeof window.initFirebaseExports === 'function') {
-    window.initFirebaseExports({
-      collection, doc, getDoc, getDocs, addDoc, updateDoc,
-      query, where, orderBy, limit, writeBatch, serverTimestamp, onSnapshot
-    });
-  }
+// Auth функции для совместимости
+if (typeof firebase !== 'undefined' && firebase.auth) {
+  const auth = firebase.auth();
+  
+  // Экспортируем Auth функции
+  window.signInWithPopup = auth.signInWithPopup.bind(auth);
+  window.signInWithEmailAndPassword = auth.signInWithEmailAndPassword.bind(auth);
+  window.createUserWithEmailAndPassword = auth.createUserWithEmailAndPassword.bind(auth);
+  window.GoogleAuthProvider = firebase.auth.GoogleAuthProvider;
+  window.TwitterAuthProvider = firebase.auth.TwitterAuthProvider;
+  window.onAuthStateChanged = auth.onAuthStateChanged.bind(auth);
+  window.signOut = auth.signOut.bind(auth);
+}
 
 function normalizeUrl(u) {
   if (!u) return '';
@@ -2148,13 +2127,13 @@ window.rewardUser = async function(userId, suggestionId) {
   
   try {
     // Обновляем баланс пользователя в коллекции users
-    const userRef = doc(db, 'users', userId);
+    const userRef = doc(window.db, 'users', userId);
     await updateDoc(userRef, {
       reagents: increment(Number(amount))
     });
     
     // Записываем транзакцию награды
-    await addDoc(collection(db, 'reward_transactions'), {
+    await addDoc(collection(window.db, 'reward_transactions'), {
       userId: userId,
       amount: Number(amount),
       type: 'suggestion_reward',
@@ -2190,7 +2169,7 @@ window.rewardUser = async function(userId, suggestionId) {
       const isUserEn = userLang === 'en' || userLang === 'en-US';
       
       // Отправляем уведомление в коллекции notifications
-      await addDoc(collection(db, 'notifications'), {
+      await addDoc(collection(window.db, 'notifications'), {
         userId: userId,
         type: 'reward',
         title: isUserEn ? 'RGT Reward Received!' : 'Получена RGT награда!',
@@ -2433,12 +2412,12 @@ async function saveSuggestion() {
           clickCount: 0
         };
         
-        await addDoc(collection(db, COL_FAUCETS), newPayload);
+        await addDoc(collection(window.db, COL_FAUCETS), newPayload);
         toast((window.currentLang === 'en') ? 'Suggestion resubmitted!' : 'Предложение отправлено повторно!');
       } else {
         // Обновляем существующее pending предложение
         payload.status = 'pending'; // гарантируем статус pending
-        await updateDoc(doc(db, COL_FAUCETS, id), payload);
+        await updateDoc(doc(window.db, COL_FAUCETS, id), payload);
         toast((window.currentLang === 'en') ? 'Suggestion updated!' : 'Предложение обновлено!');
       }
     } else {
@@ -2603,7 +2582,7 @@ async function submitSuggestion() {
         clickCount: 0
       };
       
-      await addDoc(collection(db, COL_FAUCETS), faucetData);
+      await addDoc(collection(window.db, COL_FAUCETS), faucetData);
       toast((window.currentLang === 'en') ? 'Suggestion sent!' : 'Предложение отправлено!');
     }
     
@@ -2707,7 +2686,7 @@ window.openLoginModal = openLoginModal;
 window.closeLoginModal = closeLoginModal;
 window.loginGoogle = async function() {
   try { 
-    await signInWithPopup(auth, new GoogleAuthProvider()); 
+    await signInWithPopup(window.auth, new GoogleAuthProvider()); 
     closeLoginModal(); 
     showToast('Вход: Google'); 
   } catch(e) { 
@@ -2716,7 +2695,7 @@ window.loginGoogle = async function() {
 };
 window.loginTwitter = async function() {
   try { 
-    await signInWithPopup(auth, new TwitterAuthProvider()); 
+    await signInWithPopup(window.auth, new TwitterAuthProvider()); 
     closeLoginModal(); 
     showToast('Вход: Twitter'); 
   } catch(e) { 
@@ -2731,7 +2710,7 @@ window.loginEmail = async function() {
     return; 
   }
   try { 
-    await signInWithEmailAndPassword(auth, email, pass); 
+    await signInWithEmailAndPassword(window.auth, email, pass); 
     closeLoginModal(); 
     showToast((window.currentLang==='en')?'Logged in':'Вход выполнен'); 
   } catch(e) { 
@@ -2746,7 +2725,7 @@ window.registerEmail = async function() {
     return; 
   }
   try { 
-    await createUserWithEmailAndPassword(auth, email, pass); 
+    await createUserWithEmailAndPassword(window.auth, email, pass); 
     closeLoginModal(); 
     showToast((window.currentLang==='en')?'Account created!':'Аккаунт создан!'); 
   } catch(e) { 
@@ -2754,7 +2733,7 @@ window.registerEmail = async function() {
   }
 };
 window.logout = function() { 
-  if (auth) signOut(auth); 
+  if (window.auth) signOut(window.auth); 
 };
 
 document.getElementById('loginModal').addEventListener('click', function(e) {
@@ -2807,7 +2786,7 @@ async function loadFavorites() {
   if (currentUser) {
     // Load faucet-level favorites (legacy)
     try {
-      const favSnap = await getDoc(doc(db, 'users', currentUser.uid, 'faucetFavorites', 'list'));
+      const favSnap = await getDoc(doc(window.db, 'users', currentUser.uid, 'faucetFavorites', 'list'));
       if (favSnap.exists()) {
         favSnap.data().ids?.forEach(id => favoritesSet.add(id));
       }
@@ -2815,7 +2794,7 @@ async function loadFavorites() {
     
     // Load link-level favorites
     try {
-      const linkSnap = await getDocs(collection(db, 'users', currentUser.uid, 'linkFavorites'));
+      const linkSnap = await getDocs(collection(window.db, 'users', currentUser.uid, 'linkFavorites'));
       linkSnap.forEach(doc => {
         linkFavoritesSet.add(doc.id);
       });
@@ -3349,8 +3328,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // Init - безопасный запуск с проверкой Firebase
-if (window.auth && typeof onAuthStateChanged === 'function') {
-  onAuthStateChanged(auth, async (user) => {
+if (window.auth && typeof window.onAuthStateChanged === 'function') {
+  window.onAuthStateChanged(window.auth, async (user) => {
     currentUser = user || null;
     window.currentUser = currentUser;
     isAdmin = !!(user && (user.uid === ADMIN_UID));
