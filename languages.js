@@ -3151,6 +3151,9 @@ function setLanguage(lang) {
     // Обновляем язык в модальном окне профиля если оно открыто
     updateProfileModalLanguage(lang);
     
+    // Обновляем переводы в модальном окне если оно открыто
+    updateModalTranslations();
+    
     // Загружаем проекты для соответствующего языка
     if (lang === 'en') {
       loadProjectsFromJSON('projects_en');
@@ -3184,6 +3187,49 @@ function setLanguage(lang) {
     return true;
   }
   return false;
+}
+
+// Функция для обновления переводов в модальном окне
+function updateModalTranslations() {
+  try {
+    // Проверяем что модальное окно открыто
+    const modalOverlay = document.querySelector('.modal-overlay');
+    if (!modalOverlay || modalOverlay.style.opacity === '0') return;
+    
+    // Обновляем все элементы с data-translate в модальном окне
+    modalOverlay.querySelectorAll('[data-translate]').forEach(el => {
+      const key = el.getAttribute('data-translate');
+      const translated = t(key);
+      if (translated && translated !== key) {
+        el.textContent = translated;
+      }
+    });
+    
+    // Обновляем элементы с data-footer-translate
+    modalOverlay.querySelectorAll('[data-footer-translate]').forEach(el => {
+      const key = el.getAttribute('data-footer-translate');
+      const translated = t(key);
+      if (translated && translated !== key) {
+        el.textContent = translated;
+      }
+    });
+    
+    // Обновляем placeholder'ы
+    modalOverlay.querySelectorAll('input[placeholder]').forEach(el => {
+      const placeholder = el.getAttribute('placeholder');
+      if (placeholder && placeholder.includes('footer_')) {
+        // Ищем соответствующий ключ перевода
+        const key = placeholder.replace('footer_', '').toLowerCase().replace(/\s+/g, '_');
+        const translated = t('footer_' + key);
+        if (translated && translated !== 'footer_' + key) {
+          el.placeholder = translated;
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.warn('Ошибка обновления переводов в модальном окне:', error);
+  }
 }
 
 
@@ -3315,12 +3361,12 @@ function updateLanguageButton() {
 // Функция получения флага языка
 function getLanguageFlag(lang) {
   const flags = {
-    'ru': 'fi-ru',
+    'ru': 'fi-ua',
     'en': 'fi-gb', 
     'tr': 'fi-tr',
     'es': 'fi-es'
   };
-  return flags[lang] || 'fi-ru';
+  return flags[lang] || 'fi-ua';
 }
 
 // Переключение языка
@@ -3368,6 +3414,9 @@ window.getFlagDisplay = function(lang) {
 
 // Экспортируем функцию для обновления языка в модальном окне
 window.updateProfileModalLanguage = updateProfileModalLanguage;
+
+// Экспортируем функцию для обновления переводов в модальном окне
+window.updateModalTranslations = updateModalTranslations;
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
