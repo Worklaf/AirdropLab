@@ -2910,6 +2910,13 @@ if (currentUser && db) {
     initFeedbacksListener(currentUser.uid);
   }
 }
+
+// Инициализируем систему реагентов ПОСЛЕ инициализации Firebase
+console.log('🧪 Initializing Reagents system after Firebase init in Wheel...');
+if (typeof window._checkClaimOnLoad === 'function') {
+  setTimeout(window._checkClaimOnLoad, 500);
+  setTimeout(window._checkClaimOnLoad, 2500);
+}
 </script>
 
 <!-- Фиксированная админ-панель -->
