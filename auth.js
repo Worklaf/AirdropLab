@@ -23,28 +23,17 @@ let isAdmin = false;
 async function initAuth() {
   console.log('🔐 Initializing centralized auth system...');
   
-  // Ждем загрузки Firebase
-  if (!window.firebase || typeof window.firebase.initializeApp !== 'function') {
-    console.warn('🔐 Firebase SDK not loaded, retrying in 100ms...');
-    setTimeout(initAuth, 100);
-    return;
-  }
-  
   try {
-    // Ждем конфигурации Firebase
-    if (!window.firebaseConfig) {
-      console.warn('🔐 Firebase config not ready, retrying in 100ms...');
-      setTimeout(initAuth, 100);
-      return;
-    }
-    
     // Используем существующий Firebase app или создаем новый
     if (window.firebaseApp) {
-      auth = window.firebase.auth();
-    } else {
-      const app = window.firebase.initializeApp(window.firebaseConfig);
-      auth = window.firebase.auth();
+      auth = window.getAuth(window.firebaseApp);
+    } else if (window.firebaseConfig) {
+      const app = window.initializeApp(window.firebaseConfig);
+      auth = window.getAuth(app);
       window.firebaseApp = app;
+    } else {
+      console.warn('🔐 No Firebase config available');
+      return;
     }
 
     // Делаем доступным глобально
@@ -63,7 +52,7 @@ async function initAuth() {
     }
 
     // Отслеживаем изменения состояния аутентификации
-    auth.onAuthStateChanged(async user => {
+    onAuthStateChanged(auth, async user => {
       currentUser = user;
       window.currentUser = user;
       isAdmin = user && user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
@@ -76,22 +65,6 @@ async function initAuth() {
       // Генерируем событие для других скриптов
       if (typeof window.onAuthStateChanged === 'function') {
         window.onAuthStateChanged(user);
-      }
-    });
-
-    // Проверяем результат redirect аутентификации
-    auth.getRedirectResult().then((result) => {
-      if (result.user) {
-        console.log('🔐 Redirect login successful:', result.user.uid);
-        closeLoginModal();
-        if (typeof showToast === 'function') {
-          showToast('Вход выполнен успешно!');
-        }
-      }
-    }).catch((error) => {
-      console.error('🔐 Redirect result error:', error);
-      if (typeof showToast === 'function') {
-        showToast('Ошибка входа: ' + error.message);
       }
     });
 
@@ -170,12 +143,10 @@ window.closeLoginModal = function() {
 
 window.loginGoogle = async function() {
   try {
-    const provider = new window.firebase.auth.GoogleAuthProvider();
-    // Используем redirect вместо popup для обхода Cross-Origin политики
-    await auth.signInWithRedirect(provider);
+    await signInWithPopup(auth, new GoogleAuthProvider());
     closeLoginModal();
     if (typeof showToast === 'function') {
-      showToast('Вход: Google - перенаправление...');
+      showToast('Вход: Google');
     }
   } catch (error) {
     console.error('Google login error:', error);
@@ -187,12 +158,10 @@ window.loginGoogle = async function() {
 
 window.loginTwitter = async function() {
   try {
-    const provider = new window.firebase.auth.TwitterAuthProvider();
-    // Используем redirect вместо popup для обхода Cross-Origin политики
-    await auth.signInWithRedirect(provider);
+    await signInWithPopup(auth, new TwitterAuthProvider());
     closeLoginModal();
     if (typeof showToast === 'function') {
-      showToast('Вход: Twitter - перенаправление...');
+      showToast('Вход: Twitter');
     }
   } catch (error) {
     console.error('Twitter login error:', error);
@@ -215,7 +184,7 @@ window.handleEmailAuth = async function(event) {
   }
   
   try {
-    await auth.signInWithEmailAndPassword(email, password);
+    await signInWithEmailAndPassword(auth, email, password);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход выполнен');
@@ -241,7 +210,7 @@ window.handleRegister = async function(event) {
   }
   
   try {
-    await auth.createUserWithEmailAndPassword(email, password);
+    await createUserWithEmailAndPassword(auth, email, password);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Аккаунт создан!');
@@ -272,7 +241,7 @@ window.toggleRegisterMode = function() {
 // Функция выхода
 window.logout = async function() {
   try {
-    await auth.signOut();
+    await signOut(auth);
     currentUser = null;
     window.currentUser = null;
     isAdmin = false;
@@ -299,7 +268,12 @@ window.isAdminUser = function() {
   return isAdmin;
 };
 
-// Инициализация при загрузке - будет вызвана из faucet.html
+// Инициализация при загрузке
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAuth);
+} else {
+  initAuth();
+}
 
 // Экспорт для использования в других модулях
 if (typeof module !== 'undefined' && module.exports) {
