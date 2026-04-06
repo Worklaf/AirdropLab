@@ -581,6 +581,56 @@
   <img class="image-modal-content" id="modalImage">
 </div>
 
+<!-- ✅ ВОССТАНОВЛЕНИЕ КЭШИРОВАННОГО СОСТОЯНИЯ (0ms) -->
+<script>
+window.restoreCachedState = function() {
+  console.log('⚡ Restoring cached state...');
+  
+  // Restore user metadata from localStorage
+  const cachedUser = JSON.parse(localStorage.getItem('__cache_user') || 'null');
+  const cachedAdmin = localStorage.getItem('__cache_isAdmin') === 'true';
+  
+  if (cachedUser && cachedUser.uid) {
+    console.log('👤 Restored user from cache:', cachedUser.uid);
+    window.currentUser = cachedUser;
+    isAdminMode = cachedAdmin;
+    window.isAdmin = cachedAdmin;
+    
+    // Restore user data
+    userFavorites = JSON.parse(localStorage.getItem('favorites_backup') || '[]');
+    userCompleted = JSON.parse(localStorage.getItem('arc_completed_v1') || '[]');
+    newActivitiesData = JSON.parse(localStorage.getItem('arc_new_activities_v1') || '{}');
+    viewedActivitiesData = JSON.parse(localStorage.getItem('arc_viewed_activities_v1') || '{}');
+    arcData = JSON.parse(localStorage.getItem('arc_tracker_v3') || '{}');
+    
+    // Show logged-in UI elements
+    const loggedInView = document.getElementById('loggedInView');
+    const loggedOutView = document.getElementById('loggedOutView');
+    const userAvatar = document.getElementById('userAvatar');
+    const userName = document.getElementById('userName');
+    
+    if (loggedInView) loggedInView.classList.remove('hidden');
+    if (loggedOutView) loggedOutView.classList.add('hidden');
+    if (userAvatar) userAvatar.src = cachedUser.photoURL || 
+      'https://ui-avatars.com/api/?name=' + (cachedUser.email || 'User') + '&background=random';
+    if (userName) userName.textContent = cachedUser.displayName || 
+      (cachedUser.email ? cachedUser.email.split('@')[0] : 'User');
+    
+    // Show admin panel if user is admin
+    if (cachedAdmin) {
+      const adminPanel = document.getElementById('adminPanel');
+      if (adminPanel) {
+        adminPanel.style.display = 'flex';
+        console.log('🔧 Admin panel restored from cache');
+      }
+    }
+  }
+};
+
+// Call immediately on page load
+restoreCachedState();
+</script>
+
 <!-- СКРИПТ ИНИЦИАЛИЗАЦИИ ЯЗЫКА -->
 <script>
   setTimeout(function() {
@@ -1494,6 +1544,19 @@ onAuthStateChanged(auth, async function(user) {
         console.log('👤 User logged in:', user.uid);
         currentUser = user;
         window.currentUser = user;
+        
+        // ✅ КЭШИРОВАНИЕ СОСТОЯНИЯ АВТОРИЗАЦИИ
+        localStorage.setItem('__cache_user', JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || 'User',
+            photoURL: user.photoURL || '',
+            lastLoginTime: new Date().toISOString()
+        }));
+        const isAdminUser = user.uid === ADMIN_UID;
+        localStorage.setItem('__cache_isAdmin', isAdminUser ? 'true' : 'false');
+        window.isAdmin = isAdminUser;
+        
         await saveUserData(user);
         await syncLocalStorageToFirestore(user.uid);
         document.getElementById('generalFeedbackPanel').classList.remove('hidden');
@@ -1547,7 +1610,12 @@ onAuthStateChanged(auth, async function(user) {
         loadData();
 
         // ✅ ВЫЗЫВАЕМ activateAdminMode ТОЛЬКО ПОСЛЕ полной загрузки данных
-        if (user.uid === ADMIN_UID) activateAdminMode();
+        if (user.uid === ADMIN_UID) {
+          setTimeout(function() {
+            console.log('🔧 Calling activateAdminMode with delay');
+            activateAdminMode();
+          }, 50);
+        }
 
         applyFilters();
 
@@ -1561,6 +1629,11 @@ onAuthStateChanged(auth, async function(user) {
         window.currentUser = null;
         userFavorites = [];
         userCompleted = [];
+        
+        // ✅ ОЧИСТКА КЭША ПРИ ЛОГАУТЕ
+        localStorage.removeItem('__cache_user');
+        localStorage.removeItem('__cache_isAdmin');
+        window.isAdmin = false;
 
         document.getElementById('generalFeedbackPanel').classList.add('hidden');
         // Уведомления управляются централизованно через header.js
@@ -2314,6 +2387,15 @@ function activateAdminMode() {
   modeIndicator.setAttribute('data-translate', 'admin_mode'); // ← добавляем атрибут
   modeIndicator.textContent = t('admin_mode');
   modeIndicator.classList.add('text-purple-400', 'font-bold');
+  
+  // ✅ ОБНОВЛЯЕМ КНОПКИ АДМИНА В ХЕДЕРЕ
+  setTimeout(function() {
+    if (typeof window.updateMobileAdminButtons === 'function') {
+      console.log('🔧 Calling updateMobileAdminButtons from activateAdminMode');
+      window.updateMobileAdminButtons();
+    }
+  }, 50);
+  
   applyFilters();
 }
 
