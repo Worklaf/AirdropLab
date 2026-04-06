@@ -2649,6 +2649,10 @@ function selectProfileLanguage(lang) {
     updateProfileLanguage(lang);
 }
 
+// Экспортируем функции глобально
+window.toggleProfileLangDropdown = toggleProfileLangDropdown;
+window.selectProfileLanguage = selectProfileLanguage;
+
 document.addEventListener("click", (e) => {
     const box = document.getElementById("profileLangDropdown");
     if (!box.contains(e.target)) {
