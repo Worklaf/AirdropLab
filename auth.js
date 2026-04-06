@@ -26,10 +26,10 @@ async function initAuth() {
   try {
     // Используем существующий Firebase app или создаем новый
     if (window.firebaseApp) {
-      auth = window.getAuth(window.firebaseApp);
+      auth = window.firebaseApp.auth();
     } else if (window.firebaseConfig) {
-      const app = window.initializeApp(window.firebaseConfig);
-      auth = window.getAuth(app);
+      const app = firebase.initializeApp(window.firebaseConfig);
+      auth = app.auth();
       window.firebaseApp = app;
     } else {
       console.warn('🔐 No Firebase config available');
@@ -52,7 +52,7 @@ async function initAuth() {
     }
 
     // Отслеживаем изменения состояния аутентификации
-    onAuthStateChanged(auth, async user => {
+    auth.onAuthStateChanged(async user => {
       currentUser = user;
       window.currentUser = user;
       isAdmin = user && user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
@@ -143,7 +143,8 @@ window.closeLoginModal = function() {
 
 window.loginGoogle = async function() {
   try {
-    await signInWithPopup(auth, new GoogleAuthProvider());
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход: Google');
@@ -158,7 +159,8 @@ window.loginGoogle = async function() {
 
 window.loginTwitter = async function() {
   try {
-    await signInWithPopup(auth, new TwitterAuthProvider());
+    const provider = new firebase.auth.TwitterAuthProvider();
+    await auth.signInWithPopup(provider);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход: Twitter');
@@ -184,7 +186,7 @@ window.handleEmailAuth = async function(event) {
   }
   
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    await auth.signInWithEmailAndPassword(email, password);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход выполнен');
@@ -210,7 +212,7 @@ window.handleRegister = async function(event) {
   }
   
   try {
-    await createUserWithEmailAndPassword(auth, email, password);
+    await auth.createUserWithEmailAndPassword(email, password);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Аккаунт создан!');
@@ -241,7 +243,7 @@ window.toggleRegisterMode = function() {
 // Функция выхода
 window.logout = async function() {
   try {
-    await signOut(auth);
+    await auth.signOut();
     currentUser = null;
     window.currentUser = null;
     isAdmin = false;
