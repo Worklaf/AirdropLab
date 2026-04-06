@@ -983,37 +983,47 @@ const COL_SUGGESTIONS = 'faucet_suggestions';
 let isEn = (window.currentLang === 'en');
 
 // Firebase init - используем глобальную конфигурацию
-const firebaseConfig = window.firebaseConfig;
+// Ждем загрузки конфигурации из firebase-config.js
+function initializeFirebase() {
+  const firebaseConfig = window.firebaseConfig;
+  
+  // Критичные логи для отладки
+  console.log('🔧 Firebase Config Debug:', {
+    hasConfig: !!firebaseConfig,
+    hasApiKey: !!(firebaseConfig?.apiKey),
+    projectId: firebaseConfig?.projectId,
+    apiKeyLength: firebaseConfig?.apiKey?.length || 0
+  });
 
-// Критичные логи для отладки
-console.log('🔧 Firebase Config Debug:', {
-  hasConfig: !!firebaseConfig,
-  hasApiKey: !!(firebaseConfig?.apiKey),
-  projectId: firebaseConfig?.projectId,
-  apiKeyLength: firebaseConfig?.apiKey?.length || 0
-});
-
-// Используем глобальные Firebase переменные из загруженных SDK
-if (typeof firebase !== 'undefined' && firebaseConfig) {
-  console.log('✅ Firebase доступен, инициализируем...');
-  
-  // Получаем Firebase сервисы
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  
-  // Экспортируем глобально для других скриптов
-  window.auth = auth;
-  window.db = db;
-  
-  // Экспортируем функции для совместимости
-  window.__authExports = { 
-    onAuthStateChanged: auth.onAuthStateChanged.bind(auth), 
-    signOut: auth.signOut.bind(auth)
-  };
-  
-  console.log('✅ Firestore успешно инициализирован');
-} else {
-  console.log('🔥 Firebase недоступен, работаем без аутентификации');
+  // Используем глобальные Firebase переменные из загруженных SDK
+  if (typeof firebase !== 'undefined' && firebaseConfig) {
+    console.log('✅ Firebase доступен, инициализируем...');
+    
+    // Инициализируем Firebase приложение если еще не инициализировано
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    
+    // Получаем Firebase сервисы
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    
+    // Экспортируем глобально для других скриптов
+    window.auth = auth;
+    window.db = db;
+    
+    // Экспортируем функции для совместимости
+    window.__authExports = { 
+      onAuthStateChanged: auth.onAuthStateChanged.bind(auth), 
+      signOut: auth.signOut.bind(auth)
+    };
+    
+    console.log('✅ Firestore успешно инициализирован');
+    return true;
+  } else {
+    console.log('🔥 Firebase недоступен, работаем без аутентификации');
+    return false;
+  }
 }
 
 // Firestore функции для совместимости
@@ -3309,7 +3319,17 @@ document.addEventListener('languageChanged', function() {
 document.addEventListener('DOMContentLoaded', async function() {
   console.log('🚀 Faucet page initialization started');
   
-  // Ждем инициализации Firebase
+  // Инициализируем Firebase с fallback
+  let firebaseReady = initializeFirebase();
+  
+  // Если Firebase не готов сразу, ждем немного
+  if (!firebaseReady && typeof firebase !== 'undefined') {
+    console.log('⏳ Ожидаем инициализации Firebase...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    firebaseReady = initializeFirebase();
+  }
+  
+  // Ждем инициализации Auth
   if (typeof window.initAuth === 'function') {
     await window.initAuth();
   }
@@ -3324,145 +3344,33 @@ document.addEventListener('DOMContentLoaded', async function() {
     window.injectHeader();
   }
   
+  // Настраиваем onAuthStateChanged если Firebase готов
+  if (firebaseReady && window.auth && typeof window.onAuthStateChanged === 'function') {
+    window.onAuthStateChanged(window.auth, async (user) => {
+      currentUser = user || null;
+      window.currentUser = currentUser;
+      isAdmin = !!(user && (user.uid === ADMIN_UID));
+      window.isAdmin = isAdmin;
+      // Обновляем мобильные и десктопные кнопки администратора
+      if (typeof window.updateMobileAdminButtons === 'function') {
+        window.updateMobileAdminButtons();
+      }
+      // Показываем фиксированную админ-панель
+      const adminPanel = document.getElementById('fixedAdminPanel');
+      if (adminPanel) {
+        adminPanel.style.display = isAdmin ? 'flex' : 'none';
+      }
+      
+      // Обновляем UI
+      updateHeaderAuthUI(user);
+      updateAuthButtons(user);
+      loadFavorites();
+      renderAll();
+    });
+  }
+  
   console.log('✅ Faucet page initialization completed');
 });
-
-// Init - безопасный запуск с проверкой Firebase
-if (window.auth && typeof window.onAuthStateChanged === 'function') {
-  window.onAuthStateChanged(window.auth, async (user) => {
-    currentUser = user || null;
-    window.currentUser = currentUser;
-    isAdmin = !!(user && (user.uid === ADMIN_UID));
-    window.isAdmin = isAdmin; // Добавляем эту строку!
-    // Обновляем мобильные и десктопные кнопки администратора
-    if (typeof window.updateMobileAdminButtons === 'function') {
-      window.updateMobileAdminButtons();
-    }
-    // Показываем фиксированную админ-панель
-    const adminPanel = document.getElementById('fixedAdminPanel');
-    if (adminPanel) {
-      adminPanel.style.display = isAdmin ? 'flex' : 'none';
-    }
-    
-    // Обновляем видимость полей редактирования
-    if (typeof window.updateEditFieldsVisibility === 'function') {
-      window.updateEditFieldsVisibility();
-    }
-    
-    // Загружаем язык пользователя из профиля
-    if (user && window.db) {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          
-          // Загружаем язык пользователя из профиля
-          if (userData.language) {
-            window.currentLang = userData.language;
-            
-            // Обновляем язык интерфейса
-            if (typeof window.setLanguage === 'function') {
-              window.setLanguage(userData.language);
-            }
-            
-            // Обновляем кнопку в футере
-            if (typeof window.updateFooterLanguageButton === 'function') {
-              window.updateFooterLanguageButton();
-            }
-          }
-        }
-      } catch(e) {
-        console.warn('Failed to load user language:', e);
-      }
-    }
-    
-    // Показываем/скрываем кнопки фильтров
-    const mySuggestionsBtn = document.getElementById('mySuggestionsFilter');
-    const suggestionsBtn = document.getElementById('suggestionsFilter');
-    const hiddenFilterBtn = document.getElementById('hiddenFilter');
-    
-    if (mySuggestionsBtn) {
-      mySuggestionsBtn.style.display = user ? 'inline-flex' : 'none';
-    }
-    if (suggestionsBtn) {
-      suggestionsBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-    }
-    if (hiddenFilterBtn) {
-      hiddenFilterBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-    }
-    
-    updateHeaderAuthUI(user);
-    await loadFavorites();
-    updateCounts(); // Обновляем счетчики после загрузки избранного
-    await loadFaucetsFromFirestore();
-    updateCounts(); // Обновляем счетчики после загрузки кранов
-    // Повторный вызов с задержкой для надежности
-    setTimeout(function() { updateCounts(); }, 500);
-    
-    if (isAdmin) await loadPendingSuggestions();
-    if (user && window.db) {
-      await loadNotifications(); // Используем функцию из common.js
-      
-      // Инициализируем слушатель уведомлений для real-time обновлений
-      if (typeof initNotificationsListener === 'function') {
-        initNotificationsListener(user.uid);
-      }
-    }
-
-    // Hook profile/account modal (footer.js)
-    try {
-      const avaWrap = document.getElementById('userAvatarWrapper');
-      const nameWrap = document.getElementById('userNameWrapper');
-      const openAccount = () => {
-        if (typeof window.openPageModal === 'function') window.openPageModal('account');
-      };
-      if (avaWrap) avaWrap.onclick = openAccount;
-      if (nameWrap) nameWrap.onclick = openAccount;
-      
-      // Hook notifications button
-      const notifBtn = document.getElementById('notificationButton') || document.querySelector('[onclick*="openNotificationsModal"]') || document.querySelector('[onclick*="showNotifications"]');
-      if (notifBtn && !notifBtn.onclick) {
-        notifBtn.onclick = () => {
-          if (typeof window.showNotifications === 'function') {
-            window.showNotifications();
-          } else if (typeof window.openNotificationsModal === 'function') {
-            window.openNotificationsModal();
-          }
-        };
-      }
-    } catch(_) {}
-  });
-} else {
-  // Firebase недоступен - запускаем без аутентификации
-  console.log('🔧 Firebase недоступен, запускаем без аутентификации');
-  currentUser = null;
-  window.currentUser = null;
-  isAdmin = false;
-  
-  // Скрываем админ-панель
-  const adminPanel = document.getElementById('fixedAdminPanel');
-  if (adminPanel) {
-    adminPanel.style.display = 'none';
-  }
-  
-  // Скрываем кнопки фильтров
-  const mySuggestionsBtn = document.getElementById('mySuggestionsFilter');
-  const suggestionsBtn = document.getElementById('suggestionsFilter');
-  const hiddenFilterBtn = document.getElementById('hiddenFilter');
-  
-  if (mySuggestionsBtn) {
-    mySuggestionsBtn.style.display = 'none';
-  }
-  if (suggestionsBtn) {
-    suggestionsBtn.style.display = 'none';
-  }
-  if (hiddenFilterBtn) {
-    hiddenFilterBtn.style.display = 'none';
-  }
-  
-  // Загружаем краны без Firebase
-  loadFaucetsFromFirestore();
-}
 </script>
 
 <!-- Фиксированная админ-панель -->
