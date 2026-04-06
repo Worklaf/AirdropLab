@@ -2769,10 +2769,24 @@ function updateHeaderAuthUI(user) {
   
   if (user) {
     if (ava) ava.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
-    if (name) name.textContent = user.displayName || (user.email ? user.email.split('@')[0] : 'Researcher');
+    if (name) {
+      const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
+      name.textContent = displayName;
+    }
     if (mobAva) mobAva.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
     if (mobOut) mobOut.style.display = 'none';
     if (mobInn) mobInn.style.display = 'flex';
+
+    // Обновляем кэш при каждом входе (чтобы другие страницы получили свежие данные)
+    try {
+      const cacheData = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL
+      };
+      localStorage.setItem('firebaseUser', JSON.stringify(cacheData));
+    } catch(_) {}
   } else {
     if (mobOut) mobOut.style.display = 'block';
     if (mobInn) mobInn.style.display = 'none';
@@ -3783,9 +3797,11 @@ window.autoTranslateDescription = autoTranslateDescription;
 // Функция для перезагрузки кранов при смене языка
 async function reloadFaucetsWithNewLanguage() {
   const currentLang = window.currentLang || 'ru';
+  const srcFaucets = window.DEFAULT_FAUCETS || DEFAULT_FAUCETS;
+  if (!srcFaucets || !srcFaucets.length) return;
   
   if (currentLang === 'ru') {
-    faucets = DEFAULT_FAUCETS.map((f) => ({
+    faucets = srcFaucets.map((f) => ({
       id: f.id,
       name: f.name || '',
       token: f.token || '',
@@ -3804,7 +3820,7 @@ async function reloadFaucetsWithNewLanguage() {
   } else {
     // Используем наш сервис перевода для кранов
     
-    const translatedFaucets = DEFAULT_FAUCETS.map(async (faucet) => {
+    const translatedFaucets = srcFaucets.map(async (faucet) => {
       const translatedDesc = await translateText(faucet.desc || '', currentLang);
       const translatedReward = await translateText(faucet.reward || '', currentLang);
       const translatedCooldown = await translateText(faucet.cooldown || '', currentLang);
