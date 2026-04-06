@@ -981,15 +981,52 @@
                                     </label>
                                 </div>
                             </div>
-                            <div class="w-48">
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Язык</label>
-                                <select id="profileLanguage" onchange="updateProfileLanguage(this.value)"
-                                        class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:border-cyan-500 focus:outline-none">
-                                    <option value="ru" ${(userData.language === 'ru' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'ru')) ? 'selected' : ''}>${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('ru').flag : '<span class="fi fi-ua"></span>')} ${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('ru').text : 'УКР')}</option>
-                                    <option value="en" ${(userData.language === 'en' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'en')) ? 'selected' : ''}>${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').flag : '<span class="fi fi-gb"></span>')} ${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').text : 'ENG')}</option>
-                                </select>
-                            </div>
-                        </div>
+                            <div class="w-48 relative" id="profileLangDropdown">
+    <label class="block text-sm font-medium text-slate-300 mb-2">Язык</label>
+
+    <!-- Кнопка -->
+    <button onclick="toggleProfileLangDropdown()" id="profileLangBtn"
+        class="flex items-center justify-between w-full px-3 py-2.5 rounded-lg border border-slate-700 bg-slate-800 text-sm text-white hover:bg-slate-700 transition">
+        <span class="flex items-center gap-2">
+            <span id="profileLangFlag" class="fi fi-ua"></span>
+            <span id="profileLangText">Русский</span>
+        </span>
+        <i class="fas fa-chevron-down text-xs text-slate-400"></i>
+    </button>
+
+    <!-- Выпадающее меню -->
+    <div id="profileLangMenu"
+        class="absolute left-0 right-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl hidden z-50">
+        <div class="py-1">
+
+            <button onclick="selectProfileLanguage('ru')" 
+                class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700">
+                <span class="fi fi-ua"></span>
+                <span>Русский</span>
+            </button>
+
+            <button onclick="selectProfileLanguage('en')" 
+                class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700">
+                <span class="fi fi-gb"></span>
+                <span>English</span>
+            </button>
+
+            <button onclick="selectProfileLanguage('tr')" 
+                class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700">
+                <span class="fi fi-tr"></span>
+                <span>Türkçe</span>
+            </button>
+
+            <button onclick="selectProfileLanguage('es')" 
+                class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700">
+                <span class="fi fi-es"></span>
+                <span>Español</span>
+            </button>
+
+        </div>
+    </div>
+</div>
+
 
                         <!-- Country + City -->
                         <div class="grid grid-cols-2 gap-4">
