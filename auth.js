@@ -79,6 +79,22 @@ async function initAuth() {
       }
     });
 
+    // Проверяем результат redirect аутентификации
+    auth.getRedirectResult().then((result) => {
+      if (result.user) {
+        console.log('🔐 Redirect login successful:', result.user.uid);
+        closeLoginModal();
+        if (typeof showToast === 'function') {
+          showToast('Вход выполнен успешно!');
+        }
+      }
+    }).catch((error) => {
+      console.error('🔐 Redirect result error:', error);
+      if (typeof showToast === 'function') {
+        showToast('Ошибка входа: ' + error.message);
+      }
+    });
+
     console.log('✅ Centralized auth system initialized');
   } catch (error) {
     console.error('🔐 Auth initialization error:', error);
@@ -155,10 +171,11 @@ window.closeLoginModal = function() {
 window.loginGoogle = async function() {
   try {
     const provider = new window.firebase.auth.GoogleAuthProvider();
-    await auth.signInWithPopup(provider);
+    // Используем redirect вместо popup для обхода Cross-Origin политики
+    await auth.signInWithRedirect(provider);
     closeLoginModal();
     if (typeof showToast === 'function') {
-      showToast('Вход: Google');
+      showToast('Вход: Google - перенаправление...');
     }
   } catch (error) {
     console.error('Google login error:', error);
@@ -171,10 +188,11 @@ window.loginGoogle = async function() {
 window.loginTwitter = async function() {
   try {
     const provider = new window.firebase.auth.TwitterAuthProvider();
-    await auth.signInWithPopup(provider);
+    // Используем redirect вместо popup для обхода Cross-Origin политики
+    await auth.signInWithRedirect(provider);
     closeLoginModal();
     if (typeof showToast === 'function') {
-      showToast('Вход: Twitter');
+      showToast('Вход: Twitter - перенаправление...');
     }
   } catch (error) {
     console.error('Twitter login error:', error);
