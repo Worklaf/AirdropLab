@@ -20,17 +20,44 @@
   <script src="config/firebase-config.js"></script>
   
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  
-  <script>
-    console.log('🔥 Firebase SDK loaded (compat version)');
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, increment, collection, query, orderBy, limit, getDocs, addDoc, writeBatch, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
+    // Делаем доступным глобально
+    window.initializeApp = initializeApp;
+    window.getAuth = getAuth;
+    window.onAuthStateChanged = onAuthStateChanged;
+    window.signOut = signOut;
+    window.signInWithPopup = signInWithPopup;
+    window.GoogleAuthProvider = GoogleAuthProvider;
+    window.TwitterAuthProvider = TwitterAuthProvider;
+    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+    window.getFirestore = getFirestore;
+    window.doc = doc;
+    window.setDoc = setDoc;
+    window.getDoc = getDoc;
+    window.updateDoc = updateDoc;
+    window.serverTimestamp = serverTimestamp;
+    window.increment = increment;
+    window.collection = collection;
+    window.query = query;
+    window.orderBy = orderBy;
+    window.limit = limit;
+    window.getDocs = getDocs;
+    window.addDoc = addDoc;
+    window.writeBatch = writeBatch;
+    window.runTransaction = runTransaction;
+    window.onSnapshot = onSnapshot;
+    
+    console.log('🔥 Firebase SDK loaded as modules');
   </script>
   
   <!-- CENTRALIZED AUTHENTICATION SYSTEM -->
-  <script src="auth.js"></script>
-  <script src="auth-modal.js"></script>
+  <script type="module" src="auth.js"></script>
+  <script type="module" src="auth-modal.js"></script>
   
   <style>
     /* Modal styles */
@@ -678,32 +705,19 @@ try {
   // Try to reuse existing Firebase app if available
   if (window.firebaseApp) {
     app = window.firebaseApp;
-    auth = firebase.auth();
+    auth = getAuth(app);
     try {
-      db = firebase.firestore();
+      db = getFirestore(app);
     } catch(e) {
       console.warn('WoF: Firestore init failed, will retry:', e);
       db = null;
     }
   } else {
     // Otherwise, create the default app (same as main page)
-    app  = firebase.initializeApp(cfg);
-    auth = firebase.auth();
+    app  = initializeApp(cfg);
+    auth = getAuth(app);
     try {
-      db = firebase.firestore();
-      // Используем multi-tab synchronization для решения проблемы с persistence
-      db.enablePersistence({ 
-        synchronizeTabs: true,
-        cacheSizeBytes: 5000000 
-      }).catch((err) => {
-        if (err.code === 'failed-precondition') {
-          console.warn('🔥 Firestore persistence: Multiple tabs open, falling back to memory cache');
-        } else if (err.code === 'unimplemented') {
-          console.warn('🔥 Firestore persistence: Browser doesn\'t support persistence');
-        } else {
-          console.warn('🔥 Firestore persistence error:', err);
-        }
-      });
+      db = initializeFirestore(app, { cacheSizeBytes: 5000000 });
     } catch(e) {
       console.warn('WoF: Firestore init failed, will retry:', e);
       db = null;
@@ -717,51 +731,9 @@ try {
   // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
   window.auth = auth;
   window.db   = db;
-  window.firestore = db;
-  
-  // Глобальные константы для удобства
-  window.COL_USERS = 'users';
-  window.COL_WHEEL = 'wheelSpins';
-  window.COL_JACKPOT = 'jackpot';
-  
-  // Сообщаем что Firebase готов
-  window.firebaseReady = true;
-  document.dispatchEvent(new CustomEvent('firebaseReady', { detail: { auth, db } }));
-  
-  // Инициализируем экспорты для header.js
-  if (typeof window.initFirebaseExports === 'function') {
-    window.initFirebaseExports({
-      db: db,
-      auth: auth,
-      firebase: firebase,
-      collection: (path) => db.collection(path),
-      doc: (path) => db.doc(path),
-      getDoc: (docRef) => docRef.get(),
-      getDocs: (queryRef) => queryRef.get(),
-      addDoc: (collectionRef, data) => collectionRef.add(data),
-      updateDoc: (docRef, data) => docRef.update(data),
-      setDoc: (docRef, data) => docRef.set(data),
-      deleteDoc: (docRef) => docRef.delete(),
-      query: (collectionRef, ...constraints) => {
-        let q = collectionRef;
-        constraints.forEach(c => {
-          if (c.type === 'where') q = q.where(c.field, c.op, c.value);
-          else if (c.type === 'orderBy') q = q.orderBy(c.field, c.direction);
-          else if (c.type === 'limit') q = q.limit(c.limit);
-        });
-        return q;
-      },
-      where: (field, op, value) => ({ type: 'where', field, op, value }),
-      orderBy: (field, direction) => ({ type: 'orderBy', field, direction }),
-      limit: (limit) => ({ type: 'limit', limit }),
-      serverTimestamp: () => firebase.firestore.FieldValue.serverTimestamp(),
-      increment: (n) => firebase.firestore.FieldValue.increment(n),
-      writeBatch: () => db.batch(),
-      runTransaction: (fn) => db.runTransaction(fn),
-      onSnapshot: (docRef, callback) => docRef.onSnapshot(callback)
-    });
-  }
-  
+  window.firestore = db; // Добавляем для онлайн-режима
+  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot };
+  window.__authExports = { onAuthStateChanged, signOut };
   console.log('✅ WoF Firebase initialized');
   
   // Immediately check current user state
@@ -769,19 +741,12 @@ try {
     const immediateUser = auth.currentUser;
     if (immediateUser) {
       console.log('🔐 User already logged in:', immediateUser.uid);
+      currentUser = immediateUser;
       window.currentUser = immediateUser;
       isAdmin = !!(immediateUser && immediateUser.uid === WOF_ADMIN_UID);
       updateSpinsUI();
     }
   }
-  
-  // Инициализируем reagents после полной загрузки Firebase
-  setTimeout(() => {
-    if (typeof window._checkClaimOnLoad === 'function') {
-      console.log('🧪 Initializing Reagents system after Firebase init in Wheel...');
-      window._checkClaimOnLoad();
-    }
-  }, 500);
 } catch(e) {
   console.warn('WoF Firebase init error:', e);
 }
@@ -803,7 +768,8 @@ const COL_USERS      = 'users';
 // ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
-let isAdmin = false;
+let currentUser = null;
+let isAdmin     = false;
 let userData    = {};
 let wheelAngle  = 0;   // radians
 let spinning    = false;
@@ -811,7 +777,7 @@ let localHistory = [];
 
 // Загружаем историю из Firestore при загрузке страницы (оптимизированная)
 function loadLocalHistory() {
-  if (!window.currentUser || !window.db) {
+  if (!currentUser || !window.db) {
     console.log('📚 No user or DB, will retry in 500ms');
     setTimeout(loadLocalHistory, 500);
     return;
@@ -833,9 +799,9 @@ function loadLocalHistory() {
       return;
     }
     
-    const userHistoryRef = doc(window.db, 'users', window.currentUser.uid, 'wheelHistory', 'spins');
+    const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
     
-    console.log('📚 Setting up Firestore history listener for user:', window.currentUser.uid);
+    console.log('📚 Setting up Firestore history listener for user:', currentUser.uid);
     
     // Используем onSnapshot для real-time обновлений
     onSnapshot(userHistoryRef, (docSnapshot) => {
@@ -896,11 +862,11 @@ function loadLocalHistory() {
 
 // Функция сохранения истории в Firestore (оптимизированная)
 function saveHistoryToFirestore() {
-  if (!window.currentUser || !window.db || localHistory.length === 0) return;
+  if (!currentUser || !window.db || localHistory.length === 0) return;
 
   try {
     const { doc, setDoc } = window.__firestoreExports;
-    const userHistoryRef = doc(window.db, 'users', window.currentUser.uid, 'wheelHistory', 'spins');
+    const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
     
     // Оптимизация 1: Ограничиваем последними 500 записями (вместо 1000)
     const maxRecords = 500;
@@ -1062,7 +1028,7 @@ function pickReward() {
 
 window.doSpin = async function() {
   if (spinning) return;
-  if (!window.currentUser) {
+  if (!currentUser) {
     showToastLocal('wof_need_login', 'Please log in to play');
     return;
   }
@@ -1070,7 +1036,7 @@ window.doSpin = async function() {
   // IMPORTANT: Fresh load of userData before balance check
   if (db) {
     try {
-      const freshSnap = await db.collection(COL_USERS).doc(window.currentUser.uid).get();
+      const freshSnap = await getDoc(doc(db, COL_USERS, currentUser.uid));
       if (freshSnap.exists()) {
         userData = freshSnap.data();
         window.userProfileData = userData;
@@ -1157,8 +1123,8 @@ async function handleResult(reward, isFree) {
 
   // Save to Firestore
   try {
-    if (db && window.currentUser) {
-      const uRef = db.collection(COL_USERS).doc(window.currentUser.uid);
+    if (db && currentUser) {
+      const uRef = doc(db, COL_USERS, currentUser.uid);
       const updates = {
         'wof.totalSpins':   wof.totalSpins,
         'wof.totalWon':     wof.totalWon,
@@ -1168,13 +1134,13 @@ async function handleResult(reward, isFree) {
         'wof.lastSpinDate': wof.lastSpinDate,
       };
       if (!isFree) {
-        updates['reagents'] = firebase.firestore.FieldValue.increment(netProfit);
+        updates['reagents'] = increment(netProfit);
       }
-      await uRef.update(updates);
+      await updateDoc(uRef, updates);
 
       // Reload userData to sync balance
       try {
-        const updatedSnap = await uRef.get();
+        const updatedSnap = await getDoc(uRef);
         if (updatedSnap.exists()) {
           userData = updatedSnap.data();
           window.userProfileData = userData;
@@ -1182,14 +1148,14 @@ async function handleResult(reward, isFree) {
       } catch(e) {}
 
       // Log spin
-      await db.collection(COL_WHEEL).add({
-        uid:       window.currentUser.uid,
-        display:   window.currentUser.displayName || window.currentUser.email || '—',
+      await addDoc(collection(db, COL_WHEEL), {
+        uid:       currentUser.uid,
+        display:   currentUser.displayName || currentUser.email || '—',
         reward,
         spentRGT,
         netLoss,
         isFree,
-        ts:        firebase.firestore.FieldValue.serverTimestamp()
+        ts:        serverTimestamp()
       });
     }
   } catch(e) {
@@ -1227,22 +1193,22 @@ async function addToJackpot(loss) {
   const now = new Date();
   const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   try {
-    const jRef = db.collection(COL_JACKPOT).doc(month);
-    await db.runTransaction(async tx => {
+    const jRef = doc(db, COL_JACKPOT, month);
+    await runTransaction(db, async tx => {
       const snap = await tx.get(jRef);
-      if (snap.exists) {
+      if (snap.exists()) {
         tx.update(jRef, {
-          total: firebase.firestore.FieldValue.increment(loss),
-          [`players.${window.currentUser.uid}`]: firebase.firestore.FieldValue.increment(loss)
+          total: increment(loss),
+          [`players.${currentUser.uid}`]: increment(loss)
         });
       } else {
         tx.set(jRef, {
           month,
           total: loss,
-          players: { [window.currentUser.uid]: loss },
+          players: { [currentUser.uid]: loss },
           drawn: false,
           winner: null,
-          ts: firebase.firestore.FieldValue.serverTimestamp()
+          ts: serverTimestamp()
         });
       }
     });
@@ -1322,8 +1288,8 @@ window.closeResult = function() {
 // ═══════════════════════════════════════════════════════════
 // NOTIFICATIONS
 // ═══════════════════════════════════════════════════════════
-async function sendSpinNotification(reward, spent, profit) {
-  if (!db || !window.currentUser) return;
+function sendSpinNotification(reward, spent, profit) {
+  if (!db || !currentUser) return;
   const isEn = (window.currentLang === 'en');
   let msg = '';
   if (profit > 0) {
@@ -1334,12 +1300,12 @@ async function sendSpinNotification(reward, spent, profit) {
     msg = isEn ? `😓 Wheel: won ${reward} RGT / spent ${spent} RGT.` : `😓 Колесо: выиграли ${reward} RGT / потратили ${spent} RGT.`;
   }
   try {
-    await db.collection('notifications').add({
-      userId: window.currentUser.uid,
+    addDoc(collection(db, 'notifications'), {
+      userId: currentUser.uid,  // Используем userId как в index.html
       type:   'wheel_spin',
-      message: msg,
+      message: msg,            // Используем message как в index.html
       read:   false,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      createdAt: serverTimestamp()  // Используем createdAt как в index.html
     });
   } catch(e) {
     console.error('Error sending spin notification:', e);
@@ -1398,14 +1364,14 @@ async function loadJackpot() {
     isEn ? `${days}d ${hours}h until draw` : `До розыгрыша: ${days} дн. ${hours} ч.`;
 
   try {
-    const snap = await db.collection(COL_JACKPOT).doc(month).get();
-    const total = snap.exists ? (snap.data().total || 0) : 0;
+    const snap = await getDoc(doc(db, COL_JACKPOT, month));
+    const total = snap.exists() ? (snap.data().total || 0) : 0;
     document.getElementById('jackpotAmt').textContent = total + ' RGT';
 
     // Jackpot chance for current user
-    if (window.currentUser && snap.exists) {
+    if (currentUser && snap.exists()) {
       const players = snap.data().players || {};
-      const myLoss  = players[window.currentUser.uid] || 0;
+      const myLoss  = players[currentUser.uid] || 0;
       const chance  = total > 0 ? ((myLoss / total) * 100).toFixed(1) : 0;
       document.getElementById('stJackpotChance').textContent = chance + '%';
     }
@@ -2084,7 +2050,7 @@ function updateSpinsUI() {
   const lbl   = document.getElementById('spinBtnLabel');
   if (!btn || !lbl) return;
 
-  if (!window.currentUser) {
+  if (!currentUser) {
     lbl.textContent = isEn ? 'LOG IN TO PLAY' : 'ВОЙДИТЕ В АККАУНТ';
     btn.disabled = true;
     return;
@@ -2325,9 +2291,9 @@ window.clearSpinHistory = function() {
     localHistory = [];
     
     // Очищаем в Firestore
-    if (window.currentUser && window.db) {
+    if (currentUser && window.db) {
       const { doc, deleteDoc } = window.__firestoreExports;
-      const userHistoryRef = doc(window.db, 'users', window.currentUser.uid, 'wheelHistory', 'spins');
+      const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
       deleteDoc(userHistoryRef);
     }
     
@@ -2449,7 +2415,8 @@ function updateHeaderAuthUI(user) {
 // AUTH STATE
 // ═══════════════════════════════════════════════════════════
 if (auth) {
-  auth.onAuthStateChanged(async user => {
+  onAuthStateChanged(auth, async user => {
+    currentUser = user;
     window.currentUser = user;
     isAdmin = !!(user && user.uid === WOF_ADMIN_UID);
     window.isAdmin = isAdmin;
@@ -2672,7 +2639,7 @@ window.clearFilteredNotifications = async function() {
 
 // Функция загрузки уведомлений для колеса
 async function loadNotificationsForWheel() {
-  if (!window.db || !window.currentUser) {
+  if (!window.db || !currentUser) {
     const listEl = document.getElementById('notificationsList');
     if (listEl) {
       listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Недоступно без авторизации</p>';
@@ -2701,7 +2668,7 @@ async function loadNotificationsForWheel() {
     
     const q = query(
       collection(window.db, "notifications"),
-      where("userId", "==", window.currentUser.uid),
+      where("userId", "==", currentUser.uid),
       orderBy("createdAt", "desc")
     );
     
@@ -2937,10 +2904,10 @@ function updateNotificationBadge() {
 }
 
 // Инициализация слушателя сообщений при загрузке страницы (только если пользователь уже авторизован)
-if (window.currentUser && db) {
+if (currentUser && db) {
   // Используем функцию из header.js
   if (typeof initFeedbacksListener === 'function') {
-    initFeedbacksListener(window.currentUser.uid);
+    initFeedbacksListener(currentUser.uid);
   }
 }
 
@@ -3082,8 +3049,8 @@ function updateModeButtons(activeMode) {
 function initOnlineGame() {
   console.log('🎮 Initializing online game...');
   
-  // Ждем загрузки Firebase
-  if (!db) {
+  // Ждем загрузки Firebase функций
+  if (typeof window.doc === 'undefined' || typeof window.getDoc === 'undefined') {
     console.log('⏳ Firebase functions not ready, waiting...');
     setTimeout(() => initOnlineGame(), 500);
     return;
@@ -3116,8 +3083,11 @@ function initOnlineGame() {
   
   // Проверяем что Firestore имеет правильные методы для v9+
   console.log('🔍 Firestore methods check:');
-  console.log('  collection:', typeof db?.collection);
-  console.log('  doc:', typeof db?.doc);
+  console.log('  collection:', typeof firestore.collection);
+  console.log('  doc:', typeof firestore.doc);
+  console.log('  getDoc:', typeof window.getDoc);
+  console.log('  setDoc:', typeof window.setDoc);
+  console.log('  doc (global):', typeof window.doc);
   
   // Устанавливаем глобальную переменную
   window.firestore = firestore;
@@ -3144,7 +3114,7 @@ function setupFirebaseListener() {
   console.log('🔥 Setting up Firebase listener for real-time updates...');
   
   // Проверяем доступность Firebase
-  if (!db) {
+  if (typeof window.firestore === 'undefined' || typeof window.doc === 'undefined' || typeof window.onSnapshot === 'undefined') {
     console.log('⚠️ Firebase not available, using polling');
     // Fallback к polling с интервалом 5 секунд
     setInterval(() => {
@@ -3157,9 +3127,9 @@ function setupFirebaseListener() {
   
   try {
     // Используем правильный синтаксис для Firebase v9+
-    const gameDocRef = db.collection('onlineWheelGames').doc('globalGame');
+    const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
     
-    const unsubscribe = gameDocRef.onSnapshot((doc) => {
+    const unsubscribe = window.onSnapshot(gameDocRef, (doc) => {
       if (doc.exists()) {
         const data = doc.data();
         
@@ -3246,25 +3216,28 @@ function startBettingTimer() {
 function loadOnlineGameData() {
   console.log('📦 Loading online game data...');
   console.log('🔍 Current window.firestore:', typeof window.firestore);
-  console.log('🔍 Available Firestore methods:');
-  console.log('  collection:', typeof db?.collection);
-  console.log('  doc:', typeof db?.doc);
+  console.log('🔍 Available Firebase functions:');
+  console.log('  collection:', typeof window.firestore?.collection);
+  console.log('  doc:', typeof window.firestore?.doc);
+  console.log('  getDoc:', typeof window.getDoc);
+  console.log('  setDoc:', typeof window.setDoc);
+  console.log('  doc (global):', typeof window.doc);
   
-  // Ждем загрузки Firebase
-  if (!db) {
+  // Ждем загрузки Firebase функций
+  if (typeof window.doc === 'undefined' || typeof window.getDoc === 'undefined') {
     console.log('⏳ Firebase functions not ready for game data, waiting...');
     setTimeout(() => loadOnlineGameData(), 500);
     return;
   }
   
-  // Проверяем доступность Firebase
-  if (db) {
-    console.log('✅ Using Firestore for online game data');
+  // Проверяем доступность Firebase с правильным синтаксисом v9+
+  if (typeof window.firestore !== 'undefined' && typeof window.getDoc === 'function') {
+    console.log('✅ Using Firebase v9+ syntax for online game data');
     
     // Используем правильный синтаксис для создания document reference
-    const gameDocRef = db.collection('onlineWheelGames').doc('globalGame');
+    const gameDocRef = window.doc(window.firestore, 'onlineWheelGames', 'globalGame');
     
-    gameDocRef.get().then((doc) => {
+    window.getDoc(gameDocRef).then((doc) => {
       if (doc.exists()) {
         const data = doc.data();
         onlineGame = { ...onlineGame, ...data };
@@ -3287,7 +3260,10 @@ function loadOnlineGameData() {
       loadFromLocalStorage();
     });
   } else {
-    console.log('⚠️ Firestore not available, using localStorage');
+    console.log('⚠️ Firebase v9+ functions not available, using localStorage');
+    console.log('🔍 Firestore type:', typeof window.firestore);
+    console.log('🔍 getDoc type:', typeof window.getDoc);
+    console.log('🔍 doc type:', typeof window.doc);
     // Fallback к localStorage если Firebase недоступен
     loadFromLocalStorage();
   }
@@ -3336,10 +3312,13 @@ async function saveOnlineGameData() {
   
   try {
     console.log('💾 Saving online game data...');
-    console.log('🔍 Firestore available:', !!db);
+    console.log('🔍 Available Firebase functions:');
+    console.log('  setDoc:', typeof window.setDoc);
+    console.log('  doc:', typeof window.doc);
+    console.log('  doc (global):', typeof window.doc);
     
     // Используем правильный синтаксис для Firebase v9+
-    const gameDataRef = db.collection('onlineWheelGame').doc('current');
+    const gameDataRef = window.doc(window.firestore, 'onlineWheelGame', 'current');
     
     const gameData = {
       participants: onlineGame.participants,
@@ -3354,7 +3333,7 @@ async function saveOnlineGameData() {
       lastUpdated: new Date().toISOString()
     };
     
-    await gameDataRef.set(gameData);
+    await window.setDoc(gameDataRef, gameData);
     console.log('💾 Saved global online game data to Firebase');
     
   } catch (error) {
@@ -3381,26 +3360,30 @@ function saveToLocalStorage() {
 function updateUserBalance() {
   console.log('💰 Updating user balance...');
   console.log('🔍 Current user:', window.currentUser?.uid);
-  console.log('🔍 Firestore available:', !!db);
+  console.log('🔍 Available Firebase functions:');
+  console.log('  getDoc:', typeof window.getDoc);
+  console.log('  setDoc:', typeof window.setDoc);
+  console.log('  doc:', typeof window.firestore?.doc);
+  console.log('  doc (global):', typeof window.doc);
   
   const balanceEl = document.getElementById('onlineUserBalance');
   if (!balanceEl) return;
   
-  // Ждем загрузки Firebase
-  if (!db) {
-    console.log('⏳ Firestore not ready for balance, waiting...');
+  // Ждем загрузки Firebase функций
+  if (typeof window.doc === 'undefined' || typeof window.getDoc === 'undefined') {
+    console.log('⏳ Firebase functions not ready for balance, waiting...');
     setTimeout(() => updateUserBalance(), 500);
     return;
   }
   
-  // Получаем баланс пользователя из Firebase
-  if (window.currentUser) {
-    console.log('✅ Using Firestore for user balance');
+  // Получаем баланс пользователя из Firebase с правильным синтаксисом v9+
+  if (typeof window.firestore !== 'undefined' && typeof window.getDoc === 'function' && window.currentUser) {
+    console.log('✅ Using Firebase v9+ syntax for user balance');
     
     // Используем коллекцию 'users' и поле 'reagents' как в faucet.html
-    const userDocRef = db.collection('users').doc(window.currentUser.uid);
+    const userDocRef = window.doc(window.firestore, 'users', window.currentUser.uid);
     
-    userDocRef.get().then((doc) => {
+    window.getDoc(userDocRef).then((doc) => {
       let balance = 0;
       
       if (doc.exists()) {
@@ -3412,7 +3395,7 @@ function updateUserBalance() {
         balance = 0; // Не используем тестовый баланс
         
         // Создаем документ пользователя
-        userDocRef.set({
+        window.setDoc(userDocRef, {
           displayName: window.currentUser.displayName || 'Anonymous',
           reagents: 0,
           createdAt: new Date().toISOString()
@@ -3432,8 +3415,10 @@ function updateUserBalance() {
       loadBalanceFromOtherSources();
     });
   } else {
-    console.log('⚠️ User not logged in or Firestore not available, using fallback');
-    console.log('🔍 Firestore available:', !!db);
+    console.log('⚠️ Firebase v9+ functions or user not available, using fallback');
+    console.log('🔍 Firestore type:', typeof window.firestore);
+    console.log('🔍 getDoc type:', typeof window.getDoc);
+    console.log('🔍 doc type:', typeof window.doc);
     console.log('🔍 Current user:', window.currentUser?.uid);
     // Fallback к другим источникам
     loadBalanceFromOtherSources();
@@ -3474,14 +3459,14 @@ function loadBalanceFromOtherSources() {
 
 // Получение баланса пользователя из Firebase
 async function getUserBalanceFromFirebase() {
-  if (!window.currentUser || !db) {
+  if (!window.currentUser || typeof window.firestore === 'undefined' || typeof window.getDoc !== 'function') {
     console.log('⚠️ Cannot get balance - Firebase or user not available');
     return 0;
   }
   
   try {
-    const userDocRef = db.collection('users').doc(window.currentUser.uid);
-    const userDoc = await userDocRef.get();
+    const userDocRef = window.doc(window.firestore, 'users', window.currentUser.uid);
+    const userDoc = await window.getDoc(userDocRef);
     
     if (userDoc.exists()) {
       const userData = userDoc.data();
@@ -3501,18 +3486,18 @@ async function getUserBalanceFromFirebase() {
 
 // Обновление баланса пользователя в Firebase (при выигрыше/проигрыше)
 function updateUserBalanceInFirebase(amount, isWin = false) {
-  if (!window.currentUser || !db) {
+  if (!window.currentUser || typeof window.firestore === 'undefined' || typeof window.updateDoc !== 'function') {
     console.log('⚠️ Cannot update balance - Firebase or user not available');
     return Promise.resolve();
   }
   
   console.log(`💰 Updating user balance in Firebase: ${isWin ? '+' : '-'}${amount} RGT`);
   
-  const userDocRef = db.collection('users').doc(window.currentUser.uid);
+  const userDocRef = window.doc(window.firestore, 'users', window.currentUser.uid);
   
   // Используем increment для атомарного обновления
-  return userDocRef.update({
-    reagents: firebase.firestore.FieldValue.increment(isWin ? amount : -amount),
+  return window.updateDoc(userDocRef, {
+    reagents: window.increment(isWin ? amount : -amount),
     updatedAt: new Date().toISOString()
   }).then(() => {
     console.log(`✅ Balance updated: ${isWin ? '+' : '-'}${amount} RGT`);
@@ -3865,7 +3850,7 @@ function updateParticipantsList() {
   
   participantsList.innerHTML = participants.map((participant, index) => {
     const percentage = totalBets > 0 ? ((participant.bet / totalBets) * 100).toFixed(1) : 0;
-    const isCurrentUser = participant.uid === window.currentUser?.uid;
+    const isCurrentUser = participant.uid === currentUser?.uid;
     const color = participant.color || '#8b5cf6';
     
     return `
@@ -3929,7 +3914,7 @@ async function updateOnlineLeaderboard() {
   if (!leaderboardEl) return;
   
   // Проверяем доступность Firebase
-  if (!db) {
+  if (typeof window.firestore === 'undefined' || typeof window.doc === 'undefined' || typeof window.getDoc === 'undefined') {
     console.log('⚠️ Firestore not available for leaderboard, using empty data');
     leaderboardEl.innerHTML = `
       <div style="text-align:center;color:#a0aec0;padding:40px;">
@@ -4089,8 +4074,8 @@ async function savePlayerStats(winner, winAmount) {
   const statsPromises = onlineGame.participants.map(async (participant) => {
     try {
       // Используем глобальные функции Firebase v9+
-      const statsDocRef = db.collection('onlineWheelStats').doc(participant.uid);
-      const statsDoc = await statsDocRef.get();
+      const statsDocRef = window.doc(window.firestore, 'onlineWheelStats', participant.uid);
+      const statsDoc = await window.getDoc(statsDocRef);
       
       let currentStats = {};
       if (statsDoc.exists()) {
@@ -4126,7 +4111,7 @@ async function savePlayerStats(winner, winAmount) {
       }
       
       // Сохраняем в Firestore
-      await statsDocRef.set(updatedStats);
+      await window.setDoc(statsDocRef, updatedStats);
       
       console.log(`📊 Stats saved for ${participant.displayName}: Games: ${updatedStats.totalGames}, Wins: ${updatedStats.totalWins}, Winnings: ${updatedStats.totalWinnings}`);
       
@@ -4475,7 +4460,7 @@ function showOnlineWinner(winner) {
   saveGameToHistory(winner, realWinAmount);
   
   // Сохраняем статистику игроков (только если есть права)
-  if (db) {
+  if (typeof window.firestore !== 'undefined' && typeof window.doc !== 'undefined') {
     savePlayerStats(winner, realWinAmount).catch(error => {
       console.log('⚠️ Stats save failed (permissions issue):', error);
     });
