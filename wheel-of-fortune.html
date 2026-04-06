@@ -9,14 +9,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <link rel="stylesheet" href="styles.css">
-  <script src="languages.js"></script>
-  <script src="header.js"></script>
-  <script>
-    // Восстановить кэшированное состояние авторизации при загрузке страницы
-    if (typeof window.restoreCachedState === 'function') {
-      window.restoreCachedState();
-    }
-  </script>
+  
+  <!-- Firebase SDK - загружаем ПЕРВЫМ -->
   <script src="config/firebase-config.js"></script>
   
   <!-- Firebase SDK -->
@@ -58,6 +52,16 @@
   <!-- CENTRALIZED AUTHENTICATION SYSTEM -->
   <script type="module" src="auth.js"></script>
   <script type="module" src="auth-modal.js"></script>
+  
+  <!-- Остальные скрипты -->
+  <script src="languages.js"></script>
+  <script src="header.js"></script>
+  <script>
+    // Восстановить кэшированное состояние авторизации при загрузке страницы
+    if (typeof window.restoreCachedState === 'function') {
+      window.restoreCachedState();
+    }
+  </script>
   
   <style>
     /* Modal styles */
@@ -665,7 +669,6 @@
 </div>
 
 <script src="footer.js"></script>
-<script src="assets/reagents.js"></script>
 
 <script type="module">
 // ═══════════════════════════════════════════════════════════
@@ -700,56 +703,52 @@ if (!cfg?.apiKey) {
   console.warn('WoF: Firebase config not available, running offline');
 }
 
+// Используем централизованную Firebase инициализацию
 let app, auth, db;
-try {
-  // Try to reuse existing Firebase app if available
-  if (window.firebaseApp) {
-    app = window.firebaseApp;
-    auth = getAuth(app);
-    try {
-      db = getFirestore(app);
-    } catch(e) {
-      console.warn('WoF: Firestore init failed, will retry:', e);
-      db = null;
-    }
-  } else {
-    // Otherwise, create the default app (same as main page)
-    app  = initializeApp(cfg);
-    auth = getAuth(app);
-    try {
-      db = initializeFirestore(app, { cacheSizeBytes: 5000000 });
-    } catch(e) {
-      console.warn('WoF: Firestore init failed, will retry:', e);
-      db = null;
-    }
-    // Store globally for other pages to reuse
-    window.firebaseApp = app;
+
+// Ждем централизованной инициализации Firebase
+const waitForFirebase = () => {
+  return new Promise((resolve) => {
+    const checkFirebase = () => {
+      if (window.firebaseApp && window.auth && window.db) {
+        app = window.firebaseApp;
+        auth = window.auth;
+        db = window.db;
+        console.log('✅ WoF using centralized Firebase');
+        resolve();
+      } else {
+        setTimeout(checkFirebase, 100);
+      }
+    };
+    checkFirebase();
+  });
+};
+
+await waitForFirebase();
+
+// Export для совместимости с существующим кодом
+window.wofAuth = auth;
+window.wofDb   = db;
+
+// Immediately check current user state
+if (auth) {
+  const immediateUser = auth.currentUser;
+  if (immediateUser) {
+    console.log('🔐 User already logged in:', immediateUser.uid);
+    currentUser = immediateUser;
+    window.currentUser = immediateUser;
+    isAdmin = !!(immediateUser && immediateUser.uid === WOF_ADMIN_UID);
+    updateSpinsUI();
   }
-  // Export for global use (especially footer.js account modal)
-  window.wofAuth = auth;
-  window.wofDb   = db;
-  // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
-  window.auth = auth;
-  window.db   = db;
-  window.firestore = db; // Добавляем для онлайн-режима
-  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot };
-  window.__authExports = { onAuthStateChanged, signOut };
-  console.log('✅ WoF Firebase initialized');
-  
-  // Immediately check current user state
-  if (auth) {
-    const immediateUser = auth.currentUser;
-    if (immediateUser) {
-      console.log('🔐 User already logged in:', immediateUser.uid);
-      currentUser = immediateUser;
-      window.currentUser = immediateUser;
-      isAdmin = !!(immediateUser && immediateUser.uid === WOF_ADMIN_UID);
-      updateSpinsUI();
-    }
-  }
-} catch(e) {
-  console.warn('WoF Firebase init error:', e);
 }
+
+// Загружаем reagents.js ПОСЛЕ инициализации Firebase
+const script = document.createElement('script');
+script.src = 'assets/reagents.js';
+script.onload = () => {
+  console.log('🧪 Reagents loaded after Firebase init');
+};
+document.head.appendChild(script);
 
 // ═══════════════════════════════════════════════════════════
 // CONSTANTS
