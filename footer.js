@@ -2627,5 +2627,33 @@ function initAccountPage() {
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
         setTimeout(initFooter, 100);
     }
+const profileLangMap = {
+    ru: { flag: "fi fi-ua", text: "Русский" },
+    en: { flag: "fi fi-gb", text: "English" },
+    tr: { flag: "fi fi-tr", text: "Türkçe" },
+    es: { flag: "fi fi-es", text: "Español" }
+};
+
+function toggleProfileLangDropdown() {
+    document.getElementById("profileLangMenu").classList.toggle("hidden");
+}
+
+function selectProfileLanguage(lang) {
+    const data = profileLangMap[lang];
+
+    document.getElementById("profileLangFlag").className = data.flag;
+    document.getElementById("profileLangText").textContent = data.text;
+
+    document.getElementById("profileLangMenu").classList.add("hidden");
+
+    updateProfileLanguage(lang);
+}
+
+document.addEventListener("click", (e) => {
+    const box = document.getElementById("profileLangDropdown");
+    if (!box.contains(e.target)) {
+        document.getElementById("profileLangMenu").classList.add("hidden");
+    }
+});
 
 })();
