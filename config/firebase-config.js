@@ -1,80 +1,59 @@
-// 🌐 Универсальная загрузка Firebase-конфига
-// Работает на Vercel, Cloudflare Pages и локально
+// Firebase Configuration - загружаем через API
+// Работает на Cloudflare Pages с Functions
 
 let firebaseConfig = null;
 let configLoaded = false;
 
+// Функция загрузки конфигурации
 async function loadFirebaseConfig() {
   if (configLoaded) return;
-
+  
   try {
-    console.log("🔧 Определяем платформу...");
-
-    const isVercel = !!window.NEXT_PUBLIC_FIREBASE_API_KEY || !!process.env?.NEXT_PUBLIC_FIREBASE_API_KEY;
-    const isCloudflare = window.location.origin.includes("airdroplab.org");
-
-    // ============================
-    // 1️⃣ VERCEL (NEXT_PUBLIC_*)
-    // ============================
-    if (isVercel) {
-      console.log("🚀 Загружаем конфиг из Vercel ENV");
-
-      firebaseConfig = {
-        apiKey: window.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: window.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId: window.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        storageBucket: window.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: window.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: window.NEXT_PUBLIC_FIREBASE_APP_ID || process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-      };
-
-      if (process.env?.NEXT_PUBLIC_ADMIN_UID) {
-        window.ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
-      }
-
-      configLoaded = true;
-      window.firebaseConfig = firebaseConfig;
-      console.log("🌐 Firebase конфигурация установлена (Vercel)");
-      return;
+    console.log('🔧 Загружаем конфигурацию Firebase через API...');
+    
+    // Определяем базовый URL
+    const baseUrl = window.location.origin;
+    
+    const response = await fetch(`${baseUrl}/api/config`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
-
-    // ==========================================
-    // 2️⃣ CLOUDFLARE PAGES — загрузка через API
-    // ==========================================
-    if (isCloudflare) {
-      console.log("☁️ Cloudflare Pages: загружаем /api/config");
-
-      const response = await fetch(`${window.location.origin}/api/config`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-      const config = await response.json();
-
-      firebaseConfig = {
-        apiKey: config.CF_API_KEY,
-        authDomain: config.CF_AUTH_DOMAIN,
-        projectId: config.CF_PROJECT_ID,
-        storageBucket: config.CF_STORAGE_BUCKET,
-        messagingSenderId: config.CF_MESSAGING_SENDER_ID,
-        appId: config.CF_APP_ID
-      };
-
-      if (config.ADMIN_UID) window.ADMIN_UID = config.ADMIN_UID;
-
-      configLoaded = true;
-      window.firebaseConfig = firebaseConfig;
-      console.log("🌐 Firebase конфигурация установлена (Cloudflare)");
-      return;
+    
+    const config = await response.json();
+    console.log('📦 Получена конфигурация:', {
+      hasApiKey: !!config.CF_API_KEY,
+      apiKeyLength: config.CF_API_KEY ? config.CF_API_KEY.length : 0,
+      debug: config.debug
+    });
+    
+    // Используем настоящий API ключ если доступен
+    firebaseConfig = {
+      apiKey: config.CF_API_KEY || "AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk",
+      authDomain: config.CF_AUTH_DOMAIN,
+      projectId: config.CF_PROJECT_ID,
+      storageBucket: config.CF_STORAGE_BUCKET,
+      messagingSenderId: config.CF_MESSAGING_SENDER_ID,
+      appId: config.CF_APP_ID
+    };
+    
+    // Устанавливаем ADMIN_UID глобально
+    if (config.ADMIN_UID) {
+      globalThis.ADMIN_UID = config.ADMIN_UID;
     }
-
-    // ============================
-    // 3️⃣ ЛОКАЛЬНЫЙ FALLBACK
-    // ============================
-    throw new Error("Не удалось определить платформу");
-
+    
+    configLoaded = true;
+    
+    if (config.CF_API_KEY) {
+      console.log('✅ Используем настоящий Firebase API ключ из Environment Variables');
+    } else {
+      console.log('⚠️ API ключ недоступен, используем fallback');
+    }
+    
   } catch (error) {
-    console.error("❌ Ошибка загрузки конфигурации:", error);
-    console.log("⚠️ Используем fallback Firebase config");
-
+    console.error('❌ Ошибка загрузки конфигурации:', error);
+    console.log('🔧 Используем локальную конфигурацию');
+    
+    // Fallback конфигурация
     firebaseConfig = {
       apiKey: "AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk",
       authDomain: "testnet-hub.firebaseapp.com",
@@ -83,11 +62,24 @@ async function loadFirebaseConfig() {
       messagingSenderId: "497813176653",
       appId: "1:497813176653:web:089188fdd1555d76cd7704"
     };
-
+    
     configLoaded = true;
-    window.firebaseConfig = firebaseConfig;
   }
 }
 
-// Инициализация
-loadFirebaseConfig();
+// Загружаем конфигурацию асинхронно
+loadFirebaseConfig().then(() => {
+  // Делаем доступным глобально после загрузки
+  window.firebaseConfig = firebaseConfig;
+  console.log('🌐 Firebase конфигурация установлена глобально');
+});
+
+// Для синхронного доступа (если кто-то вызовет сразу)
+window.firebaseConfig = firebaseConfig || {
+  apiKey: "AIzaSyBdXGYg2t8DJBrQHCC80-pFerZU9PWmSCk",
+  authDomain: "testnet-hub.firebaseapp.com",
+  projectId: "testnet-hub",
+  storageBucket: "testnet-hub.firebasestorage.app",
+  messagingSenderId: "497813176653",
+  appId: "1:497813176653:web:089188fdd1555d76cd7704"
+};
