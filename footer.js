@@ -595,6 +595,7 @@
         switch(page) {
             case 'faq':    html = getFAQContent();    break;
             case 'guides': html = getGuidesContent(); break;
+            case 'notifications': html = getNotificationsContent(); break;
             default:       html = `<p class="text-center text-slate-400 p-8">${lang('in_work') || 'В разработке'}</p>`;
         }
 
@@ -734,6 +735,60 @@
                         ${lang('footer_guide_lock')}
                     </p>
                 </div>
+            </div>
+        `;
+    }
+
+    // ============ NOTIFICATIONS CONTENT ============
+
+    function getNotificationsContent() {
+        const lang = typeof window.t === 'function' ? window.t : (k) => k;
+        const notificationsList = (typeof window.notifications !== 'undefined') ? window.notifications : [];
+
+        return `
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-6 border-b border-slate-700">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                        <i class="fas fa-bell text-cyan-400"></i>
+                        ${lang('notifications') || 'Уведомления'}
+                    </h2>
+                    ${notificationsList.length > 0
+                        ? `<button onclick="if(typeof window.markAllNotificationsRead==='function')window.markAllNotificationsRead(); setTimeout(()=>window.closePageModal(),200);" class="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-colors">
+                            <i class="fas fa-check-double mr-1"></i> ${lang('notif_clear_all') || 'Отметить все'}</button>`
+                        : ''}
+                </div>
+                <p class="text-slate-400 mt-2">${notificationsList.length} ${lang('notifications') || 'уведомлений'}</p>
+            </div>
+            <div class="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                ${notificationsList.length > 0
+                    ? notificationsList.map(notif => {
+                        const tsDisplay = notif.ts && typeof notif.ts.toDate === 'function' 
+                            ? notif.ts.toDate().toLocaleString() 
+                            : (notif.ts ? new Date(notif.ts).toLocaleString() : 'недавно');
+                        return `
+                        <div class="notification-item p-4 border border-slate-700/50 rounded-lg mb-3 ${notif.read ? 'opacity-60' : 'bg-slate-800/30'} hover:border-cyan-500/50 transition-colors"
+                             onclick="if(typeof window.markNotificationRead==='function')window.markNotificationRead('${notif.id}')">
+                            <div class="flex items-start gap-3 cursor-pointer">
+                                <div class="text-lg mt-1 flex-shrink-0">
+                                    ${notif.type === 'wheel_spin' ? '🎡' :
+                                      notif.type === 'jackpot_win' ? '🏆' :
+                                      notif.type === 'claim' ? '🎁' :
+                                      notif.type === 'reward' ? '✨' :
+                                      '📢'}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-white text-sm font-medium break-words">${notif.msg || ''}</p>
+                                    <p class="text-slate-500 text-xs mt-1">${tsDisplay}</p>
+                                </div>
+                                ${!notif.read ? '<span class="w-2 h-2 bg-cyan-400 rounded-full flex-shrink-0 mt-1.5"></span>' : ''}
+                            </div>
+                        </div>
+                    `}).join('')
+                    : `<div class="text-center py-12 text-slate-400">
+                        <i class="fas fa-inbox text-4xl mb-4 opacity-30 block"></i>
+                        <p>${lang('notif_empty_title') || 'Нет уведомлений'}</p>
+                        <p class="text-xs mt-2">${lang('notif_empty_desc') || 'Уведомления появятся здесь'}</p>
+                    </div>`}
             </div>
         `;
     }
@@ -931,7 +986,7 @@
                                 <select id="profileLanguage" onchange="updateProfileLanguage(this.value)"
                                         class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:border-cyan-500 focus:outline-none">
                                     <option value="ru" ${(userData.language === 'ru' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'ru')) ? 'selected' : ''}>${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('ru').flag : '<span class="fi fi-ua"></span>')} ${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('ru').text : 'УКР')}</option>
-                                    <option value="en" ${(userData.language === 'en' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'en')) ? 'selected' : ''}>${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').flag : '<span class="fi fi-us"></span>')} ${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').text : 'ENG')}</option>
+                                    <option value="en" ${(userData.language === 'en' || (!userData.language && typeof window.currentLang !== 'undefined' && window.currentLang === 'en')) ? 'selected' : ''}>${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').flag : '<span class="fi fi-gb"></span>')} ${(typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').text : 'ENG')}</option>
                                 </select>
                             </div>
                         </div>
@@ -1687,75 +1742,7 @@ function initAccountPage() {
         });
     };
 
-    // ============ NOTIFICATIONS ============
-
-    window.openNotificationsModal = function() {
-        const lang    = typeof window.t === 'function' ? window.t : (k) => k;
-        const modal   = document.getElementById('pageModal');
-        const content = document.getElementById('pageModalContent');
-        if (!modal || !content) return;
-
-        const notificationsList = (typeof window.notifications !== 'undefined') ? window.notifications : [];
-
-        const html = `
-            <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-6 border-b border-slate-700">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
-                            <i class="fas fa-bell text-yellow-400"></i>
-                            ${lang('notif_title')}
-                        </h2>
-                        <p class="text-slate-400 mt-2">${notificationsList.length} ${lang('notifications')}</p>
-                    </div>
-                    ${notificationsList.length > 0
-                        ? `<button onclick="clearAllNotifications()" class="text-xs text-slate-400 hover:text-white transition-colors">${lang('notif_clear_all')}</button>`
-                        : ''}
-                </div>
-            </div>
-            <div class="p-6 max-h-[70vh] overflow-y-auto">
-                ${notificationsList.length > 0 ? notificationsList.map(notif => `
-                    <div class="notification-item p-4 mb-3 rounded-xl ${notif.read ? 'bg-slate-800/30' : 'bg-slate-800/50 border border-slate-700'}">
-                        <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${notif.read ? 'bg-slate-700' : 'bg-cyan-500/20'}">
-                                <i class="fas ${notif.type === 'success' ? 'fa-check-circle text-green-400' : notif.type === 'warning' ? 'fa-exclamation-triangle text-yellow-400' : 'fa-info-circle text-blue-400'}"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm text-white">${notif.message}</p>
-                                <p class="text-xs text-slate-500 mt-1">${formatTimeAgo(notif.createdAt)}</p>
-                            </div>
-                            ${!notif.read
-                                ? `<button onclick="markNotificationRead('${notif.id}')" class="text-xs text-cyan-400 hover:text-cyan-300">${lang('notif_mark_read')}</button>`
-                                : ''}
-                        </div>
-                    </div>
-                `).join('') : `
-                    <div class="text-center py-12">
-                        <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-bell-slash text-3xl text-slate-500"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-white mb-2">${lang('notif_empty_title')}</h3>
-                        <p class="text-slate-400 text-sm">${lang('notif_empty_desc')}</p>
-                    </div>
-                `}
-            </div>
-        `;
-
-        content.innerHTML = html;
-        modal.classList.add('active');
-    };
-
-    window.markNotificationRead = async function(notifId) {
-        if (typeof window.markNotificationAsRead === 'function') {
-            await window.markNotificationAsRead(notifId);
-        }
-        openNotificationsModal();
-    };
-
-    window.clearAllNotifications = function() {
-        localStorage.setItem('notifications', '[]');
-        window.notifications = [];
-        openNotificationsModal();
-    };
+    // Удалено: Все функции уведомлений теперь реализованы в header.js и отдельных страницах
 
     function formatTimeAgo(date) {
         const lang = typeof window.t === 'function' ? window.t : (k) => k;
@@ -2234,10 +2221,18 @@ function initAccountPage() {
         const projectEl = document.getElementById('footerProjectCount');
 
         // 1. Обновление проектов
-        if (projectEl && typeof window.projects !== 'undefined') {
-            projectEl.textContent = Array.isArray(window.projects) 
-                ? window.projects.filter(p => !p.deleted).length 
-                : 0;
+        if (projectEl) {
+            let projectCount = 0;
+            
+            // Проверяем разные источники проектов
+            if (typeof window.projects !== 'undefined' && Array.isArray(window.projects)) {
+                projectCount = window.projects.filter(p => !p.deleted).length;
+            } else if (typeof window.faucets !== 'undefined' && Array.isArray(window.faucets)) {
+                // Fallback для faucet страницы
+                projectCount = window.faucets.filter(f => !f.deleted).length;
+            }
+            
+            projectEl.textContent = projectCount;
             projectEl.classList.add('text-cyan-400');
         }
 
@@ -2253,13 +2248,29 @@ function initAccountPage() {
                     exp.doc(db, 'config', 'stats'),
                     function(snap) {
                         if (snap.exists()) {
-                            const count = snap.data().userCount || 0;
-                            userEl.textContent = count;
-                            userEl.classList.toggle('text-emerald-400', count > 0);
-                            userEl.classList.toggle('text-slate-400',   count <= 0);
+                            // Базовое значение из Firebase config
+                            const baseCount = snap.data().userCount || 12321;
+                            
+                            // Получаем реальное количество пользователей
+                            exp.getDocs(exp.collection(db, 'users')).then(usersSnap => {
+                                const realUsersCount = usersSnap.size;
+                                const totalCount = baseCount + realUsersCount;
+                                
+                                userEl.textContent = totalCount;
+                                userEl.classList.toggle('text-emerald-400', totalCount > 0);
+                                userEl.classList.toggle('text-slate-400',   totalCount <= 0);
+                            }).catch(err => {
+                                // Если не удалось получить реальных пользователей, показываем базовое значение
+                                userEl.textContent = baseCount;
+                                console.warn('Failed to get real users count:', err);
+                            });
                         }
                     }
                 );
+            } else {
+                // Fallback если Firebase недоступен
+                userEl.textContent = '12321';
+                console.warn('Firebase not available for user count');
             }
         }
     }   // ← ЕДИНСТВЕННАЯ закрывающая скобка функции
@@ -2487,22 +2498,8 @@ function initAccountPage() {
     document.addEventListener('DOMContentLoaded', function() { setTimeout(updateFooterTranslations, 500); });
     window.updateFooterTranslations = updateFooterTranslations;
 
-    // Универсальная функция для получения отображения флага - инлайн SVG
-    // Универсальная функция для получения отображения флага - flag-icons CSS
-window.getFlagDisplay = function(language) {
-    var data = {
-        ru: {
-            flag: '<span class="fi fi-ua" style="width:20px;height:15px;display:inline-block;vertical-align:middle;border-radius:2px;flex-shrink:0;font-size:20px;line-height:15px;"></span>',
-            text: 'УКР'
-        },
-        en: {
-            flag: '<span class="fi fi-us" style="width:20px;height:15px;display:inline-block;vertical-align:middle;border-radius:2px;flex-shrink:0;font-size:20px;line-height:15px;"></span>',
-            text: 'ENG'
-        }
-    };
-
-    return data[language] || data['ru'];
-};
+    // Универсальная функция для получения отображения флага теперь определена в header.js
+    // Используется window.getFlagDisplay()
 
     window.updateProfileLanguage = async function(language) {
         if (!currentUser) {
