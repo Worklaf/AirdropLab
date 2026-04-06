@@ -52,36 +52,35 @@ async function initAuth() {
     }
 
     // Отслеживаем изменения состояния аутентификации
-    window.onAuthStateChanged(auth, async user => {
-      currentUser = user;
-      window.currentUser = user;
-      isAdmin = user && user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
-      
-      console.log('🔐 Auth state changed:', { user: user?.uid, isAdmin });
-      
-      // Кэшируем пользователя в localStorage для мгновенного восстановления при перезагрузке
-      if (user) {
-        const userData = {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL
-        };
-        localStorage.setItem('firebaseUser', JSON.stringify(userData));
-        localStorage.setItem('__cache_isAdmin', isAdmin ? 'true' : 'false');
-      } else {
-        localStorage.removeItem('firebaseUser');
-        localStorage.removeItem('__cache_isAdmin');
-      }
-      
-      // Обновляем UI на всех страницах
-      updateAuthUI();
-      
-      // Генерируем событие для других скриптов
-      if (typeof window.onAuthStateChanged === 'function') {
-        window.onAuthStateChanged(user);
-      }
-    });
+window.onAuthStateChanged(auth, async user => {
+  currentUser = user;
+  window.currentUser = user;
+  isAdmin = user && user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
+  
+  console.log('🔐 Auth state changed:', { user: user?.uid, isAdmin });
+  
+  if (user) {
+    const userData = {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL
+    };
+    localStorage.setItem('firebaseUser', JSON.stringify(userData));
+    localStorage.setItem('__cache_isAdmin', isAdmin ? 'true' : 'false');
+  } else {
+    localStorage.removeItem('firebaseUser');
+    localStorage.removeItem('__cache_isAdmin');
+  }
+
+  updateAuthUI();
+
+  // 🔁 КАСТОМНОЕ событие для других скриптов
+  if (typeof window.handleAuthStateChanged === 'function') {
+    window.handleAuthStateChanged(user);
+  }
+});
+
 
     console.log('✅ Centralized auth system initialized');
   } catch (error) {
