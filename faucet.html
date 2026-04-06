@@ -3456,6 +3456,13 @@ if (window.auth && typeof onAuthStateChanged === 'function') {
   
   // Загружаем краны без Firebase
   loadFaucetsFromFirestore();
+  
+  // Инициализируем систему реагентов ПОСЛЕ инициализации Firebase
+  console.log('🧪 Initializing Reagents system after Firebase init...');
+  if (typeof window._checkClaimOnLoad === 'function') {
+    setTimeout(window._checkClaimOnLoad, 500);
+    setTimeout(window._checkClaimOnLoad, 2500);
+  }
 }
 </script>
 
