@@ -724,7 +724,37 @@ const waitForFirebase = () => {
   });
 };
 
-await waitForFirebase();
+// Резервная инициализация если централизованная не работает
+const initFirebaseFallback = async () => {
+  try {
+    const cfg = await waitForConfig();
+    if (!cfg?.apiKey) {
+      console.warn('WoF: Firebase config not available, running offline');
+      return;
+    }
+    
+    app = initializeApp(cfg);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    
+    // Store globally
+    window.firebaseApp = app;
+    window.auth = auth;
+    window.db = db;
+    window.firestore = db;
+    
+    console.log('✅ WoF Firebase fallback initialized');
+  } catch(e) {
+    console.warn('WoF Firebase fallback error:', e);
+  }
+};
+
+try {
+  await waitForFirebase();
+} catch(e) {
+  console.warn('WoF: Centralized Firebase failed, using fallback');
+  await initFirebaseFallback();
+}
 
 // Export для совместимости с существующим кодом
 window.wofAuth = auth;
@@ -938,24 +968,31 @@ function groupByMonth(history) {
 // }
 
 // ═══════════════════════════════════════════════════════════
-// CANVAS WHEEL
+// CANVAS WHEEL - инициализация после загрузки DOM
 // ═══════════════════════════════════════════════════════════
-const canvas  = document.getElementById('wheelCanvas');
-const ctx     = canvas.getContext('2d');
+let canvas, ctx;
 
-function resizeCanvas() {
-  const w = canvas.parentElement.offsetWidth;
-  canvas.width  = w;
-  canvas.height = w;
-  drawWheel();
-}
+function initWheel() {
+  canvas = document.getElementById('wheelCanvas');
+  if (!canvas) {
+    console.error('❌ wheelCanvas not found');
+    return;
+  }
+  ctx = canvas.getContext('2d');
+  
+  function resizeCanvas() {
+    const w = canvas.parentElement.offsetWidth;
+    canvas.width  = w;
+    canvas.height = w;
+    drawWheel();
+  }
 
-function drawWheel() {
-  if (!ctx) return;
-  const W = canvas.width;
-  const cx = W / 2, cy = W / 2;
-  const R  = Math.max(0, cx - 8); // Защита от отрицательного радиуса
-  ctx.clearRect(0, 0, W, W);
+  function drawWheel() {
+    if (!ctx) return;
+    const W = canvas.width;
+    const cx = W / 2, cy = W / 2;
+    const R  = Math.max(0, cx - 8); // Защита от отрицательного радиуса
+    ctx.clearRect(0, 0, W, W);
 
   const n = REWARDS.length;
   const slice = (Math.PI * 2) / n;
@@ -1007,10 +1044,23 @@ function drawWheel() {
   ctx.strokeStyle = '#8b5cf6';
   ctx.lineWidth = 3;
   ctx.stroke();
+  }
+  
+  window.addEventListener('resize', () => { resizeCanvas(); });
+  setTimeout(resizeCanvas, 100);
 }
 
-window.addEventListener('resize', () => { resizeCanvas(); });
-setTimeout(resizeCanvas, 100);
+// Инициализируем колесо после загрузки DOM
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initWheel);
+} else {
+  initWheel();
+}
+
+// Делаем canvas и ctx доступными глобально для других функций
+window.wheelCanvas = canvas;
+window.wheelCtx = ctx;
+window.drawWheel = drawWheel; // Делаем drawWheel доступной глобально
 
 // ═══════════════════════════════════════════════════════════
 // SPIN LOGIC
