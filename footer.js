@@ -991,7 +991,7 @@
                                 </div>
                             </div>
                             <div class="w-48 relative" id="profileLangDropdown">
-    <label class="block text-sm font-medium text-slate-300 mb-2">Язык</label>
+   <label class="block text-sm font-medium text-slate-300 mb-2">${lang('footer_language')}</label>
 
     <button onclick="toggleProfileLangDropdown()" id="profileLangBtn"
         class="flex items-center justify-between w-full px-3 py-2.5 rounded-lg border border-slate-700 bg-slate-800 text-sm text-white hover:bg-slate-700 transition">
@@ -2645,7 +2645,7 @@ function initAccountPage() {
         setTimeout(initFooter, 100);
     }
 const profileLangMap = {
-    ru: { flag: "fi fi-ru", text: "Русский" },
+    ru: { flag: "fi fi-ua", text: "Русский" },
     en: { flag: "fi fi-gb", text: "English" },
     tr: { flag: "fi fi-tr", text: "Türkçe" },
     es: { flag: "fi fi-es", text: "Español" }
