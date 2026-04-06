@@ -3496,6 +3496,9 @@ async function setUserRating(faucetId, newRating) {
   });
 }
 
+// Сделать функцию глобальной
+window.renderAll = renderAll;
+
 // Language change rerender
 document.addEventListener('languageChanged', function() {
   renderAll();
