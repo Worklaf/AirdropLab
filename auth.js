@@ -154,7 +154,8 @@ window.closeLoginModal = function() {
 
 window.loginGoogle = async function() {
   try {
-    await signInWithPopup(auth, new GoogleAuthProvider());
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await firebase.auth().signInWithPopup(provider);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход: Google');
@@ -169,7 +170,8 @@ window.loginGoogle = async function() {
 
 window.loginTwitter = async function() {
   try {
-    await signInWithPopup(auth, new TwitterAuthProvider());
+    const provider = new firebase.auth.TwitterAuthProvider();
+    await firebase.auth().signInWithPopup(provider);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход: Twitter');
@@ -195,7 +197,7 @@ window.handleEmailAuth = async function(event) {
   }
   
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    await firebase.auth().signInWithEmailAndPassword(email, password);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход выполнен');
@@ -221,7 +223,7 @@ window.handleRegister = async function(event) {
   }
   
   try {
-    await createUserWithEmailAndPassword(auth, email, password);
+    await firebase.auth().createUserWithEmailAndPassword(email, password);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Аккаунт создан!');
@@ -252,7 +254,7 @@ window.toggleRegisterMode = function() {
 // Функция выхода
 window.logout = async function() {
   try {
-    await signOut(auth);
+    await firebase.auth().signOut();
     currentUser = null;
     window.currentUser = null;
     isAdmin = false;
