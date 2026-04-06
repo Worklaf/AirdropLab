@@ -21,30 +21,28 @@ let isAdmin = false;
 
 // Инициализация аутентификации
 async function initAuth() {
-  console.log('🔐 Initializing centralized auth system...');
-  
   try {
-    // Используем существующий Firebase app или создаем новый
-    if (window.firebaseApp) {
-      auth = window.getAuth(window.firebaseApp);
-    } else if (window.firebaseConfig) {
-      const app = window.initializeApp(window.firebaseConfig);
-      auth = window.getAuth(app);
-      window.firebaseApp = app;
-    } else {
-      console.warn('🔐 No Firebase config available');
-      return;
-    }
+    // Ждем инициализации Firebase
+    const waitForFirebase = () => {
+      return new Promise((resolve) => {
+        const checkFirebase = () => {
+          if (window.firebase && window.firebase.auth) {
+            resolve();
+          } else {
+            setTimeout(checkFirebase, 100);
+          }
+        };
+        checkFirebase();
+      });
+    };
 
-    // Делаем доступным глобально
-    window.auth = auth;
-    window.currentUser = currentUser;
-    window.isAdmin = isAdmin;
+    await waitForFirebase();
 
-    // Проверяем текущего пользователя
+    auth = firebase.auth();
+    
+    // Проверяем текущего пользователя при загрузке
     const immediateUser = auth.currentUser;
     if (immediateUser) {
-      console.log('🔐 User already logged in:', immediateUser.uid);
       currentUser = immediateUser;
       window.currentUser = immediateUser;
       isAdmin = immediateUser.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
@@ -52,7 +50,7 @@ async function initAuth() {
     }
 
     // Отслеживаем изменения состояния аутентификации
-    onAuthStateChanged(auth, async user => {
+    auth.onAuthStateChanged(async user => {
       currentUser = user;
       window.currentUser = user;
       isAdmin = user && user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
@@ -78,9 +76,7 @@ async function initAuth() {
       updateAuthUI();
       
       // Генерируем событие для других скриптов
-      if (typeof window.onAuthStateChanged === 'function') {
-        window.onAuthStateChanged(user);
-      }
+      document.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: user, isAdmin: isAdmin } }));
     });
 
     console.log('✅ Centralized auth system initialized');
