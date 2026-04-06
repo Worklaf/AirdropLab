@@ -214,10 +214,43 @@
                             <i class="fas fa-question-circle text-xs w-4"></i>
                             <span class="text-sm" data-footer-translate="footer_faq">${lang('footer_faq')}</span>
                         </a>
-                        <a href="#" onclick="footerToggleLang(); return false;" class="footer-link group flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
-                            <i class="fas fa-globe text-xs w-4"></i>
-                            <span class="text-sm" data-footer-translate="footer_language">${lang('footer_language')}</span>
-                        </a>
+                        <div class="relative" id="footerLangDropdown">
+                            <button onclick="toggleFooterLangDropdown()" id="footerLangBtn"
+                                class="footer-link group flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
+                                <i class="fas fa-globe text-xs w-4"></i>
+                                <span class="text-sm" id="footerLangText">Язык</span>
+                                <i class="fas fa-chevron-down text-xs text-slate-400 ml-1"></i>
+                            </button>
+
+                            <div id="footerLangMenu"
+                                class="absolute left-0 bottom-full mb-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl hidden z-50">
+                                <div class="py-1">
+                                    <button onclick="selectFooterLanguage('ru')" 
+                                        class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700">
+                                        <span class="fi fi-ua"></span>
+                                        <span>Русский</span>
+                                    </button>
+
+                                    <button onclick="selectFooterLanguage('en')" 
+                                        class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700">
+                                        <span class="fi fi-gb"></span>
+                                        <span>English</span>
+                                    </button>
+
+                                    <button onclick="selectFooterLanguage('tr')" 
+                                        class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700">
+                                        <span class="fi fi-tr"></span>
+                                        <span>Türkçe</span>
+                                    </button>
+
+                                    <button onclick="selectFooterLanguage('es')" 
+                                        class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700">
+                                        <span class="fi fi-es"></span>
+                                        <span>Español</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         <div class="pt-3 mt-2 border-t border-slate-800/50">
                             <div class="flex items-center gap-2 text-xs text-slate-500">
                                 <i class="fas fa-users text-emerald-400"></i>
@@ -335,11 +368,41 @@
                         <div class="tech-item flex items-center gap-2"><i class="fab fa-css3-alt text-blue-400"></i><span>Tailwind CSS</span></div>
                         <div class="tech-item flex items-center gap-2"><i class="fas fa-font text-purple-400"></i><span>Font Awesome</span></div>
                         <div class="tech-item flex items-center gap-2"><i class="fas fa-code text-emerald-400"></i><span>JavaScript</span></div>
-                        <div class="md:hidden flex items-center gap-2 ml-4 pl-4 border-l border-slate-700">
-                            <button onclick="footerToggleLang()" id="footerLangBtn" class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 hover:bg-slate-700 rounded-lg border border-slate-700/50 text-xs transition-all text-slate-300">
-                                <span class="lang-flag-footer">🇷🇺</span>
-                                <span class="lang-text-footer">РУС</span>
+                        <div class="md:hidden flex items-center gap-2 ml-4 pl-4 border-l border-slate-700 relative" id="footerLangDropdownMobile">
+                            <button onclick="toggleFooterLangDropdown()" id="footerLangBtnMobile" class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 hover:bg-slate-700 rounded-lg border border-slate-700/50 text-xs transition-all text-slate-300">
+                                <i class="fas fa-globe text-xs"></i>
+                                <span id="footerLangTextMobile">Русский</span>
+                                <i class="fas fa-chevron-down text-xs text-slate-400"></i>
                             </button>
+                            
+                            <div id="footerLangMenuMobile"
+                                class="absolute left-0 bottom-full mb-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl hidden z-50">
+                                <div class="py-1">
+                                    <button onclick="selectFooterLanguage('ru')" 
+                                        class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700">
+                                        <span class="fi fi-ua"></span>
+                                        <span>Русский</span>
+                                    </button>
+
+                                    <button onclick="selectFooterLanguage('en')" 
+                                        class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700">
+                                        <span class="fi fi-gb"></span>
+                                        <span>English</span>
+                                    </button>
+
+                                    <button onclick="selectFooterLanguage('tr')" 
+                                        class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700">
+                                        <span class="fi fi-tr"></span>
+                                        <span>Türkçe</span>
+                                    </button>
+
+                                    <button onclick="selectFooterLanguage('es')" 
+                                        class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-slate-700">
+                                        <span class="fi fi-es"></span>
+                                        <span>Español</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2474,6 +2537,7 @@ function initAccountPage() {
     setTimeout(() => {
         updateFooterLanguageButton();
         updateAllFlagSelectors();
+        updateFooterLanguageText();
         console.log('Flags initialized with inline CSS');
     }, 200);
     
@@ -2666,14 +2730,88 @@ function selectProfileLanguage(lang) {
     updateProfileLanguage(lang);
 }
 
+// Функции для выпадающего списка языка в футере
+window.toggleFooterLangDropdown = function() {
+    document.getElementById("footerLangMenu").classList.toggle("hidden");
+};
+
+window.selectFooterLanguage = function(lang) {
+    const data = profileLangMap[lang];
+    
+    // Обновляем текст в десктопной кнопке
+    const footerLangText = document.getElementById("footerLangText");
+    if (footerLangText) {
+        footerLangText.textContent = data.text;
+    }
+    
+    // Обновляем текст в мобильной кнопке
+    const footerLangTextMobile = document.getElementById("footerLangTextMobile");
+    if (footerLangTextMobile) {
+        footerLangTextMobile.textContent = data.text;
+    }
+    
+    // Закрываем оба меню
+    const footerMenu = document.getElementById("footerLangMenu");
+    if (footerMenu) footerMenu.classList.add("hidden");
+    
+    const footerMenuMobile = document.getElementById("footerLangMenuMobile");
+    if (footerMenuMobile) footerMenuMobile.classList.add("hidden");
+    
+    // Устанавливаем язык
+    if (typeof window.setLanguage === 'function') {
+        window.setLanguage(lang);
+    } else if (typeof window.toggleLang === 'function') {
+        window.toggleLang();
+    }
+    
+    // Показываем уведомление
+    const langFunc = typeof window.t === 'function' ? window.t : (k) => k;
+    footerShowToast(langFunc('footer_language_changed'));
+};
+
+// Обновляем текст языка в футере при инициализации
+function updateFooterLanguageText() {
+    const currentLang = localStorage.getItem('airdropLabLang') || 'ru';
+    const data = profileLangMap[currentLang] || profileLangMap['ru'];
+    
+    // Обновляем десктопную кнопку
+    const footerLangText = document.getElementById("footerLangText");
+    if (footerLangText) {
+        footerLangText.textContent = data.text;
+    }
+    
+    // Обновляем мобильную кнопку
+    const footerLangTextMobile = document.getElementById("footerLangTextMobile");
+    if (footerLangTextMobile) {
+        footerLangTextMobile.textContent = data.text;
+    }
+}
+
 // Экспортируем функции глобально
 window.toggleProfileLangDropdown = toggleProfileLangDropdown;
 window.selectProfileLanguage = selectProfileLanguage;
+window.updateFooterLanguageText = updateFooterLanguageText;
 
 document.addEventListener("click", (e) => {
-    const box = document.getElementById("profileLangDropdown");
-    if (!box.contains(e.target)) {
-        document.getElementById("profileLangMenu").classList.add("hidden");
+    // Закрываем выпадающий список профиля
+    const profileBox = document.getElementById("profileLangDropdown");
+    if (profileBox && !profileBox.contains(e.target)) {
+        const profileMenu = document.getElementById("profileLangMenu");
+        if (profileMenu) profileMenu.classList.add("hidden");
+    }
+    
+    // Закрываем выпадающий список футера (десктоп)
+    const footerBox = document.getElementById("footerLangDropdown");
+    if (footerBox && !footerBox.contains(e.target)) {
+        const footerMenu = document.getElementById("footerLangMenu");
+        if (footerMenu) footerMenu.classList.add("hidden");
+    }
+    
+    // Закрываем выпадающий список футера (мобильный)
+    const footerBoxMobile = document.getElementById("footerLangDropdownMobile");
+    if (footerBoxMobile && !footerBoxMobile.contains(e.target)) {
+        const footerMenuMobile = document.getElementById("footerLangMenuMobile");
+        if (footerMenuMobile) footerMenuMobile.classList.add("hidden");
     }
 });
 
