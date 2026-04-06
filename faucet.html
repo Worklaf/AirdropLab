@@ -9,29 +9,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css">
-  
-  <!-- Firebase SDK - загружаем ПЕРЕД модулями (v9 compat для глобального использования) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  
-  <!-- Firebase конфигурация и инициализация -->
-  <script src="config/firebase-config.js"></script>
-  <script>
-    // Немедленная инициализация Firebase после загрузки конфигурации
-    if (typeof firebase !== 'undefined' && window.firebaseConfig) {
-      if (!firebase.apps.length) {
-        firebase.initializeApp(window.firebaseConfig);
-        console.log('✅ Firebase немедленно инициализирован');
-      }
-    }
-  </script>
-  <script src="auth.js"></script>
   <script src="languages.js"></script>
   <script src="header.js"></script>
   <script src="assets/reagents.js"></script>
-  <script src="auth-modal.js"></script>
   <style>
     /* z-index fix — nav dropdown поверх всего */
     #site-nav { position: relative; z-index: 999 !important; }
@@ -208,10 +188,6 @@
   </style>
 </head>
 <body class="antialiased">
-  <!-- Toast уведомления (как в index.html) -->
-  <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 border border-slate-700 text-white px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
-    <i class="fas fa-check-circle text-emerald-400"></i><span id="toastMessage">Действие выполнено</span>
-  </div>
 
 <div id="site-header"></div>
 
@@ -620,6 +596,9 @@ window.updateRatingDisplay = updateRatingDisplay;
   </div>
 </div>
 
+<!-- Firebase Configuration -->
+<script src="config/firebase-config.js"></script>
+
 <!-- Firebase и приложение -->
 <script type="module">
 // ═══════════════════════════════════════════
@@ -992,98 +971,120 @@ const COL_SUGGESTIONS = 'faucet_suggestions';
 let isEn = (window.currentLang === 'en');
 
 // Firebase init - используем глобальную конфигурацию
-// Ждем загрузки конфигурации из firebase-config.js
-function initializeFirebase() {
-  const firebaseConfig = window.firebaseConfig;
-  
-  // Критичные логи для отладки
-  console.log('🔧 Firebase Config Debug:', {
-    hasConfig: !!firebaseConfig,
-    hasApiKey: !!(firebaseConfig?.apiKey),
-    projectId: firebaseConfig?.projectId,
-    apiKeyLength: firebaseConfig?.apiKey?.length || 0
-  });
+const firebaseConfig = window.firebaseConfig;
 
-  // Используем глобальные Firebase переменные из загруженных SDK
-  if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function' && firebaseConfig) {
-    console.log('✅ Firebase доступен, проверяем инициализацию...');
-    
-    // Firebase уже инициализирован в head, просто получаем сервисы
-    if (firebase.apps.length > 0) {
-      console.log('✅ Firebase уже инициализирован, получаем сервисы...');
-    } else {
-      console.log('⚠️ Firebase не инициализирован, инициализируем...');
-      firebase.initializeApp(firebaseConfig);
-    }
-    
-    // Получаем Firebase сервисы
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    
-    // Экспортируем глобально для других скриптов
-    window.auth = auth;
-    window.db = db;
-    
-    // Экспортируем функции для совместимости
-    window.__authExports = { 
-      onAuthStateChanged: auth.onAuthStateChanged.bind(auth), 
-      signOut: auth.signOut.bind(auth)
-    };
-    
+// Критичные логи для отладки
+console.log('🔧 Firebase Config Debug:', {
+  hasConfig: !!firebaseConfig,
+  hasApiKey: !!(firebaseConfig?.apiKey),
+  projectId: firebaseConfig?.projectId,
+  apiKeyLength: firebaseConfig?.apiKey?.length || 0
+});
+
+// Firebase imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  signInWithPopup,
+  GoogleAuthProvider,
+  TwitterAuthProvider
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  initializeFirestore,
+  collection,
+  doc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  setDoc,
+  getDoc,
+  query,
+  where,
+  limit,
+  orderBy,
+  serverTimestamp,
+  increment,
+  runTransaction,
+  writeBatch,
+  onSnapshot,
+  arrayUnion
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// Проверяем доступность Firebase
+if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === "test" || firebaseConfig.apiKey === "disabled") {
+  console.log('⚠️ Firebase недоступен, используем локальный режим');
+  window.auth = null;
+  window.db = null;
+  window.currentUser = null;
+  window.loadFaucetsFromFirestore = async function() {
+    return [];
+  };
+} else {
+  console.log('✅ Firebase доступен, инициализируем...');
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  let db;
+  try {
+    db = initializeFirestore(app, {
+      cacheSizeBytes: 10000000 // 10MB
+    });
     console.log('✅ Firestore успешно инициализирован');
-    return true;
+  } catch (e) {
+    console.warn('⚠️ Firestore инициализация не удалась, используем стандартную:', e);
+    db = getFirestore(app);
+  }
+
+  // Глобальные переменные Firebase
+  window.auth = auth;
+  window.db = db;
+  window.currentUser = null;
+
+  // Provide globals for other modules
+  window.__firestoreExports = {
+    collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+    query, where, orderBy, onSnapshot, serverTimestamp, increment, runTransaction, arrayUnion
+  };
+  window.__authExports = { onAuthStateChanged, signOut };
+}
+
+  // Provide globals for other modules (reagents.js expects these)
+  window.db = db;
+  window.auth = auth;
+  window.__firestoreExports = {
+    collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+    query, where, orderBy, limit, writeBatch, serverTimestamp, onSnapshot
+  };
+
+  // Инициализируем Firebase экспорты для common.js
+  if (typeof window.initFirebaseExports === 'function') {
+    window.initFirebaseExports({
+      collection, doc, getDoc, getDocs, addDoc, updateDoc,
+      query, where, orderBy, limit, writeBatch, serverTimestamp, onSnapshot
+    });
   } else {
-    console.log('🔥 Firebase недоступен, работаем без аутентификации');
-    return false;
+    console.log('⚠️ initFirebaseExports не доступен, пропускаем инициализацию');
+  }
+
+// Функция toast для уведомлений
+function toast(message) {
+  if (typeof window.showToast === 'function') {
+    window.showToast(message);
+  } else {
+    console.log('Toast:', message);
   }
 }
 
-// Firestore функции для совместимости
-if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
-  const firestore = firebase.firestore();
-  
-  // Экспортируем Firestore функции
-  window.collection = firestore.collection.bind(firestore);
-  window.doc = firestore.doc.bind(firestore);
-  window.getDoc = async (ref) => {
-    const snap = await ref.get();
-    return { exists: snap.exists, data: () => snap.data(), id: snap.id };
-  };
-  window.getDocs = async (ref) => {
-    const snap = await ref.get();
-    return { docs: snap.docs.map(doc => ({ exists: true, data: () => doc.data(), id: doc.id })) };
-  };
-  window.addDoc = async (ref, data) => {
-    const result = await ref.add(data);
-    return { id: result.id };
-  };
-  window.updateDoc = async (ref, data) => {
-    await ref.update(data);
-  };
-  window.deleteDoc = async (ref) => {
-    await ref.delete();
-  };
-  window.query = firestore.query.bind(firestore);
-  window.where = firestore.where.bind(firestore);
-  window.orderBy = firestore.orderBy.bind(firestore);
-  window.serverTimestamp = firestore.FieldValue.serverTimestamp;
-  window.increment = firestore.FieldValue.increment;
-  window.onSnapshot = firestore.onSnapshot.bind(firestore);
-}
-
-// Auth функции для совместимости
-if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function') {
-  const auth = firebase.auth();
-  
-  // Экспортируем Auth функции
-  window.signInWithPopup = auth.signInWithPopup.bind(auth);
-  window.signInWithEmailAndPassword = auth.signInWithEmailAndPassword.bind(auth);
-  window.createUserWithEmailAndPassword = auth.createUserWithEmailAndPassword.bind(auth);
-  window.GoogleAuthProvider = firebase.auth.GoogleAuthProvider;
-  window.TwitterAuthProvider = firebase.auth.TwitterAuthProvider;
-  window.onAuthStateChanged = auth.onAuthStateChanged.bind(auth);
-  window.signOut = auth.signOut.bind(auth);
-}
+// Функция showToast для совместимости
+window.showToast = function(message) {
+  console.log('Toast:', message);
+  // Здесь можно добавить визуальное отображение toast
+};
 
 function normalizeUrl(u) {
   if (!u) return '';
@@ -2149,13 +2150,13 @@ window.rewardUser = async function(userId, suggestionId) {
   
   try {
     // Обновляем баланс пользователя в коллекции users
-    const userRef = doc(window.db, 'users', userId);
+    const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, {
       reagents: increment(Number(amount))
     });
     
     // Записываем транзакцию награды
-    await addDoc(collection(window.db, 'reward_transactions'), {
+    await addDoc(collection(db, 'reward_transactions'), {
       userId: userId,
       amount: Number(amount),
       type: 'suggestion_reward',
@@ -2191,7 +2192,7 @@ window.rewardUser = async function(userId, suggestionId) {
       const isUserEn = userLang === 'en' || userLang === 'en-US';
       
       // Отправляем уведомление в коллекции notifications
-      await addDoc(collection(window.db, 'notifications'), {
+      await addDoc(collection(db, 'notifications'), {
         userId: userId,
         type: 'reward',
         title: isUserEn ? 'RGT Reward Received!' : 'Получена RGT награда!',
@@ -2434,12 +2435,12 @@ async function saveSuggestion() {
           clickCount: 0
         };
         
-        await addDoc(collection(window.db, COL_FAUCETS), newPayload);
+        await addDoc(collection(db, COL_FAUCETS), newPayload);
         toast((window.currentLang === 'en') ? 'Suggestion resubmitted!' : 'Предложение отправлено повторно!');
       } else {
         // Обновляем существующее pending предложение
         payload.status = 'pending'; // гарантируем статус pending
-        await updateDoc(doc(window.db, COL_FAUCETS, id), payload);
+        await updateDoc(doc(db, COL_FAUCETS, id), payload);
         toast((window.currentLang === 'en') ? 'Suggestion updated!' : 'Предложение обновлено!');
       }
     } else {
@@ -2604,7 +2605,7 @@ async function submitSuggestion() {
         clickCount: 0
       };
       
-      await addDoc(collection(window.db, COL_FAUCETS), faucetData);
+      await addDoc(collection(db, COL_FAUCETS), faucetData);
       toast((window.currentLang === 'en') ? 'Suggestion sent!' : 'Предложение отправлено!');
     }
     
@@ -2707,52 +2708,42 @@ function closeLoginModal() {
 window.openLoginModal = openLoginModal;
 window.closeLoginModal = closeLoginModal;
 window.loginGoogle = async function() {
-  try { 
-    await signInWithPopup(window.auth, new GoogleAuthProvider()); 
-    closeLoginModal(); 
-    showToast('Вход: Google'); 
-  } catch(e) { 
-    showToast(e.message); 
+  if (!window.auth) {
+    alert((window.currentLang==='en')?'Firebase not available':'Firebase недоступен');
+    return;
   }
+  try { await signInWithPopup(window.auth, new GoogleAuthProvider()); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
+  catch(e) { alert(e.message); }
 };
 window.loginTwitter = async function() {
-  try { 
-    await signInWithPopup(window.auth, new TwitterAuthProvider()); 
-    closeLoginModal(); 
-    showToast('Вход: Twitter'); 
-  } catch(e) { 
-    showToast(e.message); 
+  if (!window.auth) {
+    alert((window.currentLang==='en')?'Firebase not available':'Firebase недоступен');
+    return;
   }
+  try { await signInWithPopup(window.auth, new TwitterAuthProvider()); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
+  catch(e) { alert(e.message); }
 };
 window.loginEmail = async function() {
+  if (!window.auth) {
+    alert((window.currentLang==='en')?'Firebase not available':'Firebase недоступен');
+    return;
+  }
   const email = (document.getElementById('emailInput')?.value || '').trim();
   const pass  = (document.getElementById('passInput')?.value || '').trim();
-  if (!email || !pass) { 
-    showToast((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); 
-    return; 
-  }
-  try { 
-    await signInWithEmailAndPassword(window.auth, email, pass); 
-    closeLoginModal(); 
-    showToast((window.currentLang==='en')?'Logged in':'Вход выполнен'); 
-  } catch(e) { 
-    showToast(e.message); 
-  }
+  if (!email || !pass) { alert((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); return; }
+  try { await signInWithEmailAndPassword(window.auth, email, pass); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
+  catch(e) { alert(e.message); }
 };
 window.registerEmail = async function() {
+  if (!window.auth) {
+    alert((window.currentLang==='en')?'Firebase not available':'Firebase недоступен');
+    return;
+  }
   const email = (document.getElementById('emailInput')?.value || '').trim();
   const pass  = (document.getElementById('passInput')?.value || '').trim();
-  if (!email || !pass) { 
-    showToast((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); 
-    return; 
-  }
-  try { 
-    await createUserWithEmailAndPassword(window.auth, email, pass); 
-    closeLoginModal(); 
-    showToast((window.currentLang==='en')?'Account created!':'Аккаунт создан!'); 
-  } catch(e) { 
-    showToast(e.message); 
-  }
+  if (!email || !pass) { alert((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); return; }
+  try { await createUserWithEmailAndPassword(window.auth, email, pass); closeLoginModal(); toast((window.currentLang==='en')?'Account created':'Аккаунт создан'); }
+  catch(e) { alert(e.message); }
 };
 window.logout = function() { 
   if (window.auth) signOut(window.auth); 
@@ -2808,7 +2799,7 @@ async function loadFavorites() {
   if (currentUser) {
     // Load faucet-level favorites (legacy)
     try {
-      const favSnap = await getDoc(doc(window.db, 'users', currentUser.uid, 'faucetFavorites', 'list'));
+      const favSnap = await getDoc(doc(db, 'users', currentUser.uid, 'faucetFavorites', 'list'));
       if (favSnap.exists()) {
         favSnap.data().ids?.forEach(id => favoritesSet.add(id));
       }
@@ -2816,7 +2807,7 @@ async function loadFavorites() {
     
     // Load link-level favorites
     try {
-      const linkSnap = await getDocs(collection(window.db, 'users', currentUser.uid, 'linkFavorites'));
+      const linkSnap = await getDocs(collection(db, 'users', currentUser.uid, 'linkFavorites'));
       linkSnap.forEach(doc => {
         linkFavoritesSet.add(doc.id);
       });
@@ -3327,62 +3318,142 @@ document.addEventListener('languageChanged', function() {
   renderAll();
 });
 
-// Правильная инициализация Firebase и модулей
-document.addEventListener('DOMContentLoaded', async function() {
-  console.log('🚀 Faucet page initialization started');
-  
-  // Инициализируем Firebase с fallback
-  let firebaseReady = initializeFirebase();
-  
-  // Если Firebase не готов сразу, ждем немного
-  if (!firebaseReady && typeof firebase !== 'undefined') {
-    console.log('⏳ Ожидаем инициализации Firebase...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    firebaseReady = initializeFirebase();
-  }
-  
-  // Ждем инициализации Auth
-  if (typeof window.initAuth === 'function') {
-    await window.initAuth();
-  }
-  
-  // Создаем модальное окно входа
-  if (typeof window.createLoginModal === 'function') {
-    window.createLoginModal();
-  }
-  
-  // Вставляем хедер с переключателем языка
-  if (typeof window.injectHeader === 'function') {
-    window.injectHeader();
-  }
-  
-  // Настраиваем onAuthStateChanged если Firebase готов
-  if (firebaseReady && window.auth && typeof window.onAuthStateChanged === 'function') {
-    window.onAuthStateChanged(window.auth, async (user) => {
-      currentUser = user || null;
-      window.currentUser = currentUser;
-      isAdmin = !!(user && (user.uid === ADMIN_UID));
-      window.isAdmin = isAdmin;
-      // Обновляем мобильные и десктопные кнопки администратора
-      if (typeof window.updateMobileAdminButtons === 'function') {
-        window.updateMobileAdminButtons();
+// Init - безопасный запуск с проверкой Firebase
+if (window.auth && typeof onAuthStateChanged === 'function') {
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user || null;
+    window.currentUser = currentUser;
+    isAdmin = !!(user && (user.uid === ADMIN_UID));
+    window.isAdmin = isAdmin; // Добавляем эту строку!
+    // Обновляем мобильные и десктопные кнопки администратора
+    if (typeof window.updateMobileAdminButtons === 'function') {
+      window.updateMobileAdminButtons();
+    }
+    // Показываем фиксированную админ-панель
+    const adminPanel = document.getElementById('fixedAdminPanel');
+    if (adminPanel) {
+      adminPanel.style.display = isAdmin ? 'flex' : 'none';
+    }
+    
+    // Обновляем видимость полей редактирования
+    if (typeof window.updateEditFieldsVisibility === 'function') {
+      window.updateEditFieldsVisibility();
+    }
+    
+    // Загружаем язык пользователя из профиля
+    if (user && window.db) {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          
+          // Загружаем язык пользователя из профиля
+          if (userData.language) {
+            window.currentLang = userData.language;
+            
+            // Обновляем язык интерфейса
+            if (typeof window.setLanguage === 'function') {
+              window.setLanguage(userData.language);
+            }
+            
+            // Обновляем кнопку в футере
+            if (typeof window.updateFooterLanguageButton === 'function') {
+              window.updateFooterLanguageButton();
+            }
+          }
+        }
+      } catch(e) {
+        console.warn('Failed to load user language:', e);
       }
-      // Показываем фиксированную админ-панель
-      const adminPanel = document.getElementById('fixedAdminPanel');
-      if (adminPanel) {
-        adminPanel.style.display = isAdmin ? 'flex' : 'none';
-      }
+    }
+    
+    // Показываем/скрываем кнопки фильтров
+    const mySuggestionsBtn = document.getElementById('mySuggestionsFilter');
+    const suggestionsBtn = document.getElementById('suggestionsFilter');
+    const hiddenFilterBtn = document.getElementById('hiddenFilter');
+    
+    if (mySuggestionsBtn) {
+      mySuggestionsBtn.style.display = user ? 'inline-flex' : 'none';
+    }
+    if (suggestionsBtn) {
+      suggestionsBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+    }
+    if (hiddenFilterBtn) {
+      hiddenFilterBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+    }
+    
+    updateHeaderAuthUI(user);
+    await loadFavorites();
+    updateCounts(); // Обновляем счетчики после загрузки избранного
+    await loadFaucetsFromFirestore();
+    updateCounts(); // Обновляем счетчики после загрузки кранов
+    // Повторный вызов с задержкой для надежности
+    setTimeout(function() { updateCounts(); }, 500);
+    
+    if (isAdmin) await loadPendingSuggestions();
+    if (user && window.db) {
+      await loadNotifications(); // Используем функцию из common.js
       
-      // Обновляем UI
-      updateHeaderAuthUI(user);
-      updateAuthButtons(user);
-      loadFavorites();
-      renderAll();
-    });
+      // Инициализируем слушатель уведомлений для real-time обновлений
+      if (typeof initNotificationsListener === 'function') {
+        initNotificationsListener(user.uid);
+      }
+    }
+
+    // Hook profile/account modal (footer.js)
+    try {
+      const avaWrap = document.getElementById('userAvatarWrapper');
+      const nameWrap = document.getElementById('userNameWrapper');
+      const openAccount = () => {
+        if (typeof window.openPageModal === 'function') window.openPageModal('account');
+      };
+      if (avaWrap) avaWrap.onclick = openAccount;
+      if (nameWrap) nameWrap.onclick = openAccount;
+      
+      // Hook notifications button
+      const notifBtn = document.getElementById('notificationButton') || document.querySelector('[onclick*="openNotificationsModal"]') || document.querySelector('[onclick*="showNotifications"]');
+      if (notifBtn && !notifBtn.onclick) {
+        notifBtn.onclick = () => {
+          if (typeof window.showNotifications === 'function') {
+            window.showNotifications();
+          } else if (typeof window.openNotificationsModal === 'function') {
+            window.openNotificationsModal();
+          }
+        };
+      }
+    } catch(_) {}
+  });
+} else {
+  // Firebase недоступен - запускаем без аутентификации
+  console.log('🔧 Firebase недоступен, запускаем без аутентификации');
+  currentUser = null;
+  window.currentUser = null;
+  isAdmin = false;
+  
+  // Скрываем админ-панель
+  const adminPanel = document.getElementById('fixedAdminPanel');
+  if (adminPanel) {
+    adminPanel.style.display = 'none';
   }
   
-  console.log('✅ Faucet page initialization completed');
-});
+  // Скрываем кнопки фильтров
+  const mySuggestionsBtn = document.getElementById('mySuggestionsFilter');
+  const suggestionsBtn = document.getElementById('suggestionsFilter');
+  const hiddenFilterBtn = document.getElementById('hiddenFilter');
+  
+  if (mySuggestionsBtn) {
+    mySuggestionsBtn.style.display = 'none';
+  }
+  if (suggestionsBtn) {
+    suggestionsBtn.style.display = 'none';
+  }
+  if (hiddenFilterBtn) {
+    hiddenFilterBtn.style.display = 'none';
+  }
+  
+  // Загружаем краны без Firebase
+  loadFaucetsFromFirestore();
+}
 </script>
 
 <!-- Фиксированная админ-панель -->
@@ -4089,33 +4160,6 @@ window.updateEditFieldsVisibility = updateEditFieldsVisibility;
   display: none !important;
 }
 </style>
-
-<!-- Глобальные функции для уведомлений (как в index.html) -->
-<script>
-window.showToast = function(msg) { 
-  const translatedMsg = (typeof t === 'function') ? (t(msg) || msg) : msg;
-  const toastEl = document.getElementById('toast'); 
-  if (toastEl) {
-    const toastMessageEl = document.getElementById('toastMessage');
-    if (toastMessageEl) {
-      toastMessageEl.textContent = translatedMsg; 
-      toastEl.classList.remove('translate-y-20', 'opacity-0'); 
-      setTimeout(function() { toastEl.classList.add('translate-y-20', 'opacity-0'); }, 3000); 
-    }
-  } else {
-    console.log('Toast:', translatedMsg);
-  }
-};
-
-// Fallback функция для обратной совместимости
-window.toast = function(message) {
-  if (typeof showToast === 'function') {
-    showToast(message);
-  } else {
-    console.log('Toast:', message);
-  }
-};
-</script>
 
 <script src="footer.js"></script>
 
