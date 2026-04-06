@@ -16,8 +16,17 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   
-  <!-- Firebase конфигурация -->
+  <!-- Firebase конфигурация и инициализация -->
   <script src="config/firebase-config.js"></script>
+  <script>
+    // Немедленная инициализация Firebase после загрузки конфигурации
+    if (typeof firebase !== 'undefined' && window.firebaseConfig) {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(window.firebaseConfig);
+        console.log('✅ Firebase немедленно инициализирован');
+      }
+    }
+  </script>
   <script src="auth.js"></script>
   <script src="languages.js"></script>
   <script src="header.js"></script>
@@ -997,10 +1006,13 @@ function initializeFirebase() {
 
   // Используем глобальные Firebase переменные из загруженных SDK
   if (typeof firebase !== 'undefined' && firebaseConfig) {
-    console.log('✅ Firebase доступен, инициализируем...');
+    console.log('✅ Firebase доступен, проверяем инициализацию...');
     
-    // Инициализируем Firebase приложение если еще не инициализировано
-    if (!firebase.apps.length) {
+    // Firebase уже инициализирован в head, просто получаем сервисы
+    if (firebase.apps.length > 0) {
+      console.log('✅ Firebase уже инициализирован, получаем сервисы...');
+    } else {
+      console.log('⚠️ Firebase не инициализирован, инициализируем...');
       firebase.initializeApp(firebaseConfig);
     }
     
