@@ -9,14 +9,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-  
-  <!-- Firebase Configuration -->
-  <script src="config/firebase-config.js"></script>
-  
   <!-- CENTRALIZED AUTHENTICATION SYSTEM -->
   <script src="auth.js"></script>
   <script src="auth-modal.js"></script>
@@ -199,7 +191,6 @@
     /* Fix for clickable links even in overlays */
     .faucet-links-list a { pointer-events: auto; }
   </style>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css">
 </head>
 <body class="antialiased">
 
@@ -573,6 +564,9 @@ window.updateRatingDisplay = updateRatingDisplay;
     </div>
   </div>
 </div>
+
+<!-- Firebase Configuration -->
+<script src="config/firebase-config.js"></script>
 
 <!-- Firebase и приложение -->
 <script type="module">
@@ -1930,7 +1924,7 @@ window.showUserInfo = async function(userId) {
                         <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Язык интерфейса</div>
                         <select id="userLanguageSelect" onchange="updateUserLanguage(this.value)" style="font-size:13px;color:#f1f5f9;background:rgba(71,85,105,0.2);border:1px solid rgba(71,85,105,0.3);border-radius:6px;padding:6px 8px;width:100%;">
                             <option value="ru" ${userData.language === 'ru' || (!userData.language && window.currentLang === 'ru') ? 'selected' : ''}>${typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('ru').flag + ' ' + window.getFlagDisplay('ru').text + ' (Русский)' : '<span class="fi fi-ua"></span> УКР (Русский)'}</option>
-                            <option value="en" ${userData.language === 'en' || (!userData.language && window.currentLang === 'en') ? 'selected' : ''}>${typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').flag + ' ' + window.getFlagDisplay('en').text + ' (English)' : '<span class="fi fi-gb"></span> ENG (English)'}</option>
+                            <option value="en" ${userData.language === 'en' || (!userData.language && window.currentLang === 'en') ? 'selected' : ''}>${typeof window.getFlagDisplay === 'function' ? window.getFlagDisplay('en').flag + ' ' + window.getFlagDisplay('en').text + ' (English)' : '<span class="fi fi-us"></span> ENG (English)'}</option>
                         </select>
                     </div>
                     ${userData.firstName ? `
@@ -3541,16 +3535,6 @@ function closeFaucetModal() {
 
 // Обработчики языковых кнопок
 document.addEventListener('DOMContentLoaded', function() {
-  // Создаем модальное окно входа
-  if (typeof createLoginModal === 'function') {
-    createLoginModal();
-  }
-  
-  // Инициализируем аутентификацию
-  if (typeof initAuth === 'function') {
-    initAuth();
-  }
-  
   // Языковой переключатель модального окна
   document.querySelectorAll('.modal-lang-btn').forEach(btn => {
     btn.addEventListener('click', () => {
