@@ -706,8 +706,33 @@ try {
   window.auth = auth;
   window.db   = db;
   window.firestore = db; // Добавляем для онлайн-режима
-  window.__firestoreExports = { collection: firebase.firestore().collection, doc: firebase.firestore().doc, getDoc: firebase.firestore().doc, setDoc: firebase.firestore().doc, getDocs: firebase.firestore().getDocs, updateDoc: firebase.firestore().doc, addDoc: firebase.firestore().doc, deleteDoc: firebase.firestore().doc, query: firebase.firestore().query, orderBy: firebase.firestore().orderBy, limit: firebase.firestore().limit, where: firebase.firestore().where, serverTimestamp: firebase.firestore.FieldValue.serverTimestamp, increment: firebase.firestore.FieldValue.increment, runTransaction: firebase.firestore().runTransaction, writeBatch: firebase.firestore().writeBatch, arrayUnion: firebase.firestore.FieldValue.arrayUnion, onSnapshot: firebase.firestore().onSnapshot };
-  window.__authExports = { onAuthStateChanged: firebase.auth().onAuthStateChanged, signOut: firebase.auth().signOut };
+  window.__firestoreExports = { 
+    collection: (path) => db.collection(path), 
+    doc: (path) => db.doc(path), 
+    getDoc: (ref) => ref.get(), 
+    setDoc: (ref, data) => ref.set(data), 
+    getDocs: (query) => query.get(), 
+    updateDoc: (ref, data) => ref.update(data), 
+    addDoc: (collection, data) => collection.add(data), 
+    deleteDoc: (ref) => ref.delete(), 
+    query: (collection, ...constraints) => {
+      let q = collection;
+      constraints.forEach(constraint => {
+        q = q.where(constraint.field, constraint.operator, constraint.value);
+      });
+      return q;
+    }, 
+    orderBy: (field, direction) => ({ field, direction }), 
+    limit: (n) => ({ limit: n }), 
+    where: (field, op, value) => ({ field, operator: op, value }), 
+    serverTimestamp: () => firebase.firestore.FieldValue.serverTimestamp(), 
+    increment: (n) => firebase.firestore.FieldValue.increment(n), 
+    runTransaction: (fn) => db.runTransaction(fn), 
+    writeBatch: () => db.batch(), 
+    arrayUnion: (elements) => firebase.firestore.FieldValue.arrayUnion(elements), 
+    onSnapshot: (ref, callback) => ref.onSnapshot(callback) 
+  };
+  window.__authExports = { onAuthStateChanged: (callback) => auth.onAuthStateChanged(callback), signOut: () => auth.signOut() };
   
   // Инициализируем экспорты для header.js
   if (typeof window.initFirebaseExports === 'function') {
@@ -1022,8 +1047,8 @@ window.doSpin = async function() {
   // IMPORTANT: Fresh load of userData before balance check
   if (db) {
     try {
-      const freshSnap = await getDoc(doc(db, COL_USERS, window.currentUser.uid));
-      if (freshSnap.exists()) {
+      const freshSnap = await db.collection(COL_USERS).doc(window.currentUser.uid).get();
+      if (freshSnap.exists) {
         userData = freshSnap.data();
         window.userProfileData = userData;
       }
@@ -1110,7 +1135,7 @@ async function handleResult(reward, isFree) {
   // Save to Firestore
   try {
     if (db && window.currentUser) {
-      const uRef = doc(db, COL_USERS, window.currentUser.uid);
+      const uRef = db.collection(COL_USERS).doc(window.currentUser.uid);
       const updates = {
         'wof.totalSpins':   wof.totalSpins,
         'wof.totalWon':     wof.totalWon,
@@ -1120,28 +1145,28 @@ async function handleResult(reward, isFree) {
         'wof.lastSpinDate': wof.lastSpinDate,
       };
       if (!isFree) {
-        updates['reagents'] = increment(netProfit);
+        updates['reagents'] = firebase.firestore.FieldValue.increment(netProfit);
       }
-      await updateDoc(uRef, updates);
+      await uRef.update(updates);
 
       // Reload userData to sync balance
       try {
-        const updatedSnap = await getDoc(uRef);
-        if (updatedSnap.exists()) {
+        const updatedSnap = await uRef.get();
+        if (updatedSnap.exists) {
           userData = updatedSnap.data();
           window.userProfileData = userData;
         }
       } catch(e) {}
 
       // Log spin
-      await addDoc(collection(db, COL_WHEEL), {
+      await db.collection(COL_WHEEL).add({
         uid:       window.currentUser.uid,
         display:   window.currentUser.displayName || window.currentUser.email || '—',
         reward,
         spentRGT,
         netLoss,
         isFree,
-        ts:        serverTimestamp()
+        ts:        firebase.firestore.FieldValue.serverTimestamp()
       });
     }
   } catch(e) {
@@ -1179,13 +1204,13 @@ async function addToJackpot(loss) {
   const now = new Date();
   const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   try {
-    const jRef = doc(db, COL_JACKPOT, month);
-    await runTransaction(db, async tx => {
+    const jRef = db.collection(COL_JACKPOT).doc(month);
+    await db.runTransaction(async tx => {
       const snap = await tx.get(jRef);
-      if (snap.exists()) {
+      if (snap.exists) {
         tx.update(jRef, {
-          total: increment(loss),
-          [`players.${window.currentUser.uid}`]: increment(loss)
+          total: firebase.firestore.FieldValue.increment(loss),
+          [`players.${window.currentUser.uid}`]: firebase.firestore.FieldValue.increment(loss)
         });
       } else {
         tx.set(jRef, {
@@ -1194,7 +1219,7 @@ async function addToJackpot(loss) {
           players: { [window.currentUser.uid]: loss },
           drawn: false,
           winner: null,
-          ts: serverTimestamp()
+          ts: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
     });
@@ -1286,12 +1311,12 @@ function sendSpinNotification(reward, spent, profit) {
     msg = isEn ? `😓 Wheel: won ${reward} RGT / spent ${spent} RGT.` : `😓 Колесо: выиграли ${reward} RGT / потратили ${spent} RGT.`;
   }
   try {
-    addDoc(collection(db, 'notifications'), {
+    db.collection('notifications').add({
       userId: window.currentUser.uid,  // Используем userId как в index.html
       type:   'wheel_spin',
       message: msg,            // Используем message как в index.html
       read:   false,
-      createdAt: serverTimestamp()  // Используем createdAt как в index.html
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()  // Используем createdAt как в index.html
     });
   } catch(e) {
     console.error('Error sending spin notification:', e);
@@ -1350,12 +1375,12 @@ async function loadJackpot() {
     isEn ? `${days}d ${hours}h until draw` : `До розыгрыша: ${days} дн. ${hours} ч.`;
 
   try {
-    const snap = await getDoc(doc(db, COL_JACKPOT, month));
-    const total = snap.exists() ? (snap.data().total || 0) : 0;
+    const snap = await db.collection(COL_JACKPOT).doc(month).get();
+    const total = snap.exists ? (snap.data().total || 0) : 0;
     document.getElementById('jackpotAmt').textContent = total + ' RGT';
 
     // Jackpot chance for current user
-    if (window.currentUser && snap.exists()) {
+    if (window.currentUser && snap.exists) {
       const players = snap.data().players || {};
       const myLoss  = players[window.currentUser.uid] || 0;
       const chance  = total > 0 ? ((myLoss / total) * 100).toFixed(1) : 0;
