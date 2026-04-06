@@ -5,52 +5,55 @@
 // Подключается: <script src="auth.js"></script>
 // ═════════════════════════════════════════════════════════
 
-// Используем глобальные функции Firebase из compat версии
-// Все Firebase функции доступны через window.firebase после загрузки в wheel-of-fortune.html
+// Используем глобальные функции Firebase из module loader
+// import {
+//   getAuth, onAuthStateChanged, signOut, signInWithPopup,
+//   GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword,
+//   createUserWithEmailAndPassword
+// } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 // Глобальные переменные для аутентификации
 let auth = null;
+let currentUser = null;
 let isAdmin = false;
 
 // Инициализация аутентификации
 async function initAuth() {
+  console.log('🔐 Initializing centralized auth system...');
+  
   try {
-    // Ждем инициализации Firebase из wheel-of-fortune.html
-    if (!window.firebaseReady) {
-      console.log('⏳ Waiting for Firebase initialization...');
-      await new Promise((resolve) => {
-        const listener = () => {
-          document.removeEventListener('firebaseReady', listener);
-          resolve();
-        };
-        document.addEventListener('firebaseReady', listener);
-        // Таймаут 5 секунд на случай если событие не придет
-        setTimeout(() => {
-          document.removeEventListener('firebaseReady', listener);
-          resolve();
-        }, 5000);
-      });
-    }
-    
-    // Проверяем доступность Firebase
-    if (!window.firebase || !window.firebase.auth) {
-      console.warn('⚠️ Firebase not available');
+    // Используем существующий Firebase app или создаем новый
+    if (window.firebaseApp) {
+      auth = window.getAuth(window.firebaseApp);
+    } else if (window.firebaseConfig) {
+      const app = window.initializeApp(window.firebaseConfig);
+      auth = window.getAuth(app);
+      window.firebaseApp = app;
+    } else {
+      console.warn('🔐 No Firebase config available');
       return;
     }
 
-    auth = window.firebase.auth();
+    // Делаем доступным глобально
     window.auth = auth;
-    
-    // Проверяем текущего пользователя при загрузке
+    window.currentUser = currentUser;
+    window.isAdmin = isAdmin;
+
+    // Проверяем текущего пользователя
     const immediateUser = auth.currentUser;
     if (immediateUser) {
+      console.log('🔐 User already logged in:', immediateUser.uid);
+      currentUser = immediateUser;
       window.currentUser = immediateUser;
       isAdmin = immediateUser.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
       updateAuthUI();
     }
 
     // Отслеживаем изменения состояния аутентификации
-    auth.onAuthStateChanged(async user => {
+    onAuthStateChanged(auth, async user => {
+      currentUser = user;
       window.currentUser = user;
       isAdmin = user && user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
       
@@ -75,7 +78,9 @@ async function initAuth() {
       updateAuthUI();
       
       // Генерируем событие для других скриптов
-      document.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: user, isAdmin: isAdmin } }));
+      if (typeof window.onAuthStateChanged === 'function') {
+        window.onAuthStateChanged(user);
+      }
     });
 
     console.log('✅ Centralized auth system initialized');
@@ -90,7 +95,7 @@ function updateAuthUI() {
   const loggedOutElements = document.querySelectorAll('.auth-logged-out');
   const loggedInElements = document.querySelectorAll('.auth-logged-in');
   
-  if (window.currentUser) {
+  if (currentUser) {
     // Пользователь вошел - скрываем кнопки входа, показываем профиль
     loggedOutElements.forEach(el => el.style.display = 'none');
     loggedInElements.forEach(el => el.style.display = 'flex');
@@ -106,12 +111,12 @@ function updateAuthUI() {
 
 // Обновление информации о пользователе
 function updateUserInfo() {
-  if (!window.currentUser) return;
+  if (!currentUser) return;
   
   // Avatar
   const avatarElements = document.querySelectorAll('.user-avatar');
   avatarElements.forEach(el => {
-    el.src = window.currentUser.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+    el.src = currentUser.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
     el.onerror = function() {
       this.src = 'https://www.gravatar.com/avatar/?d=mp';
     };
@@ -120,13 +125,13 @@ function updateUserInfo() {
   // Name
   const nameElements = document.querySelectorAll('.user-name');
   nameElements.forEach(el => {
-    el.textContent = window.currentUser.displayName || (window.currentUser.email ? window.currentUser.email.split('@')[0] : 'User');
+    el.textContent = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
   });
   
   // Email
   const emailElements = document.querySelectorAll('.user-email');
   emailElements.forEach(el => {
-    el.textContent = window.currentUser.email || '';
+    el.textContent = currentUser.email || '';
   });
 }
 
@@ -153,8 +158,7 @@ window.closeLoginModal = function() {
 
 window.loginGoogle = async function() {
   try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await firebase.auth().signInWithPopup(provider);
+    await signInWithPopup(auth, new GoogleAuthProvider());
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход: Google');
@@ -169,8 +173,7 @@ window.loginGoogle = async function() {
 
 window.loginTwitter = async function() {
   try {
-    const provider = new firebase.auth.TwitterAuthProvider();
-    await firebase.auth().signInWithPopup(provider);
+    await signInWithPopup(auth, new TwitterAuthProvider());
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход: Twitter');
@@ -196,7 +199,7 @@ window.handleEmailAuth = async function(event) {
   }
   
   try {
-    await firebase.auth().signInWithEmailAndPassword(email, password);
+    await signInWithEmailAndPassword(auth, email, password);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Вход выполнен');
@@ -222,7 +225,7 @@ window.handleRegister = async function(event) {
   }
   
   try {
-    await firebase.auth().createUserWithEmailAndPassword(email, password);
+    await createUserWithEmailAndPassword(auth, email, password);
     closeLoginModal();
     if (typeof showToast === 'function') {
       showToast('Аккаунт создан!');
@@ -253,7 +256,8 @@ window.toggleRegisterMode = function() {
 // Функция выхода
 window.logout = async function() {
   try {
-    await firebase.auth().signOut();
+    await signOut(auth);
+    currentUser = null;
     window.currentUser = null;
     isAdmin = false;
     updateAuthUI();
@@ -268,11 +272,11 @@ window.logout = async function() {
 
 // Проверка состояния аутентификации
 window.isLoggedIn = function() {
-  return window.currentUser !== null;
+  return currentUser !== null;
 };
 
 window.getCurrentUser = function() {
-  return window.currentUser;
+  return currentUser;
 };
 
 window.isAdminUser = function() {
