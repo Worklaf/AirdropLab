@@ -82,7 +82,7 @@
     {
       "id": "42_prev_alkimiya_281002",
       "deleted": false,
-      "name": "42 (anteriormente Alkimiya)",
+      "name": "42 (prev. Alkimiya)",
       "createdAt": "2026-02-20T16:18:01.002Z",
       "updatedAt": {
         "seconds": 1774440672,
@@ -125,7 +125,7 @@
         "Actividad Social",
         "Testnet"
       ],
-      "name": "Modelo de Acción",
+      "name": "Action Model",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
       "createdAt": "2026-02-12T09:40:29.125Z",
       "referralLink": "https://join.actionmodel.com/WORKLAF",
@@ -228,7 +228,7 @@
       "referralLink": "https://arcnetwork.xyz/",
       "guideUrl": "https://airdroplab.org/guides/Arc/Arc_Testnet_by_Circle",
       "priority": "high",
-      "name": "Red de Pruebas de Arc",
+      "name": "Arc Testnet",
       "image": "https://img.cryptorank.io/coins/arc1755596336233.png",
       "updatedAt": {
         "seconds": 1774440672,
@@ -385,7 +385,7 @@
       "deleted": false,
       "lastUpdated": "2026-03-17",
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/backed-activity1126",
-      "name": "Respaldado (xAcciones)",
+      "name": "Backed (xStocks)",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
       "categories": [
         "Rellenar Formulario",
@@ -536,7 +536,7 @@
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/canopy-activity1101",
       "status": "active",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "name": "Dossel",
+      "name": "Canopy",
       "categories": [
         "Testnet"
       ]
@@ -580,7 +580,7 @@
     {
       "id": "dfusion_ai_972480",
       "guideUrl": "",
-      "name": "dFusion Inteligencia Artificial",
+      "name": "dFusion AI",
       "referralLink": "",
       "twitterUrl": "https://x.com/dFusionAI?hzet=dszqupsbol",
       "priority": "normal",
@@ -667,7 +667,7 @@
         "nanoseconds": 661000000
       },
       "deleted": false,
-      "name": "Euforia",
+      "name": "Euphoria",
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/euphoria-eth-activity902?id=2977",
       "hasDaily": false
     },
@@ -715,7 +715,7 @@
         "Programa de Embajadores",
         "Actividad Social"
       ],
-      "name": "Acciones Justas",
+      "name": "Fair Shares",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2"
     },
     {
@@ -824,7 +824,7 @@
       "categories": [
         "Rellenar Formulario"
       ],
-      "name": "Ir a la oscuridad",
+      "name": "GoDark",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
       "cryptoRankUrl": "",
       "deleted": false,
@@ -838,7 +838,7 @@
       "image": "https://images.cryptorank.io/coins/golden_tides1774441234742.png",
       "description": "Golden Tides es un juego en línea multijugador de estilo MOBA (arena de batalla multijugador) con temática pirata, que combina elementos de PvP (jugador contra jugador) y PvE (jugador contra entorno). Los partidos se llevan a cabo en formato 4 contra 4 y duran alrededor de 20-25 minutos, donde dos equipos se desplazan por tres islas seleccionadas al azar. El objetivo incluye batallas tanto contra oponentes jugables como contra enemigos controlados por la computadora (NPC), derrotar a jefes para obtener mejoras, así como competir para ser el primero en encontrar el mapa del tesoro antes que el otro equipo.",
       "status": "active",
-      "name": "Mareas Doradas",
+      "name": "Golden Tides",
       "createdAt": "2026-03-26T11:36:18.030Z",
       "guideUrl": "",
       "twitterUrl": "https://x.com/GoldenTides_gg?hzet=dszqupsbol",
@@ -894,7 +894,7 @@
       "categories": [
         "Rellenar Formulario"
       ],
-      "name": "Impacto",
+      "name": "Hit",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/hit-one-activity1118",
       "deleted": false,
@@ -1271,7 +1271,7 @@
       "createdAt": "2026-03-26T11:05:18.210Z",
       "guideUrl": "",
       "referralLink": "https://app.legend.trade/",
-      "name": "Legend Trade",
+      "name": "legend.trade",
       "twitterUrl": "https://x.com/legendtrade?hzet=dszqupsbol",
       "description": "Legend es una plataforma de trading social que permite a los usuarios competir en mercados en cadena. Incluye el modo Arena, donde los traders son clasificados y emparejados con oponentes. El sistema utiliza calificaciones ELO y colas para organizar los torneos, y también admite apuestas según las reglas establecidas. Los usuarios pueden encontrar a otros traders, operar contra ellos, seguir su clasificación y participar en trading competitivo a través de Legend.",
       "status": "active",
@@ -1312,7 +1312,7 @@
       },
       "createdAt": "2026-03-11T11:59:58.381Z",
       "guideUrl": "",
-      "name": "Límite de Ruptura",
+      "name": "Limit Break",
       "categories": [
         "Rellenar Formulario"
       ],
@@ -1354,7 +1354,7 @@
     {
       "id": "monaco_070594",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "name": "Mónaco",
+      "name": "Monaco",
       "categories": [
         "Rellenar Formulario"
       ],
@@ -1540,7 +1540,7 @@
       "lastUpdated": "2026-03-18",
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/noise-activity1067?id=2848",
       "status": "active",
-      "name": "Ruido",
+      "name": "Noise",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
       "categories": [
         "Rellenar Formulario",
@@ -1673,7 +1673,7 @@
         "Obtener Rol",
         "Actividad Social"
       ],
-      "name": "Genial, estoy listo para traducir. ¿Cuál es el texto que necesitas traducir del ruso al español?",
+      "name": "Yupp",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/yupp-activity846?id=1979",
       "isFavorite": false,
@@ -1732,7 +1732,7 @@
         "Trading"
       ],
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "name": "Resumen",
+      "name": "Upshot",
       "activities": [
         {
           "status": "ended",
@@ -1852,7 +1852,7 @@
     },
     {
       "id": "proj_1770059246487",
-      "name": "Red ARO",
+      "name": "ARO Network",
       "createdAt": "2026-02-02T19:07:26.487Z",
       "referralLink": "https://dashboard.aro.network/signup?referral=GR5OOG",
       "twitterUrl": "https://x.com/AroNetwork",
@@ -2014,7 +2014,7 @@
     {
       "id": "proj_1770227629025",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "name": "Resultado",
+      "name": "Outcome",
       "categories": [
         "DeFi",
         "Predicciones",
@@ -2085,7 +2085,7 @@
         "DePIN",
         "Actividad Social"
       ],
-      "name": "Red de OptimAI",
+      "name": "OptimAI Network",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2"
     },
     {
@@ -2129,7 +2129,7 @@
     {
       "id": "proj_1770229086684",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "name": "Finanzas RAX",
+      "name": "RAX Finance",
       "categories": [
         "Actividad Social"
       ],
@@ -2242,7 +2242,7 @@
       ],
       "referralLink": "https://test.redact.money/",
       "priority": "normal",
-      "name": "Fénix",
+      "name": "Fhenix",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
       "categories": [
         "Deploy de Contrato",
@@ -2257,7 +2257,7 @@
     {
       "id": "proj_1770229569371",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "name": "Basado",
+      "name": "Based",
       "categories": [
         "Obtener Rol",
         "Actividad Social",
@@ -2375,7 +2375,7 @@
     {
       "id": "proj_1770313709894",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "name": "Inmutable",
+      "name": "Immutable",
       "categories": [
         "Gaming",
         "Actividad Social"
@@ -2482,7 +2482,7 @@
       "priority": "normal",
       "twitterUrl": "https://x.com/quipnetwork",
       "referralLink": "https://quest.quip.network/airdrop?referral_code=MM0U33UJ",
-      "name": "Red Quip",
+      "name": "Quip Network",
       "guideUrl": "",
       "lastUpdated": "2026-04-02",
       "activities": [
@@ -2544,7 +2544,7 @@
         "nanoseconds": 344000000
       },
       "image": "https://img.cryptorank.io/coins/robinhood_chain1771327492835.png",
-      "name": "Cadena de Robinhood",
+      "name": "Robinhood Chain",
       "priority": "high",
       "guideUrl": "https://worklaf.github.io/Worklaf/AirdropLab/guides/Robinhood/robinhood-chain.html",
       "referralLink": "https://faucet.testnet.chain.robinhood.com/",
@@ -2598,7 +2598,7 @@
         "nanoseconds": 546000000
       },
       "deleted": false,
-      "name": "Sísmico",
+      "name": "Seismic",
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/seismicsys-activity721",
       "hasDaily": false,
       "referralLink": "https://www.seismic.systems/",
@@ -2732,7 +2732,7 @@
       "description": "Sixpence es un innovador protocolo DeFi diseñado para integrar activos del mundo real (RWA) en el ámbito de las finanzas descentralizadas. La plataforma permite a los usuarios utilizar acciones, bonos y commodities tokenizadas como garantía para obtener liquidez o proporcionar préstamos. Los inversores pueden depositar sus activos digitales en pools de crédito, asegurándose una alta rentabilidad que varía según la demanda del mercado. El sistema establece estrictos límites de relación préstamo-valor, garantizando la seguridad de las transacciones para diversos tipos de garantías, desde valores volátiles hasta monedas estables. De esta manera, el proyecto conecta los mercados bursátiles tradicionales con la tecnología blockchain, ofreciendo instrumentos flexibles para la gestión de capital. Este mecanismo abre nuevas oportunidades para obtener ingresos pasivos y utilizar de manera eficiente los portafolios de inversión en el entorno digital.",
       "createdAt": "2026-03-21T20:27:36.140Z",
       "hasDaily": true,
-      "name": "Seis peniques",
+      "name": "Sixpence",
       "updatedAt": {
         "seconds": 1774440678,
         "nanoseconds": 859000000
@@ -2850,7 +2850,7 @@
         }
       ],
       "status": "active",
-      "name": "Tiempo",
+      "name": "Tempo",
       "image": "https://img.cryptorank.io/coins/tempo1757060807891.png",
       "description": "Tempo es una blockchain de nivel 1 (L1) compatible con EVM, diseñada para procesar pagos. No reemplaza a las blockchains universales, sino que ofrece soluciones para escenarios con un gran volumen de pagos. Entre ellas se incluyen comisiones bajas predecibles en un segmento de pago dedicado, soporte para varios establescoines, intercambio de establescoines integrado, alta capacidad de procesamiento, baja latencia, transacciones privadas, memorandos de pago con soporte para estándares como ISO 20022, así como mecanismos para garantizar el cumplimiento de los requisitos.",
       "referralLink": "https://airdroplab.org/guides/Tempo/Tempo_Testnet",
@@ -2953,7 +2953,7 @@
         "Mainnet"
       ],
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "name": "Protocolo Teneo",
+      "name": "Teneo Protocol",
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/teneo-protocol-activity686?id=1403",
       "lastUpdated": "2026-03-06",
       "deleted": false,
@@ -2962,7 +2962,7 @@
     {
       "id": "the_invention_network_226755",
       "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "name": "La Red de Invención",
+      "name": "The Invention Network",
       "categories": [
         "Bounties de Plataforma"
       ],
@@ -3001,7 +3001,7 @@
       "twitterUrl": "https://x.com/vibe_trading?hzet=dszqupsbol",
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/vibe-trading-activity1098",
       "hasDaily": false,
-      "name": "Comercio de Vibes",
+      "name": "Vibe Trading",
       "updatedAt": {
         "seconds": 1774440679,
         "nanoseconds": 867000000
