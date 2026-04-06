@@ -2891,45 +2891,57 @@ function closeLoginModal() {
 window.openLoginModal = openLoginModal;
 window.closeLoginModal = closeLoginModal;
 window.loginGoogle = async function() {
-  if (!window.auth) {
-    alert((window.currentLang==='en')?'Firebase not available':'Firebase недоступен');
-    return;
+  try { 
+    await signInWithPopup(auth, new GoogleAuthProvider()); 
+    closeLoginModal(); 
+    showToast('Вход: Google'); 
+  } catch(e) { 
+    showToast(e.message); 
   }
-  try { await signInWithPopup(window.auth, new GoogleAuthProvider()); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
-  catch(e) { alert(e.message); }
 };
 window.loginTwitter = async function() {
-  if (!window.auth) {
-    alert((window.currentLang==='en')?'Firebase not available':'Firebase недоступен');
-    return;
+  try { 
+    await signInWithPopup(auth, new TwitterAuthProvider()); 
+    closeLoginModal(); 
+    showToast('Вход: Twitter'); 
+  } catch(e) { 
+    showToast(e.message); 
   }
-  try { await signInWithPopup(window.auth, new TwitterAuthProvider()); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
-  catch(e) { alert(e.message); }
 };
 window.loginEmail = async function() {
-  if (!window.auth) {
-    alert((window.currentLang==='en')?'Firebase not available':'Firebase недоступен');
-    return;
-  }
   const email = (document.getElementById('emailInput')?.value || '').trim();
   const pass  = (document.getElementById('passInput')?.value || '').trim();
-  if (!email || !pass) { alert((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); return; }
-  try { await signInWithEmailAndPassword(window.auth, email, pass); closeLoginModal(); toast((window.currentLang==='en')?'Logged in':'Вход выполнен'); }
-  catch(e) { alert(e.message); }
+  if (!email || !pass) { 
+    showToast((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); 
+    return; 
+  }
+  try { 
+    await signInWithEmailAndPassword(auth, email, pass); 
+    closeLoginModal(); 
+    showToast((window.currentLang==='en')?'Logged in':'Вход выполнен'); 
+  }
+  catch(e) { 
+    showToast(e.message); 
+  }
 };
 window.registerEmail = async function() {
-  if (!window.auth) {
-    alert((window.currentLang==='en')?'Firebase not available':'Firebase недоступен');
-    return;
-  }
   const email = (document.getElementById('emailInput')?.value || '').trim();
   const pass  = (document.getElementById('passInput')?.value || '').trim();
-  if (!email || !pass) { alert((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); return; }
-  try { await createUserWithEmailAndPassword(window.auth, email, pass); closeLoginModal(); toast((window.currentLang==='en')?'Account created':'Аккаунт создан'); }
-  catch(e) { alert(e.message); }
+  if (!email || !pass) { 
+    showToast((window.currentLang==='en')?'Enter email and password':'Введите email и пароль'); 
+    return; 
+  }
+  try { 
+    await createUserWithEmailAndPassword(auth, email, pass); 
+    closeLoginModal(); 
+    showToast((window.currentLang==='en')?'Account created!':'Аккаунт создан!'); 
+  }
+  catch(e) { 
+    showToast(e.message); 
+  }
 };
 window.logout = function() { 
-  if (window.auth) signOut(window.auth); 
+  if (auth) signOut(auth); 
 };
 
 document.getElementById('loginModal').addEventListener('click', function(e) {
