@@ -2983,12 +2983,15 @@ if (currentUser && db) {
   }
 }
 
+// Временно закомментировано из-за проблем с кэшированием
+/*
 // Инициализируем систему реагентов ПОСЛЕ инициализации Firebase
 console.log('🧪 Initializing Reagents system after Firebase init in Wheel...');
 if (typeof window._checkClaimOnLoad === 'function') {
   setTimeout(window._checkClaimOnLoad, 500);
   setTimeout(window._checkClaimOnLoad, 2500);
 }
+*/
 </script>
 
 <!-- Фиксированная админ-панель -->
