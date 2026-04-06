@@ -721,7 +721,6 @@ try {
     const immediateUser = auth.currentUser;
     if (immediateUser) {
       console.log('🔐 User already logged in:', immediateUser.uid);
-      currentUser = immediateUser;
       window.currentUser = immediateUser;
       isAdmin = !!(immediateUser && immediateUser.uid === WOF_ADMIN_UID);
       updateSpinsUI();
@@ -756,8 +755,7 @@ const COL_USERS      = 'users';
 // ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
-let currentUser = null;
-let isAdmin     = false;
+let isAdmin = false;
 let userData    = {};
 let wheelAngle  = 0;   // radians
 let spinning    = false;
@@ -765,7 +763,7 @@ let localHistory = [];
 
 // Загружаем историю из Firestore при загрузке страницы (оптимизированная)
 function loadLocalHistory() {
-  if (!currentUser || !window.db) {
+  if (!window.currentUser || !window.db) {
     console.log('📚 No user or DB, will retry in 500ms');
     setTimeout(loadLocalHistory, 500);
     return;
@@ -787,9 +785,9 @@ function loadLocalHistory() {
       return;
     }
     
-    const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
+    const userHistoryRef = doc(window.db, 'users', window.currentUser.uid, 'wheelHistory', 'spins');
     
-    console.log('📚 Setting up Firestore history listener for user:', currentUser.uid);
+    console.log('📚 Setting up Firestore history listener for user:', window.currentUser.uid);
     
     // Используем onSnapshot для real-time обновлений
     onSnapshot(userHistoryRef, (docSnapshot) => {
@@ -850,11 +848,11 @@ function loadLocalHistory() {
 
 // Функция сохранения истории в Firestore (оптимизированная)
 function saveHistoryToFirestore() {
-  if (!currentUser || !window.db || localHistory.length === 0) return;
+  if (!window.currentUser || !window.db || localHistory.length === 0) return;
 
   try {
     const { doc, setDoc } = window.__firestoreExports;
-    const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
+    const userHistoryRef = doc(window.db, 'users', window.currentUser.uid, 'wheelHistory', 'spins');
     
     // Оптимизация 1: Ограничиваем последними 500 записями (вместо 1000)
     const maxRecords = 500;
@@ -1016,7 +1014,7 @@ function pickReward() {
 
 window.doSpin = async function() {
   if (spinning) return;
-  if (!currentUser) {
+  if (!window.currentUser) {
     showToastLocal('wof_need_login', 'Please log in to play');
     return;
   }
@@ -1024,7 +1022,7 @@ window.doSpin = async function() {
   // IMPORTANT: Fresh load of userData before balance check
   if (db) {
     try {
-      const freshSnap = await getDoc(doc(db, COL_USERS, currentUser.uid));
+      const freshSnap = await getDoc(doc(db, COL_USERS, window.currentUser.uid));
       if (freshSnap.exists()) {
         userData = freshSnap.data();
         window.userProfileData = userData;
@@ -1111,8 +1109,8 @@ async function handleResult(reward, isFree) {
 
   // Save to Firestore
   try {
-    if (db && currentUser) {
-      const uRef = doc(db, COL_USERS, currentUser.uid);
+    if (db && window.currentUser) {
+      const uRef = doc(db, COL_USERS, window.currentUser.uid);
       const updates = {
         'wof.totalSpins':   wof.totalSpins,
         'wof.totalWon':     wof.totalWon,
@@ -1137,8 +1135,8 @@ async function handleResult(reward, isFree) {
 
       // Log spin
       await addDoc(collection(db, COL_WHEEL), {
-        uid:       currentUser.uid,
-        display:   currentUser.displayName || currentUser.email || '—',
+        uid:       window.currentUser.uid,
+        display:   window.currentUser.displayName || window.currentUser.email || '—',
         reward,
         spentRGT,
         netLoss,
@@ -1187,13 +1185,13 @@ async function addToJackpot(loss) {
       if (snap.exists()) {
         tx.update(jRef, {
           total: increment(loss),
-          [`players.${currentUser.uid}`]: increment(loss)
+          [`players.${window.currentUser.uid}`]: increment(loss)
         });
       } else {
         tx.set(jRef, {
           month,
           total: loss,
-          players: { [currentUser.uid]: loss },
+          players: { [window.currentUser.uid]: loss },
           drawn: false,
           winner: null,
           ts: serverTimestamp()
@@ -1277,7 +1275,7 @@ window.closeResult = function() {
 // NOTIFICATIONS
 // ═══════════════════════════════════════════════════════════
 function sendSpinNotification(reward, spent, profit) {
-  if (!db || !currentUser) return;
+  if (!db || !window.currentUser) return;
   const isEn = (window.currentLang === 'en');
   let msg = '';
   if (profit > 0) {
@@ -1289,7 +1287,7 @@ function sendSpinNotification(reward, spent, profit) {
   }
   try {
     addDoc(collection(db, 'notifications'), {
-      userId: currentUser.uid,  // Используем userId как в index.html
+      userId: window.currentUser.uid,  // Используем userId как в index.html
       type:   'wheel_spin',
       message: msg,            // Используем message как в index.html
       read:   false,
@@ -1357,9 +1355,9 @@ async function loadJackpot() {
     document.getElementById('jackpotAmt').textContent = total + ' RGT';
 
     // Jackpot chance for current user
-    if (currentUser && snap.exists()) {
+    if (window.currentUser && snap.exists()) {
       const players = snap.data().players || {};
-      const myLoss  = players[currentUser.uid] || 0;
+      const myLoss  = players[window.currentUser.uid] || 0;
       const chance  = total > 0 ? ((myLoss / total) * 100).toFixed(1) : 0;
       document.getElementById('stJackpotChance').textContent = chance + '%';
     }
@@ -2038,7 +2036,7 @@ function updateSpinsUI() {
   const lbl   = document.getElementById('spinBtnLabel');
   if (!btn || !lbl) return;
 
-  if (!currentUser) {
+  if (!window.currentUser) {
     lbl.textContent = isEn ? 'LOG IN TO PLAY' : 'ВОЙДИТЕ В АККАУНТ';
     btn.disabled = true;
     return;
@@ -2279,9 +2277,9 @@ window.clearSpinHistory = function() {
     localHistory = [];
     
     // Очищаем в Firestore
-    if (currentUser && window.db) {
+    if (window.currentUser && window.db) {
       const { doc, deleteDoc } = window.__firestoreExports;
-      const userHistoryRef = doc(window.db, 'users', currentUser.uid, 'wheelHistory', 'spins');
+      const userHistoryRef = doc(window.db, 'users', window.currentUser.uid, 'wheelHistory', 'spins');
       deleteDoc(userHistoryRef);
     }
     
@@ -2403,8 +2401,7 @@ function updateHeaderAuthUI(user) {
 // AUTH STATE
 // ═══════════════════════════════════════════════════════════
 if (auth) {
-  onAuthStateChanged(auth, async user => {
-    currentUser = user;
+  auth.onAuthStateChanged(async user => {
     window.currentUser = user;
     isAdmin = !!(user && user.uid === WOF_ADMIN_UID);
     window.isAdmin = isAdmin;
@@ -2627,7 +2624,7 @@ window.clearFilteredNotifications = async function() {
 
 // Функция загрузки уведомлений для колеса
 async function loadNotificationsForWheel() {
-  if (!window.db || !currentUser) {
+  if (!window.db || !window.currentUser) {
     const listEl = document.getElementById('notificationsList');
     if (listEl) {
       listEl.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">Недоступно без авторизации</p>';
@@ -2656,7 +2653,7 @@ async function loadNotificationsForWheel() {
     
     const q = query(
       collection(window.db, "notifications"),
-      where("userId", "==", currentUser.uid),
+      where("userId", "==", window.currentUser.uid),
       orderBy("createdAt", "desc")
     );
     
@@ -2892,10 +2889,10 @@ function updateNotificationBadge() {
 }
 
 // Инициализация слушателя сообщений при загрузке страницы (только если пользователь уже авторизован)
-if (currentUser && db) {
+if (window.currentUser && db) {
   // Используем функцию из header.js
   if (typeof initFeedbacksListener === 'function') {
-    initFeedbacksListener(currentUser.uid);
+    initFeedbacksListener(window.currentUser.uid);
   }
 }
 
@@ -3838,7 +3835,7 @@ function updateParticipantsList() {
   
   participantsList.innerHTML = participants.map((participant, index) => {
     const percentage = totalBets > 0 ? ((participant.bet / totalBets) * 100).toFixed(1) : 0;
-    const isCurrentUser = participant.uid === currentUser?.uid;
+    const isCurrentUser = participant.uid === window.currentUser?.uid;
     const color = participant.color || '#8b5cf6';
     
     return `
