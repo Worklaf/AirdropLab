@@ -600,6 +600,203 @@ window.updateRatingDisplay = updateRatingDisplay;
 <!-- Firebase Configuration -->
 <script src="config/firebase-config.js"></script>
 
+<!-- DATA - полный список кранов -->
+<script>
+// ═════════════════════════════════════════
+const DEFAULT_FAUCETS = [
+  // ── BITCOIN ──
+  { id:'btc1', name:'Bitcoin Testnet 3', token:'BTC', type:'free', net:'testnet',
+    desc:'Краны Bitcoin тестовой сети (Testnet 3). Для разработки и тестирования BTC транзакций.',
+    links:['https://bitcoinfaucet.com/en/'], reward:'', cooldown:'', tags:[] },
+  
+  // ── ETHEREUM ──
+  { id:'eth1', name:'Ethereum Sepolia', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Sepolia тестнете Ethereum.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── POLYGON ──
+  { id:'polygon1', name:'Polygon Mumbai', token:'MATIC', type:'free', net:'testnet',
+    desc:'Получите тестовые MATIC на Mumbai тестнете Polygon.',
+    links:['https://mumbaifaucet.com/'], reward:'0.2 MATIC', cooldown:'24ч', tags:[] },
+  
+  // ── ARBITRUM ──
+  { id:'arbitrum1', name:'Arbitrum Sepolia', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Arbitrum Sepolia тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── BSC ──
+  { id:'bsc1', name:'BSC Testnet', token:'BNB', type:'free', net:'testnet',
+    desc:'Получите тестовые BNB на BSC тестнете.',
+    links:['https://testnet.binance.org/faucet'], reward:'0.1 BNB', cooldown:'24ч', tags:[] },
+  
+  // ── AVALANCHE ──
+  { id:'avalanche1', name:'Avalanche Fuji', token:'AVAX', type:'free', net:'testnet',
+    desc:'Получите тестовые AVAX на Avalanche Fuji тестнете.',
+    links:['https://faucet.avax.network/'], reward:'0.25 AVAX', cooldown:'24ч', tags:[] },
+  
+  // ── FANTOM ──
+  { id:'fantom1', name:'Fantom Testnet', token:'FTM', type:'free', net:'testnet',
+    desc:'Получите тестовые FTM на Fantom тестнете.',
+    links:['https://faucet.fantom.network/'], reward:'0.5 FTM', cooldown:'24ч', tags:[] },
+  
+  // ── OPTIMISM ──
+  { id:'optimism1', name:'Optimism Sepolia', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Optimism Sepolia тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── AURORA ──
+  { id:'aurora1', name:'Aurora Testnet', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Aurora тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── CELO ──
+  { id:'celo1', name:'Celo Alfajores', token:'CELO', type:'free', net:'testnet',
+    desc:'Получите тестовые CELO на Celo Alfajores тестнете.',
+    links:['https://celoalfajores.org/'], reward:'0.1 CELO', cooldown:'24ч', tags:[] },
+  
+  // ── RARI CHAIN ──
+  { id:'rari1', name:'Rari Chain Testnet', token:'ETH', type:'free', net:'testnet',
+    desc:'NFT-фокусированный L3 на базе Arbitrum.',
+    links:['https://testnet.rarichain.org/faucet'],
+    reward:'', cooldown:'', tags:[] },
+  
+  // ── OASIS ──
+  { id:'rose1', name:'Oasis Emerald', token:'ROSE', type:'free', net:'testnet',
+    desc:'Privacy-oriented L1. Тестнет с Emerald ParaTime.',
+    links:['https://oasisemerald.github.io/emerald-faucet/'],
+    reward:'', cooldown:'', tags:[] },
+  
+  // ── KLAYTN ──
+  { id:'klay1', name:'Klaytn Baobab', token:'KLAY', type:'free', net:'testnet',
+    desc:'Тестнет Klaytn (Baobab). Разработан Kakao.',
+    links:['https://baobab.wallet.klaytn.foundation/faucet'],
+    reward:'5 KLAY', cooldown:'24ч', tags:[] },
+  
+  // ── HEPTON ──
+  { id:'hte1', name:'Hepton', token:'HTE', type:'free', net:'testnet',
+    desc:'EVM-совместимый L1 блокчейн с фокусом на DeFi.',
+    links:['https://faucet.hepton.io/'],
+    reward:'', cooldown:'', tags:[] },
+  
+  // ── LAMINA1 ──
+  { id:'laminai1', name:'Lamina1 Testnet', token:'LAM', type:'free', net:'testnet',
+    desc:'L1 блокчейн с фокусом на масштабируемость.',
+    links:['https://faucet-test.lamina1.network/'],
+    reward:'', cooldown:'', tags:[] },
+  
+  // ── ZKSYNC ──
+  { id:'zksync1', name:'zkSync Era Testnet', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на zkSync Era тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── SCROLL ──
+  { id:'scroll1', name:'Scroll Sepolia', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Scroll Sepolia тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── BASE ──
+  { id:'base1', name:'Base Sepolia', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Base Sepolia тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── LINEA ──
+  { id:'linea1', name:'Linea Testnet', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Linea тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── BLAST ──
+  { id:'blast1', name:'Blast Sepolia', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Blast Sepolia тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── MODE ──
+  { id:'mode1', name:'Mode Testnet', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Mode тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── MANTLE ──
+  { id:'mantle1', name:'Mantle Sepolia', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Mantle Sepolia тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── ZKFAIR ──
+  { id:'zkfair1', name:'zkFair Testnet', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на zkFair тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── RISE ──
+  { id:'rise1', name:'Rise Testnet', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Rise тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── TAIKO ──
+  { id:'taiko1', name:'Taiko A1', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Taiko A1 тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── SEI ──
+  { id:'sei1', name:'Sei Testnet', token:'SEI', type:'free', net:'testnet',
+    desc:'Получите тестовые SEI на Sei тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── WANCHAIN ──
+  { id:'wanchain1', name:'Wanchain Testnet', token:'WAN', type:'free', net:'testnet',
+    desc:'Получите тестовые WAN на Wanchain тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── DOGE ──
+  { id:'doge1', name:'Dogecoin Testnet', token:'DOGE', type:'free', net:'testnet',
+    desc:'Получите тестовые DOGE на Dogecoin тестнете.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── SOLANA ──
+  { id:'sol1', name:'Solana Devnet', token:'SOL', type:'free', net:'testnet',
+    desc:'Получите тестовые SOL на Solana Devnet.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── APTOS ──
+  { id:'aptos1', name:'Aptos Devnet', token:'APT', type:'free', net:'testnet',
+    desc:'Получите тестовые APT на Aptos Devnet.',
+    links:['https://sepoliafaucet.com/'], reward:'0.001 ETH', cooldown:'24ч', tags:[] },
+  
+  // ── SUI ──
+  { id:'sui1', name:'Sui Testnet', token:'SUI', type:'free', net:'testnet',
+    desc:'Получите тестовые SUI на Sui тестнете.',
+    links:['https://faucet.sui.io/'],
+    reward:'', cooldown:'', tags:[] },
+  
+  // ── ZILLIQA ──
+  { id:'zilliqa1', name:'Zilliqa Testnet', token:'ZIL', type:'free', net:'testnet',
+    desc:'Получите тестовые ZIL на Zilliqa тестнете.',
+    links:['https://dev-wallet.zilliqa.com/'],
+    reward:'', cooldown:'', tags:[] },
+  
+  // ── NEAR ──
+  { id:'near1', name:'NEAR Testnet', token:'NEAR', type:'free', net:'testnet',
+    desc:'Получите тестовые NEAR на NEAR тестнете.',
+    links:['https://wallet.testnet.near.org/'],
+    reward:'', cooldown:'', tags:[] },
+  
+  // ── QUAI ──
+  { id:'quai1', name:'Quai Network', token:'QUAI', type:'free', net:'testnet',
+    desc:'Получите тестовые QUAI на Quai тестнете.',
+    links:['https://faucet.quai.network/'],
+    reward:'', cooldown:'', tags:[] },
+  
+  // ── TENDRLY ──
+  { id:'tenderly1', name:'Tenderly Testnet', token:'ETH', type:'free', net:'testnet',
+    desc:'Получите тестовые ETH на Tenderly тестнете.',
+    links:['https://faucet.tenderly.co/'],
+    reward:'', cooldown:'', tags:[] },
+  
+  // ── SHARDEUM ──
+  { id:'shardeum1', name:'Shardeum Sphinx', token:'SHM', type:'free', net:'testnet',
+    desc:'Получите тестовые SHM на Shardeum Sphinx тестнете.',
+    links:['https://faucet-dapps.shardeum.org/'],
+    reward:'', cooldown:'', tags:[] }
+];
+</script>
+
 <!-- Firebase и приложение -->
 <script type="module">
 // ═══════════════════════════════════════════
