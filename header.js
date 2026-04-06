@@ -1096,6 +1096,31 @@
 
 })();
 
+// ════════════════════════════════════════════════════
+// Глобальная функция для отображения флага и текста языка
+// ════════════════════════════════════════════════════
+window.getFlagDisplay = function(language) {
+    var data = {
+        ru: {
+            flag: '<span class="fi fi-ua" style="width:20px;height:15px;display:inline-block;vertical-align:middle;border-radius:2px;flex-shrink:0;font-size:20px;line-height:15px;"></span>',
+            text: 'УКР'
+        },
+        en: {
+            flag: '<span class="fi fi-gb" style="width:20px;height:15px;display:inline-block;vertical-align:middle;border-radius:2px;flex-shrink:0;font-size:20px;line-height:15px;"></span>',
+            text: 'ENG'
+        },
+        tr: {
+            flag: '<span class="fi fi-tr" style="width:20px;height:15px;display:inline-block;vertical-align:middle;border-radius:2px;flex-shrink:0;font-size:20px;line-height:15px;"></span>',
+            text: 'TR'
+        },
+        es: {
+            flag: '<span class="fi fi-es" style="width:20px;height:15px;display:inline-block;vertical-align:middle;border-radius:2px;flex-shrink:0;font-size:20px;line-height:15px;"></span>',
+            text: 'ES'
+        }
+    };
+    return data[language] || data['ru'];
+};
+
 // Функции управления выпадающим меню языков
 function toggleLangDropdown() {
   const menu = document.getElementById('langMenu');
@@ -4095,7 +4120,7 @@ function initFeedbacksListener(uid) {
     
     if (user) {
       if (ava) ava.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
-      if (name) name.textContent = user.displayName || (user.email ? user.email.split('@')[0] : 'Researcher');
+      if (name) name.textContent = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
       if (mobAva) mobAva.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
       if (mobOut) mobOut.style.display = 'none';
       if (mobInn) mobInn.style.display = 'flex';
