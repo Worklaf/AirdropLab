@@ -3116,6 +3116,9 @@ function setLanguage(lang) {
     document.documentElement.lang = lang;
     updateAllTranslations();
     
+    // Обновляем язык в модальном окне профиля если оно открыто
+    updateProfileModalLanguage(lang);
+    
     // Загружаем проекты для соответствующего языка
     if (lang === 'en') {
       loadProjectsFromJSON('projects_en');
@@ -3316,10 +3319,13 @@ window.resetToDefaultDataSource = function() {
   }
 };
 
-// Функция для перевода (доступна глобально)
+// Функция перевода (доступна глобально)
 window.t = t;
 
-// Инициализация при загрузке
+// Экспортируем функцию для обновления языка в модальном окне
+window.updateProfileModalLanguage = updateProfileModalLanguage;
+
+// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
   document.documentElement.lang = currentLang;
   updateLanguageButton();
