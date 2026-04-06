@@ -984,15 +984,6 @@
                             <div class="w-48 relative" id="profileLangDropdown">
     <label class="block text-sm font-medium text-slate-300 mb-2">Язык</label>
 
-    <button onclick="toggleProfileLangDropdown()" id="profileLangBtn"
-        class="flex items-center justify-between w-full px-3 py-2.5 rounded-lg border border-slate-700 bg-slate-800 text-sm text-white hover:bg-slate-700 transition">
-        <span class="flex items-center gap-2">
-            <span id="profileLangFlag" class="fi fi-ua"></span>
-            <span id="profileLangText">Русский</span>
-        </span>
-        <i class="fas fa-chevron-down text-xs text-slate-400"></i>
-    </button>
-
     <div id="profileLangMenu"
         class="absolute left-0 right-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl hidden z-50">
         <div class="py-1">
