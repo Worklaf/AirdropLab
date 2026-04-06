@@ -1639,7 +1639,9 @@ window.toggleFaucetVisibility = async function(faucetId) {
     faucet.hidden = newHiddenStatus;
     
     // Перерисовываем
-    renderAll();
+    if (typeof faucets !== 'undefined' && faucets.length > 0) {
+      renderAll();
+    }
     updateCounts();
     
     const isEn = window.currentLang === 'en';
