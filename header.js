@@ -7,28 +7,55 @@
 // ════════════════════════════════════════════════════
 window.restoreCachedState = function() {
   try {
-    // Читаем кэширован ное состояние пользователя из localStorage
     const cachedUserData = localStorage.getItem('firebaseUser');
     if (cachedUserData) {
       try {
         const userData = JSON.parse(cachedUserData);
-        // Восстанавливаем глобальные переменные из кэша
         window.currentUser = userData;
-        
-        // Восстанавливаем состояние авторизации
         const isAdminCached = localStorage.getItem('__cache_isAdmin') === 'true';
         window.isAdmin = isAdminCached;
-        
-        console.log('✅ Cached user state restored:', userData.email, 'isAdmin:', isAdminCached);
+
+        // Обновить UI хедера как только DOM будет готов
+        function applyUserUI() {
+          if (typeof window.updateUserUI === 'function') {
+            window.updateUserUI(userData);
+          }
+          if (typeof window.updateMobileAdminButtons === 'function') {
+            window.updateMobileAdminButtons();
+          }
+          // Обновляем логин-блок в хедере напрямую
+          const loggedOutView = document.getElementById('loggedOutView');
+          const loggedInView  = document.getElementById('loggedInView');
+          const userName      = document.getElementById('userName');
+          const userAvatar    = document.getElementById('userAvatar');
+          const mobOut        = document.getElementById('mobLoggedOutView');
+          const mobInn        = document.getElementById('mobLoggedInView');
+          const mobAva        = document.getElementById('mobUserAvatar');
+
+          if (loggedOutView) loggedOutView.style.display = 'none';
+          if (loggedInView)  loggedInView.style.display  = 'flex';
+          if (userName) {
+            const name = userData.displayName || (userData.email ? userData.email.split('@')[0] : 'User');
+            userName.textContent = name;
+          }
+          if (userAvatar)  userAvatar.src  = userData.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+          if (mobOut) mobOut.style.display = 'none';
+          if (mobInn) mobInn.style.display = 'flex';
+          if (mobAva) mobAva.src = userData.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', function() { setTimeout(applyUserUI, 250); });
+        } else {
+          setTimeout(applyUserUI, 250);
+        }
+
         return true;
       } catch (e) {
-        console.error('❌ Failed to parse cached user data:', e);
         return false;
       }
     }
-  } catch (e) {
-    console.error('❌ Error restoring cached state:', e);
-  }
+  } catch (e) {}
   return false;
 };
 
@@ -209,7 +236,7 @@ window.restoreCachedState = function() {
                 </div>
                 <div id="loggedInView" class="hidden flex items-center gap-3">
                   <div class="text-right hidden sm:block cursor-pointer" id="userNameWrapper">
-                    <div id="userName" class="text-xs font-bold text-white hover:text-cyan-400 transition-colors" data-translate="default_user_name">Researcher</div>
+                    <div id="userName" class="text-xs font-bold text-white hover:text-cyan-400 transition-colors">Researcher</div>
                     <div class="text-[10px] text-emerald-400 flex items-center justify-end gap-1.5">
                       <span class="relative flex h-1.5 w-1.5">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
