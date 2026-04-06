@@ -510,6 +510,17 @@ window.openClaimModal = async function() {
             window.footerShowToast(lang('claim_login_required'), 'error');
         return;
     }
+    
+    // Убеждаемся что Firebase инициализирован
+    if (!window.db || !window.__firestoreExports) {
+        console.warn('⚠️ Firebase not initialized yet, waiting...');
+        if (typeof window.footerShowToast === 'function')
+            window.footerShowToast('Initializing... please wait', 'info');
+        // Ждём 1 сек и повторяем попытку
+        setTimeout(() => window.openClaimModal(), 1000);
+        return;
+    }
+    
     _ensureClaimModal();
     const modal = document.getElementById('claimModal');
     const body  = document.getElementById('claimModalBody');
@@ -1551,9 +1562,20 @@ window.ReagentsSystem  = { getClaimStatus, performClaim, getUTCDateString, calcR
 window.openClaimModal  = window.openClaimModal;
 window.closeClaimModal = window.closeClaimModal;
 window.doClaim         = window.doClaim;
+window._checkClaimOnLoad = _checkClaimOnLoad;
 
 console.log('🧪 Reagents System v2.4 loaded (passive accumulation, 2-decimal precision)');
-setTimeout(_checkClaimOnLoad, 2000);
-setTimeout(_checkClaimOnLoad, 5000);
+
+// Инициализируем реагенты только на странице где auth инициализирован
+// Проверяем по наличию window.firebaseApp (module страницы) или window.auth (index.html)
+const isModulePage = typeof window.firebaseApp === 'undefined' && typeof window.initializeApp === 'function';
+const isIndexPage = typeof window.auth === 'object' && window.auth !== null && !isModulePage;
+
+if (isIndexPage) {
+  // Это index.html или другая страница с auth.js — инициализируем здесь
+  setTimeout(_checkClaimOnLoad, 2000);
+  setTimeout(_checkClaimOnLoad, 5000);
+}
+// На faucet.html и wheel-of-fortune.html инициализируются вручную после Firebase init
 
 })();
