@@ -19,30 +19,11 @@
   </script>
   <script src="config/firebase-config.js"></script>
   
-  <!-- Firebase SDK - централизованная инициализация -->
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, increment, collection, query, orderBy, limit, getDocs, addDoc, writeBatch, runTransaction, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    
-    // Централизованная функция ожидания готовности Firebase
-    window.waitForFirebase = function(maxMs = 5000) {
-      return new Promise((resolve, reject) => {
-        const start = Date.now();
-        const check = () => {
-          if (window.db && window.__firestoreExports && window.auth) {
-            console.log('✅ Firebase is ready');
-            resolve();
-          } else if (Date.now() - start > maxMs) {
-            console.warn('⏰ Firebase initialization timeout');
-            reject(new Error('Firebase timeout'));
-          } else {
-            setTimeout(check, 100);
-          }
-        };
-        check();
-      });
-    };
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, increment, collection, query, orderBy, limit, getDocs, addDoc, writeBatch, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     
     // Делаем доступным глобально
     window.initializeApp = initializeApp;
@@ -70,7 +51,6 @@
     window.writeBatch = writeBatch;
     window.runTransaction = runTransaction;
     window.onSnapshot = onSnapshot;
-    window.arrayUnion = arrayUnion;
     
     console.log('🔥 Firebase SDK loaded as modules');
   </script>
@@ -710,132 +690,80 @@ import {
 async function waitForConfig(maxMs = 3000) {
   const t0 = Date.now();
   while (!window.firebaseConfig?.apiKey && Date.now() - t0 < maxMs) {
-
-async function initFirebase() {
-  try {
-    // Ждем централизованной готовности Firebase
-    await window.waitForFirebase(5000);
-    
-    // Try to reuse existing Firebase app if available
-    if (window.firebaseApp) {
-      app = window.firebaseApp;
-      auth = window.getAuth(app);
-      try {
-        db = window.getFirestore(app);
-      } catch(e) {
-        console.warn('WoF: Firestore init failed, will retry:', e);
-        db = null;
-      }
-    } else {
-      // Otherwise, create new app
-      app = window.initializeApp(window.firebaseConfig);
-      auth = window.getAuth(app);
-      try {
-        db = window.getFirestore(app);
-      } catch(e) {
-        console.warn('WoF: Firestore init failed, will retry:', e);
-        db = null;
-      }
-      // Store globally for other pages to reuse
-      window.firebaseApp = app;
-    }
-    
-    // Export for global use (especially footer.js account modal)
-    window.wofAuth = auth;
-    window.wofDb   = db;
-    // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
-    window.auth = auth;
-    window.db   = db;
-    window.firestore = db; // Добавляем для онлайн-режима
-    
-    // Экспортируем Firestore функции для header.js
-    window.__firestoreExports = { 
-      collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, 
-      query, orderBy, limit, where, serverTimestamp, increment, runTransaction, 
-      writeBatch, arrayUnion, onSnapshot 
-    };
-    window.__authExports = { onAuthStateChanged, signOut };
-    
-    console.log('✅ WoF Firebase initialized');
-    
-    // Immediately check current user state
-    if (auth) {
-      const immediateUser = auth.currentUser;
-      if (immediateUser) {
-        console.log('🔐 User already logged in:', immediateUser.uid);
-        currentUser = immediateUser;
-        window.currentUser = immediateUser;
-        isAdmin = !!(immediateUser && immediateUser.uid === WOF_ADMIN_UID);
-        updateSpinsUI();
-      }
-    }
-    
-    // Инициализируем слушатель auth state
-    window.onAuthStateChanged(auth, async user => {
-      currentUser = user;
-      window.currentUser = user;
-      isAdmin = !!(user && user.uid === WOF_ADMIN_UID);
-      window.isAdmin = isAdmin;
-      
-      console.log('🔐 Auth state changed:', { user: user?.uid, isAdmin });
-      
-      if (user && db) {
-        try {
-          const uSnap = await window.getDoc(window.doc(db, window.COL_USERS, user.uid));
-          userData = uSnap.exists() ? uSnap.data() : {};
-          window.userProfileData = userData;
-        } catch(e) {
-          userData = {};
-        }
-        
-        // Загружаем только после того как userData готов
-        updateSpinsUI();
-        updateStatsUI();
-        await loadJackpot();
-        await loadLeaderboard();
-        loadLocalHistory(); // Теперь точно есть currentUser и db
-        
-        // Переинициализируем систему реагентов с актуальным пользователем
-        if (typeof window._checkClaimOnLoad === 'function') {
-          setTimeout(window._checkClaimOnLoad, 300);
-        }
-        // Отправляем событие готовности пользователя
-        window.dispatchEvent(new CustomEvent('userReady', { 
-          detail: { user, userData } 
-        }));
-        
-      } else if (!user) {
-        userData = {};
-        updateSpinsUI(); // Покажет кнопку "войдите в аккаунт"
-      }
-    });
-    
-    // Сообщаем что Firebase готов
-    window.firebaseReady = true;
-    document.dispatchEvent(new CustomEvent('firebaseReady', { detail: { auth, db } }));
-    
-    // Инициализируем reagents после полной загрузки Firebase
-    setTimeout(() => {
-      if (typeof window._checkClaimOnLoad === 'function') {
-        console.log('🧪 Initializing Reagents system after Firebase init in Wheel...');
-        window._checkClaimOnLoad();
-      }
-    }, 500);
-    
-  } catch(e) {
-    console.warn('WoF Firebase init error:', e);
+    await new Promise(r => setTimeout(r, 80));
   }
+  return window.firebaseConfig;
+}
+
+const cfg = await waitForConfig();
+if (!cfg?.apiKey) {
+  console.warn('WoF: Firebase config not available, running offline');
+}
+
+let app, auth, db;
+try {
+  // Try to reuse existing Firebase app if available
+  if (window.firebaseApp) {
+    app = window.firebaseApp;
+    auth = getAuth(app);
+    try {
+      db = getFirestore(app);
+    } catch(e) {
+      console.warn('WoF: Firestore init failed, will retry:', e);
+      db = null;
+    }
+  } else {
+    // Otherwise, create the default app (same as main page)
+    app  = initializeApp(cfg);
+    auth = getAuth(app);
+    try {
+      db = initializeFirestore(app, { cacheSizeBytes: 5000000 });
+    } catch(e) {
+      console.warn('WoF: Firestore init failed, will retry:', e);
+      db = null;
+    }
+    // Store globally for other pages to reuse
+    window.firebaseApp = app;
+  }
+  // Export for global use (especially footer.js account modal)
+  window.wofAuth = auth;
+  window.wofDb   = db;
+  // IMPORTANT: Also set window.auth and window.db for consistency with faucet.html and footer.js
+  window.auth = auth;
+  window.db   = db;
+  window.firestore = db; // Добавляем для онлайн-режима
+  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot };
+  window.__authExports = { onAuthStateChanged, signOut };
+  console.log('✅ WoF Firebase initialized');
+  
+  // Immediately check current user state
+  if (auth) {
+    const immediateUser = auth.currentUser;
+    if (immediateUser) {
+      console.log('🔐 User already logged in:', immediateUser.uid);
+      currentUser = immediateUser;
+      window.currentUser = immediateUser;
+      isAdmin = !!(immediateUser && immediateUser.uid === WOF_ADMIN_UID);
+      updateSpinsUI();
+    }
+  }
+} catch(e) {
+  console.warn('WoF Firebase init error:', e);
 }
 
 // ═══════════════════════════════════════════════════════════
 // CONSTANTS
-// ═════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+const WOF_ADMIN_UID  = globalThis.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2';
 const REWARDS        = [100, 50, 20, 10, 4, 3, 2, 1];
 const COLORS         = ['#ec4899','#8b5cf6','#f59e0b','#10b981','#3b82f6','#ef4444','#22d3ee','#a78bfa'];
 const WEIGHTS        = [0.5, 1, 2, 3, 5, 6, 7, 9];
 const DAILY_FREE     = 3;
 const PAID_COST      = 5;
 const SPIN_MS        = 4500;
+const COL_WHEEL      = 'wheel_spins';
+const COL_JACKPOT    = 'wheel_jackpot';
+const COL_USERS      = 'users';
 
 // ═══════════════════════════════════════════════════════════
 // STATE
@@ -2983,15 +2911,12 @@ if (currentUser && db) {
   }
 }
 
-// Временно закомментировано из-за проблем с кэшированием
-/*
 // Инициализируем систему реагентов ПОСЛЕ инициализации Firebase
 console.log('🧪 Initializing Reagents system after Firebase init in Wheel...');
 if (typeof window._checkClaimOnLoad === 'function') {
   setTimeout(window._checkClaimOnLoad, 500);
   setTimeout(window._checkClaimOnLoad, 2500);
 }
-*/
 </script>
 
 <!-- Фиксированная админ-панель -->
