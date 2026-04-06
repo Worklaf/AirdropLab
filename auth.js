@@ -24,6 +24,12 @@ async function initAuth() {
   console.log('🔐 Initializing centralized auth system...');
   
   try {
+    // Проверяем доступность Firebase
+    if (typeof firebase === 'undefined' || typeof firebase.auth !== 'function') {
+      console.warn('🔐 Firebase SDK not available');
+      return;
+    }
+    
     // Используем существующий Firebase app или создаем новый
     if (firebase.apps.length > 0) {
       console.log('🔐 Firebase уже инициализирован, используем существующий app');
