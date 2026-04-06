@@ -20,44 +20,17 @@
   <script src="config/firebase-config.js"></script>
   
   <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, increment, collection, query, orderBy, limit, getDocs, addDoc, writeBatch, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    
-    // Делаем доступным глобально
-    window.initializeApp = initializeApp;
-    window.getAuth = getAuth;
-    window.onAuthStateChanged = onAuthStateChanged;
-    window.signOut = signOut;
-    window.signInWithPopup = signInWithPopup;
-    window.GoogleAuthProvider = GoogleAuthProvider;
-    window.TwitterAuthProvider = TwitterAuthProvider;
-    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-    window.getFirestore = getFirestore;
-    window.doc = doc;
-    window.setDoc = setDoc;
-    window.getDoc = getDoc;
-    window.updateDoc = updateDoc;
-    window.serverTimestamp = serverTimestamp;
-    window.increment = increment;
-    window.collection = collection;
-    window.query = query;
-    window.orderBy = orderBy;
-    window.limit = limit;
-    window.getDocs = getDocs;
-    window.addDoc = addDoc;
-    window.writeBatch = writeBatch;
-    window.runTransaction = runTransaction;
-    window.onSnapshot = onSnapshot;
-    
-    console.log('🔥 Firebase SDK loaded as modules');
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  
+  <script>
+    console.log('🔥 Firebase SDK loaded (compat version)');
   </script>
   
   <!-- CENTRALIZED AUTHENTICATION SYSTEM -->
-  <script type="module" src="auth.js"></script>
-  <script type="module" src="auth-modal.js"></script>
+  <script src="auth.js"></script>
+  <script src="auth-modal.js"></script>
   
   <style>
     /* Modal styles */
@@ -705,19 +678,20 @@ try {
   // Try to reuse existing Firebase app if available
   if (window.firebaseApp) {
     app = window.firebaseApp;
-    auth = getAuth(app);
+    auth = firebase.auth();
     try {
-      db = getFirestore(app);
+      db = firebase.firestore();
     } catch(e) {
       console.warn('WoF: Firestore init failed, will retry:', e);
       db = null;
     }
   } else {
     // Otherwise, create the default app (same as main page)
-    app  = initializeApp(cfg);
-    auth = getAuth(app);
+    app  = firebase.initializeApp(cfg);
+    auth = firebase.auth();
     try {
-      db = initializeFirestore(app, { cacheSizeBytes: 5000000 });
+      db = firebase.firestore();
+      db.enablePersistence({ cacheSizeBytes: 5000000 });
     } catch(e) {
       console.warn('WoF: Firestore init failed, will retry:', e);
       db = null;
@@ -732,8 +706,14 @@ try {
   window.auth = auth;
   window.db   = db;
   window.firestore = db; // Добавляем для онлайн-режима
-  window.__firestoreExports = { collection, doc, getDoc, setDoc, getDocs, updateDoc, addDoc, deleteDoc, query, orderBy, limit, where, serverTimestamp, increment, runTransaction, writeBatch, arrayUnion, onSnapshot };
-  window.__authExports = { onAuthStateChanged, signOut };
+  window.__firestoreExports = { collection: firebase.firestore().collection, doc: firebase.firestore().doc, getDoc: firebase.firestore().doc, setDoc: firebase.firestore().doc, getDocs: firebase.firestore().getDocs, updateDoc: firebase.firestore().doc, addDoc: firebase.firestore().doc, deleteDoc: firebase.firestore().doc, query: firebase.firestore().query, orderBy: firebase.firestore().orderBy, limit: firebase.firestore().limit, where: firebase.firestore().where, serverTimestamp: firebase.firestore.FieldValue.serverTimestamp, increment: firebase.firestore.FieldValue.increment, runTransaction: firebase.firestore().runTransaction, writeBatch: firebase.firestore().writeBatch, arrayUnion: firebase.firestore.FieldValue.arrayUnion, onSnapshot: firebase.firestore().onSnapshot };
+  window.__authExports = { onAuthStateChanged: firebase.auth().onAuthStateChanged, signOut: firebase.auth().signOut };
+  
+  // Инициализируем экспорты для header.js
+  if (typeof window.initFirebaseExports === 'function') {
+    window.initFirebaseExports(window.__firestoreExports);
+  }
+  
   console.log('✅ WoF Firebase initialized');
   
   // Immediately check current user state
@@ -747,6 +727,14 @@ try {
       updateSpinsUI();
     }
   }
+  
+  // Инициализируем reagents после полной загрузки Firebase
+  setTimeout(() => {
+    if (typeof window._checkClaimOnLoad === 'function') {
+      console.log('🧪 Initializing Reagents system after Firebase init in Wheel...');
+      window._checkClaimOnLoad();
+    }
+  }, 500);
 } catch(e) {
   console.warn('WoF Firebase init error:', e);
 }
