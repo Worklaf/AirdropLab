@@ -1005,7 +1005,7 @@ function initializeFirebase() {
   });
 
   // Используем глобальные Firebase переменные из загруженных SDK
-  if (typeof firebase !== 'undefined' && firebaseConfig) {
+  if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function' && firebaseConfig) {
     console.log('✅ Firebase доступен, проверяем инициализацию...');
     
     // Firebase уже инициализирован в head, просто получаем сервисы
@@ -1039,7 +1039,7 @@ function initializeFirebase() {
 }
 
 // Firestore функции для совместимости
-if (typeof firebase !== 'undefined' && firebase.firestore) {
+if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
   const firestore = firebase.firestore();
   
   // Экспортируем Firestore функции
@@ -1072,7 +1072,7 @@ if (typeof firebase !== 'undefined' && firebase.firestore) {
 }
 
 // Auth функции для совместимости
-if (typeof firebase !== 'undefined' && firebase.auth) {
+if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function') {
   const auth = firebase.auth();
   
   // Экспортируем Auth функции
