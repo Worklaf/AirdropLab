@@ -3496,6 +3496,12 @@ async function setUserRating(faucetId, newRating) {
   });
 }
 
+// Глобальная функция для уведомлений
+window.toast = function(message) {
+  console.log('Toast:', message);
+  // Можно добавить визуальное уведомление если нужно
+};
+
 // Сделать функцию глобальной
 window.renderAll = renderAll;
 window.updateCounts = updateCounts;
