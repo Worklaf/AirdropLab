@@ -59,6 +59,21 @@ async function initAuth() {
       
       console.log('🔐 Auth state changed:', { user: user?.uid, isAdmin });
       
+      // Кэшируем пользователя в localStorage для мгновенного восстановления при перезагрузке
+      if (user) {
+        const userData = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL
+        };
+        localStorage.setItem('firebaseUser', JSON.stringify(userData));
+        localStorage.setItem('__cache_isAdmin', isAdmin ? 'true' : 'false');
+      } else {
+        localStorage.removeItem('firebaseUser');
+        localStorage.removeItem('__cache_isAdmin');
+      }
+      
       // Обновляем UI на всех страницах
       updateAuthUI();
       
