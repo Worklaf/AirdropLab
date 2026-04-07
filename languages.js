@@ -3121,7 +3121,7 @@ function updateProfileModalLanguage(lang) {
         const flagDisplay = window.getFlagDisplay ? window.getFlagDisplay(lang) : { flag: '<span class="fi fi-ua"></span>', text: 'Русский' };
         
         // Полностью заменяем содержимое флага
-        flagElement.className = flagDisplay.flag.includes('fi-ua') ? 'fi fi-ua' : 
+        flagElement.className = flagDisplay.flag.includes('fi-ru') ? 'fi fi-ua' : 
                                flagDisplay.flag.includes('fi-gb') ? 'fi fi-gb' :
                                flagDisplay.flag.includes('fi-tr') ? 'fi fi-tr' :
                                flagDisplay.flag.includes('fi-es') ? 'fi fi-es' : 'fi fi-ua';
@@ -3191,7 +3191,14 @@ function setLanguage(lang) {
 async function loadProjectsFromJSON(langCode) {
   console.log(`Loading ${langCode} projects...`);
   try {
-    const response = await fetch(`./data/${langCode}.json`);
+    // Определяем базовый путь от корня сайта
+    let basePath = '.';
+    if (window.location.pathname.includes('/games/')) {
+      // Убираем /games и всё что дальше, оставляя корневой путь
+      basePath = window.location.pathname.replace(/\/games\/.*$/, '');
+      if (!basePath || basePath === '') basePath = '/';
+    }
+    const response = await fetch(`${basePath}/data/${langCode}.json`);
     if (response.ok) {
       const data = await response.json();
       if (data.projects && window.setEnglishProjectsData) {
