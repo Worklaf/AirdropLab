@@ -14,8 +14,47 @@
     <script src="languages.js"></script>
     <script src="header.js"></script>
     <script src="assets/reagents.js"></script>
-     
-   
+    <script src="assets/global-cache.js"></script>
+    <script src="assets/preload-system.js"></script>
+    <script>
+        // Sistema de precarga inteligente
+        window.smartPreload = function() {
+          console.log('Starting smart preload system...');
+          
+          // Precargar datos de faucets (común para todas las páginas)
+          setTimeout(() => {
+            window.GlobalDataCache.loadFaucetsData(window.currentLang || 'en');
+          }, 1000);
+          
+          // Precargar datos de usuario si está autenticado
+          if (window.currentUser) {
+            setTimeout(() => {
+              window.GlobalDataCache.loadUserData(window.currentUser);
+            }, 1500);
+          }
+          
+          // Precargar proyectos
+          setTimeout(() => {
+            window.PreloadSystem.preloadProjects();
+          }, 2000);
+        };
+        
+        // Restaurar estado de autorización
+        if (typeof window.restoreCachedState === 'function') {
+          window.restoreCachedState();
+        }
+        
+        // Iniciar precarga cuando Firebase esté listo
+        window.addEventListener('firebaseReady', () => {
+          console.log('Firebase ready, starting smart preload...');
+          window.smartPreload();
+        });
+        
+        // Escuchar actualizaciones del caché
+        window.addEventListener('cacheUpdated', (e) => {
+          console.log('Cache updated in main page');
+        });
+      </script>
 </head>
 <body class="antialiased">
 <!-- SVG Спрайт -->
