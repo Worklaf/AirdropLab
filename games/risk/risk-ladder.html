@@ -25,8 +25,8 @@
   <!-- Firebase SDK Module -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc, collection, query, orderBy, limit, getDocs, serverTimestamp, increment, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, setDoc, addDoc, collection, query, orderBy, limit, getDocs, serverTimestamp, increment, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     
     // Expose to global
     window.initializeApp = initializeApp;
@@ -36,10 +36,14 @@
     window.signInWithPopup = signInWithPopup;
     window.GoogleAuthProvider = GoogleAuthProvider;
     window.TwitterAuthProvider = TwitterAuthProvider;
+    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
     window.getFirestore = getFirestore;
     window.doc = doc;
     window.getDoc = getDoc;
     window.updateDoc = updateDoc;
+    window.setDoc = setDoc;
+    window.addDoc = addDoc;
     window.collection = collection;
     window.query = query;
     window.orderBy = orderBy;
@@ -48,6 +52,12 @@
     window.serverTimestamp = serverTimestamp;
     window.increment = increment;
     window.runTransaction = runTransaction;
+    
+    // Export for footer.js (Firestore functions object)
+    window.__firestoreExports = {
+      doc, getDoc, updateDoc, setDoc, addDoc, collection, query, orderBy, 
+      limit, getDocs, serverTimestamp, increment, runTransaction, onSnapshot
+    };
     
     // Initialize Firebase
     const firebaseConfig = window.firebaseConfig;
@@ -61,6 +71,78 @@
       window.firebaseApp = app;
       
       console.log('✅ Firebase initialized in Risk Ladder game');
+      
+      // Login functions
+      window.openLoginModal = function() {
+        const m = document.getElementById('loginModal');
+        if (m) m.style.display = 'flex';
+      };
+      
+      window.closeLoginModal = function() {
+        const m = document.getElementById('loginModal');
+        if (m) m.style.display = 'none';
+      };
+      
+      window.loginGoogle = async function() {
+        try {
+          await window.signInWithPopup(window.auth, new window.GoogleAuthProvider());
+          window.closeLoginModal();
+          if (typeof showToast === 'function') showToast('✅ Logged in!');
+        } catch(e) {
+          console.error('Login error:', e);
+          alert('Login failed: ' + e.message);
+        }
+      };
+      
+      window.loginTwitter = async function() {
+        try {
+          await window.signInWithPopup(window.auth, new window.TwitterAuthProvider());
+          window.closeLoginModal();
+          if (typeof showToast === 'function') showToast('✅ Logged in!');
+        } catch(e) {
+          console.error('Login error:', e);
+          alert('Login failed: ' + e.message);
+        }
+      };
+      
+      window.loginEmail = async function() {
+        try {
+          const email = document.getElementById('emailInput')?.value?.trim();
+          const password = document.getElementById('passInput')?.value?.trim();
+          if (!email || !password) {
+            alert('Please enter email and password');
+            return;
+          }
+          await window.signInWithEmailAndPassword(window.auth, email, password);
+          document.getElementById('emailInput').value = '';
+          document.getElementById('passInput').value = '';
+          window.closeLoginModal();
+          if (typeof showToast === 'function') showToast('✅ Logged in!');
+        } catch(e) {
+          console.error('Login error:', e);
+          alert('Login failed: ' + e.message);
+        }
+      };
+      
+      window.registerEmail = async function() {
+        try {
+          const email = document.getElementById('emailInput')?.value?.trim();
+          const password = document.getElementById('passInput')?.value?.trim();
+          if (!email || !password) {
+            alert('Please enter email and password');
+            return;
+          }
+          await window.createUserWithEmailAndPassword(window.auth, email, password);
+          document.getElementById('emailInput').value = '';
+          document.getElementById('passInput').value = '';
+          window.closeLoginModal();
+          if (typeof showToast === 'function') showToast('✅ Account created!');
+        } catch(e) {
+          console.error('Register error:', e);
+          alert('Registration failed: ' + e.message);
+        }
+      };
+      
     } else {
       console.warn('⚠️ Firebase config not available');
     }
@@ -223,6 +305,44 @@
 <footer class="mt-12 py-8 border-t border-slate-700/50 text-center text-slate-500 text-sm">
   <p>🔥 RISK LADDER © 2026 AirdropLab • Play responsibly</p>
 </footer>
+
+<!-- Login Modal -->
+<div id="loginModal" class="fixed inset-0 z-[10002] items-center justify-center p-4" style="display:none;background:rgba(0,0,0,0.82);backdrop-filter:blur(10px);">
+  <div class="modal-box" style="max-width:460px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h2 style="font-size:16px;font-weight:800;color:#f1f5f9;" data-translate="login_title">Вход</h2>
+      <button onclick="closeLoginModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;">&times;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button onclick="loginGoogle()" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid rgba(34,211,238,0.35);background:rgba(34,211,238,0.08);color:#e2e8f0;font-weight:800;cursor:pointer;">
+        <i class="fab fa-google" style="color:#22d3ee;"></i><span data-translate="login_btn">Войти</span> (Google)
+      </button>
+      <button onclick="loginTwitter()" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid rgba(59,130,246,0.35);background:rgba(59,130,246,0.10);color:#e2e8f0;font-weight:800;cursor:pointer;">
+        <i class="fab fa-twitter" style="color:#60a5fa;"></i><span data-translate="login_btn">Войти</span> (Twitter)
+      </button>
+      <div style="display:flex;align-items:center;gap:10px;margin:6px 0;">
+        <div style="height:1px;background:rgba(255,255,255,0.08);flex:1;"></div>
+        <div style="font-size:10px;color:#64748b;" data-translate="or_email">ИЛИ EMAIL</div>
+        <div style="height:1px;background:rgba(255,255,255,0.08);flex:1;"></div>
+      </div>
+      <form onsubmit="event.preventDefault(); window.loginEmail();">
+        <input class="ae-input" id="emailInput" type="email" data-translate="email" placeholder="Email">
+        <input class="ae-input" id="passInput" type="password" data-translate="password" placeholder="Пароль">
+        <div style="display:flex;gap:10px;">
+          <button type="submit" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid rgba(34,211,238,0.35);background:rgba(30,37,56,0.8);color:#e2e8f0;font-weight:800;cursor:pointer;">
+            <i class="fas fa-sign-in-alt" style="margin-right:6px;color:#22d3ee;"></i><span data-translate="login_btn">Войти</span>
+          </button>
+          <button type="button" onclick="window.registerEmail()" style="padding:10px 14px;border-radius:10px;border:1px solid rgba(34,211,238,0.25);background:rgba(34,211,238,0.08);color:#22d3ee;font-weight:900;cursor:pointer;">
+            <span data-translate="register">Регистрация</span>
+          </button>
+        </div>
+      </form>
+      <div style="font-size:11px;color:#64748b;line-height:1.5;" data-translate="faucets_login_hint">
+        Вход нужен для избранного и рейтингов.
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="assets/risk-ladder.js"></script>
 
