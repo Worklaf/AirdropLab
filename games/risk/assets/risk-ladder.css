@@ -341,3 +341,100 @@ button:not(:disabled):active {
   color: #ef4444;
   animation: float-up 0.8s ease-out forwards;
 }
+
+/* PYRAMID GAME STYLES */
+
+/* Grid cell button */
+button[id^="cell-"] {
+  transition: all 0.2s ease;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+}
+
+button[id^="cell-"]:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+/* Cell animations */
+@keyframes cell-flip {
+  0% {
+    transform: rotateY(0);
+  }
+  100% {
+    transform: rotateY(180deg);
+  }
+}
+
+@keyframes cell-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(34, 211, 238, 0);
+  }
+}
+
+@keyframes mine-explode {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.2);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+button[id^="cell-"].animate-flip {
+  animation: cell-flip 0.4s ease;
+}
+
+button[id^="cell-"].animate-pulse {
+  animation: cell-pulse 1s ease-out;
+}
+
+/* Mine explosion */
+button[id^="cell-"]:has(content "💣") {
+  animation: mine-explode 0.3s ease;
+}
+
+/* PARTICLE STYLES */
+.particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.particle-coin {
+  color: #fbbf24;
+  font-size: 24px;
+  animation: float-up 1s ease-out forwards;
+}
+
+.particle-gem {
+  color: #a78bfa;
+  font-size: 20px;
+  animation: float-up 1s ease-out forwards;
+}
+
+.particle-mine {
+  color: #ef4444;
+  font-size: 24px;
+  animation: float-up 0.8s ease-out forwards;
+}
+
+/* PYRAMID CONTAINER */
+#ladderContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+}
