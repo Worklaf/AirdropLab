@@ -1179,6 +1179,26 @@ window.getFlagDisplay = function(language) {
     return data[language] || data['ru'];
 };
 
+// Обновление UI авторизации (для использования в фреймворках и подстраницах)
+window.updateAuthUI = function() {
+    var loggedOutView = document.getElementById('loggedOutView');
+    var loggedInView = document.getElementById('loggedInView');
+    var mobLoggedOutView = document.getElementById('mobLoggedOutView');
+    var mobLoggedInView = document.getElementById('mobLoggedInView');
+    
+    var isLoggedIn = (window.currentUser && typeof window.currentUser === 'object') || 
+                     localStorage.getItem('firebaseUser') !== null;
+    
+    if (loggedOutView) loggedOutView.style.display = isLoggedIn ? 'none' : 'block';
+    if (loggedInView) loggedInView.style.display = isLoggedIn ? 'flex' : 'none';
+    if (mobLoggedOutView) mobLoggedOutView.style.display = isLoggedIn ? 'none' : 'block';
+    if (mobLoggedInView) mobLoggedInView.style.display = isLoggedIn ? 'flex' : 'none';
+    
+    if (typeof window.syncAuth === 'function') {
+        window.syncAuth();
+    }
+};
+
 // Функции управления выпадающим меню языков
 function toggleLangDropdown() {
   const menu = document.getElementById('langMenu');
@@ -3877,12 +3897,22 @@ function initFeedbacksListener(uid) {
     }
     
     try {
-      const batch = writeBatch(window.db);
+      // Используем правильные Firebase экспорты
+      const fx = window.__firestoreExports;
+      if (!fx || !fx.writeBatch || !fx.doc || !fx.serverTimestamp) {
+        console.error('Firestore functions not available for batch operations');
+        if (typeof showToast === 'function') {
+          showToast('Ошибка Firebase функций');
+        }
+        return;
+      }
+      
+      const batch = fx.writeBatch(window.db);
       
       notifications.forEach(notif => {
-        batch.update(doc(window.db, 'notifications', notif.id), {
+        batch.update(fx.doc(window.db, 'notifications', notif.id), {
           read: true,
-          readAt: serverTimestamp()
+          readAt: fx.serverTimestamp()
         });
       });
       
@@ -3950,10 +3980,20 @@ function initFeedbacksListener(uid) {
     }
     
     try {
-      const batch = writeBatch(window.db);
+      // Используем правильные Firebase экспорты
+      const fx = window.__firestoreExports;
+      if (!fx || !fx.writeBatch || !fx.doc) {
+        console.error('Firestore functions not available for delete operations');
+        if (typeof showToast === 'function') {
+          showToast('Ошибка Firebase функций');
+        }
+        return;
+      }
+      
+      const batch = fx.writeBatch(window.db);
       
       notifications.forEach(notif => {
-        batch.delete(doc(window.db, 'notifications', notif.id));
+        batch.delete(fx.doc(window.db, 'notifications', notif.id));
       });
       
       await batch.commit();
