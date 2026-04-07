@@ -19,6 +19,56 @@
   </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css">
   
+  <!-- Firebase Config -->
+  <script src="../../config/firebase-config.js"></script>
+  
+  <!-- Firebase SDK Module -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, TwitterAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, collection, query, orderBy, limit, getDocs, serverTimestamp, increment, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
+    // Expose to global
+    window.initializeApp = initializeApp;
+    window.getAuth = getAuth;
+    window.onAuthStateChanged = onAuthStateChanged;
+    window.signOut = signOut;
+    window.signInWithPopup = signInWithPopup;
+    window.GoogleAuthProvider = GoogleAuthProvider;
+    window.TwitterAuthProvider = TwitterAuthProvider;
+    window.getFirestore = getFirestore;
+    window.doc = doc;
+    window.getDoc = getDoc;
+    window.updateDoc = updateDoc;
+    window.collection = collection;
+    window.query = query;
+    window.orderBy = orderBy;
+    window.limit = limit;
+    window.getDocs = getDocs;
+    window.serverTimestamp = serverTimestamp;
+    window.increment = increment;
+    window.runTransaction = runTransaction;
+    
+    // Initialize Firebase
+    const firebaseConfig = window.firebaseConfig;
+    if (firebaseConfig && firebaseConfig.apiKey) {
+      const app = window.initializeApp(firebaseConfig);
+      const auth = window.getAuth(app);
+      const db = window.getFirestore(app);
+      
+      window.auth = auth;
+      window.db = db;
+      window.firebaseApp = app;
+      
+      console.log('✅ Firebase initialized in Risk Ladder game');
+    } else {
+      console.warn('⚠️ Firebase config not available');
+    }
+  </script>
+  
+  <!-- Footer (for profile modal) -->
+  <script src="../../footer.js"></script>
+  
   <link rel="stylesheet" href="assets/risk-ladder.css">
 </head>
 <body class="antialiased bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
