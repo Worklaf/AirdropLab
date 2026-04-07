@@ -1,6 +1,6 @@
 /**
  * ============================================
- * RISK LADDER - Game Logic
+ * RISK LADDER - Game Logic with Firebase
  * ============================================
  */
 
@@ -17,12 +17,12 @@ const LADDER_CONFIG = {
     { step: 5, multiplier: 32,   chance: 15, riskLevel: 'extreme' },
     { step: 6, multiplier: 64,   chance: 5,  riskLevel: 'extreme' },
   ],
-  initialBalance: 100,
 };
 
 // GAME STATE
 let gameState = {
-  playerBalance: LADDER_CONFIG.initialBalance,
+  currentUser: null,
+  playerBalance: 0,
   currentBet: 1,
   currentStep: 0,
   gameActive: false,
@@ -35,6 +35,8 @@ let gameState = {
   bestStep: 0,
   sessionProfit: 0,
   recentGames: [],
+  
+  isLoading: false,
 };
 
 // DOM ELEMENTS
@@ -62,10 +64,95 @@ const UI = {
 
 // INITIALIZE GAME
 function initGame() {
+  console.log('🎮 Initializing RISK LADDER...');
+  
   renderLadder();
   setupEventListeners();
+  setupAuthListener();
+  
   updateUI();
-  console.log('🎮 RISK LADDER initialized');
+}
+
+// AUTH LISTENER
+function setupAuthListener() {
+  if (typeof window.onAuthStateChanged !== 'function') {
+    console.warn('⚠️ Firebase auth not available');
+    showMessage('⚠️ Waiting for Firebase...', 'info');
+    return;
+  }
+  
+  window.onAuthStateChanged(window.auth, async (user) => {
+    gameState.currentUser = user;
+    
+    if (user) {
+      console.log('✅ User logged in:', user.uid);
+      showMessage('✅ Logged in!', 'success');
+      
+      // Load user balance from Firebase
+      await loadUserBalance();
+      
+      // Load user's risk games history
+      await loadRiskGamesHistory();
+    } else {
+      console.log('❌ User logged out');
+      gameState.playerBalance = 0;
+      gameState.gamesPlayed = 0;
+      gameState.wins = 0;
+      gameState.losses = 0;
+      gameState.bestStep = 0;
+      gameState.sessionProfit = 0;
+      gameState.recentGames = [];
+      showMessage('⚠️ Please login to play', 'info');
+    }
+    
+    updateUI();
+    renderLadder();
+  });
+}
+
+// LOAD USER BALANCE FROM FIREBASE
+async function loadUserBalance() {
+  if (!gameState.currentUser || !window.db || !window.getDoc) {
+    console.warn('⚠️ Cannot load balance: Firebase not ready or user not logged in');
+    return;
+  }
+  
+  try {
+    const userRef = window.doc(window.db, 'users', gameState.currentUser.uid);
+    const userSnap = await window.getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      gameState.playerBalance = userData.reagents || 0;
+      console.log('💰 Loaded balance:', gameState.playerBalance);
+    } else {
+      console.log('📝 Creating new user doc');
+      gameState.playerBalance = 0;
+    }
+  } catch (err) {
+    console.error('❌ Error loading balance:', err);
+    showMessage('❌ Failed to load balance', 'error');
+  }
+}
+
+// LOAD RISK GAMES HISTORY
+async function loadRiskGamesHistory() {
+  if (!gameState.currentUser || !window.db) return;
+  
+  try {
+    const gamesRef = window.collection(window.db, `users/${gameState.currentUser.uid}/risk_games`);
+    const q = window.query(gamesRef, window.orderBy('timestamp', 'desc'), window.limit(8));
+    const snapshot = await window.getDocs(q);
+    
+    gameState.recentGames = [];
+    snapshot.forEach(doc => {
+      gameState.recentGames.push({ id: doc.id, ...doc.data() });
+    });
+    
+    renderRecentGames();
+  } catch (err) {
+    console.error('❌ Error loading games history:', err);
+  }
 }
 
 // RENDER LADDER
@@ -148,6 +235,16 @@ function updateBetAmount() {
 
 // RISK NEXT STEP
 async function riskNext() {
+  if (!gameState.currentUser) {
+    showMessage('⚠️ Please login first', 'info');
+    return;
+  }
+  
+  if (gameState.isLoading) {
+    showMessage('⏳ Loading...', 'info');
+    return;
+  }
+  
   if (gameState.gameActive === false && gameState.currentStep === 0) {
     // Start new game
     startGame();
@@ -161,11 +258,11 @@ async function riskNext() {
 function startGame() {
   // Validate balance
   if (gameState.playerBalance < gameState.currentBet) {
-    showMessage('❌ Not enough balance!', 'error');
+    showMessage('❌ Not enough RGT!', 'error');
     return;
   }
   
-  // Deduct bet
+  // Deduct bet from balance
   gameState.playerBalance -= gameState.currentBet;
   gameState.currentStep = 1;
   gameState.gameActive = true;
@@ -202,18 +299,18 @@ async function climbStep() {
     // ❌ LOSS
     gameState.gameActive = false;
     gameState.losses++;
-    gameState.currentStep = nextStep;
     
-    const winAmount = gameState.currentBet * LADDER_CONFIG.steps[gameState.currentStep - 2].multiplier;
+    const currentStepData = LADDER_CONFIG.steps[gameState.currentStep - 1];
+    const earnedAmount = gameState.currentBet * currentStepData.multiplier;
     
     showMessage(`💥 Failed at Step ${nextStep}! Lost ${gameState.currentBet} RGT`, 'error');
     animateStepFailure();
     renderLadder();
     
     // Record game
-    recordGame(false, gameState.currentStep - 1, -gameState.currentBet);
+    recordGame(false, gameState.currentStep, -gameState.currentBet, earnedAmount);
     
-    // Reset
+    // Reset after animation
     setTimeout(() => {
       gameState.currentStep = 0;
       gameState.gameActive = false;
@@ -224,36 +321,84 @@ async function climbStep() {
 }
 
 // CASH OUT
-function cashOut() {
+async function cashOut() {
   if (gameState.currentStep === 0) {
     showMessage('No active game to cash out', 'info');
     return;
   }
   
-  const stepData = LADDER_CONFIG.steps[gameState.currentStep - 1];
-  const winAmount = gameState.currentBet * stepData.multiplier;
+  if (!gameState.currentUser) {
+    showMessage('⚠️ Please login to save progress', 'info');
+    return;
+  }
   
-  gameState.playerBalance += winAmount;
-  gameState.wins++;
-  gameState.gameActive = false;
-  gameState.bestStep = Math.max(gameState.bestStep, gameState.currentStep);
-  gameState.sessionProfit += (winAmount - gameState.currentBet);
+  gameState.isLoading = true;
   
-  // Record game
-  recordGame(true, gameState.currentStep, winAmount - gameState.currentBet);
-  
-  showMessage(`🎉 Cashed out! Won ${winAmount} RGT at Step ${gameState.currentStep}!`, 'success');
-  animateCashOut(winAmount);
-  
-  // Reset
-  gameState.currentStep = 0;
-  gameState.currentBet = 1;
-  updateUI();
-  renderLadder();
+  try {
+    const stepData = LADDER_CONFIG.steps[gameState.currentStep - 1];
+    const winAmount = gameState.currentBet * stepData.multiplier;
+    const profit = winAmount - gameState.currentBet;
+    
+    // Update balance
+    gameState.playerBalance += winAmount;
+    gameState.wins++;
+    gameState.gameActive = false;
+    gameState.bestStep = Math.max(gameState.bestStep, gameState.currentStep);
+    gameState.sessionProfit += profit;
+    
+    // Save to Firebase
+    await saveGameToFirebase(true, gameState.currentStep, winAmount, profit);
+    
+    showMessage(`🎉 Cashed out! Won ${winAmount} RGT at Step ${gameState.currentStep}!`, 'success');
+    animateCashOut(winAmount);
+    
+    // Reset
+    gameState.currentStep = 0;
+    gameState.currentBet = 1;
+    updateUI();
+    renderLadder();
+    
+  } catch (err) {
+    console.error('❌ Error cashing out:', err);
+    showMessage('❌ Failed to save game', 'error');
+  } finally {
+    gameState.isLoading = false;
+  }
 }
 
-// RECORD GAME
-function recordGame(isWin, step, profit) {
+// SAVE GAME TO FIREBASE
+async function saveGameToFirebase(isWin, step, amount, profit) {
+  if (!gameState.currentUser || !window.db) return;
+  
+  try {
+    // Save game result
+    const gamesRef = window.collection(window.db, `users/${gameState.currentUser.uid}/risk_games`);
+    await window.addDoc(gamesRef, {
+      timestamp: window.serverTimestamp(),
+      isWin,
+      step,
+      bet: gameState.currentBet,
+      amount,
+      profit,
+    });
+    
+    // Update user balance
+    const userRef = window.doc(window.db, 'users', gameState.currentUser.uid);
+    await window.updateDoc(userRef, {
+      reagents: window.increment(isWin ? amount : -gameState.currentBet),
+      riskGamesPlayed: window.increment(1),
+      riskBestStep: gameState.bestStep,
+    });
+    
+    console.log('💾 Game saved to Firebase');
+  } catch (err) {
+    console.error('❌ Error saving to Firebase:', err);
+    throw err;
+  }
+}
+
+// RECORD GAME (LOCAL)
+function recordGame(isWin, step, profit, earnedAmount) {
   const game = {
     id: Date.now(),
     timestamp: new Date().toLocaleTimeString(),
@@ -261,6 +406,7 @@ function recordGame(isWin, step, profit) {
     step,
     bet: gameState.currentBet,
     profit,
+    earnedAmount: earnedAmount || profit,
   };
   
   gameState.recentGames.unshift(game);
@@ -328,8 +474,10 @@ function updateUI() {
   
   // Button states
   const hasBalance = gameState.playerBalance >= gameState.currentBet;
-  UI.btnRiskNext.disabled = gameState.currentStep === 0 ? !hasBalance : false;
-  UI.btnCashOut.disabled = gameState.currentStep === 0 || gameState.gameActive === false;
+  const isLoggedIn = gameState.currentUser !== null;
+  
+  UI.btnRiskNext.disabled = !isLoggedIn || (gameState.currentStep === 0 ? !hasBalance : false) || gameState.isLoading;
+  UI.btnCashOut.disabled = !isLoggedIn || gameState.currentStep === 0 || gameState.gameActive === false || gameState.isLoading;
   
   // Button labels
   if (gameState.currentStep === 0) {
@@ -386,23 +534,11 @@ function animateCashOut(amount) {
   setTimeout(() => particles.forEach(p => p.remove()), 800);
 }
 
-// LOAD GAME DATA FROM FIREBASE (когда будет реализовано)
-function loadGameData() {
-  // TODO: Load from Firebase
-  console.log('📂 Loading game data from Firebase...');
-}
-
-// SAVE GAME DATA TO FIREBASE (когда будет реализовано)
-function saveGameData() {
-  // TODO: Save to Firebase
-  console.log('💾 Saving game data to Firebase...');
-}
-
 // INIT ON LOAD
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initGame);
 } else {
-  initGame();
+  setTimeout(initGame, 500); // Wait for Firebase to init
 }
 
 // Expose to global
@@ -410,10 +546,8 @@ window.RiskLadderGame = {
   gameState,
   riskNext,
   cashOut,
-  loadGameData,
-  saveGameData,
 };
 
-console.log('🔥 RISK LADDER game logic loaded');
+console.log('🔥 RISK LADDER game logic loaded with Firebase integration');
 
 })();
