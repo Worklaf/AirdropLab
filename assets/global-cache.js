@@ -34,6 +34,9 @@ window.GlobalDataCache = {
     // Configurar sincronización entre páginas
     this.setupCrossPageSync();
     
+    // Configurar detección de conexión
+    this.setupConnectivityDetector();
+    
     this.initialized = true;
     console.log('Global Data Cache initialized');
   },
@@ -261,6 +264,85 @@ window.GlobalDataCache = {
       this.cache.lastUpdated[type] = Date.now();
       this.saveToStorage();
     });
+  },
+  
+  // Configurar detección de conexión
+  setupConnectivityDetector: function() {
+    // Estado inicial de conexión
+    this.isOnline = navigator.onLine;
+    
+    // Escuchar cambios de conexión
+    window.addEventListener('online', () => {
+      this.isOnline = true;
+      console.log('Conexión restaurada - sincronizando caché...');
+      
+      // Sincronizar datos cuando se restaura la conexión
+      if (window.currentUser) {
+        this.syncAllData();
+      }
+      
+      // Notificar a otros componentes
+      window.dispatchEvent(new CustomEvent('connectionRestored'));
+    });
+    
+    window.addEventListener('offline', () => {
+      this.isOnline = false;
+      console.log('Conexión perdida - usando modo offline');
+      
+      // Notificar a otros componentes
+      window.dispatchEvent(new CustomEvent('connectionLost'));
+    });
+    
+    // Verificación periódica de conexión
+    setInterval(() => {
+      const wasOnline = this.isOnline;
+      this.isOnline = navigator.onLine;
+      
+      if (!wasOnline && this.isOnline) {
+        console.log('Conexión detectada - sincronizando...');
+        if (window.currentUser) {
+          this.syncAllData();
+        }
+      }
+    }, 30000); // Cada 30 segundos
+  },
+  
+  // Sincronizar todos los datos
+  syncAllData: async function() {
+    if (!window.currentUser) return;
+    
+    console.log('Sincronizando todos los datos cacheados...');
+    
+    const syncTasks = [];
+    
+    // Agregar tareas de sincronización para todos los tipos de datos
+    if (this.cache.userProfile) {
+      syncTasks.push(() => this.loadUserProfile(window.currentUser.uid));
+    }
+    
+    if (this.cache.favorites) {
+      syncTasks.push(() => this.loadUserFavorites(window.currentUser.uid));
+    }
+    
+    if (this.cache.reagentsStatus) {
+      syncTasks.push(() => this.loadReagentsStatus(window.currentUser.uid));
+    }
+    
+    syncTasks.push(() => this.loadFaucetsData(window.currentLang || 'en'));
+    syncTasks.push(() => this.loadUserNotifications(window.currentUser.uid));
+    
+    // Ejecutar todas las tareas en paralelo
+    try {
+      await Promise.allSettled(syncTasks.map(task => task()));
+      console.log('Todos los datos sincronizados exitosamente');
+    } catch (error) {
+      console.error('Error sincronizando datos:', error);
+    }
+  },
+  
+  // Verificar si estamos online
+  isConnectionAvailable: function() {
+    return this.isOnline && navigator.onLine;
   },
   
   // Disparar evento de actualización
