@@ -87,6 +87,7 @@
         try {
           await window.signInWithPopup(window.auth, new window.GoogleAuthProvider());
           window.closeLoginModal();
+          if (typeof window.updateAuthUI === 'function') window.updateAuthUI();
           if (typeof showToast === 'function') showToast('✅ Logged in!');
         } catch(e) {
           console.error('Login error:', e);
@@ -98,6 +99,7 @@
         try {
           await window.signInWithPopup(window.auth, new window.TwitterAuthProvider());
           window.closeLoginModal();
+          if (typeof window.updateAuthUI === 'function') window.updateAuthUI();
           if (typeof showToast === 'function') showToast('✅ Logged in!');
         } catch(e) {
           console.error('Login error:', e);
@@ -117,6 +119,7 @@
           document.getElementById('emailInput').value = '';
           document.getElementById('passInput').value = '';
           window.closeLoginModal();
+          if (typeof window.updateAuthUI === 'function') window.updateAuthUI();
           if (typeof showToast === 'function') showToast('✅ Logged in!');
         } catch(e) {
           console.error('Login error:', e);
@@ -136,6 +139,7 @@
           document.getElementById('emailInput').value = '';
           document.getElementById('passInput').value = '';
           window.closeLoginModal();
+          if (typeof window.updateAuthUI === 'function') window.updateAuthUI();
           if (typeof showToast === 'function') showToast('✅ Account created!');
         } catch(e) {
           console.error('Register error:', e);
@@ -344,7 +348,7 @@
   </div>
 </div>
 
-<script src="assets/risk-ladder.js"></script>
+<script src="assets/risk-pyramid.js"></script>
 
 </body>
 </html>
