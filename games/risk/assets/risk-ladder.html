@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔥 RISK LADDER — AirdropLab</title>
+  <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="../../styles.css">
+  <script src="../../languages.js"></script>
+  <script src="../../header.js"></script>
+  <script src="../../assets/reagents.js"></script>
+  <script>
+    if (typeof window.restoreCachedState === 'function') {
+      window.restoreCachedState();
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css">
+  
+  <link rel="stylesheet" href="assets/risk-ladder.css">
+</head>
+<body class="antialiased bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+
+<div id="site-header"></div>
+
+<main class="max-w-6xl mx-auto px-4 py-8 mt-[var(--header-h,80px)]">
+
+  <!-- GAME CONTAINER -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- LEFT PANEL: LADDER & CONTROLS -->
+    <div class="lg:col-span-2">
+      
+      <!-- GAME INFO CARD -->
+      <div class="bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border border-purple-500/30 rounded-lg p-6 mb-6 backdrop-blur">
+        <div class="flex justify-between items-center mb-4">
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
+            🔥 RISK LADDER
+          </h1>
+          <div class="text-right">
+            <div class="text-sm text-slate-400">Your Balance</div>
+            <div class="text-2xl font-bold text-emerald-400" id="playerBalance">100</div>
+          </div>
+        </div>
+        
+        <!-- Game Stats -->
+        <div class="grid grid-cols-3 gap-4 text-sm">
+          <div class="bg-slate-800/50 rounded p-3">
+            <div class="text-slate-400">Current Bet</div>
+            <div class="text-lg font-bold text-cyan-400" id="currentBet">1</div>
+          </div>
+          <div class="bg-slate-800/50 rounded p-3">
+            <div class="text-slate-400">Potential Win</div>
+            <div class="text-lg font-bold text-emerald-400" id="potentialWin">2</div>
+          </div>
+          <div class="bg-slate-800/50 rounded p-3">
+            <div class="text-slate-400">Current Step</div>
+            <div class="text-lg font-bold text-purple-400" id="currentStep">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LADDER DISPLAY -->
+      <div class="bg-slate-900/60 border border-slate-700/50 rounded-lg p-6 backdrop-blur">
+        <div class="mb-4">
+          <h2 class="text-xl font-bold text-slate-200 mb-4">🎯 Climb the Ladder</h2>
+          <div id="ladderContainer" class="space-y-2">
+            <!-- Ladder steps будут генерированы JS -->
+          </div>
+        </div>
+
+        <!-- GAME STATE MESSAGE -->
+        <div id="gameMessage" class="text-center text-slate-400 text-sm mt-4 min-h-5">
+          Ready to risk? Place your bet and climb!
+        </div>
+      </div>
+
+      <!-- GAME CONTROLS -->
+      <div class="flex gap-3 mt-6 flex-wrap">
+        <button id="btnRiskNext" class="flex-1 min-w-[150px] bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+          🎲 RISK NEXT
+        </button>
+        <button id="btnCashOut" class="flex-1 min-w-[150px] bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+          💰 CASH OUT
+        </button>
+      </div>
+
+      <!-- BET AMOUNT SELECTOR -->
+      <div class="mt-6 bg-slate-900/60 border border-slate-700/50 rounded-lg p-4 backdrop-blur">
+        <label class="block text-sm text-slate-400 mb-3">Bet Amount</label>
+        <div class="flex gap-2 items-center flex-wrap">
+          <button class="bet-quick-btn px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded text-sm font-medium transition" data-amount="1">1</button>
+          <button class="bet-quick-btn px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded text-sm font-medium transition" data-amount="5">5</button>
+          <button class="bet-quick-btn px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded text-sm font-medium transition" data-amount="10">10</button>
+          <button class="bet-quick-btn px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded text-sm font-medium transition" data-amount="50">50</button>
+          <input type="number" id="betInput" min="1" max="999" value="1" class="flex-1 min-w-[80px] px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm font-medium text-white">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT PANEL: STATS & INFO -->
+    <div class="lg:col-span-1">
+
+      <!-- SESSION STATS -->
+      <div class="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-lg p-6 mb-6 backdrop-blur">
+        <h3 class="text-lg font-bold text-slate-100 mb-4">📊 Session Stats</h3>
+        <div class="space-y-3 text-sm">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Games Played</span>
+            <span class="font-bold text-cyan-400" id="statsGamesPlayed">0</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Wins</span>
+            <span class="font-bold text-emerald-400" id="statsWins">0</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Losses</span>
+            <span class="font-bold text-red-400" id="statsLosses">0</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Best Step</span>
+            <span class="font-bold text-purple-400" id="statsBestStep">—</span>
+          </div>
+          <div class="h-px bg-slate-700/50 my-2"></div>
+          <div class="flex justify-between">
+            <span class="text-slate-300 font-medium">Session Profit</span>
+            <span class="font-bold text-lg" id="statsProfit">+0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOW TO PLAY -->
+      <div class="bg-slate-900/60 border border-slate-700/50 rounded-lg p-6 backdrop-blur">
+        <h3 class="text-lg font-bold text-slate-100 mb-4">ℹ️ How to Play</h3>
+        <ul class="space-y-3 text-sm text-slate-400">
+          <li class="flex gap-2">
+            <span class="text-cyan-400 flex-shrink-0">1.</span>
+            <span>Place your bet</span>
+          </li>
+          <li class="flex gap-2">
+            <span class="text-cyan-400 flex-shrink-0">2.</span>
+            <span>Click "RISK NEXT" to climb</span>
+          </li>
+          <li class="flex gap-2">
+            <span class="text-cyan-400 flex-shrink-0">3.</span>
+            <span>Win = next level or lose all</span>
+          </li>
+          <li class="flex gap-2">
+            <span class="text-cyan-400 flex-shrink-0">4.</span>
+            <span>Click "CASH OUT" to claim</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- RECENT GAMES -->
+  <div class="mt-12 bg-slate-900/60 border border-slate-700/50 rounded-lg p-6 backdrop-blur">
+    <h2 class="text-2xl font-bold text-slate-100 mb-6">📜 Recent Games</h2>
+    <div id="recentGamesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Recent games будут добавлены JS -->
+      <div class="text-center text-slate-400 col-span-full">No games yet</div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="mt-12 py-8 border-t border-slate-700/50 text-center text-slate-500 text-sm">
+  <p>🔥 RISK LADDER © 2026 AirdropLab • Play responsibly</p>
+</footer>
+
+<script src="assets/risk-ladder.js"></script>
+
+</body>
+</html>
