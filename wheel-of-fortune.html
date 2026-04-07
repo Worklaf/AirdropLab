@@ -11,11 +11,72 @@
   <link rel="stylesheet" href="styles.css">
   <script src="languages.js"></script>
   <script src="header.js"></script>
+  <script src="assets/reagents.js"></script>
+  <script src="assets/global-cache.js"></script>
+  <script src="assets/preload-system.js"></script>
+  <script src="assets/offline-manager.js"></script>
   <script>
-    // Восстановить кэшированное состояние авторизации при загрузке страницы
+    // Sistema de carga rápida para Wheel of Fortune
+    window.wheelFastLoad = function() {
+      console.log('Wheel fast loading from cache...');
+      
+      // Usar datos cacheados inmediatamente
+      const userProfile = window.getGlobalData('userProfile');
+      const wheelStats = window.getGlobalData('wheelStats');
+      const jackpot = window.getGlobalData('jackpot');
+      
+      // Actualizar UI inmediatamente con datos cacheados
+      if (userProfile) {
+        userData = userProfile;
+        window.userProfileData = userProfile;
+        if (typeof updateSpinsUI === 'function') updateSpinsUI();
+        if (typeof updateStatsUI === 'function') updateStatsUI();
+      }
+      
+      if (jackpot) {
+        const jackpotEl = document.getElementById('jackpotAmt');
+        if (jackpotEl) jackpotEl.textContent = jackpot.total + ' RGT';
+      }
+      
+      // Cargar datos frescos solo si estamos online
+      if (window.currentUser && window.GlobalDataCache && window.GlobalDataCache.isConnectionAvailable()) {
+        setTimeout(() => {
+          console.log('Online mode: loading fresh wheel data...');
+          window.PreloadSystem.preloadWheelData();
+        }, 1000);
+      } else {
+        console.log('Offline mode: using cached wheel data');
+      }
+    };
+    
+    // Escuchar eventos de conexión
+    window.addEventListener('connectionRestored', () => {
+      console.log('Connection restored for wheel page - refreshing data...');
+      if (window.currentUser) {
+        window.wheelFastLoad();
+      }
+    });
+    
+    window.addEventListener('connectionLost', () => {
+      console.log('Connection lost for wheel page - using cached data');
+    });
+    
+    // Restaurar estado de autorización
     if (typeof window.restoreCachedState === 'function') {
       window.restoreCachedState();
     }
+    
+    // Iniciar carga rápida cuando Firebase esté listo
+    window.addEventListener('firebaseReady', () => {
+      console.log('Firebase ready for wheel, starting fast load...');
+      window.wheelFastLoad();
+    });
+    
+    // Escuchar actualizaciones del caché
+    window.addEventListener('cacheUpdated', (e) => {
+      console.log('Cache updated in wheel page');
+      window.wheelFastLoad();
+    });
   </script>
   <script src="config/firebase-config.js"></script>
   
@@ -1363,11 +1424,43 @@ async function loadJackpot() {
   document.getElementById('jackpotTimer').textContent =
     isEn ? `${days}d ${hours}h until draw` : `До розыгрыша: ${days} дн. ${hours} ч.`;
 
+  // Сначала попробовать использовать кэшированные данные
+  const cachedJackpot = window.getGlobalData('jackpot');
+  if (cachedJackpot && cachedJackpot.month === month) {
+    console.log('Using cached jackpot data');
+    document.getElementById('jackpotAmt').textContent = cachedJackpot.total + ' RGT';
+    
+    // Jackpot chance for current user
+    if (currentUser) {
+      const players = cachedJackpot.players || {};
+      const myLoss  = players[currentUser.uid] || 0;
+      const chance  = cachedJackpot.total > 0 ? ((myLoss / cachedJackpot.total) * 100).toFixed(1) : 0;
+      document.getElementById('stJackpotChance').textContent = chance + '%';
+    }
+    
+    // Admin button
+    const adminBtn = document.getElementById('jackpotAdminBtn');
+    if (adminBtn) adminBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  }
+
+  // Попробовать загрузить свежие данные в фоне
   try {
     const snap = await getDoc(doc(db, COL_JACKPOT, month));
     const total = snap.exists() ? (snap.data().total || 0) : 0;
+    
+    // Обновить UI свежими данными
     document.getElementById('jackpotAmt').textContent = total + ' RGT';
-
+    
+    // Сохранить в кэш
+    const jackpotData = {
+      month: month,
+      total: total,
+      players: snap.exists() ? (snap.data().players || {}) : {},
+      lastUpdated: Date.now()
+    };
+    window.GlobalDataCache.cache.jackpot = jackpotData;
+    window.GlobalDataCache.cache.lastUpdated.jackpot = Date.now();
+    
     // Jackpot chance for current user
     if (currentUser && snap.exists()) {
       const players = snap.data().players || {};
@@ -1379,8 +1472,18 @@ async function loadJackpot() {
     // Admin button
     const adminBtn = document.getElementById('jackpotAdminBtn');
     if (adminBtn) adminBtn.style.display = isAdmin ? 'inline-block' : 'none';
+    
   } catch(e) {
-    console.warn('loadJackpot error:', e);
+    // Если оффлайн и есть кэш - использовать кэш
+    if (cachedJackpot && cachedJackpot.month === month) {
+      console.log('Offline mode: using cached jackpot data');
+      return;
+    }
+    
+    // Если нет кэша - показать ошибку
+    console.warn('loadJackpot error (no cache available):', e);
+    document.getElementById('jackpotAmt').textContent = '0 RGT';
+    document.getElementById('stJackpotChance').textContent = '0%';
   }
 }
 
@@ -2549,28 +2652,37 @@ window.markFilteredNotificationsAsRead = async function() {
   
   if (unreadFiltered.length === 0) {
     if (typeof showToast === 'function') {
-      showToast('Нет непрочитанных уведомлений в текущем фильтре');
+      showToast('Нет непрочитанных уведомлений');
     }
     return;
   }
   
   try {
-    const { updateDoc, doc } = window.__firestoreExports;
+    // Используем batch операции как в index.html для правильных прав доступа
+    const batch = window.writeBatch(window.db);
     
-    for (const notif of unreadFiltered) {
-      await updateDoc(doc(window.db, "notifications", notif.id), {
-        read: true
+    unreadFiltered.forEach(notif => {
+      batch.update(window.doc(window.db, 'notifications', notif.id), {
+        read: true,
+        readAt: window.serverTimestamp()
       });
-      // Мгновенно обновляем локальный массив
+    });
+    
+    await batch.commit();
+    
+    // Обновляем локальные данные
+    unreadFiltered.forEach(notif => {
       notif.read = true;
-    }
+      notif.readAt = new Date();
+    });
     
-    // Обновляем бейдж
-    updateNotificationBadge();
+    // Обновляем UI
+    window.updateNotificationBadge();
+    window.updateFilterCounts();
     
-    // Обновляем текущий фильтр
-    const currentFilter = window.currentFilter || 'all';
-    filterNotifications(currentFilter);
+    // Обновляем отображение
+    const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+    window.filterNotifications(activeFilter);
     
     if (typeof showToast === 'function') {
       showToast(`Отмечено как прочитанные: ${unreadFiltered.length} уведомлений`);
