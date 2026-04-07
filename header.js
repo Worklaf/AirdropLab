@@ -3877,22 +3877,12 @@ function initFeedbacksListener(uid) {
     }
     
     try {
-      // Используем правильные Firebase экспорты
-      const fx = window.__firestoreExports;
-      if (!fx || !fx.writeBatch || !fx.doc || !fx.serverTimestamp) {
-        console.error('Firestore functions not available for batch operations');
-        if (typeof showToast === 'function') {
-          showToast('Ошибка Firebase функций');
-        }
-        return;
-      }
-      
-      const batch = fx.writeBatch(window.db);
+      const batch = writeBatch(window.db);
       
       notifications.forEach(notif => {
-        batch.update(fx.doc(window.db, 'notifications', notif.id), {
+        batch.update(doc(window.db, 'notifications', notif.id), {
           read: true,
-          readAt: fx.serverTimestamp()
+          readAt: serverTimestamp()
         });
       });
       
@@ -3960,20 +3950,10 @@ function initFeedbacksListener(uid) {
     }
     
     try {
-      // Используем правильные Firebase экспорты
-      const fx = window.__firestoreExports;
-      if (!fx || !fx.writeBatch || !fx.doc) {
-        console.error('Firestore functions not available for delete operations');
-        if (typeof showToast === 'function') {
-          showToast('Ошибка Firebase функций');
-        }
-        return;
-      }
-      
-      const batch = fx.writeBatch(window.db);
+      const batch = writeBatch(window.db);
       
       notifications.forEach(notif => {
-        batch.delete(fx.doc(window.db, 'notifications', notif.id));
+        batch.delete(doc(window.db, 'notifications', notif.id));
       });
       
       await batch.commit();
