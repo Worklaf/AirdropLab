@@ -12,11 +12,69 @@
   <script src="languages.js"></script>
   <script src="header.js"></script>
   <script src="assets/reagents.js"></script>
+  <script src="assets/global-cache.js"></script>
+  <script src="assets/preload-system.js"></script>
   <script>
-    // Восстановить кэшированное состояние авторизации при загрузке страницы
+    // Función toast para compatibilidad
+    window.toast = function(message, type = 'info') {
+      if (typeof showToast === 'function') {
+        showToast(message, type);
+      } else {
+        console.log(`Toast (${type}): ${message}`);
+      }
+    };
+    
+    // Sistema de carga rápida de datos
+    window.fastLoadData = async function() {
+      console.log('Fast loading data from cache...');
+      
+      // Usar datos cacheados si están frescos
+      const userProfile = window.getGlobalData('userProfile');
+      const favorites = window.getGlobalData('favorites');
+      const faucets = window.getGlobalData('faucets');
+      const reagentsStatus = window.getGlobalData('reagentsStatus');
+      
+      // Actualizar UI inmediatamente con datos cacheados
+      if (userProfile) {
+        window.updateUserUI(userProfile);
+      }
+      
+      if (favorites && favorites.length > 0) {
+        window.updateFavoritesUI(favorites);
+      }
+      
+      if (faucets && faucets.length > 0) {
+        window.renderFaucets(faucets);
+      }
+      
+      if (reagentsStatus) {
+        window.updateReagentsUI(reagentsStatus);
+      }
+      
+      // Cargar datos frescos en segundo plano
+      if (window.currentUser) {
+        setTimeout(() => {
+          window.GlobalDataCache.forceRefresh(['userProfile', 'favorites', 'reagentsStatus']);
+        }, 1000);
+      }
+    };
+    
+    // Restaurar estado de autorización
     if (typeof window.restoreCachedState === 'function') {
       window.restoreCachedState();
     }
+    
+    // Iniciar carga rápida cuando Firebase esté listo
+    window.addEventListener('firebaseReady', () => {
+      console.log('Firebase ready, starting fast load...');
+      window.fastLoadData();
+    });
+    
+    // Escuchar actualizaciones del caché
+    window.addEventListener('cacheUpdated', (e) => {
+      console.log('Cache updated, refreshing UI...');
+      window.fastLoadData();
+    });
   </script>
   <style>
     /* z-index fix — nav dropdown поверх всего */
