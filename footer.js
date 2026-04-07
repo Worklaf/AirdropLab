@@ -2541,8 +2541,15 @@ function initAccountPage() {
         console.log('Flags initialized with inline CSS');
     }, 200);
     
-    // ⭐️ Обязательно должен быть здесь
-    updateFooterStats();
+    // ⭐️ Задержка для инициализации Firebase (особенно на страницах games/*)
+    setTimeout(function() {
+        if (window.db || window.__firestoreExports) {
+            updateFooterStats();
+        } else {
+            // Если Firebase ещё не готов, ждём ещё 1 сек
+            setTimeout(updateFooterStats, 1000);
+        }
+    }, 500);
     
     document.addEventListener('projectsLoaded', function() {
         const projectEl = document.getElementById('footerProjectCount');
