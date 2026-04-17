@@ -118,50 +118,121 @@
     {
       "id": "action_model_229125",
       "status": "active",
-      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/action-model-activity1092",
+      "twitterUrl": "https://x.com/actionmodelai",
+      "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
       "deleted": false,
-      "lastUpdated": "2026-02-12",
+      "hasDaily": true,
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/action-model-activity1092",
+      "referralLink": "https://join.actionmodel.com/WORKLAF",
+      "priority": "high",
+      "lastUpdated": "2026-04-08",
+      "createdAt": "2026-02-12T09:40:29.125Z",
       "categories": [
         "Actividad Social",
         "Testnet"
       ],
-      "name": "Action Model",
-      "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "createdAt": "2026-02-12T09:40:29.125Z",
-      "referralLink": "https://join.actionmodel.com/WORKLAF",
+      "guideUrl": "",
+      "image": "https://img.cryptorank.io/coins/action_model1770728109409.png",
+      "description": "ActionModel desarrolla un modelo de acciones comunitarias (Large Action Model, LAM) — un sistema de inteligencia artificial diseñado para realizar tareas digitales reales en computadoras interactuando con interfaces de usuario gráficas (GUI), en lugar de simplemente generar texto como los modelos de lenguaje tradicionales (Large Language Models, LLM). Esto lo logra rastreando los estados de la pantalla, tomando decisiones sobre acciones (como hacer clic en coordenadas, ingresar texto o desplazarse) mediante su propio árbol de acciones, construido a partir de la contribución de los usuarios, ejecutando estas acciones y repitiéndolas hasta completar la tarea. Esto permite automatizar procesos de trabajo de manera autónoma, como la entrada de datos, la navegación en sitios web o el trabajo con aplicaciones, sin utilizar API.\n\nEl proyecto se opone al desarrollo centralizado de la IA por parte de grandes empresas tecnológicas a través de la contribución de la comunidad: los usuarios instalan una extensión de navegador para el aprendizaje pasivo o activo y crean o venden flujos de trabajo reutilizables en un mercado, donde su ejecución genera una recompensa constante para los creadores.\n\nLa aplicación de escritorio Actionist sirve como una herramienta para interactuar con el usuario, permitiendo crear agentes de IA especializados (empleados digitales con memoria, programación, características personales y acceso a herramientas) que trabajan localmente o en la nube las 24 horas del día, con un seguimiento completo de la historia para garantizar la transparencia.\n\n$LAM es el token propio que facilita el funcionamiento de las acciones, recompensa el aprendizaje y la contribución, permite la gobernanza y representa una participación en la propiedad del sistema de IA.",
       "activities": [
         {
-          "status": "active",
-          "title": "Farmeo de Puntos",
           "id": "act_1770889381746",
+          "date": "2026-02-02",
+          "description": "Action Model [anunció](https://x.com/ActionModelAI/status/2018304575791398938) el lanzamiento de una extensión y una plataforma para entrenar agentes de inteligencia artificial. Puedes participar en el entrenamiento simplemente instalando la extensión del navegador y realizando tus actividades habituales en Internet.\n\nEn la plataforma Action Model, en la sección ActionFI, puedes realizar tareas en diversas plataformas y obtener puntos a cambio.\n\n \n\n1. Ve al [sitio web](https://join.actionmodel.com/WORKLAF) y regístrate con tu correo electrónico.\n\n2. Abre la [pestaña](https://train.actionmodel.com/quests) \"Get Started\", completa las tareas disponibles e instala la extensión.\n![](https://img.cryptorank.io/image-hub/2313121770742045276.jpg)\n\n3. Ve a la pestaña \"Quests\" y completa las tareas disponibles. \nEn la pestaña, hay un check-in diario.\n![](https://img.cryptorank.io/image-hub/32132145121770742052542.jpg)\n\n4. En la [pestaña](https://train.actionmodel.com/actionfi) \"ActionFi\", completa las tareas.\nAl completar las tareas de esta pestaña, obtienes puntos con un multiplicador.\n![](https://img.cryptorank.io/image-hub/412511770742058510.jpg)",
           "categories": [
             "Actividad Social",
             "Testnet"
           ],
-          "date": "2026-02-02",
-          "description": "Action Model [anunció](https://x.com/ActionModelAI/status/2018304575791398938) el lanzamiento de una extensión y una plataforma para entrenar agentes de inteligencia artificial. Puedes participar en el entrenamiento simplemente instalando la extensión del navegador y realizando tus actividades habituales en Internet.\n\nEn la plataforma Action Model, en la sección ActionFI, puedes realizar tareas en diversas plataformas y obtener puntos a cambio.\n\n \n\n1. Ve al [sitio web](https://join.actionmodel.com/WORKLAF) y regístrate con tu correo electrónico.\n\n2. Abre la [pestaña](https://train.actionmodel.com/quests) \"Get Started\", completa las tareas disponibles e instala la extensión.\n![](https://img.cryptorank.io/image-hub/2313121770742045276.jpg)\n\n3. Ve a la pestaña \"Quests\" y completa las tareas disponibles. \nEn la pestaña, hay un check-in diario.\n![](https://img.cryptorank.io/image-hub/32132145121770742052542.jpg)\n\n4. En la [pestaña](https://train.actionmodel.com/actionfi) \"ActionFi\", completa las tareas.\nAl completar las tareas de esta pestaña, obtienes puntos con un multiplicador.\n![](https://img.cryptorank.io/image-hub/412511770742058510.jpg)"
+          "title": "Farmeo de Puntos",
+          "status": "active"
         },
         {
-          "status": "active",
           "title": "TaskOn",
+          "status": "active",
+          "id": "act_1770983876728",
+          "date": "2026-02-12",
           "categories": [
             "Actividad Social"
           ],
-          "date": "2026-02-12",
-          "id": "act_1770983876728",
           "description": "En la plataforma TaskOn, hay campañas disponibles con misiones de aprendizaje y creación de contenido.\nAl completar misiones, ganas puntos $LAM. Estos puntos reflejan tu contribución al proyecto y más adelante pueden ser convertidos en tokens o influir en el tamaño de la asignación durante la distribución de airdrop.\n\n \n\n1. Ve al [sitio](https://taskon.xyz/ActionModel) y conecta tu billetera. Comienza a completar misiones\n![](https://img.cryptorank.io/image-hub/%D1%81_91770910481505.jpg)"
+        },
+        {
+          "categories": [
+            "Actividad Social"
+          ],
+          "endDate": "",
+          "createdAt": "2026-04-14T17:40:36.985Z",
+          "description": "En el Discord del proyecto, puedes obtener roles. Puedes mostrar actividad participando en juegos y creando contenido, y así ganar EP, con los que puedes comprar roles.\nTambién puedes ganar AP por una comunicación de calidad. Los AP se convierten en tokens $LAM más adelante.\n\nPuntos de Acción\n• 1 mensaje con sentido = 1 AP.\n• Las publicaciones en la rama [proof-of-work](https://discord.com/channels/1352314173111140374/1401877009629446206) pueden dar entre 1 y 10 AP\n• El rol @LAM Fueler da un multiplicador de 3x AP\n\nPuntos de Participación\n• Los roles solo se abren a través de la acumulación de Puntos de Participación\n• Los Puntos de Participación se ganan interactuando con el contenido en la rama [task-feed](https://discord.com/channels/1352314173111140374/1401985675770986516) y participando en [juegos](https://discord.com/channels/1352314173111140374/1475814435061764096)\n\n1. Únete a [Discord](https://discord.gg/Y8tdcwuxfF) y participa activamente en el desarrollo de la comunidad",
+          "date": "2026-04-08",
+          "id": "act_1776188436985",
+          "status": "active",
+          "title": "Discord"
         }
       ],
-      "priority": "high",
-      "guideUrl": "",
-      "image": "https://img.cryptorank.io/coins/action_model1770728109409.png",
-      "twitterUrl": "https://x.com/actionmodelai",
-      "hasDaily": true,
+      "name": "Action Model",
       "updatedAt": {
         "seconds": 1774440672,
         "nanoseconds": 551000000
-      },
-      "description": "ActionModel desarrolla un modelo de acciones comunitarias (Large Action Model, LAM) — un sistema de inteligencia artificial diseñado para realizar tareas digitales reales en computadoras interactuando con interfaces de usuario gráficas (GUI), en lugar de simplemente generar texto como los modelos de lenguaje tradicionales (Large Language Models, LLM). Esto lo logra rastreando los estados de la pantalla, tomando decisiones sobre acciones (como hacer clic en coordenadas, ingresar texto o desplazarse) mediante su propio árbol de acciones, construido a partir de la contribución de los usuarios, ejecutando estas acciones y repitiéndolas hasta completar la tarea. Esto permite automatizar procesos de trabajo de manera autónoma, como la entrada de datos, la navegación en sitios web o el trabajo con aplicaciones, sin utilizar API.\n\nEl proyecto se opone al desarrollo centralizado de la IA por parte de grandes empresas tecnológicas a través de la contribución de la comunidad: los usuarios instalan una extensión de navegador para el aprendizaje pasivo o activo y crean o venden flujos de trabajo reutilizables en un mercado, donde su ejecución genera una recompensa constante para los creadores.\n\nLa aplicación de escritorio Actionist sirve como una herramienta para interactuar con el usuario, permitiendo crear agentes de IA especializados (empleados digitales con memoria, programación, características personales y acceso a herramientas) que trabajan localmente o en la nube las 24 horas del día, con un seguimiento completo de la historia para garantizar la transparencia.\n\n$LAM es el token propio que facilita el funcionamiento de las acciones, recompensa el aprendizaje y la contribución, permite la gobernanza y representa una participación en la propiedad del sistema de IA."
+      }
+    },
+    {
+      "id": "ambient_001951",
+      "activities": [
+        {
+          "id": "act_1776188086548",
+          "description": "Ambient [anunció](https://x.com/ambient_xyz/status/2041242948013330613) el lanzamiento de la plataforma AIGE en testnet. Puedes probar el funcionamiento de la plataforma creando tu propio agente.\n\n \n\n1. Ve al [sitio web](https://www.ai-ge.xyz/discover) y conecta tu billetera\n\n2. Abre la sección Lanzamiento, crea y lanza un agente\n\n\n\n ![imagen](https://images.cryptorank.io/image-hub/a_far_123411775572624595.jpg)",
+          "categories": [
+            "Testnet"
+          ],
+          "title": "AIGE. Creación de Agente",
+          "createdAt": "2026-04-14T17:34:46.548Z",
+          "date": "2026-04-06",
+          "endDate": "",
+          "status": "active"
+        },
+        {
+          "date": "2025-12-12",
+          "endDate": "",
+          "status": "active",
+          "title": "Ambient Testnet",
+          "categories": [
+            "Testnet"
+          ],
+          "createdAt": "2026-04-14T17:36:20.819Z",
+          "id": "act_1776188180819",
+          "description": "Ambient [lanzó](https://x.com/ambient_xyz/status/1999457085369758006) la testnet. En el marco de la testnet, podemos interactuar con la IA, solicitar tokens de prueba y enviar retroalimentación.\n\n \n\n1. Ve al [sitio web](https://app.ambient.xyz/) y regístrate con tu correo electrónico. Después de registrarte con éxito, conecta tu billetera:\n![imagen](https://img.cryptorank.io/image-hub/ammio1765556053125.png) \n\n\n \n\n2. Comienza a interactuar con el asistente de IA utilizando 3 funciones diferentes. Informa sobre todos los errores encontrados en el correo electrónico indicado arriba o en Discord:\n![imagen](https://img.cryptorank.io/image-hub/amiba1765556490396.png) \n\n\n \n\n3. Solicita tokens de prueba en la pestaña Drops:\n\n![imagen](https://img.cryptorank.io/image-hub/amibab1765556500727.png)"
+        },
+        {
+          "createdAt": "2026-04-14T17:37:21.711Z",
+          "title": "Únete a Discord",
+          "categories": [
+            "Actividad Social"
+          ],
+          "endDate": "",
+          "status": "active",
+          "date": "2025-10-23",
+          "description": "Hoy (23 de octubre) Ambient [abrió](https://x.com/ambient_xyz/status/1981407268399907073) su servidor de Discord. Puedes unirte a él y convertirte en un participante temprano. Por ahora, no hay roles disponibles, pero puedes empezar a crear contenido sobre el proyecto y esperar a que se agreguen roles. Ten en cuenta que con el tiempo, el enlace a Discord puede dejar de ser válido. No conectes tu billetera si se requiere para la verificación.\n\n1. Únete a [Discord](https://cryptorank.io/ru/drophunting/discord.gg/CzDH8ybEUU) y, si lo deseas, comienza a crear contenido sobre el proyecto. O simplemente espera a que se agreguen roles en el servidor.\n\n![imagen](https://img.cryptorank.io/image-hub/asmosa1761252941868.png)",
+          "id": "act_1776188241711"
+        }
+      ],
+      "lastUpdated": "2026-04-06",
+      "createdAt": "2026-04-14T17:33:21.951Z",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/ambient-activity750?id=3202",
+      "hasDaily": false,
+      "guideUrl": "",
+      "image": "https://images.cryptorank.io/coins/ambient1743501929032.png",
+      "deleted": false,
+      "twitterUrl": "https://x.com/ambient_xyz?hzet=dszqupsbol",
+      "referralLink": "https://www.ai-ge.xyz/discover",
+      "description": "Ambient es una blockchain de nivel 1 (Layer 1) que combina la compatibilidad con Solana SVM y un mecanismo de Proof of Work para proporcionar una inferencia de IA verificada de manera eficiente y asequible. Su objetivo a largo plazo es desarrollar un modelo de IA fundamental en la cadena con un nivel de inteligencia artificial general (AGI) destinado al uso público.",
+      "name": "Ambient",
+      "categories": [
+        "Rellenar Formulario",
+        "Actividad Social",
+        "Testnet"
+      ],
+      "status": "active",
+      "priority": "normal"
     },
     {
       "id": "arc-circle",
@@ -542,6 +613,52 @@
       ]
     },
     {
+      "id": "carte_488137",
+      "guideUrl": "",
+      "image": "https://images.cryptorank.io/coins/carte1775465943567.png",
+      "name": "CARTE",
+      "activities": [
+        {
+          "endDate": "2026-04-08",
+          "categories": [
+            "Rellenar Formulario"
+          ],
+          "createdAt": "2026-04-06T19:42:35.082Z",
+          "description": "Carte [anunció](https://x.com/carte_gg/status/2040584821462663311) el lanzamiento de una lista de espera. Puedes dejar tu correo electrónico o iniciar sesión con tu cuenta de Google para reservar un paquete de cartas y acceder a la plataforma para apoyar a artistas y coleccionar. \nEl proyecto cuenta con el apoyo directo de [Manifold](https://cryptorank.io/ico/manifold#funding-rounds) \n\n \n\n1. Ve al [sitio web](https://carte.gg?r=01OQBQNU) y deja tu correo electrónico. Copia el enlace de referencia y invita a otros usuarios\n![imagen](https://images.cryptorank.io/image-hub/dsafga_11775474999768.jpg)",
+          "id": "act_1775504555082",
+          "date": "2026-04-05",
+          "status": "ended",
+          "title": "Lista de Espera"
+        },
+        {
+          "status": "active",
+          "title": "Apertura del Paquete",
+          "categories": [
+            "Minteo de NFT"
+          ],
+          "createdAt": "2026-04-14T18:03:23.053Z",
+          "endDate": "2026-04-15",
+          "description": "Carte han lanzado la posibilidad de abrir paquetes para todos los participantes que dejaron una solicitud para unirse a la lista de espera. Puedes abrir un paquete y seleccionar 1 de 4 cartas.\n\n1. Ve al [sitio web](https://carte.gg/?r=01OQBQNU) y autentícate.\n\n2. Abre el paquete con cartas.\n![imagen](https://images.cryptorank.io/image-hub/czxvasdf1775746436833.jpg)\n\n3. Selecciona una de las cartas y descarta el resto.\n![imagen](https://images.cryptorank.io/image-hub/gxzfasdfa1775746440521.jpg)\n\n4. Conecta tu billetera y [sigue](https://x.com/ManifoldXYZ) las actualizaciones en X.\n![imagen](https://images.cryptorank.io/image-hub/gdsafsa1775746446121.jpg)",
+          "date": "2026-04-08",
+          "id": "act_1776189803053"
+        }
+      ],
+      "description": "CARTE es una plataforma para la colección de cartas de arte digital, actualmente en beta cerrada. Fue creada por la empresa Manifold.xyz. La plataforma funciona según un modelo de tres etapas: los usuarios reservan un paquete, luego lo abren para descubrir cartas de arte digital únicas de artistas seleccionados por curadores. Cuando los usuarios compran paquetes, una parte de los fondos va directamente a los creadores de las obras representadas en la colección.",
+      "lastUpdated": "2026-04-08",
+      "createdAt": "2026-04-06T19:41:28.137Z",
+      "categories": [
+        "Minteo de NFT",
+        "Rellenar Formulario"
+      ],
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/carte-activity1149",
+      "referralLink": "https://carte.gg?r=01OQBQNU",
+      "priority": "normal",
+      "deleted": false,
+      "twitterUrl": "https://x.com/carte_gg?hzet=dszqupsbol",
+      "status": "active",
+      "hasDaily": false
+    },
+    {
       "id": "celes_068334",
       "categories": [
         "Testnet"
@@ -579,51 +696,51 @@
     },
     {
       "id": "dfusion_ai_972480",
-      "guideUrl": "",
-      "name": "dFusion AI",
-      "referralLink": "",
-      "twitterUrl": "https://x.com/dFusionAI?hzet=dszqupsbol",
-      "priority": "normal",
-      "createdAt": "2026-03-31T14:06:12.480Z",
-      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/dfusion-ai-activity1144",
+      "lastUpdated": "2026-03-23",
       "image": "https://images.cryptorank.io/coins/d_fusion_ai1758208995136.png",
-      "hasDaily": false,
-      "description": "dFusion es una red inteligente descentralizada diseñada para transformar datos dispersos en información estructurada para la inteligencia artificial. El proyecto se centra en la calidad y la autenticidad del contenido, permitiendo a las comunidades crear subredes especializadas en áreas como las finanzas y el derecho. En lugar de competir por el poder, el protocolo implementa un nuevo modelo económico en el que la propiedad y la verificación de los datos son recompensadas con tokens. La plataforma ofrece herramientas para empresas, brindando a los clientes corporativos un acceso seguro a la analítica a través de API. De esta manera, el sistema forma la infraestructura fundamental para el desarrollo de agentes digitales independientes.",
+      "priority": "normal",
       "status": "active",
-      "deleted": false,
+      "activities": [
+        {
+          "status": "active",
+          "description": "dFusion [anunció](https://x.com/dFusionAI/status/1970518597832261878) el lanzamiento de su testnet. Puedes obtener puntos por crear y subir datos únicos. También puedes hacer solicitudes a la IA y dejar comentarios detallados sobre las respuestas que recibes.\n\n* Los puntos se convierten en tokens $DFSN en el TGE\n* El tamaño de las recompensas depende directamente del tamaño total del conjunto de datos de la subred. Cuanto más nueva y pequeña sea la subred, mayor será el multiplicador de puntos que obtendrás\n* Los trabajos que se suben a las subredes deben ser únicos\n* Poseer una subred te da ingresos pasivos sin necesidad de subir datos y la posibilidad de monetizar\n\n1. Ve al [sitio web](https://testnet.dfusion.ai/signup?ReferralCode=4ubp7fqu) y conecta tu billetera. Crea una cuenta\n\n2. En la pestaña \"Subir\", selecciona una subred y familiarízate con las reglas del contenido que puedes crear y subir. Haz clic en la subred adecuada\n![imagen](https://images.cryptorank.io/image-hub/zvzaa1774960414727.jpg)\n\n\n \n\n3. Sube un archivo con datos únicos en la temática seleccionada\n![imagen](https://images.cryptorank.io/image-hub/fasfasdas1774960419034.jpg)\n\n\n \n\n4. Haz clic en el botón de búsqueda y crea un nuevo chat. Haz una pregunta sobre el tema que te interese\n![imagen](https://images.cryptorank.io/image-hub/dsafasrq1774960422805.jpg) \n\n\n \n\n5. Después de leer la respuesta, deja un comentario detallado\nObtendrás puntos por cada interacción con el chat\n\n![imagen](https://images.cryptorank.io/image-hub/wqr_12311774960429034.jpg) \n\n \n\n6. Invita a otros usuarios\n![imagen](https://images.cryptorank.io/image-hub/dasfqwrqwrq1774964054386.jpg) \n\n\n \n\n7. Puedes [comprar](https://testnet.dfusion.ai/purchase-subnet) una subred y lanzarla\n\n![imagen](https://images.cryptorank.io/image-hub/dassafvzxvcz1774963782983.jpg)",
+          "categories": [
+            "Testnet"
+          ],
+          "id": "act_1774967023345",
+          "endDate": "",
+          "createdAt": "2026-03-31T14:23:43.345Z",
+          "date": "2026-03-23",
+          "title": "Farmeo de Puntos"
+        },
+        {
+          "description": "dFusion [anunció](https://x.com/dFusionAI/status/2023405550294413817) el lanzamiento del programa de embajadores dFusion X. Puedes completar el formulario y postular para participar y recibir recompensas por usuarios invitados\n\n1. Ve al [formulario](https://docs.google.com/forms/d/e/1FAIpQLSdyvwETfMsnM2BG-cIa2uxhrL76w1XOMPXbHiWTQDvcsAYcLg/viewform) y complétalo\n![imagen](https://images.cryptorank.io/image-hub/ar_12412311774965753943.jpg)",
+          "endDate": "",
+          "categories": [
+            "Programa de Embajadores",
+            "Rellenar Formulario"
+          ],
+          "id": "act_1775332776566",
+          "title": "Programa de Embajadores",
+          "date": "2026-03-16",
+          "createdAt": "2026-04-04T19:59:36.566Z",
+          "status": "active"
+        }
+      ],
+      "name": "dFusion AI",
+      "description": "dFusion es una red inteligente descentralizada diseñada para transformar datos dispersos en información estructurada para la inteligencia artificial. El proyecto se centra en la calidad y la autenticidad del contenido, permitiendo a las comunidades crear subredes especializadas en áreas como las finanzas y el derecho. En lugar de competir por el poder, el protocolo implementa un nuevo modelo económico en el que la propiedad y la verificación de los datos son recompensadas con tokens. La plataforma ofrece herramientas para empresas, brindando a los clientes corporativos un acceso seguro a la analítica a través de API. De esta manera, el sistema forma la infraestructura fundamental para el desarrollo de agentes digitales independientes.",
+      "guideUrl": "",
+      "referralLink": "https://testnet.dfusion.ai/signup?ReferralCode=4ubp7fqu",
+      "hasDaily": false,
       "categories": [
         "Programa de Embajadores",
         "Rellenar Formulario",
         "Testnet"
       ],
-      "lastUpdated": "2026-03-23",
-      "activities": [
-        {
-          "id": "act_1774967023345",
-          "createdAt": "2026-03-31T14:23:43.345Z",
-          "status": "active",
-          "date": "2026-03-23",
-          "title": "Farmeo de Puntos",
-          "categories": [
-            "Testnet"
-          ],
-          "endDate": "",
-          "description": "dFusion [anunció](https://x.com/dFusionAI/status/1970518597832261878) el lanzamiento de su testnet. Puedes obtener puntos por crear y subir datos únicos. También puedes hacer solicitudes a la IA y dejar comentarios detallados sobre las respuestas que recibes.\n\n* Los puntos se convierten en tokens $DFSN en el TGE\n* El tamaño de las recompensas depende directamente del tamaño total del conjunto de datos de la subred. Cuanto más nueva y pequeña sea la subred, mayor será el multiplicador de puntos que obtendrás\n* Los trabajos que se suben a las subredes deben ser únicos\n* Poseer una subred te da ingresos pasivos sin necesidad de subir datos y la posibilidad de monetizar\n\n1. Ve al [sitio web](https://testnet.dfusion.ai/signup?ReferralCode=4ubp7fqu) y conecta tu billetera. Crea una cuenta\n\n2. En la pestaña \"Subir\", selecciona una subred y familiarízate con las reglas del contenido que puedes crear y subir. Haz clic en la subred adecuada\n![imagen](https://images.cryptorank.io/image-hub/zvzaa1774960414727.jpg)\n\n\n \n\n3. Sube un archivo con datos únicos en la temática seleccionada\n![imagen](https://images.cryptorank.io/image-hub/fasfasdas1774960419034.jpg)\n\n\n \n\n4. Haz clic en el botón de búsqueda y crea un nuevo chat. Haz una pregunta sobre el tema que te interese\n![imagen](https://images.cryptorank.io/image-hub/dsafasrq1774960422805.jpg) \n\n\n \n\n5. Después de leer la respuesta, deja un comentario detallado\nObtendrás puntos por cada interacción con el chat\n\n![imagen](https://images.cryptorank.io/image-hub/wqr_12311774960429034.jpg) \n\n \n\n6. Invita a otros usuarios\n![imagen](https://images.cryptorank.io/image-hub/dasfqwrqwrq1774964054386.jpg) \n\n\n \n\n7. Puedes [comprar](https://testnet.dfusion.ai/purchase-subnet) una subred y lanzarla\n\n![imagen](https://images.cryptorank.io/image-hub/dassafvzxvcz1774963782983.jpg)"
-        },
-        {
-          "endDate": "",
-          "description": "dFusion [anunció](https://x.com/dFusionAI/status/2023405550294413817) el lanzamiento del programa de embajadores dFusion X. Puedes completar el formulario y postular para participar y recibir recompensas por usuarios invitados\n\n1. Ve al [formulario](https://docs.google.com/forms/d/e/1FAIpQLSdyvwETfMsnM2BG-cIa2uxhrL76w1XOMPXbHiWTQDvcsAYcLg/viewform) y complétalo\n![imagen](https://images.cryptorank.io/image-hub/ar_12412311774965753943.jpg)",
-          "categories": [
-            "Programa de Embajadores",
-            "Rellenar Formulario"
-          ],
-          "title": "Programa de Embajadores",
-          "status": "active",
-          "date": "2026-03-16",
-          "createdAt": "2026-04-04T19:59:36.566Z",
-          "id": "act_1775332776566"
-        }
-      ]
+      "deleted": false,
+      "twitterUrl": "https://x.com/dFusionAI?hzet=dszqupsbol",
+      "createdAt": "2026-03-31T14:06:12.480Z",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/dfusion-ai-activity1144"
     },
     {
       "id": "euphoria_794573",
@@ -935,6 +1052,39 @@
       "priority": "normal"
     },
     {
+      "id": "jurassic_finance_757209",
+      "status": "active",
+      "createdAt": "2026-04-15T18:45:57.209Z",
+      "deleted": false,
+      "twitterUrl": "https://x.com/JurassicFi?hzet=dszqupsbol",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/jurassic-finance-activity1160",
+      "referralLink": "https://jurassic.finance/",
+      "hasDaily": false,
+      "name": "Jurassic Finance",
+      "image": "https://images.cryptorank.io/coins/jurassic_finance1776256774207.png",
+      "priority": "normal",
+      "activities": [
+        {
+          "id": "act_1776278813121",
+          "date": "2026-04-15",
+          "createdAt": "2026-04-15T18:46:53.121Z",
+          "categories": [
+            "Rellenar Formulario"
+          ],
+          "status": "active",
+          "description": "Jurassic Finance [anunció](https://x.com/JurassicFi/status/2044356130814460086) el lanzamiento de una lista de espera. Puedes dejar tu correo electrónico para acceder al producto en el futuro.\n\n1. Ve al [sitio web](https://jurassic.finance/) y deja tu correo electrónico.\n\n![imagen](https://images.cryptorank.io/image-hub/a_dasrqwe1776268893228.jpg)",
+          "endDate": "2026-05-07",
+          "title": "Lista de espera"
+        }
+      ],
+      "guideUrl": "",
+      "description": "Jurassic Finance tokeniza un activo de cartera en la blockchain de Solana. El proyecto cuenta con el apoyo del acelerador Colosseum.",
+      "categories": [
+        "Rellenar Formulario"
+      ],
+      "lastUpdated": "2026-04-15"
+    },
+    {
       "id": "kaio_345183",
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/kaio-activity1108",
       "lastUpdated": "2026-03-24",
@@ -1236,6 +1386,68 @@
       "status": "active"
     },
     {
+      "id": "knidoslabs_051084",
+      "createdAt": "2026-04-14T18:07:31.084Z",
+      "categories": [
+        "Rellenar Formulario",
+        "Obtener Rol",
+        "Actividad Social",
+        "Testnet"
+      ],
+      "lastUpdated": "2026-04-10",
+      "name": "KnidosLabs",
+      "description": "Knidos Labs desarrolla instrumentos financieros para redes blockchain, centrándose en la descentralización y la optimización de los ingresos de los validadores. La empresa ofrece una Capa de Mejora de Descentralización (Decentralization Enhancement Layer) - un entorno de orquestación confiable y independiente de la red, diseñado para apoyar la descentralización de las redes basadas en proof-of-stake. Al aumentar el número de nodos validadores, la plataforma utiliza un mecanismo integrado de Node-Fi para activar el capital inactivo. Gracias a Node-Fi, el staking se vuelve accesible y estimulado sin condiciones adicionales.",
+      "activities": [
+        {
+          "id": "act_1776190107889",
+          "date": "2026-04-10",
+          "createdAt": "2026-04-14T18:08:27.889Z",
+          "endDate": "",
+          "categories": [
+            "Rellenar Formulario",
+            "Obtener Rol"
+          ],
+          "description": "Knidos [anunció](https://x.com/knidosxyz/status/2042597892184019008) que están buscando moderadores para su servidor de Discord. Puedes enviar una solicitud para unirte al equipo de moderadores. Los moderadores en proyectos suelen recibir roles únicos en el servidor y una mayor asignación en los airdrops.\n\n1. Ve al [formulario](https://docs.google.com/forms/d/e/1FAIpQLSfbwopjOAkvs6bLum1E2SDHKunBHionSKGC9uiNqVQ4sueZ9w/viewform), rellénalo y envía tu solicitud.\n![imagen](https://images.cryptorank.io/image-hub/agareq_4_e_11775828936493.jpg)",
+          "title": "Selección de moderadores en Discord",
+          "status": "active"
+        },
+        {
+          "status": "active",
+          "title": "Red de pruebas",
+          "description": "Knidos [anunció](https://x.com/knidosxyz/status/2041574724531097900) el lanzamiento de su testnet. Si anteriormente te inscribiste en la lista de espera, puedes verificar tu correo electrónico, deberías haber recibido una invitación para acceder al testnet con recompensas.\n\n\n1. Ve al [sitio web](https://testnet.knidos.xyz/), conecta tu billetera, ingresa la invitación y participa en el testnet\n![imagen](https://images.cryptorank.io/image-hub/atrq_4123411775825148265.jpg) \n\n\n \n\n2. Si no tienes invitación, únete a [Discord](https://t.co/Rn4Yk1RECF), los usuarios en el canal [chat](https://discord.com/channels/1464270542541557959/1487488203920379974) a veces comparten códigos\n\n3. Ve a la pestaña Inicio y realiza el check-in diario\n![imagen](https://images.cryptorank.io/image-hub/vza1775826246043.jpg) \n\n\n \n\n4. Desplázate hacia abajo y completa las tareas disponibles\n![imagen](https://images.cryptorank.io/image-hub/vzxfdad1775826250264.jpg) \n\n\n \n\n5. En la pestaña [Juegos](https://testnet.knidos.xyz/dashboard?menu=games), juega a los juegos disponibles\n![imagen](https://images.cryptorank.io/image-hub/51_fsada1775826256975.jpg)",
+          "createdAt": "2026-04-14T18:09:53.997Z",
+          "categories": [
+            "Actividad Social",
+            "Testnet"
+          ],
+          "endDate": "",
+          "date": "2026-04-07",
+          "id": "act_1776190193997"
+        },
+        {
+          "status": "active",
+          "title": "Listas de espera",
+          "description": "Knidos [anunció](https://x.com/knidosxyz/status/2009332768355078546) el lanzamiento de una lista de espera en testnet. Puedes solicitar acceso para convertirte en un usuario temprano.\n\n \n\n1. Ve al [sitio web](https://www.knidos.xyz/) y conecta tu billetera\n![imagen](https://images.cryptorank.io/image-hub/klzxv1775823178908.jpg) \n\n\n \n\n2. Conecta tu cuenta de Google\nLa invitación al testnet llegará a tu correo electrónico, así que mantente atento a la llegada del mensaje\n![imagen](https://images.cryptorank.io/image-hub/fasrfzxcvz1775823203299.jpg) \n\n\n \n\n3. Abre el [sitio web](https://testnet.knidos.xyz/waitlist) y deja tu correo electrónico\n![imagen](https://images.cryptorank.io/image-hub/fdszokptap1775825129901.jpg)",
+          "categories": [
+            "Rellenar Formulario"
+          ],
+          "endDate": "",
+          "createdAt": "2026-04-14T18:11:52.607Z",
+          "id": "act_1776190312607",
+          "date": "2026-01-08"
+        }
+      ],
+      "image": "https://images.cryptorank.io/coins/knidos_labs1740384163282.png",
+      "guideUrl": "",
+      "hasDaily": true,
+      "deleted": false,
+      "twitterUrl": "https://x.com/KnidosLabs?hzet=dszqupsbol",
+      "status": "active",
+      "priority": "normal",
+      "referralLink": "https://testnet.knidos.xyz/",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/knidoslabs-activity1152?id=3219"
+    },
+    {
       "id": "legendtrade_118210",
       "priority": "normal",
       "hasDaily": false,
@@ -1439,6 +1651,39 @@
       "name": "MWX"
     },
     {
+      "id": "nava_ai_606535",
+      "twitterUrl": "https://x.com/navaai?hzet=dszqupsbol",
+      "deleted": false,
+      "createdAt": "2026-04-15T18:43:26.534Z",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/nava-ai-activity1159",
+      "hasDaily": false,
+      "guideUrl": "",
+      "image": "https://images.cryptorank.io/coins/nava_ai1776245943764.png",
+      "activities": [
+        {
+          "description": "Nava AI [anunció](https://x.com/navaai/status/2044068391187820810) un producto para la verificación de acciones de agentes de inteligencia artificial. Puedes dejar tu correo electrónico para registrarte en la lista de espera y obtener acceso al testnet privado en el futuro.\n\n1. Ve al [sitio web](https://navalabs.ai/#contact) y deja tu correo electrónico.\n\n![imagen](https://images.cryptorank.io/image-hub/arqerqweq1776261298907.jpg)",
+          "id": "act_1776278648853",
+          "endDate": "",
+          "status": "active",
+          "date": "2026-04-14",
+          "createdAt": "2026-04-15T18:44:08.853Z",
+          "categories": [
+            "Rellenar Formulario"
+          ],
+          "title": "Lista de Espera"
+        }
+      ],
+      "lastUpdated": "2026-04-14",
+      "categories": [
+        "Rellenar Formulario"
+      ],
+      "status": "active",
+      "priority": "normal",
+      "description": "Nava Labs proporciona una capa de seguridad para agentes de inteligencia artificial que realizan transacciones financieras. El sistema utiliza un proceso de tres etapas: el agente propone una transacción, un modelo independiente llamado \"Árbitro\" la verifica, y el escrow ejecuta la transacción solo si la verificación es exitosa. El escrow utiliza cálculos multipartes (MPC), lo que significa que ni el agente ni el Árbitro pueden actuar de forma independiente. El Árbitro verifica la correspondencia con las intenciones del usuario, la validez de los parámetros de seguridad y genera una cadena lógica para cada decisión. Si la verificación no se pasa, la transacción no se ejecuta (fail-closed).",
+      "name": "Nava AI",
+      "referralLink": "https://navalabs.ai/#contact"
+    },
+    {
       "id": "nexira",
       "hasDaily": false,
       "twitterUrl": "https://x.com/NexiraDAEP?crid=1103",
@@ -1619,6 +1864,39 @@
       },
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/plutonai-activity1115",
       "hasDaily": false
+    },
+    {
+      "id": "praxis_society_497740",
+      "description": "Praxis es una comunidad de futuros habitantes de la ciudad, que incluye fundadores, personas creativas, inversores y otros. La membresía se otorga mediante solicitud. Los participantes aceptados pueden asistir a eventos y contribuir al desarrollo de la ciudad. Los miembros comparten un estilo de vida caracterizado por el optimismo, una buena salud, una meta clara y un compromiso con algo más grande que ellos mismos; esto se resume en una palabra: \"Vitalidad\".",
+      "name": "Praxis Society",
+      "categories": [
+        "Rellenar Formulario"
+      ],
+      "status": "active",
+      "priority": "normal",
+      "referralLink": "https://www.praxisnation.com/join?utm_source=website&utm_medium=citizenship",
+      "deleted": false,
+      "twitterUrl": "https://twitter.com/praxisnation?hzet=dszqupsbol",
+      "activities": [
+        {
+          "endDate": "",
+          "status": "active",
+          "date": "2026-04-13",
+          "createdAt": "2026-04-14T18:33:16.789Z",
+          "title": "Formulario de Ciudadanía Praxis",
+          "categories": [
+            "Rellenar Formulario"
+          ],
+          "description": "El 15 de octubre, el proyecto Praxis Society obtuvo una inversión de $525M. Actualmente, Praxis tiene un formulario que podemos completar para obtener la Ciudadanía. Recomendamos tomar en serio el llenado del formulario, ya que un llenado de calidad aumentará tus posibilidades de obtener la Ciudadanía.\n\n**Actualización del 13.04.2026.**\nPraxis [anunció](https://x.com/praxisnation/status/2036516300197957960) el reinicio del proceso de solicitud para acceder al proyecto.\n\n**Sigue estos pasos:**\n\n1. Haz clic en el [enlace](https://www.praxisnation.com/join?utm_source=website&utm_medium=citizenship) y completa todos los campos:\n![imagen](https://img.cryptorank.io/image-hub/prax1729084587772.png)\n\n2. Después de esto, aparecerá una nueva ventana con preguntas. Responde a ellas y envía la solicitud:\n![imagen](https://img.cryptorank.io/image-hub/prax_11729085044842.png)\n\n3. También puedes unirte al [Discord](https://discord.gg/praxis) y ser activo allí (creando contenido, respondiendo preguntas, etc.).",
+          "id": "act_1776191596789"
+        }
+      ],
+      "lastUpdated": "2026-04-13",
+      "createdAt": "2026-04-14T18:31:37.740Z",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/praxis-society-activity475",
+      "hasDaily": false,
+      "image": "https://images.cryptorank.io/coins/praxis_society1666098589227.png",
+      "guideUrl": ""
     },
     {
       "id": "prismax_244101",
@@ -3065,6 +3343,52 @@
       "name": "Watch.fun",
       "deleted": false,
       "createdAt": "2026-03-26T11:38:30.275Z"
+    },
+    {
+      "id": "xenea_663855",
+      "referralLink": "https://xenea.app/register/15takcWTN8",
+      "hasDaily": true,
+      "categories": [
+        "Actividad Social",
+        "Testnet"
+      ],
+      "guideUrl": "",
+      "activities": [
+        {
+          "createdAt": "2026-04-06T19:01:13.374Z",
+          "title": "Farmeo de Puntos",
+          "date": "2026-04-03",
+          "description": "En Xenea está en marcha una campaña con un airdrop confirmado. Podemos instalar la aplicación en nuestro teléfono, completar diversas tareas, conectar nuestras cuentas de Galxe y Zealy, y obtener puntos a cambio. En el futuro, podremos canjear los puntos obtenidos por tokens $XENE y NFT exclusivos.\n\n1. Ve al [enlace](https://xenea.app/register/15takcWTN8) y regístrate con tu cuenta de Google/Apple:\n![imagen](https://img.cryptorank.io/image-hub/xene1732720324668.png)\n\n\n2. Instala la aplicación en Android/IOS:\n![imagen](https://img.cryptorank.io/image-hub/xene_11732720393311.png)\n\n\n3. Ingresa el código 15takcWTN8 y regístrate:\n![imagen](https://img.cryptorank.io/image-hub/xene_51732722249418.png)\n\n\n4. Para empezar a completar tareas, haz clic en Ongoing Gem Campaign:\n![imagen](https://img.cryptorank.io/image-hub/xene_21732721138858.png)\n\n\n5. Completa todas las tareas disponibles (puedes encontrar las respuestas a la mayoría de los cuestionarios en [X/Twitter](https://x.com/Xenea_io) :\n![imagen](https://img.cryptorank.io/image-hub/xene_31732721154586.png)\n\n\n6. También puedes completar tareas en la pestaña Missions:\n\n![imagen](https://img.cryptorank.io/image-hub/xene_41732721168930.png)",
+          "id": "act_1775502073374",
+          "endDate": "",
+          "categories": [
+            "Actividad Social"
+          ],
+          "status": "active"
+        },
+        {
+          "createdAt": "2026-04-06T19:02:18.165Z",
+          "title": "Red de pruebas",
+          "date": "2026-04-03",
+          "id": "act_1775502138165",
+          "categories": [
+            "Testnet"
+          ],
+          "description": "Xenea [anunció](https://x.com/Xenea_io/status/2039976237758919095) el lanzamiento de la testnet Ubusuna. Puedes participar tomando tokens de prueba y enviándolos a diferentes direcciones, convirtiéndote en un usuario temprano de la red.\n\n \n\n1. Ve a la billetera Xenea y copia la dirección\n\n2. Únete al [Discord](https://discord.com/invite/xenea) del proyecto y abre el canal [#ubusuna-testnet-faucet](https://discord.com/channels/973133963004633138/1487470362961903737) e ingresa el comando /facuet\n\n3. Pega la dirección de la billetera y envía el mensaje\n![imagen](https://images.cryptorank.io/image-hub/a_sfdarq_11775230109906.jpg)\n\n\n \n\n4. Abre el explorador de bloques y copia cualquier dirección\n![imagen](https://images.cryptorank.io/image-hub/fasr_12311775230116646.jpg)\n\n\n \n\n5. Ve a la billetera Xenea y envía tokens de prueba",
+          "endDate": "",
+          "status": "active"
+        }
+      ],
+      "name": "Xenea",
+      "description": "Xenea es una blockchain de nivel 1 compatible con EVM que cuenta con un almacenamiento descentralizado integrado, y utiliza el consenso Proof of Democracy (PoD) para garantizar una descentralización masiva y una transferencia segura de activos. Su sistema de Almacenamiento de Contenido Autónomo Descentralizado (DACS) mantiene la coherencia de los datos y los tokens, apoyando la tokenización de activos reales (RWA) y asegurando una transferencia segura de activos para las generaciones futuras.\n\nXENE es el token nativo de la red Xenea, que sirve para varios propósitos: comisiones de transacciones y de red, participación en la gobernanza para propuestas y recompensa por bloque para la verificación de transacciones a través de Proof of Democracy (PoD). XENE también es la garantía para el funcionamiento de los nodos DACS (almacenamiento descentralizado) y recompensa a los participantes y creadores en el ecosistema. Estas utilidades proporcionan seguridad a la red, estimulan la descentralización y apoyan el crecimiento de la infraestructura.",
+      "lastUpdated": "2026-04-03",
+      "image": "https://images.cryptorank.io/coins/xenea1732720401845.png",
+      "priority": "normal",
+      "status": "active",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/xenea-activity557",
+      "twitterUrl": "https://x.com/Xenea_io?hzet=dszqupsbol",
+      "createdAt": "2026-04-06T18:54:23.855Z",
+      "deleted": false
     }
   ]
 }
