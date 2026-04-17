@@ -118,50 +118,121 @@
     {
       "id": "action_model_229125",
       "status": "active",
-      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/action-model-activity1092",
+      "twitterUrl": "https://x.com/actionmodelai",
+      "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
       "deleted": false,
-      "lastUpdated": "2026-02-12",
+      "hasDaily": true,
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/action-model-activity1092",
+      "referralLink": "https://join.actionmodel.com/WORKLAF",
+      "priority": "high",
+      "lastUpdated": "2026-04-08",
+      "createdAt": "2026-02-12T09:40:29.125Z",
       "categories": [
         "Sosyal Aktivite",
         "Testnet"
       ],
-      "name": "Action Model",
-      "updatedBy": "SAkz4mdW9reDaIsvqigCNZhEKJR2",
-      "createdAt": "2026-02-12T09:40:29.125Z",
-      "referralLink": "https://join.actionmodel.com/WORKLAF",
+      "guideUrl": "",
+      "image": "https://img.cryptorank.io/coins/action_model1770728109409.png",
+      "description": "ActionModel, topluluğa ait büyük eylem modeli (Large Action Model, LAM) geliştirmektedir - bilgisayarlar üzerinde grafik kullanıcı arayüzleri (GUI) ile etkileşime girerek gerçek dijital görevleri gerçekleştirmek için tasarlanmış bir yapay zeka sistemi. Bu, geleneksel büyük dil modellerinin (Large Language Models, LLM) yalnızca metin oluşturmasına kıyasla daha gelişmiş bir yaklaşım sunar. Ekran durumlarını izler, kullanıcı katkılarına dayalı olarak oluşturulmuş eylem ağacını kullanarak eylemler (koordinatlara tıklama, metin girişi veya kaydırma gibi) hakkında kararlar verir, bu eylemleri gerçekleştirir ve görev tamamlanana kadar döngüye girer. Bu, veri girişi, web sitelerine navigasyon veya uygulama kullanımı gibi iş akışlarını API kullanmadan otomatik olarak otomatikleştirmeye olanak tanır.\n\nProje, büyük teknoloji şirketleri tarafından merkezi olarak yürütülen yapay zeka gelişimine karşı topluluk katkılarını teşvik etmektedir. Kullanıcılar, tarayıcı uzantısını pasif veya aktif olarak eğitmek ve ticaret platformunda yeniden kullanılabilir iş akışları oluşturmak ve satmak için kurabilirler. Bu platformda iş akışlarının yürütülmesi, yaratıcılarına sürekli bir ödül sağlar.\n\nActionist masaüstü uygulaması, kullanıcılarla etkileşim için bir araç olarak hizmet eder ve kullanıcıların, belleğe, zamanlamaya, kişilik özelliklerine ve araçlara erişimine sahip özel yapay zeka ajanları (dijital çalışanlar) oluşturmasına olanak tanır. Bu ajanlar, yerel olarak veya bulutta 7/24 çalışır ve şeffaflığı sağlamak için tam bir geçmiş izleme sağlar.\n\n$LAM, işlemlerin yürütülmesini sağlayan, eğitimi ve katkıyı ödüllendiren, yönetişim sağlayan ve yapay zeka sistemine sahip olmayı temsil eden özel bir tokendir.",
       "activities": [
         {
-          "status": "active",
-          "title": "Puan Farming",
           "id": "act_1770889381746",
+          "date": "2026-02-02",
+          "description": "Action Model [duyurdu](https://x.com/ActionModelAI/status/2018304575791398938) AI-ajantlarının eğitimini için bir uzantı ve platformun lançmanını. Eğitimde yer almak için yalnızca tarayıcı uzantısını kurun ve internet üzerinde alışkın olduğunuz işlerle ilgilenin.\nAction Model platformunda, ActionFI bölümünde, çeşitli platformlarda görevleri tamamlayabilir ve bu görevler için puanlar kazanabilirsiniz.\n\n1. [Siteye](https://join.actionmodel.com/WORKLAF) gidin ve e-posta ile kaydolun.\n\n2. [Sekmeye](https://train.actionmodel.com/quests) gidin, \"Başlayın\"ı tıklayın, mevcut görevleri tamamlayın ve uzantıyı kurun.\n![](https://img.cryptorank.io/image-hub/2313121770742045276.jpg)\n\n3. \"Görevler\" sekmesine gidin ve mevcut görevleri tamamlayın. \nBu sekmede günlük check-in bulunur.\n![](https://img.cryptorank.io/image-hub/32132145121770742052542.jpg)\n\n4. [Sekmede](https://train.actionmodel.com/actionfi) \"ActionFi\" görevlerini tamamlayın.\nBu sekmedeki görevleri tamamlayarak, çarpan ile puanlar kazanın.\n![](https://img.cryptorank.io/image-hub/412511770742058510.jpg)",
           "categories": [
             "Sosyal Aktivite",
             "Testnet"
           ],
-          "date": "2026-02-02",
-          "description": "Action Model [duyurdu](https://x.com/ActionModelAI/status/2018304575791398938) AI-ajantlarının eğitimini için bir uzantı ve platformun lançmanını. Eğitimde yer almak için yalnızca tarayıcı uzantısını kurun ve internet üzerinde alışkın olduğunuz işlerle ilgilenin.\nAction Model platformunda, ActionFI bölümünde, çeşitli platformlarda görevleri tamamlayabilir ve bu görevler için puanlar kazanabilirsiniz.\n\n1. [Siteye](https://join.actionmodel.com/WORKLAF) gidin ve e-posta ile kaydolun.\n\n2. [Sekmeye](https://train.actionmodel.com/quests) gidin, \"Başlayın\"ı tıklayın, mevcut görevleri tamamlayın ve uzantıyı kurun.\n![](https://img.cryptorank.io/image-hub/2313121770742045276.jpg)\n\n3. \"Görevler\" sekmesine gidin ve mevcut görevleri tamamlayın. \nBu sekmede günlük check-in bulunur.\n![](https://img.cryptorank.io/image-hub/32132145121770742052542.jpg)\n\n4. [Sekmede](https://train.actionmodel.com/actionfi) \"ActionFi\" görevlerini tamamlayın.\nBu sekmedeki görevleri tamamlayarak, çarpan ile puanlar kazanın.\n![](https://img.cryptorank.io/image-hub/412511770742058510.jpg)"
+          "title": "Puan Farming",
+          "status": "active"
         },
         {
-          "status": "active",
           "title": "TaskOn",
+          "status": "active",
+          "id": "act_1770983876728",
+          "date": "2026-02-12",
           "categories": [
             "Sosyal Aktivite"
           ],
-          "date": "2026-02-12",
-          "id": "act_1770983876728",
           "description": "TaskOn platformunda eğitim ve içerik oluşturma kuestleri içeren kampanyalar mevcuttur.\nKuestleri tamamlayarak $LAM puanları kazanırsınız. Bu puanlar, projeye verdiğiniz katkıyı yansıtır ve gelecekte tokenlere dönüştürülebilir veya airdrop dağıtımı sırasında tahsis boyutunu etkileyebilir.\n\n1. [Siteye](https://taskon.xyz/ActionModel) gidin ve cüzdanınızı bağlayın. Kuestleri tamamlayın\n![](https://img.cryptorank.io/image-hub/%D1%81_91770910481505.jpg)"
+        },
+        {
+          "categories": [
+            "Sosyal Aktivite"
+          ],
+          "endDate": "",
+          "createdAt": "2026-04-14T17:40:36.985Z",
+          "description": "Discord projemize katıldığınızda roller elde edebilirsiniz. Oyunlara katılır, içerik oluşturur ve EP puanları kazanırsınız. Bu puanlarla roller satın alabilirsiniz. \nAyrıca, kaliteli sohbetler yaparak AP puanları kazanabilirsiniz. AP puanları daha sonra $LAM tokenlerine dönüştürülebilir.\n\nEylem Puanları\n• 1 anlamlı mesaj = 1 AP.\n• [proof-of-work](https://discord.com/channels/1352314173111140374/1401877009629446206) kanalındaki yayınlar için 1 ila 10 AP arasında puan kazanabilirsiniz.\n• @LAM Fueler rolü 3x AP çarpanı sağlar.\n\nEtkileşim Puanları\n• Roller yalnızca Etkileşim Puanlarının birikmesiyle açılır.\n• Etkileşim Puanları, [task-feed](https://discord.com/channels/1352314173111140374/1401985675770986516) kanalındaki içeriklerle etkileşime girerek ve [oyunlara](https://discord.com/channels/1352314173111140374/1475814435061764096) katılımla kazanılır.\n\n1. [Discord](https://discord.gg/Y8tdcwuxfF)'a katılın ve topluluk gelişimine aktif olarak katılın.",
+          "date": "2026-04-08",
+          "id": "act_1776188436985",
+          "status": "active",
+          "title": "Discord"
         }
       ],
-      "priority": "high",
-      "guideUrl": "",
-      "image": "https://img.cryptorank.io/coins/action_model1770728109409.png",
-      "twitterUrl": "https://x.com/actionmodelai",
-      "hasDaily": true,
+      "name": "Action Model",
       "updatedAt": {
         "seconds": 1774440672,
         "nanoseconds": 551000000
-      },
-      "description": "ActionModel, topluluğa ait büyük eylem modeli (Large Action Model, LAM) geliştirmektedir - bilgisayarlar üzerinde grafik kullanıcı arayüzleri (GUI) ile etkileşime girerek gerçek dijital görevleri gerçekleştirmek için tasarlanmış bir yapay zeka sistemi. Bu, geleneksel büyük dil modellerinin (Large Language Models, LLM) yalnızca metin oluşturmasına kıyasla daha gelişmiş bir yaklaşım sunar. Ekran durumlarını izler, kullanıcı katkılarına dayalı olarak oluşturulmuş eylem ağacını kullanarak eylemler (koordinatlara tıklama, metin girişi veya kaydırma gibi) hakkında kararlar verir, bu eylemleri gerçekleştirir ve görev tamamlanana kadar döngüye girer. Bu, veri girişi, web sitelerine navigasyon veya uygulama kullanımı gibi iş akışlarını API kullanmadan otomatik olarak otomatikleştirmeye olanak tanır.\n\nProje, büyük teknoloji şirketleri tarafından merkezi olarak yürütülen yapay zeka gelişimine karşı topluluk katkılarını teşvik etmektedir. Kullanıcılar, tarayıcı uzantısını pasif veya aktif olarak eğitmek ve ticaret platformunda yeniden kullanılabilir iş akışları oluşturmak ve satmak için kurabilirler. Bu platformda iş akışlarının yürütülmesi, yaratıcılarına sürekli bir ödül sağlar.\n\nActionist masaüstü uygulaması, kullanıcılarla etkileşim için bir araç olarak hizmet eder ve kullanıcıların, belleğe, zamanlamaya, kişilik özelliklerine ve araçlara erişimine sahip özel yapay zeka ajanları (dijital çalışanlar) oluşturmasına olanak tanır. Bu ajanlar, yerel olarak veya bulutta 7/24 çalışır ve şeffaflığı sağlamak için tam bir geçmiş izleme sağlar.\n\n$LAM, işlemlerin yürütülmesini sağlayan, eğitimi ve katkıyı ödüllendiren, yönetişim sağlayan ve yapay zeka sistemine sahip olmayı temsil eden özel bir tokendir."
+      }
+    },
+    {
+      "id": "ambient_001951",
+      "activities": [
+        {
+          "id": "act_1776188086548",
+          "description": "Ambient, [duyurdu](https://x.com/ambient_xyz/status/2041242948013330613) testnet'te AIGE platformunun başlatılmasını. Platformun işlevselliğini test etmek için kendi ajanınızı oluşturabilirsiniz.\n\n \n\n1. [Siteye](https://www.ai-ge.xyz/discover) gidin ve cüzdanınızı bağlayın\n\n2. Launch bölümünü açın, bir ajant oluşturun ve başlatın\n\n\n\n![görsel](https://images.cryptorank.io/image-hub/a_far_123411775572624595.jpg)",
+          "categories": [
+            "Testnet"
+          ],
+          "title": "AIGE. Ajenta Oluşturma",
+          "createdAt": "2026-04-14T17:34:46.548Z",
+          "date": "2026-04-06",
+          "endDate": "",
+          "status": "active"
+        },
+        {
+          "date": "2025-12-12",
+          "endDate": "",
+          "status": "active",
+          "title": "Ambient Testnet",
+          "categories": [
+            "Testnet"
+          ],
+          "createdAt": "2026-04-14T17:36:20.819Z",
+          "id": "act_1776188180819",
+          "description": "Ambient [başlattı](https://x.com/ambient_xyz/status/1999457085369758006)! Testnet kapsamında AI ile etkileşime geçebilir, test tokenleri isteyebilir ve geri bildirim gönderebiliriz.\n\n1. [Siteye](https://app.ambient.xyz/) gidin ve e-posta kullanarak kaydolun. Başarılı kayıt sonrası cüzdanınızı bağlayın:\n![görsel](https://img.cryptorank.io/image-hub/ammio1765556053125.png)\n\n2. AI asistanı kullanarak 3 farklı fonksiyonla sohbeti başlatın. Bulunan tüm hataları yukarıda belirtilen e-posta adresine veya Discord'a bildirin:\n![görsel](https://img.cryptorank.io/image-hub/amiba1765556490396.png)\n\n3. Drops sekmesinden test tokenlerini isteyin:\n![görsel](https://img.cryptorank.io/image-hub/amibab1765556500727.png)"
+        },
+        {
+          "createdAt": "2026-04-14T17:37:21.711Z",
+          "title": "Discord'a Katılın",
+          "categories": [
+            "Sosyal Aktivite"
+          ],
+          "endDate": "",
+          "status": "active",
+          "date": "2025-10-23",
+          "description": "Bugün (23 Ekim) Ambient, [Discord](https://x.com/ambient_xyz/status/1981407268399907073) sunucusunu açtı. Sunucuya katılabilir ve erken bir katılımcı olabilirsiniz. Şu anda sunucuda kullanılabilir roller bulunmuyor, ancak projeye ilişkin içerik oluşturmaya başlayabilir ve rollerin eklenmesini bekleyebilirsiniz. Bağlantı zamanla geçersiz hale gelebilir, bu nedenle cüzdanınızı bağlamayın, özellikle de doğrulama için gerekliyse.\n\n1. [Discord](https://cryptorank.io/ru/drophunting/discord.gg/CzDH8ybEUU)'a katılın ve isteğe bağlı olarak projeye ilişkin içerik oluşturmaya başlayın. Veya simplemente rollerin sunucuya eklenmesini bekleyin.\n\n![görsel](https://img.cryptorank.io/image-hub/asmosa1761252941868.png)",
+          "id": "act_1776188241711"
+        }
+      ],
+      "lastUpdated": "2026-04-06",
+      "createdAt": "2026-04-14T17:33:21.951Z",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/ambient-activity750?id=3202",
+      "hasDaily": false,
+      "guideUrl": "",
+      "image": "https://images.cryptorank.io/coins/ambient1743501929032.png",
+      "deleted": false,
+      "twitterUrl": "https://x.com/ambient_xyz?hzet=dszqupsbol",
+      "referralLink": "https://www.ai-ge.xyz/discover",
+      "description": "Ambient, Solana SVM ile uyumluluk ve Proof of Work mekanizmasını birleştiren bir Layer 1 (L1) blockchain'dir. Bu, etkili ve ucuz doğrulanmış AI çıkarımı sağlar. Uzun vadeli hedefi, halka açık kullanım için AGI seviyesinde bir temel AI modeli geliştirmektir.",
+      "name": "Ambient",
+      "categories": [
+        "Form Doldurma",
+        "Sosyal Aktivite",
+        "Testnet"
+      ],
+      "status": "active",
+      "priority": "normal"
     },
     {
       "id": "arc-circle",
@@ -542,6 +613,52 @@
       ]
     },
     {
+      "id": "carte_488137",
+      "guideUrl": "",
+      "image": "https://images.cryptorank.io/coins/carte1775465943567.png",
+      "name": "CARTE",
+      "activities": [
+        {
+          "endDate": "2026-04-08",
+          "categories": [
+            "Form Doldurma"
+          ],
+          "createdAt": "2026-04-06T19:42:35.082Z",
+          "description": "Carte [duyurdu](https://x.com/carte_gg/status/2040584821462663311) bekleme listesinin başladığını. E-posta bırakabilir veya Google hesabıyla oturum açarak kart paketini rezerve edebilir ve sanatçıları destekleme ve koleksiyon platformuna erişebilirsiniz. \nProje doğrudan [Manifold](https://cryptorank.io/ico/manifold#funding-rounds) tarafından desteklenmektedir.\n\n1. [Sitesine](https://carte.gg?r=01OQBQNU) gidin ve e-postanızı bırakın. Referans linkini kopyalayın ve diğer kullanıcıları davet edin\n![görsel](https://images.cryptorank.io/image-hub/dsafga_11775474999768.jpg)",
+          "id": "act_1775504555082",
+          "date": "2026-04-05",
+          "status": "ended",
+          "title": "Bekleme Listesi"
+        },
+        {
+          "status": "active",
+          "title": "Pak Açılışı",
+          "categories": [
+            "NFT Mint"
+          ],
+          "createdAt": "2026-04-14T18:03:23.053Z",
+          "endDate": "2026-04-15",
+          "description": "Carte, listedeki bekleyenler listesine kayıt için başvuruda bulunan tüm katılımcılara paket açma olanağını başlattı. Bir paketi açabilir ve 4 karttan birini seçebilirsiniz.\n\n1. [Siteye](https://carte.gg/?r=01OQBQNU) gidin ve giriş yapın.\n2. Kart paketini açın.\n![görsel](https://images.cryptorank.io/image-hub/czxvasdf1775746436833.jpg)\n\n3. Bir kart seçin ve geri kalanını sıfırlayın.\n![görsel](https://images.cryptorank.io/image-hub/gxzfasdfa1775746440521.jpg)\n\n4. Cüzdanınızı bağlayın ve X'te [güncellemeleri](https://x.com/ManifoldXYZ) takip edin.\n![görsel](https://images.cryptorank.io/image-hub/gdsafsa1775746446121.jpg)",
+          "date": "2026-04-08",
+          "id": "act_1776189803053"
+        }
+      ],
+      "description": "CARTE, dijital sanat kartları toplamak için bir platformdur ve şu anda kapalı beta testi aşamasındadır. Manifold.xyz tarafından oluşturulmuştur. Platform, üç aşamalı bir modele dayanır: kullanıcılar bir paket (set) ayırtır, ardından açarlar ve seçilen küratörler tarafından seçilen benzersiz dijital sanat kartlarını keşfederler. Kullanıcılar paketler satın aldığında, gelirin bir kısmı doğrudan koleksiyondaki eserlerin yazarlarına aktarılır.",
+      "lastUpdated": "2026-04-08",
+      "createdAt": "2026-04-06T19:41:28.137Z",
+      "categories": [
+        "NFT Mint",
+        "Form Doldurma"
+      ],
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/carte-activity1149",
+      "referralLink": "https://carte.gg?r=01OQBQNU",
+      "priority": "normal",
+      "deleted": false,
+      "twitterUrl": "https://x.com/carte_gg?hzet=dszqupsbol",
+      "status": "active",
+      "hasDaily": false
+    },
+    {
       "id": "celes_068334",
       "categories": [
         "Testnet"
@@ -579,51 +696,51 @@
     },
     {
       "id": "dfusion_ai_972480",
-      "guideUrl": "",
-      "name": "dFusion AI",
-      "referralLink": "",
-      "twitterUrl": "https://x.com/dFusionAI?hzet=dszqupsbol",
-      "priority": "normal",
-      "createdAt": "2026-03-31T14:06:12.480Z",
-      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/dfusion-ai-activity1144",
+      "lastUpdated": "2026-03-23",
       "image": "https://images.cryptorank.io/coins/d_fusion_ai1758208995136.png",
-      "hasDaily": false,
-      "description": "dFusion, yapay zeka için dağınık verileri yapılandırılmış bilgiye dönüştüren bir merkezi olmayan akıllı ağdır. Proje, içerik kalitesi ve otantikliğine odaklanır ve finans, hukuk gibi alanlarda uzman alt ağlar oluşturmak için topluluklara olanak tanır. Hesaplamalı güce dayalı yarış yerine, protokol, verileri sahip olmak ve doğrulamak için tokenlerle ödüllendiren yeni bir ekonomik model uygular. Platform, işletmeler için araçlar sunar ve kurumsal müşterilere API aracılığıyla analizlere güvenli erişim sağlar. Bu şekilde, sistem bağımsız dijital ajanların gelişimi için temel altyapıyı oluşturur.",
+      "priority": "normal",
       "status": "active",
-      "deleted": false,
+      "activities": [
+        {
+          "status": "active",
+          "description": "dFusion [duyurdu](https://x.com/dFusionAI/status/1970518597832261878) testnet'in lançmanını. Benzersiz veriler oluşturup yükleyerek puan kazanabilirsiniz. Ayrıca, AI'ye sorular sorabilir ve alınan yanıtlara ayrıntılı geri bildirim bırakabilirsiniz.\n\n• Puanlar TGE'de $DFSN tokenine dönüştürülür\n• Ödül büyüklüğü, alt ağ veritabanının toplam büyüklüğüne doğrudan bağlıdır. Alt ağ ne kadar yeni ve küçük olursa, puanların çarpım faktörü o kadar yüksek olur\n• Alt ağa yüklenen çalışmalar benzersiz olmalıdır\n• Alt ağa sahip olmak, verileri yüklemek zorunda kalmadan pasif gelir sağlar ve para kazanma olanağı sunar\n\n1. [Siteye](https://testnet.dfusion.ai/signup?ReferralCode=4ubp7fqu) gidin ve cüzdanınızı bağlayın. Bir hesap oluşturun\n\n2. \"Yükleme\" sekmesinde, alt ağı seçin ve oluşturup yükleyebileceğiniz içerik kurallarını inceleyin. Uygun alt ağa tıklayın\n![görsel](https://images.cryptorank.io/image-hub/zvzaa1774960414727.jpg)\n\n\n \n\n3. Seçilen tematikte benzersiz veriler içeren dosyayı yükleyin\n![görsel](https://images.cryptorank.io/image-hub/fasfasdas1774960419034.jpg)\n\n\n \n\n4. Arama düğmesine tıklayın ve yeni bir sohbet oluşturun. İlgi alanınıza ilişkin bir soru sorun\n![görsel](https://images.cryptorank.io/image-hub/dsafasrq1774960422805.jpg) \n\n\n \n\n5. Yanıtı inceleyerek, ayrıntılı geri bildirim bırakın\nHer bir sohbet etkileşimi için puan kazanın\n\n![görsel](https://images.cryptorank.io/image-hub/wqr_12311774960429034.jpg) \n\n \n\n6. Diğer kullanıcıları davet edin\n![görsel](https://images.cryptorank.io/image-hub/dasfqwrqwrq1774964054386.jpg) \n\n\n \n\n7. Alt ağ [satın alabilirsiniz](https://testnet.dfusion.ai/purchase-subnet) ve çalıştırabilirsiniz\n\n![görsel](https://images.cryptorank.io/image-hub/dassafvzxvcz1774963782983.jpg)\n\n \n\nNot: Bu çeviri, orijinal metnin anlamını ve yapısını korumak amacıyla yapılmıştır.",
+          "categories": [
+            "Testnet"
+          ],
+          "id": "act_1774967023345",
+          "endDate": "",
+          "createdAt": "2026-03-31T14:23:43.345Z",
+          "date": "2026-03-23",
+          "title": "Puan Farming"
+        },
+        {
+          "description": "dFusion [duyurdu](https://x.com/dFusionAI/status/2023405550294413817) bahwa dFusion X elçilik programını başlattı. Biçimi doldurun ve katılma başvurusunda bulunun, davet ettiğiniz kullanıcılar için ödüller kazanın\n\n \n\n1. [Biçime](https://docs.google.com/forms/d/e/1FAIpQLSdyvwETfMsnM2BG-cIa2uxhrL76w1XOMPXbHiWTQDvcsAYcLg/viewform) gidin ve doldurun\n![görsel](https://images.cryptorank.io/image-hub/ar_12412311774965753943.jpg)",
+          "endDate": "",
+          "categories": [
+            "Elçi Programı",
+            "Form Doldurma"
+          ],
+          "id": "act_1775332776566",
+          "title": "Elçilik Programı",
+          "date": "2026-03-16",
+          "createdAt": "2026-04-04T19:59:36.566Z",
+          "status": "active"
+        }
+      ],
+      "name": "dFusion AI",
+      "description": "dFusion, yapay zeka için dağınık verileri yapılandırılmış bilgiye dönüştüren bir merkezi olmayan akıllı ağdır. Proje, içerik kalitesi ve otantikliğine odaklanır ve finans, hukuk gibi alanlarda uzman alt ağlar oluşturmak için topluluklara olanak tanır. Hesaplamalı güce dayalı yarış yerine, protokol, verileri sahip olmak ve doğrulamak için tokenlerle ödüllendiren yeni bir ekonomik model uygular. Platform, işletmeler için araçlar sunar ve kurumsal müşterilere API aracılığıyla analizlere güvenli erişim sağlar. Bu şekilde, sistem bağımsız dijital ajanların gelişimi için temel altyapıyı oluşturur.",
+      "guideUrl": "",
+      "referralLink": "https://testnet.dfusion.ai/signup?ReferralCode=4ubp7fqu",
+      "hasDaily": false,
       "categories": [
         "Elçi Programı",
         "Form Doldurma",
         "Testnet"
       ],
-      "lastUpdated": "2026-03-23",
-      "activities": [
-        {
-          "id": "act_1774967023345",
-          "createdAt": "2026-03-31T14:23:43.345Z",
-          "status": "active",
-          "date": "2026-03-23",
-          "title": "Puan Farming",
-          "categories": [
-            "Testnet"
-          ],
-          "endDate": "",
-          "description": "dFusion [duyurdu](https://x.com/dFusionAI/status/1970518597832261878) testnet'in lançmanını. Benzersiz veriler oluşturup yükleyerek puan kazanabilirsiniz. Ayrıca, AI'ye sorular sorabilir ve alınan yanıtlara ayrıntılı geri bildirim bırakabilirsiniz.\n\n• Puanlar TGE'de $DFSN tokenine dönüştürülür\n• Ödül büyüklüğü, alt ağ veritabanının toplam büyüklüğüne doğrudan bağlıdır. Alt ağ ne kadar yeni ve küçük olursa, puanların çarpım faktörü o kadar yüksek olur\n• Alt ağa yüklenen çalışmalar benzersiz olmalıdır\n• Alt ağa sahip olmak, verileri yüklemek zorunda kalmadan pasif gelir sağlar ve para kazanma olanağı sunar\n\n1. [Siteye](https://testnet.dfusion.ai/signup?ReferralCode=4ubp7fqu) gidin ve cüzdanınızı bağlayın. Bir hesap oluşturun\n\n2. \"Yükleme\" sekmesinde, alt ağı seçin ve oluşturup yükleyebileceğiniz içerik kurallarını inceleyin. Uygun alt ağa tıklayın\n![görsel](https://images.cryptorank.io/image-hub/zvzaa1774960414727.jpg)\n\n\n \n\n3. Seçilen tematikte benzersiz veriler içeren dosyayı yükleyin\n![görsel](https://images.cryptorank.io/image-hub/fasfasdas1774960419034.jpg)\n\n\n \n\n4. Arama düğmesine tıklayın ve yeni bir sohbet oluşturun. İlgi alanınıza ilişkin bir soru sorun\n![görsel](https://images.cryptorank.io/image-hub/dsafasrq1774960422805.jpg) \n\n\n \n\n5. Yanıtı inceleyerek, ayrıntılı geri bildirim bırakın\nHer bir sohbet etkileşimi için puan kazanın\n\n![görsel](https://images.cryptorank.io/image-hub/wqr_12311774960429034.jpg) \n\n \n\n6. Diğer kullanıcıları davet edin\n![görsel](https://images.cryptorank.io/image-hub/dasfqwrqwrq1774964054386.jpg) \n\n\n \n\n7. Alt ağ [satın alabilirsiniz](https://testnet.dfusion.ai/purchase-subnet) ve çalıştırabilirsiniz\n\n![görsel](https://images.cryptorank.io/image-hub/dassafvzxvcz1774963782983.jpg)\n\n \n\nNot: Bu çeviri, orijinal metnin anlamını ve yapısını korumak amacıyla yapılmıştır."
-        },
-        {
-          "endDate": "",
-          "description": "dFusion [duyurdu](https://x.com/dFusionAI/status/2023405550294413817) bahwa dFusion X elçilik programını başlattı. Biçimi doldurun ve katılma başvurusunda bulunun, davet ettiğiniz kullanıcılar için ödüller kazanın\n\n \n\n1. [Biçime](https://docs.google.com/forms/d/e/1FAIpQLSdyvwETfMsnM2BG-cIa2uxhrL76w1XOMPXbHiWTQDvcsAYcLg/viewform) gidin ve doldurun\n![görsel](https://images.cryptorank.io/image-hub/ar_12412311774965753943.jpg)",
-          "categories": [
-            "Elçi Programı",
-            "Form Doldurma"
-          ],
-          "title": "Elçilik Programı",
-          "status": "active",
-          "date": "2026-03-16",
-          "createdAt": "2026-04-04T19:59:36.566Z",
-          "id": "act_1775332776566"
-        }
-      ]
+      "deleted": false,
+      "twitterUrl": "https://x.com/dFusionAI?hzet=dszqupsbol",
+      "createdAt": "2026-03-31T14:06:12.480Z",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/dfusion-ai-activity1144"
     },
     {
       "id": "euphoria_794573",
@@ -935,6 +1052,39 @@
       "priority": "normal"
     },
     {
+      "id": "jurassic_finance_757209",
+      "status": "active",
+      "createdAt": "2026-04-15T18:45:57.209Z",
+      "deleted": false,
+      "twitterUrl": "https://x.com/JurassicFi?hzet=dszqupsbol",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/jurassic-finance-activity1160",
+      "referralLink": "https://jurassic.finance/",
+      "hasDaily": false,
+      "name": "Jurassic Finance",
+      "image": "https://images.cryptorank.io/coins/jurassic_finance1776256774207.png",
+      "priority": "normal",
+      "activities": [
+        {
+          "id": "act_1776278813121",
+          "date": "2026-04-15",
+          "createdAt": "2026-04-15T18:46:53.121Z",
+          "categories": [
+            "Form Doldurma"
+          ],
+          "status": "active",
+          "description": "Jurassic Finance [duyurdu](https://x.com/JurassicFi/status/2044356130814460086) bekleme listesini başlattı. Ürün erişimi için gelecekte e-posta adresinizi bırakabilirsiniz.\n\n1. [Web sitesine](https://jurassic.finance/) gidin ve e-posta adresinizi bırakın.\n\n![görsel](https://images.cryptorank.io/image-hub/a_dasrqwe1776268893228.jpg)",
+          "endDate": "2026-05-07",
+          "title": "Bekleme Listesi"
+        }
+      ],
+      "guideUrl": "",
+      "description": "Jurassic Finance, bir portföy varlığını Solana blockchain üzerinde tokenleştirir. Proje, Colosseum hızlandırıcı tarafından desteklenmektedir.",
+      "categories": [
+        "Form Doldurma"
+      ],
+      "lastUpdated": "2026-04-15"
+    },
+    {
       "id": "kaio_345183",
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/kaio-activity1108",
       "lastUpdated": "2026-03-24",
@@ -1236,6 +1386,68 @@
       "status": "active"
     },
     {
+      "id": "knidoslabs_051084",
+      "createdAt": "2026-04-14T18:07:31.084Z",
+      "categories": [
+        "Form Doldurma",
+        "Rol Alma",
+        "Sosyal Aktivite",
+        "Testnet"
+      ],
+      "lastUpdated": "2026-04-10",
+      "name": "KnidosLabs",
+      "description": "Knidos Labs, blockchain ağları için finansal araçlar geliştirerek, merkezden uzaklaştırmayı ve doğrulayıcı gelirlerini optimize etmeyi hedefliyor. Şirket, proof-of-stake tabanlı ağların merkezden uzaklaşmasını desteklemek amacıyla ağdan bağımsız ve güvenilir bir ortam sunan Decentralization Enhancement Layer sağlıyor. Doğrulayıcı düğümlerin sayısını artırarak, platform, pasif sermayeyi harekete geçirmek için entegre edilmiş Node-Fi mekanizmasını kullanıyor. Node-Fi sayesinde stake etme kolayca erişilebilir ve ek koşulsuz teşvik ediliyor.",
+      "activities": [
+        {
+          "id": "act_1776190107889",
+          "date": "2026-04-10",
+          "createdAt": "2026-04-14T18:08:27.889Z",
+          "endDate": "",
+          "categories": [
+            "Form Doldurma",
+            "Rol Alma"
+          ],
+          "description": "Knidos [duyurdu](https://x.com/knidosxyz/status/2042597892184019008) Discord için moderatör alımını başlattı. Katılmak için başvurunuzu gönderebilir ve moderatör olabilirsiniz. Projelerde moderatörler sunucuda benzersiz roller ve airdrop dağıtılırken artan tahsisat alır.\n\n1. [Forma](https://docs.google.com/forms/d/e/1FAIpQLSfbwopjOAkvs6bLum1E2SDHKunBHionSKGC9uiNqVQ4sueZ9w/viewform) gidin, doldurun ve başvurunuzu gönderin.\n![görsel](https://images.cryptorank.io/image-hub/agareq_4_e_11775828936493.jpg)",
+          "title": "Discord Moderatörleri Alımı",
+          "status": "active"
+        },
+        {
+          "status": "active",
+          "title": "Testnet",
+          "description": "Knidos [duyurdu](https://x.com/knidosxyz/status/2041574724531097900) testnet'in başladığını. Daha önce katılma listesine başvurduysanız, e-postanızı kontrol edin, ödüllü testnete erişim için bir davetiye almanız gerekir.\n\n\n1. [Siteye](https://testnet.knidos.xyz/) gidin, cüzdanınızı bağlayın, davetiye kodunu girin ve testnete katılın\n![görsel](https://images.cryptorank.io/image-hub/atrq_4123411775825148265.jpg) \n\n\n \n\n2. Davetiye kodu yoksa, [Discord](https://t.co/Rn4Yk1RECF)'a katılın, sohbet kanalındaki kullanıcılar bazen kod paylaşıyor\n![görsel](https://discord.com/channels/1464270542541557959/1487488203920379974) \n\n\n3. Ana sayfa sekmesine gidin ve günlük check-in işlemini yapın\n![görsel](https://images.cryptorank.io/image-hub/vza1775826246043.jpg) \n\n\n \n\n4. Aşağıya kaydırın ve mevcut görevleri tamamlayın\n![görsel](https://images.cryptorank.io/image-hub/vzxfdad1775826250264.jpg) \n\n\n \n\n5. [Oyunlar sekmesine](https://testnet.knidos.xyz/dashboard?menu=games) gidin ve mevcut oyunları oynayın\n![görsel](https://images.cryptorank.io/image-hub/51_fsada1775826256975.jpg)",
+          "createdAt": "2026-04-14T18:09:53.997Z",
+          "categories": [
+            "Sosyal Aktivite",
+            "Testnet"
+          ],
+          "endDate": "",
+          "date": "2026-04-07",
+          "id": "act_1776190193997"
+        },
+        {
+          "status": "active",
+          "title": "Bekleme Listeleri",
+          "description": "Knidos, [testnet için bir bekleme listesi başlattığını duyurdu](https://x.com/knidosxyz/status/2009332768355078546). Katılmak ve erken bir kullanıcı olmak için erişimi elde etmek istiyorsanız, başvurunuzu bırakabilirsiniz.\n\n1. [Web sitesine](https://www.knidos.xyz/) gidin ve cüzdanınızı bağlayın\n![resim](https://images.cryptorank.io/image-hub/klzxv1775823178908.jpg)\n\n\n2. Google hesabınızı bağlayın\nTestnet daveti, e-postanıza gelecektir, bu nedenle e-postanızı kontrol edin\n![resim](https://images.cryptorank.io/image-hub/fasrfzxcvz1775823203299.jpg)\n\n\n3. [Web sitesini](https://testnet.knidos.xyz/waitlist) açın ve e-postanızı bırakın\n![resim](https://images.cryptorank.io/image-hub/fdszokptap1775825129901.jpg)",
+          "categories": [
+            "Form Doldurma"
+          ],
+          "endDate": "",
+          "createdAt": "2026-04-14T18:11:52.607Z",
+          "id": "act_1776190312607",
+          "date": "2026-01-08"
+        }
+      ],
+      "image": "https://images.cryptorank.io/coins/knidos_labs1740384163282.png",
+      "guideUrl": "",
+      "hasDaily": true,
+      "deleted": false,
+      "twitterUrl": "https://x.com/KnidosLabs?hzet=dszqupsbol",
+      "status": "active",
+      "priority": "normal",
+      "referralLink": "https://testnet.knidos.xyz/",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/knidoslabs-activity1152?id=3219"
+    },
+    {
       "id": "legendtrade_118210",
       "priority": "normal",
       "hasDaily": false,
@@ -1439,6 +1651,39 @@
       "name": "MWX"
     },
     {
+      "id": "nava_ai_606535",
+      "twitterUrl": "https://x.com/navaai?hzet=dszqupsbol",
+      "deleted": false,
+      "createdAt": "2026-04-15T18:43:26.534Z",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/nava-ai-activity1159",
+      "hasDaily": false,
+      "guideUrl": "",
+      "image": "https://images.cryptorank.io/coins/nava_ai1776245943764.png",
+      "activities": [
+        {
+          "description": "Nava AI, AI ajanlarının eylemlerini doğrulamak için bir ürün [duyurdu](https://x.com/navaai/status/2044068391187820810). Bekleme listesine kaydolmak için e-posta adresinizi bırakabilir ve daha sonra özel testnet'e erişebilirsiniz.\n\n1. [Siteye](https://navalabs.ai/#contact) gidin ve e-posta adresinizi bırakın.\n\n![görsel](https://images.cryptorank.io/image-hub/arqerqweq1776261298907.jpg)",
+          "id": "act_1776278648853",
+          "endDate": "",
+          "status": "active",
+          "date": "2026-04-14",
+          "createdAt": "2026-04-15T18:44:08.853Z",
+          "categories": [
+            "Form Doldurma"
+          ],
+          "title": "Bekleme Listesi"
+        }
+      ],
+      "lastUpdated": "2026-04-14",
+      "categories": [
+        "Form Doldurma"
+      ],
+      "status": "active",
+      "priority": "normal",
+      "description": "Nava Labs, finansal işlemleri gerçekleştiren AI ajanları için bir güvenlik katmanı sağlar. Sistem, üç aşamalı bir süreç kullanır: ajan bir işlem önerir, bağımsız \"Hakem\" modeli onu kontrol eder ve escrow, yalnızca başarılı bir kontrolün ardından işlemi gerçekleştirir. Escrow, çok taraflı hesaplamaları (MPC) kullanır, yani ne ajan ne de Hakem tek başına hareket edemez. Hakem, kullanıcı niyetlerine uygunluğu, güvenlik parametrelerinin geçerliliğini kontrol eder ve her karar için mantıksal bir zincir oluşturur. Kontrol geçilmezse, işlem gerçekleştirilmez (kapanma başarısız).",
+      "name": "Nava AI",
+      "referralLink": "https://navalabs.ai/#contact"
+    },
+    {
       "id": "nexira",
       "hasDaily": false,
       "twitterUrl": "https://x.com/NexiraDAEP?crid=1103",
@@ -1619,6 +1864,39 @@
       },
       "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/plutonai-activity1115",
       "hasDaily": false
+    },
+    {
+      "id": "praxis_society_497740",
+      "description": "Praxis, kurucuları, yaratıcı kişiler, yatırımcılar ve diğerlerini içeren geleceğin şehir sakinlerinden oluşan bir topluluktur. Üyelik başvuruya tabidir. Kabul edilen katılımcılar etkinliklere katılabilir ve şehrin gelişmesine katkıda bulunabilir. Üyeler, optimism, güçlü sağlık, net bir amaç ve kendilerinden daha büyük bir şeye adanmışlık ile karakterize edilen bir yaşam tarzını paylaşırlar; bu, tek bir sözcükle ifade edilir: \"Vitality\" (yaşam gücü).",
+      "name": "Praxis Society",
+      "categories": [
+        "Form Doldurma"
+      ],
+      "status": "active",
+      "priority": "normal",
+      "referralLink": "https://www.praxisnation.com/join?utm_source=website&utm_medium=citizenship",
+      "deleted": false,
+      "twitterUrl": "https://twitter.com/praxisnation?hzet=dszqupsbol",
+      "activities": [
+        {
+          "endDate": "",
+          "status": "active",
+          "date": "2026-04-13",
+          "createdAt": "2026-04-14T18:33:16.789Z",
+          "title": "Praxis Vatandaşlık Formu",
+          "categories": [
+            "Form Doldurma"
+          ],
+          "description": "15 Ekim'de Praxis Society projesi 525M$'lık yatırım aldı! Şu anda Praxis'te bir forma sahipsiniz ve bu formu doldurarak Vatandaşlık alabilirsiniz. Formu doldurmaya ciddi şekilde yaklaşmanızı öneririz, çünkü kaliteli bir şekilde doldurmak Vatandaşlık alma şansınızı artıracaktır.\n\n\n13.04.2026 güncellemesi. \nPraxis [duyurdu](https://x.com/praxisnation/status/2036516300197957960) proje erişimine başvuruların yeniden açıldığını\n\n \n\n1. [Bağlantıya](https://www.praxisnation.com/join?utm_source=website&utm_medium=citizenship) gidin ve tüm alanları doldurun:\n![görsel](https://img.cryptorank.io/image-hub/prax1729084587772.png) \n\n\n \n\n2. Bunu yaptıktan sonra, yeni bir pencere ile karşılaşacaksınız ve size sorular sorulacak. Onlara cevap verin ve başvurunuzu gönderin:\n\n\n![görsel](https://img.cryptorank.io/image-hub/prax_11729085044842.png) \n \n\n3. Ayrıca [Discord](https://discord.gg/praxis)'a katılabilir ve orada aktif olabilirsiniz (içerik oluşturun, sorulara cevap verin vb.).",
+          "id": "act_1776191596789"
+        }
+      ],
+      "lastUpdated": "2026-04-13",
+      "createdAt": "2026-04-14T18:31:37.740Z",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/praxis-society-activity475",
+      "hasDaily": false,
+      "image": "https://images.cryptorank.io/coins/praxis_society1666098589227.png",
+      "guideUrl": ""
     },
     {
       "id": "prismax_244101",
@@ -3065,6 +3343,52 @@
       "name": "Watch.fun",
       "deleted": false,
       "createdAt": "2026-03-26T11:38:30.275Z"
+    },
+    {
+      "id": "xenea_663855",
+      "referralLink": "https://xenea.app/register/15takcWTN8",
+      "hasDaily": true,
+      "categories": [
+        "Sosyal Aktivite",
+        "Testnet"
+      ],
+      "guideUrl": "",
+      "activities": [
+        {
+          "createdAt": "2026-04-06T19:01:13.374Z",
+          "title": "Puan Farming",
+          "date": "2026-04-03",
+          "description": "Xenea'da onaylı bir airdrop kampanyası devam ediyor! Telefonunuza uygulamayı kurabilir, çeşitli görevleri tamamlayabilir, Galxe ve Zealy hesaplarınızı bağlayabilir ve bu işlemler için puan kazanabilirsiniz. Gelecekte kazandığınız puanları $XENE tokenleri ve özel NFT'ler ile değiştirebileceksiniz.\n\n1. [Bağlantıya](https://xenea.app/register/15takcWTN8) gidin ve Google/Apple hesabınızla kaydolun:\n![görsel](https://img.cryptorank.io/image-hub/xene1732720324668.png)\n\n2. Uygulamayı Android/IOS cihazınıza kurun:\n![görsel](https://img.cryptorank.io/image-hub/xene_11732720393311.png)\n\n3. 15takcWTN8 kodunu girin ve kaydolun:\n![görsel](https://img.cryptorank.io/image-hub/xene_51732722249418.png)\n\n4. Görevleri tamamlamaya başlamak için Ongoing Gem Campaign'a tıklayın:\n![görsel](https://img.cryptorank.io/image-hub/xene_21732721138858.png)\n\n5. Tüm उपलब olan görevleri tamamlayın (çoğu quizin cevaplarını [X/Twitter](https://x.com/Xenea_io)'da bulabilirsiniz):\n![görsel](https://img.cryptorank.io/image-hub/xene_31732721154586.png)\n\n6. Görevleri ayrıca Missions sekmesinde de tamamlayabilirsiniz:\n![görsel](https://img.cryptorank.io/image-hub/xene_41732721168930.png)",
+          "id": "act_1775502073374",
+          "endDate": "",
+          "categories": [
+            "Sosyal Aktivite"
+          ],
+          "status": "active"
+        },
+        {
+          "createdAt": "2026-04-06T19:02:18.165Z",
+          "title": "Testnet",
+          "date": "2026-04-03",
+          "id": "act_1775502138165",
+          "categories": [
+            "Testnet"
+          ],
+          "description": "Xenea [duyurdu](https://x.com/Xenea_io/status/2039976237758919095) Ubusuna testnet'inin başlatılmasını. Aktif olabilir, test token'larını alarak ve bunları farklı adreslere göndererek ağın erken kullanıcısı olabilirsiniz.\n\n1. Xenea cüzdanınıza gidin ve adresi kopyalayın\n\n2. [Discord](https://discord.com/invite/xenea)'a katılın, Ubusuna testnet faucet kanalına (#ubusuna-testnet-faucet) gidin ve `/facuet` komutunu girin\n![Discord](https://discord.com/invite/xenea)\n\n3. Cüzdan adresini yapıştırın ve mesajı gönderin\n![görsel](https://images.cryptorank.io/image-hub/a_sfdarq_11775230109906.jpg)\n\n\n4. Blok gezginini açın ve herhangi bir adresi kopyalayın\n![görsel](https://images.cryptorank.io/image-hub/fasr_12311775230116646.jpg)\n\n\n5. Xenea cüzdanınıza gidin ve test token'larını gönderin",
+          "endDate": "",
+          "status": "active"
+        }
+      ],
+      "name": "Xenea",
+      "description": "Xenea, EVM ile uyumlu bir Katman-1 blok zinciridir ve entegre edilmiş merkezi olmayan depolama kullanır. Proof of Democracy (PoD) konsensüsünü, toplu olarak merkezi olmayan ve güvenli varlık transferini sağlamak için kullanır. Merkezi Otonom İçerik Depolama (DACS) sistemi, veri ve token tutarlılığını destekler, gerçek varlık tokenleştirme (RWA)'yi destekler ve gelecek nesiller için güvenli varlık transferini sağlar.\n\nXENE, Xenea ağı için özel bir tokendir ve birkaç amaca hizmet eder: işlem ve ağ ücretleri, yönetim katılımı için öneriler ve Proof of Democracy (PoD) aracılığıyla işlem doğrulaması için blokların ödüllendirilmesi. XENE ayrıca, DACS (merkezi olmayan depolama) düğümlerinin çalışması için teminat olarak kullanılır ve ekosistemdeki katılımcıları ve yaratıcıları ödüllendirir. Bu işlevler, ağ güvenliğini sağlar, merkezi olmayı teşvik eder ve altyapı büyümesini destekler.",
+      "lastUpdated": "2026-04-03",
+      "image": "https://images.cryptorank.io/coins/xenea1732720401845.png",
+      "priority": "normal",
+      "status": "active",
+      "cryptoRankUrl": "https://cryptorank.io/ru/drophunting/xenea-activity557",
+      "twitterUrl": "https://x.com/Xenea_io?hzet=dszqupsbol",
+      "createdAt": "2026-04-06T18:54:23.855Z",
+      "deleted": false
     }
   ]
 }
