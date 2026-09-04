@@ -987,8 +987,33 @@ window.loginGoogle = async function() { try { await signInWithPopup(auth, new Go
 window.loginTwitter = async function() { try { await signInWithPopup(auth, new TwitterAuthProvider()); closeLoginModal(); showToast('Вход: Twitter'); } catch(e) { showToast(e.message); } };
 window.handleEmailAuth = async function(e) { e.preventDefault(); const email = document.getElementById('emailInput').value; const pass = document.getElementById('passInput').value; try { await signInWithEmailAndPassword(auth, email, pass); closeLoginModal(); showToast('Вход выполнен'); } catch(e) { showToast(e.message); } };
 window.handleRegister = async function() { const email = document.getElementById('emailInput').value; const pass = document.getElementById('passInput').value; try { await createUserWithEmailAndPassword(auth, email, pass); closeLoginModal(); showToast('Аккаунт создан!'); } catch(e) { showToast(e.message); } };
-window.logout = function() { signOut(auth).then(() => { showToast('Выход'); localStorage.removeItem('favorites_backup'); localStorage.removeItem(STORAGE_KEY); userFavorites = []; userCompleted = []; arcData = {}; }); };
+window.logout = function() {
+  signOut(auth).then(() => {
+    showToast('Выход');
+    localStorage.removeItem('favorites_backup');
+    localStorage.removeItem(STORAGE_KEY);
 
+    // ✅ ВАЖНО: чистим кэш авторизации, иначе restoreCachedState()
+    // при следующей загрузке (или из-за гонки состояний) снова покажет юзера как залогиненного
+    localStorage.removeItem('firebaseUser');
+    localStorage.removeItem('__cache_isAdmin');
+
+    userFavorites = [];
+    userCompleted = [];
+    arcData = {};
+
+    // ✅ Сбрасываем инлайн-стили, которые мог выставить restoreCachedState()
+    const loggedOutView = document.getElementById('loggedOutView');
+    const loggedInView  = document.getElementById('loggedInView');
+    const mobLoggedOutView = document.getElementById('mobLoggedOutView');
+    const mobLoggedInView  = document.getElementById('mobLoggedInView');
+
+    if (loggedOutView) loggedOutView.style.display = '';
+    if (loggedInView)  loggedInView.style.display  = '';
+    if (mobLoggedOutView) mobLoggedOutView.style.display = '';
+    if (mobLoggedInView)  mobLoggedInView.style.display  = '';
+  });
+};
 let adminFeedbacks = [];
 let adminFeedbacksUnsubscribe = null;
 
@@ -2330,10 +2355,11 @@ function activateAdminMode() {
     '</span>';
 
   const indicator = document.getElementById('modeIndicator');
-  indicator.setAttribute('data-translate', 'admin_mode'); // ← добавляем атрибут
+if (indicator) {
+  indicator.setAttribute('data-translate', 'admin_mode');
   indicator.textContent = t('admin_mode');
   indicator.classList.add('text-purple-400', 'font-bold');
-  applyFilters();
+}
 }
 
 function setupSearchListener() {
@@ -2820,10 +2846,16 @@ function updateCounts(filtered) {
 }
 
 function updateStats(filtered) {
-  document.getElementById('statActive').textContent = filtered.filter(function(p) { const projectCompleted = userCompleted.includes(p.id + '_project'); const hasActivities = p.activities && p.activities.length > 0; const allActivitiesCompleted = hasActivities && p.activities.every(a => userCompleted.includes(p.id + '_' + a.id)); return !(projectCompleted || allActivitiesCompleted); }).length;
-  document.getElementById('statToday').textContent = filtered.filter(function(p) { return isProjectOrActivityToday(p); }).length;
-  document.getElementById('statFavorites').textContent = filtered.filter(function(p) { return userFavorites.includes(p.id); }).length;
-  document.getElementById('statCompleted').textContent = filtered.filter(function(p) { const projectCompleted = userCompleted.includes(p.id + '_project'); const hasActivities = p.activities && p.activities.length > 0; const allActivitiesCompleted = hasActivities && p.activities.every(a => userCompleted.includes(p.id + '_' + a.id)); return projectCompleted || allActivitiesCompleted; }).length;
+  const el = id => document.getElementById(id);
+  const active = filtered.filter(function(p) { const projectCompleted = userCompleted.includes(p.id + '_project'); const hasActivities = p.activities && p.activities.length > 0; const allActivitiesCompleted = hasActivities && p.activities.every(a => userCompleted.includes(p.id + '_' + a.id)); return !(projectCompleted || allActivitiesCompleted); }).length;
+  const today = filtered.filter(function(p) { return isProjectOrActivityToday(p); }).length;
+  const favorites = filtered.filter(function(p) { return userFavorites.includes(p.id); }).length;
+  const completed = filtered.filter(function(p) { const projectCompleted = userCompleted.includes(p.id + '_project'); const hasActivities = p.activities && p.activities.length > 0; const allActivitiesCompleted = hasActivities && p.activities.every(a => userCompleted.includes(p.id + '_' + a.id)); return projectCompleted || allActivitiesCompleted; }).length;
+
+  if (el('statActive')) el('statActive').textContent = active;
+  if (el('statToday')) el('statToday').textContent = today;
+  if (el('statFavorites')) el('statFavorites').textContent = favorites;
+  if (el('statCompleted')) el('statCompleted').textContent = completed;
 }
 
 function isToday(dateString) { if (!dateString) return false; return new Date(dateString).toDateString() === new Date().toDateString(); }
