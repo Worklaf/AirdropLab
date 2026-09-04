@@ -1,0 +1,15 @@
+# Включить модуль перезаписи
+RewriteEngine On
+
+# Если запрашивается реальный файл или папка — не трогаем
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Убираем .html из URL
+RewriteRule ^(.*)\.html$ /$1 [R=301,L]
+
+# Добавляем .html "под капотом" если запрашивают без расширения
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+)$ $1.html [L]
