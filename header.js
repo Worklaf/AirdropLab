@@ -4165,49 +4165,7 @@ function initFeedbacksListener(uid) {
     }
   };
 
-  // Функция инициализации слушателя уведомлений
-  window.initNotificationsListener = function(userId) {
-    if (!window.db) return;
-    
-    try {
-      const notificationsCol = collection(window.db, 'notifications');
-      const q = query(notificationsCol, 
-                     where('userId', '==', userId),
-                     orderBy('createdAt', 'desc'),
-                     limit(50));
-      
-      return onSnapshot(q, (snapshot) => {
-        const notifications = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        
-        window.allNotifications = notifications;
-        window.updateNotificationBadge();
-        window.updateFilterCounts();
-        
-        // Если модальное окно открыто, обновляем его
-        if (document.getElementById('notificationsModalOverlay')) {
-          const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
-          window.filterNotifications(activeFilter);
-        } else {
-          window.renderNotificationsInWheel(notifications);
-        }
-        
-        // Проверяем есть ли непрочитанные уведомления
-        const unreadCount = notifications.filter(n => !n.read).length;
-        if (unreadCount > 0) {
-          console.log(`🔔 У вас ${unreadCount} непрочитанных уведомлений`);
-        }
-      }, (error) => {
-        console.error('Error listening to notifications:', error);
-      });
-    } catch (error) {
-      console.error('Error initializing notifications listener:', error);
-      return null;
-    }
-  };
-
+   
   // Функция обновления пользовательского интерфейса
   window.updateUserUI = function(user) {
     const ava = document.getElementById('userAvatar');
