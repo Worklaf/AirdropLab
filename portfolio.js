@@ -103,6 +103,54 @@ function findCoin(id) {
     const bySymbol = Object.values(extraCoins).find(c => c.symbol.toLowerCase() === id.toLowerCase());
     if (bySymbol) return bySymbol;
     
+    // ⭐ НОВОЕ: Если монета не найдена и это похоже на ID - пробуем загрузить
+    if (id && typeof id === 'string' && id.length > 0 && !id.includes(' ')) {
+        // Асинхронная загрузка в фоне
+        fetchMissingCoin(id).then(coin => {
+            if (coin) {
+                extraCoins[id] = coin;
+                try {
+                    localStorage.setItem('ct_extra_coins', JSON.stringify(extraCoins));
+                } catch (e) {}
+                renderAll();
+                console.log('✅ Монета загружена по запросу:', id);
+            }
+        });
+    }
+    
+    return null;
+}
+
+// Новая функция для загрузки отсутствующей монеты
+async function fetchMissingCoin(id) {
+    try {
+        // Пробуем загрузить по ID
+        const res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&ids=${id}&sparkline=true&price_change_percentage=24h,7d,30d`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data[0]) {
+                return data[0];
+            }
+        }
+        
+        // Если не нашли по ID, пробуем поискать по символу
+        const searchRes = await fetch(`/api/coingecko?path=search?query=${id}`);
+        if (searchRes.ok) {
+            const searchData = await searchRes.json();
+            if (searchData.coins && searchData.coins.length > 0) {
+                const coinId = searchData.coins[0].id;
+                const coinRes = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&ids=${coinId}&sparkline=true&price_change_percentage=24h,7d,30d`);
+                if (coinRes.ok) {
+                    const coinData = await coinRes.json();
+                    if (coinData && coinData[0]) {
+                        return coinData[0];
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.log('Failed to fetch missing coin:', id, e);
+    }
     return null;
 }
 
@@ -239,7 +287,60 @@ async function saveNotifs() {
         console.error('Error saving notifications:', e);
     }
 }
+// ============================================================
+// ПРИНУДИТЕЛЬНАЯ ЗАГРУЗКА МОНЕТ ИЗ ОРДЕРОВ
+// ============================================================
 
+async function loadOrderCoins() {
+    // Собираем все ID монет из ордеров
+    const orderIds = orders.map(o => o.coinId).filter(Boolean);
+    
+    if (orderIds.length === 0) return;
+    
+    // Проверяем, какие монеты уже есть
+    const missingIds = orderIds.filter(id => 
+        !allCoins.find(c => c.id === id) && 
+        !extraCoins[id]
+    );
+    
+    if (missingIds.length === 0) {
+        console.log('✅ Все монеты из ордеров уже загружены');
+        return;
+    }
+    
+    console.log('🔄 Принудительная загрузка монет из ордеров:', missingIds);
+    
+    // Загружаем через прокси
+    const chunkSize = 20;
+    for (let i = 0; i < missingIds.length; i += chunkSize) {
+        const chunk = missingIds.slice(i, i + chunkSize);
+        try {
+            const res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&ids=${chunk.join(',')}&sparkline=true&price_change_percentage=24h,7d,30d`);
+            if (res.ok) {
+                const data = await res.json();
+                data.forEach(c => {
+                    extraCoins[c.id] = c;
+                });
+                console.log(`✅ Загружено ${data.length} монет из ордеров`);
+            } else {
+                console.warn(`⚠️ Не удалось загрузить монеты: ${chunk.join(', ')} (статус: ${res.status})`);
+            }
+        } catch (e) {
+            console.log('❌ Ошибка загрузки монет из ордеров:', e);
+        }
+        await new Promise(r => setTimeout(r, 300));
+    }
+    
+    // Сохраняем в localStorage
+    try {
+        localStorage.setItem('ct_extra_coins', JSON.stringify(extraCoins));
+    } catch (e) {}
+    
+    console.log('✅ Монеты из ордеров загружены');
+    
+    // Обновляем UI
+    renderAll();
+}
 async function loadAlerts() {
     try {
         if (window.db && window.currentUser) {
@@ -3558,8 +3659,6 @@ function searchOrderCoins(query) {
     
     // Объединяем allCoins и extraCoins для поиска
     let allCoinsList = [...allCoins];
-    
-    // Добавляем монеты из extraCoins которых нет в allCoins
     const extraIds = Object.keys(extraCoins).filter(id => !allCoins.find(c => c.id === id));
     extraIds.forEach(id => {
         if (extraCoins[id]) {
@@ -3567,28 +3666,84 @@ function searchOrderCoins(query) {
         }
     });
     
-    // Ищем по названию или символу
+    // Ищем локально
     const local = allCoinsList.filter(c => 
         c.name?.toLowerCase().includes(q) || 
         c.symbol?.toLowerCase().includes(q)
     ).slice(0, 8);
     
-    if (!local.length) {
-        results.innerHTML = '<div class="search-loading">ничего не найдено</div>';
+    if (local.length) {
+        renderOrderSearchResults(local);
         results.classList.add('active');
         return;
     }
     
-    results.innerHTML = local.map(c => 
+    // Если локально не найдено - ищем через API
+    results.innerHTML = '<div class="search-loading">🔍 поиск на CoinGecko...</div>';
+    results.classList.add('active');
+    
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(async () => {
+        try {
+            const res = await fetch(`/api/coingecko?path=search?query=${encodeURIComponent(q)}`);
+            if (!res.ok) {
+                results.innerHTML = '<div class="search-loading">❌ ошибка поиска</div>';
+                return;
+            }
+            const data = await res.json();
+            const remote = (data.coins || []).slice(0, 12).map(c => ({
+                id: c.id,
+                name: c.name,
+                symbol: c.symbol,
+                image: c.thumb || c.large || ''
+            }));
+            
+            if (remote.length === 0) {
+                results.innerHTML = '<div class="search-loading">ничего не найдено</div>';
+                return;
+            }
+            
+            // Сохраняем найденные монеты в extraCoins
+            for (const c of remote) {
+                if (!extraCoins[c.id] && !allCoins.find(coin => coin.id === c.id)) {
+                    // Загружаем полные данные
+                    try {
+                        const fullRes = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&ids=${c.id}&sparkline=true&price_change_percentage=24h,7d,30d`);
+                        if (fullRes.ok) {
+                            const fullData = await fullRes.json();
+                            if (fullData && fullData[0]) {
+                                extraCoins[c.id] = fullData[0];
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
+            
+            try {
+                localStorage.setItem('ct_extra_coins', JSON.stringify(extraCoins));
+            } catch (e) {}
+            
+            renderOrderSearchResults(remote);
+            results.classList.add('active');
+            
+        } catch (e) {
+            console.log('Search error:', e);
+            results.innerHTML = '<div class="search-loading">❌ ошибка поиска</div>';
+        }
+    }, 500);
+}
+
+function renderOrderSearchResults(list) {
+    const results = document.getElementById('orderSearchResults');
+    results.innerHTML = list.map(c => 
         '<div class="search-item" onclick="selectOrderCoin(' + 
         "'" + c.id + "'" + ',' + 
-        "'" + c.symbol.toUpperCase() + "'" + ',' + 
-        "'" + c.image + "'" + 
-        ')"><img src="' + c.image + '" alt="" ><div><div style="font-weight:600">' + 
-        c.name + '</div><div style="font-size:11px;color:var(--text-3)">' + 
-        c.symbol.toUpperCase() + '</div></div></div>'
+        "'" + (c.symbol || '').toUpperCase() + "'" + ',' + 
+        "'" + (c.image || '') + "'" + 
+        ')"><img src="' + (c.image || '') + '" alt="" onerror="this.style.display=\'none\'"><div><div style="font-weight:600">' + 
+        (c.name || c.symbol) + '</div><div style="font-size:11px;color:var(--text-3)">' + 
+        (c.symbol || '').toUpperCase() + '</div></div></div>'
     ).join('');
-    
     results.classList.add('active');
 }
 
@@ -4451,6 +4606,9 @@ function init() {
 
     fetchAll();
     
+    // ⭐ Загружаем монеты из ордеров ПЕРВЫМ ДЕЛОМ
+    setTimeout(loadOrderCoins, 500);
+    
     // ⭐ Загружаем недостающие монеты из портфеля и ордеров
     setTimeout(ensureMissingCoins, 1000);
     
@@ -4465,6 +4623,7 @@ function init() {
     
     // ⭐ Периодическая проверка недостающих монет (каждые 2 минуты)
     setInterval(ensureMissingCoins, 120000);
+    
     // ИСПРАВЛЕНИЕ: Используем правильный паттерн ожидания Firebase
     function attemptAuthSetup() {
         if (window.auth) {
