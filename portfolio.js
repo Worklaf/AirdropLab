@@ -8,6 +8,8 @@
 // ============================================================
 
 const API_BASE = 'https://api.coingecko.com/api/v3';
+const COINCAP_API = 'https://api.coincap.io/v2';
+const BINANCE_API = 'https://api.binance.com/api/v3';
 const FEAR_API = 'https://api.alternative.me/fng/?limit=1';
 
 const CACHE_KEY = 'ct_cache_v5';
@@ -16,7 +18,7 @@ const NOTIF_KEY = 'ct_notifs_v5';
 const ALERTS_KEY = 'ct_alerts_v5';
 const AUTO_ALERTS_KEY = 'ct_auto_alerts_v1';
 const ORDERS_KEY = 'ct_orders_v1';
-const CACHE_TTL = 10 * 60 * 1000;
+const CACHE_TTL = 60 * 60 * 1000; // 1 час - увеличено из-за проблем с API
 
 let allCoins = [];
 let extraCoins = {};
@@ -414,31 +416,43 @@ async function fetchAll() {
             allCoins = cache.coins;
             if (cache.global) globalData = cache.global;
             if (cache.fear) fearData = cache.fear;
+            if (cache.portfolioCoins) {
+                Object.assign(extraCoins, cache.portfolioCoins);
+            }
             syncAutoAlertsFromAdvisor();
             renderAll();
             checkNotifs();
         }
 
-        if (cache && Date.now() - cache.time < CACHE_TTL) {
+        // Всегда используем кэш из-за проблем с CORS/429
+        if (cache && cache.coins && cache.coins.length) {
             await refreshExtraCoins();
             syncAutoAlertsFromAdvisor();
             hideCorsWarning();
-            document.getElementById('lastUpdate').textContent = 'кэш: ' + new Date(cache.time).toLocaleTimeString('ru-RU');
+            const cacheAge = Math.floor((Date.now() - cache.time) / 60000); // минуты
+            document.getElementById('lastUpdate').textContent = `кэш (${cacheAge} мин назад)`;
             return;
         }
 
-        const page1 = await apiFetch(API_BASE + '/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h,7d,30d');
-        if (!page1.ok) throw new Error('coins page 1 status ' + page1.status);
-        const data1 = await page1.json();
-        allCoins = data1;
-
+        // Если кэша нет, пробуем загрузить (но скорее всего не сработает)
         try {
-            const page2 = await apiFetch(API_BASE + '/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=2&sparkline=true&price_change_percentage=24h,7d,30d');
-            if (page2.ok) {
-                const data2 = await page2.json();
-                allCoins = [...data1, ...data2];
-            }
-        } catch (e2) { console.log('page 2 failed', e2); }
+            const page1 = await apiFetch(API_BASE + '/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h,7d,30d');
+            if (!page1.ok) throw new Error('coins page 1 status ' + page1.status);
+            const data1 = await page1.json();
+            allCoins = data1;
+
+            try {
+                const page2 = await apiFetch(API_BASE + '/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=2&sparkline=true&price_change_percentage=24h,7d,30d');
+                if (page2.ok) {
+                    const data2 = await page2.json();
+                    allCoins = [...data1, ...data2];
+                }
+            } catch (e2) { console.log('page 2 failed', e2); }
+        } catch (e) {
+            console.log('API fetch failed, using cache only mode');
+            document.getElementById('lastUpdate').textContent = 'API недоступен. Требуется первое подключение.';
+            return;
+        }
 
         try {
             const r = await apiFetch(API_BASE + '/global');
@@ -464,8 +478,10 @@ async function fetchAll() {
 
         const cacheData = {
             time: Date.now(),
+            coins: allCoins,
             global: globalData,
-            fear: fearData
+            fear: fearData,
+            portfolioCoins: extraCoins
         };
         try {
             localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
@@ -513,20 +529,30 @@ function hideCorsWarning() {
 async function refreshExtraCoins() {
     const neededIds = [...new Set(portfolio.map(h => h.coinId).filter(id => id && !allCoins.find(c => c.id === id)))];
     if (!neededIds.length) return;
-    try { const cached = JSON.parse(localStorage.getItem('ct_extra_coins') || '{}'); Object.assign(extraCoins, cached); } catch (e) {}
+    
+    // Загружаем из кэша extraCoins
+    try { 
+        const cached = JSON.parse(localStorage.getItem('ct_extra_coins') || '{}'); 
+        Object.assign(extraCoins, cached); 
+    } catch (e) {}
+    
+    // Проверяем, есть ли нужные монеты в кэше
+    const missingFromCache = neededIds.filter(id => !extraCoins[id]);
+    if (missingFromCache.length === 0) return;
+    
+    // Если кэша нет, пробуем загрузить из API (но скорее всего не сработает)
     const chunkSize = 20;
-    for (let i = 0; i < neededIds.length; i += chunkSize) {
-        const chunk = neededIds.slice(i, i + chunkSize);
+    for (let i = 0; i < missingFromCache.length; i += chunkSize) {
+        const chunk = missingFromCache.slice(i, i + chunkSize);
         try {
             const res = await apiFetch(API_BASE + '/coins/markets?vs_currency=usd&ids=' + chunk.join(',') + '&sparkline=true&price_change_percentage=24h,7d,30d');
             if (res.ok) {
                 const data = await res.json();
                 data.forEach(c => { extraCoins[c.id] = c; });
             }
-        } catch (e) { console.log('Пропущена загрузка монет из-за 429/CORS'); }
+        } catch (e) { console.log('API fetch failed for extra coins'); }
         
-        // ✅ ВАЖНО: Пауза 2 секунды между запросами, чтобы не получить бан
-        await new Promise(r => setTimeout(r, 2000)); 
+        await new Promise(r => setTimeout(r, 1000)); 
     }
     try { localStorage.setItem('ct_extra_coins', JSON.stringify(extraCoins)); } catch (e) {}
 }
