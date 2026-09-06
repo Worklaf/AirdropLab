@@ -482,7 +482,7 @@ async function refreshDataViaProxy() {
     try {
         console.log('🔄 Загрузка данных через прокси...');
         
-        // Загружаем топ-250 монет через прокси
+        // Загружаем топ-250 монет через прокси (уже 250, но можно увеличить до 500)
         const page1Res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h,7d,30d`);
         
         if (!page1Res.ok) {
@@ -492,12 +492,13 @@ async function refreshDataViaProxy() {
         const data1 = await page1Res.json();
         let allData = data1;
         
-        // Пробуем загрузить вторую страницу
+        // Пробуем загрузить вторую страницу (еще 250 монет)
         try {
             const page2Res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=2&sparkline=true&price_change_percentage=24h,7d,30d`);
             if (page2Res.ok) {
                 const data2 = await page2Res.json();
                 allData = [...data1, ...data2];
+                console.log('✅ Загружено 2 страницы, всего:', allData.length, 'монет');
             }
         } catch (e2) {
             console.log('Page 2 load failed:', e2);
@@ -575,9 +576,18 @@ function hideCorsWarning() {
 }
 
 async function refreshExtraCoins() {
-    const neededIds = [...new Set(portfolio.map(h => h.coinId).filter(id => id && !allCoins.find(c => c.id === id)))];
-    if (!neededIds.length) return;
+    // Собираем ID из портфеля И из ордеров
+    const portfolioIds = portfolio.map(h => h.coinId).filter(Boolean);
+    const orderIds = orders.map(o => o.coinId).filter(Boolean);
+    const allNeededIds = [...new Set([...portfolioIds, ...orderIds])];
     
+    if (allNeededIds.length === 0) return;
+    
+    // Проверяем, какие уже есть
+    const neededIds = allNeededIds.filter(id => !allCoins.find(c => c.id === id));
+    if (neededIds.length === 0) return;
+    
+    // Загружаем из кэша extraCoins
     try { 
         const cached = JSON.parse(localStorage.getItem('ct_extra_coins') || '{}'); 
         Object.assign(extraCoins, cached); 
@@ -1162,32 +1172,57 @@ function toggleOthersList() {
 // ============================================================
 // РЫНОК
 // ============================================================
-
 function renderMarket() {
     const tbody = document.querySelector('#marketTable tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
+
+    // 1. Берём все монеты из allCoins
     let sorted = [...allCoins];
+
+    // 2. Добавляем extraCoins, которых нет в allCoins
+    const extraIds = Object.keys(extraCoins).filter(id => !allCoins.find(c => c.id === id));
+    extraIds.forEach(id => sorted.push(extraCoins[id]));
+
+    // 3. Фильтр
     if (marketFilter) {
-        sorted = sorted.filter(c => c.name.toLowerCase().includes(marketFilter) || c.symbol.toLowerCase().includes(marketFilter));
+        const f = marketFilter.toLowerCase();
+        sorted = sorted.filter(c =>
+            c.name?.toLowerCase().includes(f) ||
+            c.symbol?.toLowerCase().includes(f)
+        );
     }
+
+    // 4. Сортировка
     const col = marketSort.col;
     const dir = marketSort.dir;
+
     sorted.sort((a, b) => {
         let av = a[col] || 0;
         let bv = b[col] || 0;
-        if (col === 'ath_change_percentage') { av = a.ath ? ((a.current_price - a.ath) / a.ath) * 100 : 0;
-            bv = b.ath ? ((b.current_price - b.ath) / b.ath) * 100 : 0; }
+
+        // Специальная логика для ATH %
+        if (col === 'ath_change_percentage') {
+            av = a.ath ? ((a.current_price - a.ath) / a.ath) * 100 : 0;
+            bv = b.ath ? ((b.current_price - b.ath) / b.ath) * 100 : 0;
+        }
+
         return dir === 'asc' ? av - bv : bv - av;
     });
 
+    // 5. Количество монет
     const countEl = document.getElementById('marketCount');
     if (countEl) countEl.textContent = sorted.length + ' монет';
 
-    sorted.forEach((c, i) => {
+    // 6. Показываем только первые 500 монет
+    const displayCoins = sorted.slice(0, 500);
+
+    // 7. Рендер строк
+    displayCoins.forEach((c, i) => {
         const hasAth = typeof c.ath === 'number' && c.ath > 0;
         const fromAth = hasAth ? ((c.current_price - c.ath) / c.ath) * 100 : null;
         const spark = c.sparkline_in_7d ? c.sparkline_in_7d.price : [];
+
         const tr = document.createElement('tr');
         tr.innerHTML =
             '<td>' + (c.market_cap_rank || i + 1) + '</td>' +
@@ -1199,9 +1234,11 @@ function renderMarket() {
             '<td>' + fmtLarge(c.total_volume) + '</td>' +
             '<td class="' + (hasAth ? (fromAth >= 0 ? 'pos' : 'neg') : 'neu') + '">' + (hasAth ? fmtPct(fromAth) : 'н/д') + '</td>' +
             '<td>' + drawSparkline(spark) + '</td>';
+
         tbody.appendChild(tr);
     });
 
+    // 8. Обновление стрелок сортировки
     document.querySelectorAll('#marketTable th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
     const activeTh = document.querySelector('#marketTable th[onclick*="' + col + '"]');
     if (activeTh) activeTh.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
@@ -4244,10 +4281,70 @@ async function updatePortfolioPrices() {
         console.log('Price update failed:', e);
     }
 }
+
+
+// ============================================================
+// ЗАГРУЗКА НЕДОСТАЮЩИХ МОНЕТ (из портфеля и ордеров)
+// ============================================================
+
+async function ensureMissingCoins() {
+    // Собираем все ID монет из портфеля
+    const portfolioIds = portfolio.map(h => h.coinId).filter(Boolean);
+    
+    // Собираем все ID монет из ордеров
+    const orderIds = orders.map(o => o.coinId).filter(Boolean);
+    
+    // Объединяем и удаляем дубликаты
+    const allNeededIds = [...new Set([...portfolioIds, ...orderIds])];
+    
+    if (allNeededIds.length === 0) return;
+    
+    // Проверяем, какие монеты уже есть в allCoins или extraCoins
+    const missingIds = allNeededIds.filter(id => 
+        !allCoins.find(c => c.id === id) && 
+        !extraCoins[id]
+    );
+    
+    if (missingIds.length === 0) {
+        console.log('✅ Все монеты из портфеля и ордеров уже загружены');
+        return;
+    }
+    
+    console.log('🔄 Загрузка недостающих монет:', missingIds);
+    
+    // Загружаем недостающие монеты через прокси
+    const chunkSize = 20;
+    for (let i = 0; i < missingIds.length; i += chunkSize) {
+        const chunk = missingIds.slice(i, i + chunkSize);
+        try {
+            const res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&ids=${chunk.join(',')}&sparkline=true&price_change_percentage=24h,7d,30d`);
+            if (res.ok) {
+                const data = await res.json();
+                data.forEach(c => {
+                    extraCoins[c.id] = c;
+                });
+                console.log(`✅ Загружено ${data.length} монет из чанка`);
+            }
+        } catch (e) {
+            console.log('Failed to load missing coins chunk:', e);
+        }
+        await new Promise(r => setTimeout(r, 500));
+    }
+    
+    // Сохраняем в localStorage
+    try {
+        localStorage.setItem('ct_extra_coins', JSON.stringify(extraCoins));
+    } catch (e) {}
+    
+    console.log('✅ Все недостающие монеты загружены');
+    
+    // Обновляем UI
+    renderAll();
+}
+
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ
 // ============================================================
-
 function init() {
     loadPortfolio();
     loadNotifs();
@@ -4274,18 +4371,21 @@ function init() {
     });
 
     fetchAll();
-    // Первичная загрузка
-fetchAll();
-
-// ⭐ ОБНОВЛЕНИЕ ЦЕН ПОРТФЕЛЯ - КАЖДЫЕ 30 СЕКУНД
-setInterval(updatePortfolioPrices, 30000);
-
-// ⭐ ПОЛНОЕ ОБНОВЛЕНИЕ - КАЖДЫЕ 5 МИНУТ
-setInterval(fetchAll, 300000);
-
-// ⭐ ПРОВЕРКА УВЕДОМЛЕНИЙ - КАЖДЫЕ 10 СЕКУНД
-setInterval(checkNotifs, 10000);
-
+    
+    // ⭐ Загружаем недостающие монеты из портфеля и ордеров
+    setTimeout(ensureMissingCoins, 1000);
+    
+    // Обновление цен портфеля - каждые 30 секунд
+    setInterval(updatePortfolioPrices, 30000);
+    
+    // Полное обновление - каждые 5 минут
+    setInterval(fetchAll, 300000);
+    
+    // Проверка уведомлений - каждые 10 секунд
+    setInterval(checkNotifs, 10000);
+    
+    // ⭐ Периодическая проверка недостающих монет (каждые 2 минуты)
+    setInterval(ensureMissingCoins, 120000);
     // ИСПРАВЛЕНИЕ: Используем правильный паттерн ожидания Firebase
     function attemptAuthSetup() {
         if (window.auth) {
