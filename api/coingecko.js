@@ -1,4 +1,4 @@
-// api/coingecko.js - CommonJS вариант
+// api/coingecko.js - CommonJS вариант 
 
 module.exports = async function handler(req, res) {
   // Разрешаем CORS для всех доменов
