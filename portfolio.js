@@ -452,8 +452,8 @@ async function fetchAll() {
             const updateEl = document.getElementById('lastUpdate');
             if (updateEl) updateEl.textContent = `кэш (${cacheAge} мин назад, ${allCoins.length} монет)`;
             
-            // Фоновое обновление через прокси
-            await refreshDataViaProxy();
+            // Фоновое обновление
+            refreshDataViaProxy();
             return;
         }
 
@@ -484,7 +484,6 @@ async function refreshDataViaProxy() {
     try {
         console.log('🔄 Загрузка данных через прокси...');
         
-        // Загружаем топ-250 монет через прокси (страница 1)
         const page1Res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h,7d,30d`);
         
         if (!page1Res.ok) {
@@ -494,22 +493,17 @@ async function refreshDataViaProxy() {
         const data1 = await page1Res.json();
         console.log('📄 Страница 1 загружена:', data1.length, 'монет');
         
-        // ЗАПОМИНАЕМ данные первой страницы
         let allData = [...data1];
         
-        // Пробуем загрузить вторую страницу
         try {
             const page2Res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=2&sparkline=true&price_change_percentage=24h,7d,30d`);
             if (page2Res.ok) {
                 const data2 = await page2Res.json();
                 console.log('📄 Страница 2 загружена:', data2.length, 'монет');
-                // ОБЪЕДИНЯЕМ данные
                 allData = [...data1, ...data2];
-            } else {
-                console.warn('⚠️ Страница 2 не загружена:', page2Res.status);
             }
         } catch (e2) {
-            console.log('⚠️ Страница 2 не загружена:', e2.message);
+            console.log('Page 2 load failed:', e2);
         }
         
         // Дедупликация
@@ -526,7 +520,6 @@ async function refreshDataViaProxy() {
         
         allCoins = allData;
         console.log('✅ Загружено через прокси:', allCoins.length, 'монет');
-        console.log('✅ Первые 3 монеты:', allCoins.slice(0, 3).map(c => c.symbol));
 
         // Загружаем глобальные данные
         try {
@@ -544,10 +537,10 @@ async function refreshDataViaProxy() {
             }
         } catch (e) { console.log('Fear data load failed:', e); }
 
-        // Сохраняем в кэш (ВСЕ 500 монет!)
+        // ✅ СОХРАНЯЕМ ВСЕ МОНЕТЫ В КЭШ
         const cacheData = {
             time: Date.now(),
-            coins: allCoins,
+            coins: allCoins,           // ← ВАЖНО! Сохраняем все монеты
             global: globalData,
             fear: fearData,
             portfolioCoins: extraCoins
@@ -557,7 +550,7 @@ async function refreshDataViaProxy() {
             console.log('💾 Кэш сохранен, монет:', allCoins.length);
         } catch (e) {
             console.warn('Cache not saved:', e);
-            // Если кэш слишком большой - сохраняем только часть
+            // Если кэш слишком большой - сохраняем хотя бы 300
             try {
                 const smallerCache = {
                     time: Date.now(),
@@ -1192,9 +1185,18 @@ function renderMarket() {
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    // Используем ВСЕ монеты из allCoins (уже 500)
-    let sorted = [...allCoins];
+    // Объединяем allCoins и extraCoins для полного списка
+    let allCoinsList = [...allCoins];
     
+    // Добавляем монеты из extraCoins которых нет в allCoins
+    const extraIds = Object.keys(extraCoins).filter(id => !allCoins.find(c => c.id === id));
+    extraIds.forEach(id => {
+        if (extraCoins[id]) {
+            allCoinsList.push(extraCoins[id]);
+        }
+    });
+    
+    let sorted = allCoinsList;
     if (marketFilter) {
         sorted = sorted.filter(c => 
             c.name?.toLowerCase().includes(marketFilter) || 
@@ -1217,7 +1219,7 @@ function renderMarket() {
     const countEl = document.getElementById('marketCount');
     if (countEl) countEl.textContent = sorted.length + ' монет';
 
-    // Отображаем ВСЕ монеты (без ограничения!)
+    // ОТОБРАЖАЕМ ВСЕ МОНЕТЫ (без ограничения!)
     sorted.forEach((c, i) => {
         const hasAth = typeof c.ath === 'number' && c.ath > 0;
         const fromAth = hasAth ? ((c.current_price - c.ath) / c.ath) * 100 : null;
