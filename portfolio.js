@@ -7,7 +7,7 @@
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И КОНСТАНТЫ
 // ============================================================
 
-const API_BASE = '/api/coingecko?path=';
+const API_BASE = 'https://api.coingecko.com/api/v3';
 const COINCAP_API = 'https://api.coincap.io/v2';
 const BINANCE_API = 'https://api.binance.com/api/v3';
 const FEAR_API = 'https://api.alternative.me/fng/?limit=1';
