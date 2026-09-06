@@ -1,309 +1,450 @@
-// ═══════════════════════════════════════════════════════
-// 📦 CENTRALIZED AUTHENTICATION SYSTEM
-// ═══════════════════════════════════════════════════════
-// Единая система входа для всех страниц сайта
-// Подключается: <script src="auth.js"></script>
-// ═════════════════════════════════════════════════════════
+// ============================================================
+// AUTH.JS - Централизованная система авторизации
+// ============================================================
 
-// Используем глобальные функции Firebase из module loader
-// import {
-//   getAuth, onAuthStateChanged, signOut, signInWithPopup,
-//   GoogleAuthProvider, TwitterAuthProvider, signInWithEmailAndPassword,
-//   createUserWithEmailAndPassword
-// } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-// import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
-// Глобальные переменные для аутентификации
-let auth = null;
-let currentUser = null;
-let isAdmin = false;
-
-// Инициализация аутентификации
-async function initAuth() {
-  console.log('🔐 Initializing centralized auth system...');
-  
-  try {
-    // Используем существующий Firebase app или создаем новый
-    if (window.firebaseApp) {
-      auth = window.getAuth(window.firebaseApp);
-    } else if (window.firebaseConfig) {
-      const app = window.initializeApp(window.firebaseConfig);
-      auth = window.getAuth(app);
-      window.firebaseApp = app;
-    } else {
-      console.warn('🔐 No Firebase config available');
-      return;
-    }
-
-    // Делаем доступным глобально
-    window.auth = auth;
-    window.currentUser = currentUser;
-    window.isAdmin = isAdmin;
-
-    // Проверяем текущего пользователя
-    const immediateUser = auth.currentUser;
-    if (immediateUser) {
-      console.log('🔐 User already logged in:', immediateUser.uid);
-      currentUser = immediateUser;
-      window.currentUser = immediateUser;
-      isAdmin = immediateUser.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
-      updateAuthUI();
-    }
-
-    // Отслеживаем изменения состояния аутентификации
-    onAuthStateChanged(auth, async user => {
-      currentUser = user;
-      window.currentUser = user;
-      isAdmin = user && user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
-      
-      console.log('🔐 Auth state changed:', { user: user?.uid, isAdmin });
-      
-      // Кэшируем пользователя в localStorage для мгновенного восстановления при перезагрузке
-      if (user) {
-        const userData = {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL
-        };
-        localStorage.setItem('firebaseUser', JSON.stringify(userData));
-        localStorage.setItem('__cache_isAdmin', isAdmin ? 'true' : 'false');
-      } else {
-        localStorage.removeItem('firebaseUser');
-        localStorage.removeItem('__cache_isAdmin');
-      }
-      
-      // Обновляем UI на всех страницах
-      updateAuthUI();
-      
-      // Генерируем событие для других скриптов
-      if (typeof window.onAuthStateChanged === 'function') {
-        window.onAuthStateChanged(user);
-      }
-    });
-
-    console.log('✅ Centralized auth system initialized');
-  } catch (error) {
-    console.error('🔐 Auth initialization error:', error);
-  }
+// Глобальные переменные
+if (typeof window.currentUser === 'undefined') {
+    window.currentUser = null;
+}
+if (typeof window.isAdmin === 'undefined') {
+    window.isAdmin = false;
+}
+if (typeof window.auth === 'undefined') {
+    window.auth = null;
+}
+if (typeof window.db === 'undefined') {
+    window.db = null;
 }
 
-// Обновление UI элементов аутентификации
-function updateAuthUI() {
-  // Обновляем кнопки входа/выхода
-  const loggedOutElements = document.querySelectorAll('.auth-logged-out');
-  const loggedInElements = document.querySelectorAll('.auth-logged-in');
-  
-  if (currentUser) {
-    // Пользователь вошел - скрываем кнопки входа, показываем профиль
-    loggedOutElements.forEach(el => el.style.display = 'none');
-    loggedInElements.forEach(el => el.style.display = 'flex');
+// ============================================================
+// ИНИЦИАЛИЗАЦИЯ FIREBASE (Compat версия)
+// ============================================================
+
+function initAuth() {
+    console.log('🔐 Initializing centralized auth system...');
     
-    // Обновляем информацию о пользователе
-    updateUserInfo();
-  } else {
-    // Пользователь не вошел - показываем кнопки входа, скрываем профиль
-    loggedOutElements.forEach(el => el.style.display = 'flex');
-    loggedInElements.forEach(el => el.style.display = 'none');
-  }
+    try {
+        // Проверяем, загружен ли Firebase SDK
+        if (typeof firebase === 'undefined') {
+            console.error('🔥 Firebase SDK not loaded!');
+            return;
+        }
+
+        // Проверяем конфигурацию
+        const config = window.firebaseConfig;
+        if (!config) {
+            console.error('🔥 Firebase config not found!');
+            return;
+        }
+
+        // Инициализируем приложение (если еще не инициализировано)
+        if (!firebase.apps || !firebase.apps.length) {
+            firebase.initializeApp(config);
+            console.log('✅ Firebase app initialized');
+        }
+
+        // Получаем экземпляры auth и firestore
+        window.auth = firebase.auth();
+        window.db = firebase.firestore();
+
+        // Настройка Firestore
+        if (window.db && window.db.settings) {
+            window.db.settings({ merge: true });
+        }
+
+        console.log('✅ Firebase initialized successfully');
+
+// Инициализация мобильного наблюдателя и слушателя, чтобы Header узнал о входе
+setTimeout(function() {
+    if (typeof window.syncAuth === 'function') {
+        window.syncAuth();
+    }
+    if (typeof window.updateMobileAdminButtons === 'function') {
+        window.updateMobileAdminButtons();
+    }
+}, 500);
+
+        // Отслеживаем состояние авторизации
+        window.auth.onAuthStateChanged(function(user) {
+            window.currentUser = user;
+            
+            if (user) {
+                window.isAdmin = user.uid === (window.ADMIN_UID || 'SAkz4mdW9reDaIsvqigCNZhEKJR2');
+                localStorage.setItem('firebaseUser', JSON.stringify({
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL
+                }));
+                console.log('✅ User logged in:', user.email);
+
+// Сообщаем хедеру, что пользователь вошел
+if (typeof window.syncAuth === 'function') {
+    window.syncAuth();
+}
+if (typeof window.updateAuthUI === 'function') {
+    window.updateAuthUI();
+}
+if (typeof window.updateUserUI === 'function') {
+    window.updateUserUI(user);
+}
+            } else {
+                window.isAdmin = false;
+                localStorage.removeItem('firebaseUser');
+                console.log('🔐 User logged out');
+            }
+
+            // Обновляем UI
+            if (typeof window.updateAuthUI === 'function') {
+                window.updateAuthUI();
+            }
+
+            // Генерируем событие
+            document.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: user } }));
+        });
+
+        console.log('✅ Centralized auth system initialized');
+
+    } catch (error) {
+        console.error('🔥 Auth initialization error:', error);
+    }
 }
 
-// Обновление информации о пользователе
-function updateUserInfo() {
-  if (!currentUser) return;
-  
-  // Avatar
-  const avatarElements = document.querySelectorAll('.user-avatar');
-  avatarElements.forEach(el => {
-    el.src = currentUser.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
-    el.onerror = function() {
-      this.src = 'https://www.gravatar.com/avatar/?d=mp';
-    };
-  });
-  
-  // Name
-  const nameElements = document.querySelectorAll('.user-name');
-  nameElements.forEach(el => {
-    el.textContent = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
-  });
-  
-  // Email
-  const emailElements = document.querySelectorAll('.user-email');
-  emailElements.forEach(el => {
-    el.textContent = currentUser.email || '';
-  });
-}
+// ============================================================
+// ФУНКЦИИ ДЛЯ РАБОТЫ С МОДАЛЬНЫМ ОКНОМ
+// ============================================================
 
-// Функции входа
 window.openLoginModal = function() {
-  console.log('🔐 Opening login modal...');
-  const modal = document.getElementById('loginModal');
-  if (modal) {
+    console.log('🔐 Opening login modal...');
+    
+    // Проверяем, существует ли модалка
+    let modal = document.getElementById('loginModal');
+    
+    // Если модалки нет, создаем её
+    if (!modal) {
+        if (typeof window.createLoginModal === 'function') {
+            window.createLoginModal();
+            // Даем время на создание
+            setTimeout(function() {
+                const newModal = document.getElementById('loginModal');
+                if (newModal) {
+                    // ВАЖНО: Исправляем CSS для отображения
+                    newModal.style.display = 'flex';
+                    newModal.style.zIndex = '10000';
+                    newModal.style.position = 'fixed';
+                    newModal.style.top = '0';
+                    newModal.style.left = '0';
+                    newModal.style.width = '100%';
+                    newModal.style.height = '100%';
+                    newModal.classList.add('active');
+                }
+            }, 100);
+            return;
+        }
+        console.error('🔐 Login modal element not found!');
+        return;
+    }
+    
+    // Открываем модалку с исправлением CSS
     modal.style.display = 'flex';
+    modal.style.zIndex = '10000';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
     modal.classList.add('active');
-    console.log('🔐 Modal should be visible now');
-  } else {
-    console.error('🔐 Login modal element not found!');
-  }
 };
 
 window.closeLoginModal = function() {
-  const modal = document.getElementById('loginModal');
-  if (modal) {
-    modal.style.display = 'none';
-    modal.classList.remove('active');
-  }
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+    }
 };
 
-window.loginGoogle = async function() {
-  try {
-    await signInWithPopup(auth, new GoogleAuthProvider());
-    closeLoginModal();
-    if (typeof showToast === 'function') {
-      showToast('Вход: Google');
+// ============================================================
+// ФУНКЦИИ ВХОДА (Compat версия)
+// ============================================================
+
+window.loginGoogle = function() {
+    if (!window.auth) {
+        console.error('Auth not initialized');
+        alert('Ошибка авторизации. Попробуйте обновить страницу.');
+        return;
     }
-  } catch (error) {
-    console.error('Google login error:', error);
-    if (typeof showToast === 'function') {
-      showToast(error.message);
-    }
-  }
+    
+    const provider = new firebase.auth.GoogleAuthProvider();
+    window.auth.signInWithPopup(provider)
+        .then(function(result) {
+            console.log('✅ Google login successful');
+            window.closeLoginModal();
+            if (typeof showToast === 'function') {
+                showToast('Вход через Google выполнен');
+            }
+        })
+        .catch(function(error) {
+            console.error('Google login error:', error);
+            if (typeof showToast === 'function') {
+                showToast('Ошибка: ' + error.message);
+            } else {
+                alert('Ошибка входа: ' + error.message);
+            }
+        });
 };
 
-window.loginTwitter = async function() {
-  try {
-    await signInWithPopup(auth, new TwitterAuthProvider());
-    closeLoginModal();
-    if (typeof showToast === 'function') {
-      showToast('Вход: Twitter');
+window.loginTwitter = function() {
+    if (!window.auth) {
+        console.error('Auth not initialized');
+        alert('Ошибка авторизации. Попробуйте обновить страницу.');
+        return;
     }
-  } catch (error) {
-    console.error('Twitter login error:', error);
-    if (typeof showToast === 'function') {
-      showToast(error.message);
-    }
-  }
+    
+    const provider = new firebase.auth.TwitterAuthProvider();
+    window.auth.signInWithPopup(provider)
+        .then(function(result) {
+            console.log('✅ Twitter login successful');
+            window.closeLoginModal();
+            if (typeof showToast === 'function') {
+                showToast('Вход через Twitter выполнен');
+            }
+        })
+        .catch(function(error) {
+            console.error('Twitter login error:', error);
+            if (typeof showToast === 'function') {
+                showToast('Ошибка: ' + error.message);
+            } else {
+                alert('Ошибка входа: ' + error.message);
+            }
+        });
 };
 
-window.handleEmailAuth = async function(event) {
-  event.preventDefault();
-  const email = document.getElementById('emailInput')?.value;
-  const password = document.getElementById('passInput')?.value;
-  
-  if (!email || !password) {
-    if (typeof showToast === 'function') {
-      showToast('Введите email и пароль');
+window.handleEmailAuth = function(event) {
+    if (event) event.preventDefault();
+    
+    const email = document.getElementById('emailInput')?.value;
+    const password = document.getElementById('passInput')?.value;
+    
+    if (!email || !password) {
+        if (typeof showToast === 'function') {
+            showToast('Введите email и пароль');
+        }
+        return;
     }
-    return;
-  }
-  
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-    closeLoginModal();
-    if (typeof showToast === 'function') {
-      showToast('Вход выполнен');
+    
+    if (!window.auth) {
+        console.error('Auth not initialized');
+        alert('Ошибка авторизации. Попробуйте обновить страницу.');
+        return;
     }
-  } catch (error) {
-    console.error('Email login error:', error);
-    if (typeof showToast === 'function') {
-      showToast(error.message);
-    }
-  }
+    
+    window.auth.signInWithEmailAndPassword(email, password)
+        .then(function() {
+            console.log('✅ Email login successful');
+            window.closeLoginModal();
+            if (typeof showToast === 'function') {
+                showToast('Вход выполнен');
+            }
+        })
+        .catch(function(error) {
+            console.error('Email login error:', error);
+            if (typeof showToast === 'function') {
+                showToast('Ошибка: ' + error.message);
+            } else {
+                alert('Ошибка входа: ' + error.message);
+            }
+        });
 };
 
-window.handleRegister = async function(event) {
-  event.preventDefault();
-  const email = document.getElementById('emailInput')?.value;
-  const password = document.getElementById('passInput')?.value;
-  
-  if (!email || !password) {
-    if (typeof showToast === 'function') {
-      showToast('Введите email и пароль');
+window.handleRegister = function() {
+    const email = document.getElementById('emailInput')?.value;
+    const password = document.getElementById('passInput')?.value;
+    
+    if (!email || !password) {
+        if (typeof showToast === 'function') {
+            showToast('Введите email и пароль');
+        }
+        return;
     }
-    return;
-  }
-  
-  try {
-    await createUserWithEmailAndPassword(auth, email, password);
-    closeLoginModal();
-    if (typeof showToast === 'function') {
-      showToast('Аккаунт создан!');
+    
+    if (!window.auth) {
+        console.error('Auth not initialized');
+        alert('Ошибка авторизации. Попробуйте обновить страницу.');
+        return;
     }
-  } catch (error) {
-    console.error('Registration error:', error);
-    if (typeof showToast === 'function') {
-      showToast(error.message);
-    }
-  }
+    
+    window.auth.createUserWithEmailAndPassword(email, password)
+        .then(function() {
+            console.log('✅ Registration successful');
+            window.closeLoginModal();
+            if (typeof showToast === 'function') {
+                showToast('Аккаунт создан!');
+            }
+        })
+        .catch(function(error) {
+            console.error('Registration error:', error);
+            if (typeof showToast === 'function') {
+                showToast('Ошибка: ' + error.message);
+            } else {
+                alert('Ошибка регистрации: ' + error.message);
+            }
+        });
 };
 
 window.toggleRegisterMode = function() {
-  const submitBtn = document.querySelector('#loginModal button[type="submit"]');
-  const toggleBtn = document.querySelector('#loginModal button[onclick="toggleRegisterMode()"]');
-  
-  if (submitBtn && toggleBtn) {
-    if (submitBtn.textContent.includes('Войти') || submitBtn.textContent.includes('Login')) {
-      submitBtn.innerHTML = '<span data-translate="register_btn">Зарегистрироваться</span>';
-      toggleBtn.innerHTML = '<span data-translate="has_account">Уже есть аккаунт?</span> <span data-translate="login">Войти</span>';
-    } else {
-      submitBtn.innerHTML = '<span data-translate="login_btn">Войти</span>';
-      toggleBtn.innerHTML = '<span data-translate="no_account">Нет аккаунта?</span> <span data-translate="register">Зарегистрироваться</span>';
-    }
-  }
-};
-
-// Функция выхода
-window.logout = async function() {
-  try {
-    await signOut(auth);
-    currentUser = null;
-    window.currentUser = null;
-    isAdmin = false;
-    updateAuthUI();
+    const submitBtn = document.querySelector('#loginModal button[type="submit"]');
+    const toggleBtn = document.querySelector('#loginModal button[onclick*="toggleRegisterMode"]');
     
-    if (typeof showToast === 'function') {
-      showToast('Выход выполнен');
+    if (submitBtn && toggleBtn) {
+        if (submitBtn.textContent.includes('Войти')) {
+            submitBtn.textContent = 'Зарегистрироваться';
+            toggleBtn.innerHTML = 'Уже есть аккаунт? <span style="color:#22d3ee;">Войти</span>';
+        } else {
+            submitBtn.textContent = 'Войти';
+            toggleBtn.innerHTML = 'Нет аккаунта? <span style="color:#22d3ee;">Зарегистрироваться</span>';
+        }
     }
-  } catch (error) {
-    console.error('Logout error:', error);
-  }
 };
 
-// Проверка состояния аутентификации
-window.isLoggedIn = function() {
-  return currentUser !== null;
+// ============================================================
+// ВЫХОД
+// ============================================================
+
+window.logout = function() {
+    if (!window.auth) {
+        console.error('Auth not initialized');
+        return;
+    }
+    
+    window.auth.signOut()
+        .then(function() {
+            console.log('✅ Logout successful');
+            window.currentUser = null;
+            window.isAdmin = false;
+            localStorage.removeItem('firebaseUser');
+            
+            if (typeof window.updateAuthUI === 'function') {
+                window.updateAuthUI();
+            }
+            
+            if (typeof showToast === 'function') {
+                showToast('Выход выполнен');
+            }
+        })
+        .catch(function(error) {
+            console.error('Logout error:', error);
+        });
 };
 
-window.getCurrentUser = function() {
-  return currentUser;
+// ============================================================
+// СОЗДАНИЕ МОДАЛЬНОГО ОКНА
+// ============================================================
+
+window.createLoginModal = function() {
+    if (document.getElementById('loginModal')) return;
+    
+    const modal = document.createElement('div');
+    modal.id = 'loginModal';
+    modal.className = 'modal';
+    modal.style.cssText = `
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(8px);
+    `;
+    
+    modal.innerHTML = `
+        <div class="modal-content modal-sm p-6 relative" style="background: #1e2538; border: 1px solid rgba(148,163,184,0.2); border-radius: 16px; max-width: 400px; width: 90%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;">
+            <button onclick="window.closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:24px; cursor:pointer;">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="text-2xl font-bold mb-6 text-center text-white">Вход</h2>
+            <div class="space-y-3">
+                <button onclick="window.loginGoogle()" class="w-full bg-white text-slate-900 font-bold py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-200">
+                    <i class="fab fa-google text-red-500"></i> Google
+                </button>
+                <button onclick="window.loginTwitter()" class="w-full bg-[#1DA1F2] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-3">
+                    <i class="fab fa-twitter"></i> Twitter
+                </button>
+                <div class="relative py-2">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-700"></div></div>
+                    <div class="relative flex justify-center"><span class="bg-[#1e2538] px-2 text-xs text-slate-500">ИЛИ EMAIL</span></div>
+                </div>
+                <form onsubmit="window.handleEmailAuth(event)" class="space-y-3">
+                    <input type="email" id="emailInput" placeholder="Email" required class="w-full bg-[#1e2538] border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                    <input type="password" id="passInput" placeholder="Пароль" required class="w-full bg-[#1e2538] border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                    <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold py-3 rounded-xl hover:from-cyan-500 hover:to-blue-500">
+                        Войти
+                    </button>
+                </form>
+                <div class="text-center">
+                    <button onclick="window.toggleRegisterMode()" class="text-cyan-400 hover:text-cyan-300 text-sm">
+                        Нет аккаунта? Зарегистрироваться
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    console.log('🎨 Login modal created');
 };
 
-window.isAdminUser = function() {
-  return isAdmin;
+// ============================================================
+// ОБНОВЛЕНИЕ UI АВТОРИЗАЦИИ
+// ============================================================
+
+window.updateAuthUI = function() {
+    const isLoggedIn = window.currentUser !== null;
+    
+    // Десктоп
+    const loggedOutView = document.getElementById('loggedOutView');
+    const loggedInView = document.getElementById('loggedInView');
+    const userName = document.getElementById('userName');
+    const userAvatar = document.getElementById('userAvatar');
+    const userEmail = document.getElementById('userEmail');
+    
+    // Мобильные
+    const mobLoggedOutView = document.getElementById('mobLoggedOutView');
+    const mobLoggedInView = document.getElementById('mobLoggedInView');
+    const mobUserAvatar = document.getElementById('mobUserAvatar');
+    
+    if (loggedOutView) loggedOutView.style.display = isLoggedIn ? 'none' : 'block';
+    if (loggedInView) loggedInView.style.display = isLoggedIn ? 'flex' : 'none';
+    if (mobLoggedOutView) mobLoggedOutView.style.display = isLoggedIn ? 'none' : 'block';
+    if (mobLoggedInView) mobLoggedInView.style.display = isLoggedIn ? 'flex' : 'none';
+    
+    if (isLoggedIn && window.currentUser) {
+        const user = window.currentUser;
+        const name = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
+        
+        if (userName) userName.textContent = name;
+        if (userAvatar) userAvatar.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+        if (userEmail) userEmail.textContent = user.email || '';
+        if (mobUserAvatar) mobUserAvatar.src = user.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+    }
 };
 
-// Инициализация при загрузке
+// ============================================================
+// ЗАПУСК ИНИЦИАЛИЗАЦИИ
+// ============================================================
+
+// Запускаем инициализацию после загрузки DOM
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initAuth);
+    document.addEventListener('DOMContentLoaded', function() {
+        // Даем время на загрузку Firebase SDK
+        setTimeout(initAuth, 100);
+    });
 } else {
-  initAuth();
+    setTimeout(initAuth, 100);
 }
 
-// Экспорт для использования в других модулях
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    initAuth,
-    openLoginModal,
-    closeLoginModal,
-    loginGoogle,
-    loginTwitter,
-    handleEmailAuth,
-    handleRegister,
-    toggleRegisterMode,
-    logout,
-    isLoggedIn,
-    getCurrentUser,
-    isAdminUser
-  };
-}
+console.log('🔐 Auth system loaded');
