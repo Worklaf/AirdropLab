@@ -84,6 +84,7 @@ const translations = {
     all_projects: 'Все активности',
     airdrops_lotteries: 'Аирдропы и розыгрыши',
     faucets: 'Краны',
+    crypto_portfolio: 'Крипто портфель',
     mainnets: 'Мейннеты',
     testnets: 'Тестнеты',
     all_guides: 'Все гайды',
@@ -845,6 +846,7 @@ passive_credited_to_upstream: 'Начислено вышестоящим по ц
     all_projects: 'Tüm aktiviteler',
     airdrops_lotteries: 'Airdroplar ve çekilişler',
     faucets: 'Faucetler',
+    crypto_portfolio: 'Kripto Portföy',
     mainnets: 'Mainnetler',
     testnets: 'Testnetler',
     all_guides: 'Tüm rehberler',
@@ -1616,6 +1618,7 @@ support_label_chat: 'Destek',
     all_projects: 'Todas las actividades',
     airdrops_lotteries: 'Airdrops y sorteos',
     faucets: 'Faucets',
+    crypto_portfolio: 'Portafolio Cripto',
     mainnets: 'Mainnets',
     testnets: 'Testnets',
     all_guides: 'Todas las guías',
@@ -2340,6 +2343,7 @@ support_label_chat: 'Soporte',
     menu_tools: 'Tools',
     menu_games: 'Games',
     menu_learning: 'Learning',
+    my_portfolio: 'My Portfolio',
     menu_in_development: 'This section is under development',
     menu_coming_soon: 'Coming soon!',
     
@@ -2383,6 +2387,7 @@ support_label_chat: 'Soporte',
     all_projects: 'All Activities',
     airdrops_lotteries: 'Airdrops & Giveaways',
     faucets: 'Faucets',
+    crypto_portfolio: 'Crypto Portfolio',
     mainnets: 'Mainnets',
     testnets: 'Testnets',
     all_guides: 'All Guides',
@@ -3071,6 +3076,10 @@ function t(key) {
 
 // Инициализация при загрузке страницы
 function initializeLanguage() {
+  // Сбрасываем кэш языка при каждом запуске для тестирования
+  // localStorage.removeItem('airdropLabLang');
+  // currentLang = localStorage.getItem('airdropLabLang') || 'ru';
+  
   // Устанавливаем язык в HTML
   document.documentElement.lang = currentLang;
   
@@ -3081,7 +3090,7 @@ function initializeLanguage() {
   // Обновляем глобальную переменную
   window.currentLang = currentLang;
   
-  console.log('Language initialized:', currentLang);
+  console.log('Language initialized:', currentLang, 'Available keys:', Object.keys(translations[currentLang] || {}).slice(0, 10));
   
   // Загружаем проекты с небольшой задержкой чтобы все функции были доступны
   setTimeout(() => {
