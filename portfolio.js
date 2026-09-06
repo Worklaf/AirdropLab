@@ -4151,11 +4151,16 @@ document.querySelectorAll('.theme-btn').forEach(btn => {
 // ============================================================
 
 function init() {
-    loadPortfolio();
-    loadNotifs();
-    loadAlerts();
-    loadAutoAlertSettings();
-    loadOrders(); // Загружаем ордера сразу
+    // Параллельная загрузка данных для ускорения
+    Promise.all([
+        loadPortfolio(),
+        loadNotifs(),
+        loadAlerts(),
+        loadAutoAlertSettings(),
+        loadOrders()
+    ]).then(() => {
+        renderAll();
+    });
 
     setupTabs();
     setupSearchClose();
@@ -4191,23 +4196,29 @@ function init() {
 
                 if (user) {
                     // Перезагружаем ВСЕ данные, включая ордера, при входе в аккаунт
-                    loadPortfolio();
-                    loadNotifs();
-                    loadAlerts();
-                    loadOrders(); // ВАЖНО: Загружаем ордера при авторизации
-                    renderAll();
+                    Promise.all([
+                        loadPortfolio(),
+                        loadNotifs(),
+                        loadAlerts(),
+                        loadOrders()
+                    ]).then(() => {
+                        renderAll();
+                    });
                 } else {
                     // Если вышел - загружаем из localStorage
-                    loadPortfolio();
-                    loadNotifs();
-                    loadAlerts();
-                    loadOrders();
-                    renderAll();
+                    Promise.all([
+                        loadPortfolio(),
+                        loadNotifs(),
+                        loadAlerts(),
+                        loadOrders()
+                    ]).then(() => {
+                        renderAll();
+                    });
                 }
             });
         } else {
-            // Если auth еще не готов, пробуем через 500 мс
-            setTimeout(attemptAuthSetup, 500);
+            // Если auth еще не готов, пробуем через 100 мс
+            setTimeout(attemptAuthSetup, 100);
         }
     }
     
