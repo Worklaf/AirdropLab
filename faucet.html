@@ -2872,9 +2872,19 @@ async function loadFavorites() {
     try {
       const linkSnap = await getDocs(collection(db, 'users', currentUser.uid, 'linkFavorites'));
       linkSnap.forEach(doc => {
-        linkFavoritesSet.add(doc.id);
+        const data = doc.data();
+        if (data && data.faucetId && data.url) {
+          const key = linkFavKey(data.faucetId, data.url);
+          linkFavoritesSet.add(key);
+        }
       });
     } catch(e) { console.warn('Failed to load link favorites', e); }
+    
+    // Перерисовываем после загрузки из Firebase
+    if (faucets.length > 0) {
+      renderAll();
+      updateCounts();
+    }
     
     // Initialize footer stats with correct data FIRST
     if (typeof window.updateFooterStats === 'function') {
@@ -2896,6 +2906,11 @@ async function loadFavorites() {
       const raw2 = localStorage.getItem('al_faucet_link_favorites') || '[]';
       JSON.parse(raw2).forEach(k => linkFavoritesSet.add(String(k)));
     } catch(_) {}
+    // Перерисовываем после загрузки из localStorage
+    if (faucets.length > 0) {
+      renderAll();
+      updateCounts();
+    }
   }
 }
 
@@ -3926,7 +3941,9 @@ async function reloadFaucetsWithNewLanguage() {
 window.reloadFaucetsWithNewLanguage = reloadFaucetsWithNewLanguage;
 
 // Экспортировать DEFAULT_FAUCETS в глобальный scope для доступа из других скриптов
-window.DEFAULT_FAUCETS = DEFAULT_FAUCETS;
+if (typeof DEFAULT_FAUCETS !== 'undefined') {
+  window.DEFAULT_FAUCETS = DEFAULT_FAUCETS;
+}
 
 </script>
 
@@ -4233,6 +4250,13 @@ window.updateEditFieldsVisibility = updateEditFieldsVisibility;
 /* Скрываем всю статистическую секцию футера */
 .footer-stats {
   display: none !important;
+}
+</style>
+
+<script src="footer.js"></script>
+
+</body>
+</html>ay: none !important;
 }
 </style>
 
