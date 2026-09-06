@@ -1,4 +1,4 @@
-// Vercel Serverless Function для проксирования CoinGecko API
+// Vercel Serverless Function для проксирования CoinGecko API 
 // Решает проблемы с CORS и 429 ошибками
 
 export default async function handler(req, res) {
