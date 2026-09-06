@@ -592,7 +592,7 @@ async function refreshDataViaProxy() {
     try {
         console.log('🔄 Загрузка данных через прокси...');
         
-        // Загружаем топ-250 монет через прокси (уже 250, но можно увеличить до 500)
+        // Загружаем топ-250 монет через прокси
         const page1Res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h,7d,30d`);
         
         if (!page1Res.ok) {
@@ -664,7 +664,8 @@ async function refreshDataViaProxy() {
         hideCorsWarning();
         renderAll();
         checkNotifs();
-        document.getElementById('lastUpdate').textContent = 'обновлено: ' + new Date().toLocaleTimeString('ru-RU');
+        const updateEl = document.getElementById('lastUpdate');
+        if (updateEl) updateEl.textContent = 'обновлено: ' + new Date().toLocaleTimeString('ru-RU');
         
     } catch (error) {
         console.error('Error loading via proxy:', error);
@@ -1297,7 +1298,6 @@ function renderMarket() {
     });
     
     let sorted = allCoinsList;
-    
     if (marketFilter) {
         sorted = sorted.filter(c => 
             c.name?.toLowerCase().includes(marketFilter) || 
@@ -1320,8 +1320,9 @@ function renderMarket() {
     const countEl = document.getElementById('marketCount');
     if (countEl) countEl.textContent = sorted.length + ' монет';
 
-    // Рендерим все монеты
-    sorted.forEach((c, i) => {
+    // Рендерим все монеты (не больше 500 для производительности)
+    const displayCoins = sorted.slice(0, 500);
+    displayCoins.forEach((c, i) => {
         const hasAth = typeof c.ath === 'number' && c.ath > 0;
         const fromAth = hasAth ? ((c.current_price - c.ath) / c.ath) * 100 : null;
         const spark = c.sparkline_in_7d ? c.sparkline_in_7d.price : [];
@@ -1329,15 +1330,14 @@ function renderMarket() {
         const tr = document.createElement('tr');
         tr.innerHTML =
             '<td>' + (c.market_cap_rank || i + 1) + '</td>' +
-            '<td><div class="coin-cell"><div class="coin-img"><img src="' + c.image + '" alt="" onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + c.symbol[0].toUpperCase() + '\'"></div><div><div class="coin-name" onclick="openChartModal(\'' + c.id + '\',\'' + c.symbol.toUpperCase() + '\')">' + c.name + '</div><div class="coin-symbol">' + c.symbol.toUpperCase() + '</div></div></div></td>' +
+            '<td><div class="coin-cell"><div class="coin-img"><img src="' + (c.image || '') + '" alt="" onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + (c.symbol ? c.symbol[0].toUpperCase() : '?') + '\'"></div><div><div class="coin-name" onclick="openChartModal(\'' + c.id + '\',\'' + (c.symbol ? c.symbol.toUpperCase() : '') + '\')">' + (c.name || c.symbol || 'Unknown') + '</div><div class="coin-symbol">' + (c.symbol ? c.symbol.toUpperCase() : '') + '</div></div></div></td>' +
             '<td>' + fmt$(c.current_price) + '</td>' +
             '<td class="' + ((c.price_change_percentage_24h || 0) >= 0 ? 'pos' : 'neg') + '">' + fmtPct(c.price_change_percentage_24h || 0) + '</td>' +
             '<td class="' + ((c.price_change_percentage_7d_in_currency || 0) >= 0 ? 'pos' : 'neg') + '">' + fmtPct(c.price_change_percentage_7d_in_currency || 0) + '</td>' +
-            '<td>' + fmtLarge(c.market_cap) + '</td>' +
-            '<td>' + fmtLarge(c.total_volume) + '</td>' +
+            '<td>' + fmtLarge(c.market_cap || 0) + '</td>' +
+            '<td>' + fmtLarge(c.total_volume || 0) + '</td>' +
             '<td class="' + (hasAth ? (fromAth >= 0 ? 'pos' : 'neg') : 'neu') + '">' + (hasAth ? fmtPct(fromAth) : 'н/д') + '</td>' +
             '<td>' + drawSparkline(spark) + '</td>';
-        
         tbody.appendChild(tr);
     });
 
@@ -3666,71 +3666,29 @@ function searchOrderCoins(query) {
         }
     });
     
-    // Ищем локально
+    // Ищем по названию или символу
     const local = allCoinsList.filter(c => 
         c.name?.toLowerCase().includes(q) || 
         c.symbol?.toLowerCase().includes(q)
     ).slice(0, 8);
     
-    if (local.length) {
-        renderOrderSearchResults(local);
+    if (!local.length) {
+        results.innerHTML = '<div class="search-loading">ничего не найдено</div>';
         results.classList.add('active');
         return;
     }
     
-    // Если локально не найдено - ищем через API
-    results.innerHTML = '<div class="search-loading">🔍 поиск на CoinGecko...</div>';
-    results.classList.add('active');
+    results.innerHTML = local.map(c => 
+        '<div class="search-item" onclick="selectOrderCoin(' + 
+        "'" + c.id + "'" + ',' + 
+        "'" + c.symbol.toUpperCase() + "'" + ',' + 
+        "'" + c.image + "'" + 
+        ')"><img src="' + c.image + '" alt="" ><div><div style="font-weight:600">' + 
+        c.name + '</div><div style="font-size:11px;color:var(--text-3)">' + 
+        c.symbol.toUpperCase() + '</div></div></div>'
+    ).join('');
     
-    clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(async () => {
-        try {
-            const res = await fetch(`/api/coingecko?path=search?query=${encodeURIComponent(q)}`);
-            if (!res.ok) {
-                results.innerHTML = '<div class="search-loading">❌ ошибка поиска</div>';
-                return;
-            }
-            const data = await res.json();
-            const remote = (data.coins || []).slice(0, 12).map(c => ({
-                id: c.id,
-                name: c.name,
-                symbol: c.symbol,
-                image: c.thumb || c.large || ''
-            }));
-            
-            if (remote.length === 0) {
-                results.innerHTML = '<div class="search-loading">ничего не найдено</div>';
-                return;
-            }
-            
-            // Сохраняем найденные монеты в extraCoins
-            for (const c of remote) {
-                if (!extraCoins[c.id] && !allCoins.find(coin => coin.id === c.id)) {
-                    // Загружаем полные данные
-                    try {
-                        const fullRes = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&ids=${c.id}&sparkline=true&price_change_percentage=24h,7d,30d`);
-                        if (fullRes.ok) {
-                            const fullData = await fullRes.json();
-                            if (fullData && fullData[0]) {
-                                extraCoins[c.id] = fullData[0];
-                            }
-                        }
-                    } catch (e) {}
-                }
-            }
-            
-            try {
-                localStorage.setItem('ct_extra_coins', JSON.stringify(extraCoins));
-            } catch (e) {}
-            
-            renderOrderSearchResults(remote);
-            results.classList.add('active');
-            
-        } catch (e) {
-            console.log('Search error:', e);
-            results.innerHTML = '<div class="search-loading">❌ ошибка поиска</div>';
-        }
-    }, 500);
+    results.classList.add('active');
 }
 
 function renderOrderSearchResults(list) {
