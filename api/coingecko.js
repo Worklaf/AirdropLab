@@ -1,7 +1,6 @@
-// Vercel Serverless Function для проксирования CoinGecko API 
-// Решает проблемы с CORS и 429 ошибками
+// api/coingecko.js - CommonJS вариант
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Разрешаем CORS для всех доменов
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -80,4 +79,4 @@ export default async function handler(req, res) {
       message: error.message 
     });
   }
-}
+};
