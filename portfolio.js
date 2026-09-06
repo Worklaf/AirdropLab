@@ -1,5 +1,5 @@
 // ============================================================
-// PORTFOLIO.JS - Crypto Portfolio Tracker Pro
+// PORTFOLIO.JS - Crypto Portfolio Tracker Pro 
 // Полная бизнес-логика, адаптированная для AirdropLab
 // ============================================================
 
