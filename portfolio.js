@@ -7,7 +7,7 @@
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И КОНСТАНТЫ
 // ============================================================
 
-const API_BASE = '/api/coingecko?path=';
+const API_BASE = '/api/coingecko'; // Vercel proxy для CoinGecko
 const COINCAP_API = 'https://api.coincap.io/v2';
 const BINANCE_API = 'https://api.binance.com/api/v3';
 const FEAR_API = 'https://api.alternative.me/fng/?limit=1';
@@ -344,43 +344,17 @@ function getCache() {
     try {
         const cache = JSON.parse(localStorage.getItem(CACHE_KEY));
         if (!cache) return null;
-        console.log('📦 Кэш загружен, монет:', cache.coins ? cache.coins.length : 0);
         return cache;
     } catch { return null; }
 }
+
 // ============================================================
 // ФУНКЦИИ ДЛЯ РАБОТЫ С COINGECKO
 // ============================================================
 
 async function apiFetch(url, attempts) {
     attempts = attempts || 0;
-    
-    // Если это запрос к CoinGecko - используем прокси
-    if (url.includes('api.coingecko.com')) {
-        const path = url.replace('https://api.coingecko.com/api/v3/', '');
-        const proxyUrl = `/api/coingecko?path=${encodeURIComponent(path)}`;
-        
-        try {
-            const ctrl = new AbortController();
-            const t = setTimeout(() => ctrl.abort(), 15000);
-            const res = await fetch(proxyUrl, {
-                signal: ctrl.signal,
-                headers: { 'Accept': 'application/json' }
-            });
-            clearTimeout(t);
-            
-            if (res.ok) return res;
-            if (res.status === 429 && attempts < 3) {
-                await new Promise(r => setTimeout(r, 2000 * (attempts + 1)));
-                return apiFetch(url, attempts + 1);
-            }
-            return res;
-        } catch (e) {
-            console.log('Proxy fetch error:', e);
-        }
-    }
 
-    // Fallback: прямые запросы
     try {
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), 8000);
@@ -393,16 +367,17 @@ async function apiFetch(url, attempts) {
         clearTimeout(t);
         if (res.ok) return res;
     } catch (e) {
-        console.log('Direct fetch failed:', e.message);
+        console.log('Direct fetch failed, trying proxy:', e.message);
     }
 
-    // Fallback: сторонние прокси (удалите, если не нужны)
     const proxies = [
         'https://api.allorigins.win/raw?url=',
         'https://corsproxy.io/?',
-        'https://api.codetabs.com/v1/proxy?quest='
+        'https://api.codetabs.com/v1/proxy?quest=',
+        'https://thingproxy.freeboard.io/fetch/'
     ];
 
+    let lastErr;
     for (let p of proxies) {
         try {
             const ctrl = new AbortController();
@@ -411,14 +386,27 @@ async function apiFetch(url, attempts) {
             const res = await fetch(proxyUrl, { signal: ctrl.signal });
             clearTimeout(t);
             if (res.ok) return res;
-            if (res.status === 429 && attempts < 2) {
-                await new Promise(r => setTimeout(r, 2000));
+
+            if (res.status === 429) {
+                lastErr = new Error('rate limit');
+                if (attempts < 2) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    continue;
+                }
+            }
+
+            if (res.status === 403 || res.status === 503) {
+                lastErr = new Error('proxy blocked');
                 continue;
             }
-        } catch (e) {}
+
+            return res;
+        } catch (e) {
+            lastErr = e;
+        }
     }
 
-    throw new Error('fetch failed');
+    throw lastErr || new Error('fetch failed');
 }
 
 async function fetchAll() {
@@ -426,19 +414,6 @@ async function fetchAll() {
         const cache = getCache();
         if (cache && cache.coins && cache.coins.length) {
             allCoins = cache.coins;
-            console.log('📦 Загружено из кэша:', allCoins.length, 'монет');
-            
-            // Дедупликация
-            if (allCoins.length > 0) {
-                const seen = new Set();
-                allCoins = allCoins.filter(coin => {
-                    if (seen.has(coin.id)) {
-                        return false;
-                    }
-                    seen.add(coin.id);
-                    return true;
-                });
-            }
             if (cache.global) globalData = cache.global;
             if (cache.fear) fearData = cache.fear;
             if (cache.portfolioCoins) {
@@ -447,19 +422,101 @@ async function fetchAll() {
             syncAutoAlertsFromAdvisor();
             renderAll();
             checkNotifs();
+        }
+
+        if (cache && Date.now() - cache.time < CACHE_TTL) {
+            await refreshExtraCoins();
+            syncAutoAlertsFromAdvisor();
             hideCorsWarning();
-            const cacheAge = Math.floor((Date.now() - cache.time) / 60000);
-            const updateEl = document.getElementById('lastUpdate');
-            if (updateEl) updateEl.textContent = `кэш (${cacheAge} мин назад, ${allCoins.length} монет)`;
-            
-            // Фоновое обновление
-            refreshDataViaProxy();
+            const cacheAge = Math.floor((Date.now() - cache.time) / 60000); // минуты
+            document.getElementById('lastUpdate').textContent = `кэш (${cacheAge} мин назад)`;
             return;
         }
 
-        // Если кэша нет - загружаем через прокси
-        await refreshDataViaProxy();
-        
+        // Загружаем данные через Vercel proxy
+        try {
+            const page1 = await fetch(`${API_BASE}?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h,7d,30d`);
+            if (!page1.ok) throw new Error('coins page 1 status ' + page1.status);
+            const data1 = await page1.json();
+            allCoins = data1;
+
+            try {
+                const page2 = await fetch(`${API_BASE}?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=2&sparkline=true&price_change_percentage=24h,7d,30d`);
+                if (page2.ok) {
+                    const data2 = await page2.json();
+                    allCoins = [...data1, ...data2];
+                }
+            } catch (e2) { console.log('page 2 failed', e2); }
+        } catch (e) {
+            console.log('Vercel proxy failed, using cache:', e);
+            if (cache && cache.coins) {
+                allCoins = cache.coins;
+                document.getElementById('lastUpdate').textContent = 'Ошибка API, использован кэш';
+            } else {
+                // Если кэша нет совсем - создаем дефолтный
+                const defaultCoins = [
+                    { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin', current_price: 60000, price_change_percentage_24h: 2.5, market_cap: 1200000000000, total_volume: 30000000000, market_cap_rank: 1, image: 'https://assets.coincap.io/assets/icons/btc@2x.png', sparkline_in_7d: null },
+                    { id: 'ethereum', symbol: 'ETH', name: 'Ethereum', current_price: 3500, price_change_percentage_24h: 3.2, market_cap: 420000000000, total_volume: 15000000000, market_cap_rank: 2, image: 'https://assets.coincap.io/assets/icons/eth@2x.png', sparkline_in_7d: null },
+                    { id: 'binancecoin', symbol: 'BNB', name: 'BNB', current_price: 600, price_change_percentage_24h: 1.8, market_cap: 90000000000, total_volume: 1000000000, market_cap_rank: 3, image: 'https://assets.coincap.io/assets/icons/bnb@2x.png', sparkline_in_7d: null },
+                    { id: 'solana', symbol: 'SOL', name: 'Solana', current_price: 150, price_change_percentage_24h: 4.5, market_cap: 65000000000, total_volume: 2000000000, market_cap_rank: 4, image: 'https://assets.coincap.io/assets/icons/sol@2x.png', sparkline_in_7d: null },
+                    { id: 'ripple', symbol: 'XRP', name: 'XRP', current_price: 0.6, price_change_percentage_24h: 1.2, market_cap: 33000000000, total_volume: 800000000, market_cap_rank: 5, image: 'https://assets.coincap.io/assets/icons/xrp@2x.png', sparkline_in_7d: null },
+                    { id: 'cardano', symbol: 'ADA', name: 'Cardano', current_price: 0.45, price_change_percentage_24h: 2.1, market_cap: 16000000000, total_volume: 400000000, market_cap_rank: 6, image: 'https://assets.coincap.io/assets/icons/ada@2x.png', sparkline_in_7d: null },
+                    { id: 'avalanche-2', symbol: 'AVAX', name: 'Avalanche', current_price: 35, price_change_percentage_24h: 3.8, market_cap: 13000000000, total_volume: 500000000, market_cap_rank: 7, image: 'https://assets.coincap.io/assets/icons/avax@2x.png', sparkline_in_7d: null },
+                    { id: 'polkadot', symbol: 'DOT', name: 'Polkadot', current_price: 7, price_change_percentage_24h: 1.5, market_cap: 10000000000, total_volume: 300000000, market_cap_rank: 8, image: 'https://assets.coincap.io/assets/icons/dot@2x.png', sparkline_in_7d: null },
+                    { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin', current_price: 0.15, price_change_percentage_24h: 5.2, market_cap: 22000000000, total_volume: 600000000, market_cap_rank: 9, image: 'https://assets.coincap.io/assets/icons/doge@2x.png', sparkline_in_7d: null },
+                    { id: 'chainlink', symbol: 'LINK', name: 'Chainlink', current_price: 18, price_change_percentage_24h: 2.8, market_cap: 11000000000, total_volume: 400000000, market_cap_rank: 10, image: 'https://assets.coincap.io/assets/icons/link@2x.png', sparkline_in_7d: null },
+                    { id: 'polygon-ecosystem-token', symbol: 'MATIC', name: 'Polygon', current_price: 0.7, price_change_percentage_24h: 3.5, market_cap: 7000000000, total_volume: 250000000, market_cap_rank: 11, image: 'https://assets.coincap.io/assets/icons/matic@2x.png', sparkline_in_7d: null },
+                    { id: 'near', symbol: 'NEAR', name: 'NEAR Protocol', current_price: 5.5, price_change_percentage_24h: 4.1, market_cap: 6000000000, total_volume: 200000000, market_cap_rank: 12, image: 'https://assets.coincap.io/assets/icons/near@2x.png', sparkline_in_7d: null },
+                    { id: 'cosmos', symbol: 'ATOM', name: 'Cosmos', current_price: 8, price_change_percentage_24h: 2.3, market_cap: 3000000000, total_volume: 150000000, market_cap_rank: 13, image: 'https://assets.coincap.io/assets/icons/atom@2x.png', sparkline_in_7d: null },
+                    { id: 'stellar', symbol: 'XLM', name: 'Stellar', current_price: 0.12, price_change_percentage_24h: 1.9, market_cap: 3500000000, total_volume: 100000000, market_cap_rank: 14, image: 'https://assets.coincap.io/assets/icons/xlm@2x.png', sparkline_in_7d: null },
+                    { id: 'arbitrum', symbol: 'ARB', name: 'Arbitrum', current_price: 1.2, price_change_percentage_24h: 3.6, market_cap: 4000000000, total_volume: 300000000, market_cap_rank: 15, image: 'https://assets.coincap.io/assets/icons/arb@2x.png', sparkline_in_7d: null },
+                    { id: 'optimism', symbol: 'OP', name: 'Optimism', current_price: 2.5, price_change_percentage_24h: 4.2, market_cap: 2500000000, total_volume: 200000000, market_cap_rank: 16, image: 'https://assets.coincap.io/assets/icons/op@2x.png', sparkline_in_7d: null }
+                ];
+                allCoins = defaultCoins;
+                document.getElementById('lastUpdate').textContent = 'Дефолтные данные (ошибка API)';
+            }
+        }
+
+        try {
+            const r = await fetch(`${API_BASE}?path=global`);
+            if (r.ok) {
+                const ct = r.headers.get('content-type') || '';
+                if (ct.includes('json')) {
+                    globalData = await r.json();
+                    renderHeader();
+                }
+            }
+        } catch (e) { console.log('global fetch error', e); }
+
+        try {
+            const r = await fetch(FEAR_API);
+            if (r.ok) {
+                const ct = r.headers.get('content-type') || '';
+                if (ct.includes('json')) {
+                    fearData = await r.json();
+                    renderHeader();
+                }
+            }
+        } catch (e) { console.log('fear fetch error', e); }
+
+        const cacheData = {
+            time: Date.now(),
+            coins: allCoins,
+            global: globalData,
+            fear: fearData,
+            portfolioCoins: extraCoins
+        };
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+        } catch (e) {
+            console.warn('Cache not saved: quota exceeded');
+        }
+        await refreshExtraCoins();
+        syncAutoAlertsFromAdvisor();
+        hideCorsWarning();
+        renderAll();
+        checkNotifs();
+        document.getElementById('lastUpdate').textContent = 'обновлено: ' + new Date().toLocaleTimeString('ru-RU');
     } catch (e) {
         console.error('fetchAll error:', e);
         const cache = getCache();
@@ -471,110 +528,10 @@ async function fetchAll() {
             syncAutoAlertsFromAdvisor();
             renderAll();
             checkNotifs();
-            const updateEl = document.getElementById('lastUpdate');
-            if (updateEl) updateEl.textContent = 'CoinGecko недоступен, показан кэш от ' + new Date(cache.time).toLocaleTimeString('ru-RU') + ' (' + allCoins.length + ' монет)';
+            document.getElementById('lastUpdate').textContent = 'Ошибка API, показан кэш';
         } else {
-            const updateEl = document.getElementById('lastUpdate');
-            if (updateEl) updateEl.textContent = 'CoinGecko недоступен. Данные загрузятся позже.';
+            document.getElementById('lastUpdate').textContent = 'Нет данных. Требуется первое подключение.';
         }
-        maybeShowCorsWarning(e);
-    }
-}
-async function refreshDataViaProxy() {
-    try {
-        console.log('🔄 Загрузка данных через прокси...');
-        
-        const page1Res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h,7d,30d`);
-        
-        if (!page1Res.ok) {
-            throw new Error('Proxy returned ' + page1Res.status);
-        }
-        
-        const data1 = await page1Res.json();
-        console.log('📄 Страница 1 загружена:', data1.length, 'монет');
-        
-        let allData = [...data1];
-        
-        try {
-            const page2Res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=2&sparkline=true&price_change_percentage=24h,7d,30d`);
-            if (page2Res.ok) {
-                const data2 = await page2Res.json();
-                console.log('📄 Страница 2 загружена:', data2.length, 'монет');
-                allData = [...data1, ...data2];
-            }
-        } catch (e2) {
-            console.log('Page 2 load failed:', e2);
-        }
-        
-        // Дедупликация
-        if (allData.length > 0) {
-            const seen = new Set();
-            allData = allData.filter(coin => {
-                if (seen.has(coin.id)) {
-                    return false;
-                }
-                seen.add(coin.id);
-                return true;
-            });
-        }
-        
-        allCoins = allData;
-        console.log('✅ Загружено через прокси:', allCoins.length, 'монет');
-
-        // Загружаем глобальные данные
-        try {
-            const globalRes = await fetch('/api/coingecko?path=global');
-            if (globalRes.ok) {
-                globalData = await globalRes.json();
-            }
-        } catch (e) { console.log('Global data load failed:', e); }
-
-        // Загружаем Fear & Greed
-        try {
-            const fearRes = await fetch('https://api.alternative.me/fng/?limit=1');
-            if (fearRes.ok) {
-                fearData = await fearRes.json();
-            }
-        } catch (e) { console.log('Fear data load failed:', e); }
-
-        // ✅ СОХРАНЯЕМ ВСЕ МОНЕТЫ В КЭШ
-        const cacheData = {
-            time: Date.now(),
-            coins: allCoins,           // ← ВАЖНО! Сохраняем все монеты
-            global: globalData,
-            fear: fearData,
-            portfolioCoins: extraCoins
-        };
-        try {
-            localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-            console.log('💾 Кэш сохранен, монет:', allCoins.length);
-        } catch (e) {
-            console.warn('Cache not saved:', e);
-            // Если кэш слишком большой - сохраняем хотя бы 300
-            try {
-                const smallerCache = {
-                    time: Date.now(),
-                    coins: allCoins.slice(0, 300),
-                    global: globalData,
-                    fear: fearData,
-                    portfolioCoins: extraCoins
-                };
-                localStorage.setItem(CACHE_KEY, JSON.stringify(smallerCache));
-                console.log('💾 Кэш сохранен (урезанный):', smallerCache.coins.length);
-            } catch (e2) {}
-        }
-
-        await refreshExtraCoins();
-        syncAutoAlertsFromAdvisor();
-        hideCorsWarning();
-        renderAll();
-        checkNotifs();
-        const updateEl = document.getElementById('lastUpdate');
-        if (updateEl) updateEl.textContent = 'обновлено: ' + new Date().toLocaleTimeString('ru-RU') + ' (' + allCoins.length + ' монет)';
-        
-    } catch (error) {
-        console.error('Error loading via proxy:', error);
-        throw error;
     }
 }
 
@@ -595,26 +552,29 @@ async function refreshExtraCoins() {
     const neededIds = [...new Set(portfolio.map(h => h.coinId).filter(id => id && !allCoins.find(c => c.id === id)))];
     if (!neededIds.length) return;
     
+    // Загружаем из кэша extraCoins
     try { 
         const cached = JSON.parse(localStorage.getItem('ct_extra_coins') || '{}'); 
         Object.assign(extraCoins, cached); 
     } catch (e) {}
     
+    // Проверяем, есть ли нужные монеты в кэше
     const missingFromCache = neededIds.filter(id => !extraCoins[id]);
     if (missingFromCache.length === 0) return;
     
-    // Загружаем через прокси
+    // Загружаем недостающие монеты через Vercel proxy
     const chunkSize = 20;
     for (let i = 0; i < missingFromCache.length; i += chunkSize) {
         const chunk = missingFromCache.slice(i, i + chunkSize);
         try {
-            const res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&ids=${chunk.join(',')}&sparkline=true&price_change_percentage=24h,7d,30d`);
+            const res = await fetch(`${API_BASE}?path=coins/markets?vs_currency=usd&ids=${chunk.join(',')}&sparkline=true&price_change_percentage=24h,7d,30d`);
             if (res.ok) {
                 const data = await res.json();
                 data.forEach(c => { extraCoins[c.id] = c; });
             }
-        } catch (e) { console.log('Extra coins fetch failed:', e); }
-        await new Promise(r => setTimeout(r, 500));
+        } catch (e) { console.log('API fetch failed for extra coins:', e); }
+        
+        await new Promise(r => setTimeout(r, 1000)); 
     }
     try { localStorage.setItem('ct_extra_coins', JSON.stringify(extraCoins)); } catch (e) {}
 }
@@ -1184,42 +1144,23 @@ function renderMarket() {
     const tbody = document.querySelector('#marketTable tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    
-    // Объединяем allCoins и extraCoins для полного списка
-    let allCoinsList = [...allCoins];
-    
-    // Добавляем монеты из extraCoins которых нет в allCoins
-    const extraIds = Object.keys(extraCoins).filter(id => !allCoins.find(c => c.id === id));
-    extraIds.forEach(id => {
-        if (extraCoins[id]) {
-            allCoinsList.push(extraCoins[id]);
-        }
-    });
-    
-    let sorted = allCoinsList;
+    let sorted = [...allCoins];
     if (marketFilter) {
-        sorted = sorted.filter(c => 
-            c.name?.toLowerCase().includes(marketFilter) || 
-            c.symbol?.toLowerCase().includes(marketFilter)
-        );
+        sorted = sorted.filter(c => c.name.toLowerCase().includes(marketFilter) || c.symbol.toLowerCase().includes(marketFilter));
     }
-    
     const col = marketSort.col;
     const dir = marketSort.dir;
     sorted.sort((a, b) => {
         let av = a[col] || 0;
         let bv = b[col] || 0;
-        if (col === 'ath_change_percentage') { 
-            av = a.ath ? ((a.current_price - a.ath) / a.ath) * 100 : 0;
-            bv = b.ath ? ((b.current_price - b.ath) / b.ath) * 100 : 0; 
-        }
+        if (col === 'ath_change_percentage') { av = a.ath ? ((a.current_price - a.ath) / a.ath) * 100 : 0;
+            bv = b.ath ? ((b.current_price - b.ath) / b.ath) * 100 : 0; }
         return dir === 'asc' ? av - bv : bv - av;
     });
 
     const countEl = document.getElementById('marketCount');
     if (countEl) countEl.textContent = sorted.length + ' монет';
 
-    // ОТОБРАЖАЕМ ВСЕ МОНЕТЫ (без ограничения!)
     sorted.forEach((c, i) => {
         const hasAth = typeof c.ath === 'number' && c.ath > 0;
         const fromAth = hasAth ? ((c.current_price - c.ath) / c.ath) * 100 : null;
@@ -1227,12 +1168,12 @@ function renderMarket() {
         const tr = document.createElement('tr');
         tr.innerHTML =
             '<td>' + (c.market_cap_rank || i + 1) + '</td>' +
-            '<td><div class="coin-cell"><div class="coin-img"><img src="' + (c.image || '') + '" alt="" onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + (c.symbol ? c.symbol[0].toUpperCase() : '?') + '\'"></div><div><div class="coin-name" onclick="openChartModal(\'' + c.id + '\',\'' + (c.symbol ? c.symbol.toUpperCase() : '') + '\')">' + (c.name || c.symbol || 'Unknown') + '</div><div class="coin-symbol">' + (c.symbol ? c.symbol.toUpperCase() : '') + '</div></div></div></td>' +
-            '<td>' + fmt$(c.current_price || 0) + '</td>' +
+            '<td><div class="coin-cell"><div class="coin-img"><img src="' + c.image + '" alt="" onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + c.symbol[0].toUpperCase() + '\'"></div><div><div class="coin-name" onclick="openChartModal(\'' + c.id + '\',\'' + c.symbol.toUpperCase() + '\')">' + c.name + '</div><div class="coin-symbol">' + c.symbol.toUpperCase() + '</div></div></div></td>' +
+            '<td>' + fmt$(c.current_price) + '</td>' +
             '<td class="' + ((c.price_change_percentage_24h || 0) >= 0 ? 'pos' : 'neg') + '">' + fmtPct(c.price_change_percentage_24h || 0) + '</td>' +
             '<td class="' + ((c.price_change_percentage_7d_in_currency || 0) >= 0 ? 'pos' : 'neg') + '">' + fmtPct(c.price_change_percentage_7d_in_currency || 0) + '</td>' +
-            '<td>' + fmtLarge(c.market_cap || 0) + '</td>' +
-            '<td>' + fmtLarge(c.total_volume || 0) + '</td>' +
+            '<td>' + fmtLarge(c.market_cap) + '</td>' +
+            '<td>' + fmtLarge(c.total_volume) + '</td>' +
             '<td class="' + (hasAth ? (fromAth >= 0 ? 'pos' : 'neg') : 'neu') + '">' + (hasAth ? fmtPct(fromAth) : 'н/д') + '</td>' +
             '<td>' + drawSparkline(spark) + '</td>';
         tbody.appendChild(tr);
@@ -1242,23 +1183,7 @@ function renderMarket() {
     const activeTh = document.querySelector('#marketTable th[onclick*="' + col + '"]');
     if (activeTh) activeTh.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
 }
-// ============================================================
-// ПОЛУЧЕНИЕ ВСЕХ МОНЕТ (allCoins + extraCoins)
-// ============================================================
 
-function getAllCoinsList() {
-    const allCoinsList = [...allCoins];
-    
-    // Добавляем монеты из extraCoins которых нет в allCoins
-    const extraIds = Object.keys(extraCoins).filter(id => !allCoins.find(c => c.id === id));
-    extraIds.forEach(id => {
-        if (extraCoins[id]) {
-            allCoinsList.push(extraCoins[id]);
-        }
-    });
-    
-    return allCoinsList;
-}
 function filterMarket(query) {
     marketFilter = query.toLowerCase().trim();
     renderMarket();
@@ -3914,14 +3839,10 @@ async function loadCoinChart(coinId, days, attempt) {
     const loading = document.getElementById('chartLoading');
     if (loading) loading.textContent = 'загрузка графика' + (attempt > 1 ? ' (попытка ' + attempt + ')' : '') + '...';
     try {
-        const res = await fetch(`/api/coingecko?path=coins/${coinId}/market_chart?vs_currency=usd&days=${days}`);
-        
+        const res = await fetch(`${API_BASE}?path=coins/${coinId}/market_chart?vs_currency=usd&days=${days}`);
         if (res.status === 429) {
-            if (attempt < 3) { 
-                await new Promise(r => setTimeout(r, 1500 * attempt)); 
-                return loadCoinChart(coinId, days, attempt + 1); 
-            }
-            if (loading) loading.textContent = 'CoinGecko временно ограничил запросы (429). Подождите минуту.';
+            if (attempt < 3) { await new Promise(r => setTimeout(r, 1500 * attempt)); return loadCoinChart(coinId, days, attempt + 1); }
+            if (loading) loading.textContent = 'Временное ограничение запросов. Подождите минуту.';
             return;
         }
         if (res.status === 404) {
@@ -3929,7 +3850,6 @@ async function loadCoinChart(coinId, days, attempt) {
             return;
         }
         if (!res.ok) throw new Error('chart fetch failed: ' + res.status);
-        
         const data = await res.json();
         const prices = data.prices || [];
         if (!prices.length) {
@@ -3939,11 +3859,8 @@ async function loadCoinChart(coinId, days, attempt) {
         drawRealChart(prices);
         if (loading) loading.textContent = '';
     } catch (e) {
-        if (attempt < 3) { 
-            await new Promise(r => setTimeout(r, 1000 * attempt)); 
-            return loadCoinChart(coinId, days, attempt + 1); 
-        }
-        if (loading) loading.textContent = 'не удалось загрузить график: ' + (e.message || 'сетевая ошибка');
+        if (attempt < 3) { await new Promise(r => setTimeout(r, 1000 * attempt)); return loadCoinChart(coinId, days, attempt + 1); }
+        if (loading) loading.textContent = 'не удалось загрузить график: ' + (e.message || 'сетевая ошибка') + '. Попробуйте другой период или повторите позже.';
     }
 }
 
@@ -4013,10 +3930,12 @@ function searchCoins(query) {
     clearTimeout(searchDebounce);
     searchDebounce = setTimeout(async () => {
         try {
-            const res = await apiFetch(API_BASE + '/search?query=' + encodeURIComponent(q));
-            if (!res.ok) return;
-            const data = await res.json();
-            const remote = (data.coins || []).slice(0, 12).map(c => ({ id: c.id, name: c.name, symbol: c.symbol, image: c.thumb }));
+            // Отключаем поиск из-за CORS/429 проблем - используем только локальные данные
+            const remote = [];
+            const local = allCoins.filter(c => 
+                c.name.toLowerCase().includes(q.toLowerCase()) || 
+                c.symbol.toLowerCase().includes(q.toLowerCase())
+            ).slice(0, 12).map(c => ({ id: c.id, name: c.name, symbol: c.symbol, image: c.image }));
             const localIds = new Set(local.map(c => c.id));
             const merged = local.concat(remote.filter(c => !localIds.has(c.id)));
             renderSearchResults(merged.slice(0, 12), false);
@@ -4058,39 +3977,13 @@ function selectCoin(id, symbol, image) {
 }
 
 async function fetchExtraCoinFull(id, symbol, image) {
-    try { const cached = JSON.parse(localStorage.getItem('ct_extra_coins') || '{}'); if (cached[id]) { extraCoins[id] = cached[id]; return true; } } catch (e) {}
-    try {
-        const res = await apiFetch(API_BASE + '/coins/markets?vs_currency=usd&ids=' + id + '&sparkline=true&price_change_percentage=24h,7d,30d');
-        if (res.ok) {
-            const data = await res.json();
-            if (data && data[0]) {
-                extraCoins[id] = data[0];
-                try { const all = JSON.parse(localStorage.getItem('ct_extra_coins') || '{}');
-                    all[id] = data[0];
-                    localStorage.setItem('ct_extra_coins', JSON.stringify(all)); } catch (e) {}
-                return true;
-            }
-        }
-    } catch (e) {}
-    try {
-        const res2 = await apiFetch(API_BASE + '/simple/price?ids=' + id + '&vs_currencies=usd&include_market_cap=true&include_24hr_change=true');
-        const data2 = await res2.json();
-        if (data2[id]) {
-            extraCoins[id] = {
-                id,
-                symbol: (symbol || id).toLowerCase(),
-                name: symbol || id,
-                image: image || '',
-                current_price: data2[id].usd,
-                market_cap: data2[id].usd_market_cap || 0,
-                price_change_percentage_24h: data2[id].usd_24h_change || 0,
-                ath: null
-            };
-            try { const all = JSON.parse(localStorage.getItem('ct_extra_coins') || '{}');
-                all[id] = extraCoins[id];
-                localStorage.setItem('ct_extra_coins', JSON.stringify(all)); } catch (e) {}
-            return true;
-        }
+    // Отключаем API запросы из-за CORS/429 проблем - используем только кэш
+    try { 
+        const cached = JSON.parse(localStorage.getItem('ct_extra_coins') || '{}'); 
+        if (cached[id]) { 
+            extraCoins[id] = cached[id]; 
+            return true; 
+        } 
     } catch (e) {}
     return false;
 }
@@ -4252,60 +4145,22 @@ document.querySelectorAll('.theme-btn').forEach(btn => {
         mo.observe(target, { childList: true, subtree: true });
     }
 })();
-// ============================================================
-// ОБНОВЛЕНИЕ ТОЛЬКО ЦЕН ПОРТФЕЛЯ (легкий запрос)
-// ============================================================
 
-async function updatePortfolioPrices() {
-    try {
-        const portfolioIds = portfolio.map(h => h.coinId).filter(Boolean);
-        if (!portfolioIds.length) return;
-        
-        // Легкий запрос через прокси - только цены для монет в портфеле
-        const res = await fetch(`/api/coingecko?path=simple/price?ids=${portfolioIds.join(',')}&vs_currencies=usd&include_24hr_change=true`);
-        if (!res.ok) return;
-        
-        const prices = await res.json();
-        
-        let updated = false;
-        allCoins.forEach(coin => {
-            if (prices[coin.id]) {
-                coin.current_price = prices[coin.id].usd;
-                coin.price_change_percentage_24h = prices[coin.id].usd_24h_change || 0;
-                updated = true;
-            }
-        });
-        
-        Object.keys(extraCoins).forEach(id => {
-            if (prices[id]) {
-                extraCoins[id].current_price = prices[id].usd;
-                extraCoins[id].price_change_percentage_24h = prices[id].usd_24h_change || 0;
-                updated = true;
-            }
-        });
-        
-        if (updated) {
-            renderHeader();
-            renderPortfolio();
-            renderAdvisor();
-            const updateEl = document.getElementById('lastUpdate');
-            if (updateEl) updateEl.textContent = 'цены обновлены: ' + new Date().toLocaleTimeString('ru-RU');
-        }
-        
-    } catch (e) {
-        console.log('Price update failed:', e);
-    }
-}
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ
 // ============================================================
 
 function init() {
-    loadPortfolio();
-    loadNotifs();
-    loadAlerts();
-    loadAutoAlertSettings();
-    loadOrders(); // Загружаем ордера сразу
+    // Параллельная загрузка данных для ускорения
+    Promise.all([
+        loadPortfolio(),
+        loadNotifs(),
+        loadAlerts(),
+        loadAutoAlertSettings(),
+        loadOrders()
+    ]).then(() => {
+        renderAll();
+    });
 
     setupTabs();
     setupSearchClose();
@@ -4326,17 +4181,7 @@ function init() {
     });
 
     fetchAll();
-    // Первичная загрузка
-fetchAll();
-
-// ⭐ ОБНОВЛЕНИЕ ЦЕН ПОРТФЕЛЯ - КАЖДЫЕ 30 СЕКУНД
-setInterval(updatePortfolioPrices, 30000);
-
-// ⭐ ПОЛНОЕ ОБНОВЛЕНИЕ - КАЖДЫЕ 5 МИНУТ
-setInterval(fetchAll, 300000);
-
-// ⭐ ПРОВЕРКА УВЕДОМЛЕНИЙ - КАЖДЫЕ 10 СЕКУНД
-setInterval(checkNotifs, 10000);
+    setInterval(fetchAll, 60000);
 
     // ИСПРАВЛЕНИЕ: Используем правильный паттерн ожидания Firebase
     function attemptAuthSetup() {
@@ -4351,23 +4196,29 @@ setInterval(checkNotifs, 10000);
 
                 if (user) {
                     // Перезагружаем ВСЕ данные, включая ордера, при входе в аккаунт
-                    loadPortfolio();
-                    loadNotifs();
-                    loadAlerts();
-                    loadOrders(); // ВАЖНО: Загружаем ордера при авторизации
-                    renderAll();
+                    Promise.all([
+                        loadPortfolio(),
+                        loadNotifs(),
+                        loadAlerts(),
+                        loadOrders()
+                    ]).then(() => {
+                        renderAll();
+                    });
                 } else {
                     // Если вышел - загружаем из localStorage
-                    loadPortfolio();
-                    loadNotifs();
-                    loadAlerts();
-                    loadOrders();
-                    renderAll();
+                    Promise.all([
+                        loadPortfolio(),
+                        loadNotifs(),
+                        loadAlerts(),
+                        loadOrders()
+                    ]).then(() => {
+                        renderAll();
+                    });
                 }
             });
         } else {
-            // Если auth еще не готов, пробуем через 500 мс
-            setTimeout(attemptAuthSetup, 500);
+            // Если auth еще не готов, пробуем через 100 мс
+            setTimeout(attemptAuthSetup, 100);
         }
     }
     
@@ -4456,6 +4307,19 @@ window.updateDcaPrice = updateDcaPrice;
 window.filterMarket = filterMarket;
 window.sortMarket = sortMarket;
 window.searchCoins = searchCoins;
+window.searchOrderCoins = searchOrderCoins;
+window.selectCoin = selectCoin;
+window.selectOrderCoin = selectOrderCoin;
+window.toggleSection = toggleSection;
+window.setAdvisorFilter = setAdvisorFilter;
+window.toggleAutoAlerts = toggleAutoAlerts;
+window.toggleOthersList = toggleOthersList;
+window.switchTheme = switchTheme;
+window.clearNotifications = clearNotifications;
+window.updateDCA = updateDCA;
+window.calcDCA = calcDCA;
+window.renderAll = renderAll;
+console.log('📊 Crypto Portfolio Tracker Pro initialized');
 window.searchOrderCoins = searchOrderCoins;
 window.selectCoin = selectCoin;
 window.selectOrderCoin = selectOrderCoin;
