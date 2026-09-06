@@ -1167,10 +1167,26 @@ function renderMarket() {
     const tbody = document.querySelector('#marketTable tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    let sorted = [...allCoins];
+    
+    // Объединяем allCoins и extraCoins для полного списка
+    let allCoinsList = [...allCoins];
+    
+    // Добавляем монеты из extraCoins которых нет в allCoins
+    const extraIds = Object.keys(extraCoins).filter(id => !allCoins.find(c => c.id === id));
+    extraIds.forEach(id => {
+        if (extraCoins[id]) {
+            allCoinsList.push(extraCoins[id]);
+        }
+    });
+    
+    let sorted = allCoinsList;
     if (marketFilter) {
-        sorted = sorted.filter(c => c.name.toLowerCase().includes(marketFilter) || c.symbol.toLowerCase().includes(marketFilter));
+        sorted = sorted.filter(c => 
+            c.name?.toLowerCase().includes(marketFilter) || 
+            c.symbol?.toLowerCase().includes(marketFilter)
+        );
     }
+    
     const col = marketSort.col;
     const dir = marketSort.dir;
     sorted.sort((a, b) => {
@@ -1184,19 +1200,21 @@ function renderMarket() {
     const countEl = document.getElementById('marketCount');
     if (countEl) countEl.textContent = sorted.length + ' монет';
 
-    sorted.forEach((c, i) => {
+    // Ограничиваем отображение до 500 монет для производительности
+    const displayCoins = sorted.slice(0, 500);
+    displayCoins.forEach((c, i) => {
         const hasAth = typeof c.ath === 'number' && c.ath > 0;
         const fromAth = hasAth ? ((c.current_price - c.ath) / c.ath) * 100 : null;
         const spark = c.sparkline_in_7d ? c.sparkline_in_7d.price : [];
         const tr = document.createElement('tr');
         tr.innerHTML =
             '<td>' + (c.market_cap_rank || i + 1) + '</td>' +
-            '<td><div class="coin-cell"><div class="coin-img"><img src="' + c.image + '" alt="" onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + c.symbol[0].toUpperCase() + '\'"></div><div><div class="coin-name" onclick="openChartModal(\'' + c.id + '\',\'' + c.symbol.toUpperCase() + '\')">' + c.name + '</div><div class="coin-symbol">' + c.symbol.toUpperCase() + '</div></div></div></td>' +
-            '<td>' + fmt$(c.current_price) + '</td>' +
+            '<td><div class="coin-cell"><div class="coin-img"><img src="' + (c.image || '') + '" alt="" onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + (c.symbol ? c.symbol[0].toUpperCase() : '?') + '\'"></div><div><div class="coin-name" onclick="openChartModal(\'' + c.id + '\',\'' + (c.symbol ? c.symbol.toUpperCase() : '') + '\')">' + (c.name || c.symbol || 'Unknown') + '</div><div class="coin-symbol">' + (c.symbol ? c.symbol.toUpperCase() : '') + '</div></div></div></td>' +
+            '<td>' + fmt$(c.current_price || 0) + '</td>' +
             '<td class="' + ((c.price_change_percentage_24h || 0) >= 0 ? 'pos' : 'neg') + '">' + fmtPct(c.price_change_percentage_24h || 0) + '</td>' +
             '<td class="' + ((c.price_change_percentage_7d_in_currency || 0) >= 0 ? 'pos' : 'neg') + '">' + fmtPct(c.price_change_percentage_7d_in_currency || 0) + '</td>' +
-            '<td>' + fmtLarge(c.market_cap) + '</td>' +
-            '<td>' + fmtLarge(c.total_volume) + '</td>' +
+            '<td>' + fmtLarge(c.market_cap || 0) + '</td>' +
+            '<td>' + fmtLarge(c.total_volume || 0) + '</td>' +
             '<td class="' + (hasAth ? (fromAth >= 0 ? 'pos' : 'neg') : 'neu') + '">' + (hasAth ? fmtPct(fromAth) : 'н/д') + '</td>' +
             '<td>' + drawSparkline(spark) + '</td>';
         tbody.appendChild(tr);
@@ -1206,7 +1224,23 @@ function renderMarket() {
     const activeTh = document.querySelector('#marketTable th[onclick*="' + col + '"]');
     if (activeTh) activeTh.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
 }
+// ============================================================
+// ПОЛУЧЕНИЕ ВСЕХ МОНЕТ (allCoins + extraCoins)
+// ============================================================
 
+function getAllCoinsList() {
+    const allCoinsList = [...allCoins];
+    
+    // Добавляем монеты из extraCoins которых нет в allCoins
+    const extraIds = Object.keys(extraCoins).filter(id => !allCoins.find(c => c.id === id));
+    extraIds.forEach(id => {
+        if (extraCoins[id]) {
+            allCoinsList.push(extraCoins[id]);
+        }
+    });
+    
+    return allCoinsList;
+}
 function filterMarket(query) {
     marketFilter = query.toLowerCase().trim();
     renderMarket();
