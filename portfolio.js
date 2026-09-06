@@ -91,10 +91,19 @@ function getColor(i) {
 
 function findCoin(id) {
     if (!id) return null;
+    
+    // Поиск по ID или символу в allCoins
     const byIdOrSymbol = allCoins.find(c => c.id === id || c.symbol.toLowerCase() === id);
     if (byIdOrSymbol) return byIdOrSymbol;
+    
+    // Поиск в extraCoins по ID
     if (extraCoins[id]) return extraCoins[id];
-    return Object.values(extraCoins).find(c => c.symbol.toLowerCase() === id) || null;
+    
+    // Поиск по символу в extraCoins
+    const bySymbol = Object.values(extraCoins).find(c => c.symbol.toLowerCase() === id.toLowerCase());
+    if (bySymbol) return bySymbol;
+    
+    return null;
 }
 
 // ============================================================
@@ -1176,46 +1185,37 @@ function renderMarket() {
     const tbody = document.querySelector('#marketTable tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-
-    // 1. Берём все монеты из allCoins
-    let sorted = [...allCoins];
-
-    // 2. Добавляем extraCoins, которых нет в allCoins
-    const extraIds = Object.keys(extraCoins).filter(id => !allCoins.find(c => c.id === id));
-    extraIds.forEach(id => sorted.push(extraCoins[id]));
-
-    // 3. Фильтр
+    
+    // Объединяем allCoins и extraCoins
+    const allCoinsList = getAllCoinsList();
+    
+    let sorted = allCoinsList;
+    
     if (marketFilter) {
-        const f = marketFilter.toLowerCase();
-        sorted = sorted.filter(c =>
-            c.name?.toLowerCase().includes(f) ||
-            c.symbol?.toLowerCase().includes(f)
+        sorted = sorted.filter(c => 
+            c.name?.toLowerCase().includes(marketFilter) || 
+            c.symbol?.toLowerCase().includes(marketFilter)
         );
     }
-
-    // 4. Сортировка
+    
     const col = marketSort.col;
     const dir = marketSort.dir;
-
     sorted.sort((a, b) => {
         let av = a[col] || 0;
         let bv = b[col] || 0;
-
-        // Специальная логика для ATH %
-        if (col === 'ath_change_percentage') {
+        if (col === 'ath_change_percentage') { 
             av = a.ath ? ((a.current_price - a.ath) / a.ath) * 100 : 0;
-            bv = b.ath ? ((b.current_price - b.ath) / b.ath) * 100 : 0;
+            bv = b.ath ? ((b.current_price - b.ath) / b.ath) * 100 : 0; 
         }
-
         return dir === 'asc' ? av - bv : bv - av;
     });
 
-    // 5. Количество монет
     const countEl = document.getElementById('marketCount');
     if (countEl) countEl.textContent = sorted.length + ' монет';
 
-    // 6. Показываем только первые 500 монет
-    const displayCoins = sorted.slice(0, 500);
+    // Показываем все монеты
+    sorted.forEach((c, i) => {
+ 
 
     // 7. Рендер строк
     displayCoins.forEach((c, i) => {
@@ -3516,7 +3516,14 @@ function selectOrderCoin(id, symbol, image) {
     document.getElementById('orderCoinSearch').value = symbol;
     document.getElementById('orderCoinImg').value = image;
     document.getElementById('orderSearchResults').classList.remove('active');
-    const c = findCoin(id);
+    
+    // Ищем монету в allCoins или extraCoins
+    let c = findCoin(id);
+    if (!c) {
+        // Если не нашли, пробуем найти по символу
+        c = findCoin(symbol.toLowerCase());
+    }
+    
     if (c && c.current_price) {
         document.getElementById('orderPrice').value = c.current_price;
         calcOrderTotal();
@@ -3526,14 +3533,44 @@ function selectOrderCoin(id, symbol, image) {
 function searchOrderCoins(query) {
     const results = document.getElementById('orderSearchResults');
     const q = query.toLowerCase().trim();
-    if (!q) { results.classList.remove('active'); return; }
-    const local = allCoins.filter(c => c.name.toLowerCase().includes(q) || c.symbol.toLowerCase().includes(q)).slice(0, 8);
+    if (!q) { 
+        results.classList.remove('active'); 
+        return; 
+    }
+    
+    // Объединяем allCoins и extraCoins для поиска
+    let allCoinsList = [...allCoins];
+    
+    // Добавляем монеты из extraCoins которых нет в allCoins
+    const extraIds = Object.keys(extraCoins).filter(id => !allCoins.find(c => c.id === id));
+    extraIds.forEach(id => {
+        if (extraCoins[id]) {
+            allCoinsList.push(extraCoins[id]);
+        }
+    });
+    
+    // Ищем по названию или символу
+    const local = allCoinsList.filter(c => 
+        c.name?.toLowerCase().includes(q) || 
+        c.symbol?.toLowerCase().includes(q)
+    ).slice(0, 8);
+    
     if (!local.length) {
         results.innerHTML = '<div class="search-loading">ничего не найдено</div>';
         results.classList.add('active');
         return;
     }
-    results.innerHTML = local.map(c => '<div class="search-item" onclick="selectOrderCoin(' + "'" + c.id + "'" + ',' + "'" + c.symbol.toUpperCase() + "'" + ',' + "'" + c.image + "'" + ')"><img src="' + c.image + '" alt="" ><div><div style="font-weight:600">' + c.name + '</div><div style="font-size:11px;color:var(--text-3)">' + c.symbol.toUpperCase() + '</div></div></div>').join('');
+    
+    results.innerHTML = local.map(c => 
+        '<div class="search-item" onclick="selectOrderCoin(' + 
+        "'" + c.id + "'" + ',' + 
+        "'" + c.symbol.toUpperCase() + "'" + ',' + 
+        "'" + c.image + "'" + 
+        ')"><img src="' + c.image + '" alt="" ><div><div style="font-weight:600">' + 
+        c.name + '</div><div style="font-size:11px;color:var(--text-3)">' + 
+        c.symbol.toUpperCase() + '</div></div></div>'
+    ).join('');
+    
     results.classList.add('active');
 }
 
@@ -3987,21 +4024,45 @@ function drawRealChart(prices) {
 
 function searchCoins(query) {
     const results = document.getElementById('searchResults');
-    if (!results) return; // ВАЖНО: Проверяем наличие элемента
+    if (!results) return;
 
     const q = query.toLowerCase().trim();
-    if (!q) { results.classList.remove('active'); return; }
+    if (!q) { 
+        results.classList.remove('active'); 
+        return; 
+    }
 
-    const local = allCoins.filter(c => c.name.toLowerCase().includes(q) || c.symbol.toLowerCase().includes(q)).slice(0, 8);
+    // Объединяем allCoins и extraCoins для поиска
+    let allCoinsList = [...allCoins];
+    
+    // Добавляем монеты из extraCoins которых нет в allCoins
+    const extraIds = Object.keys(extraCoins).filter(id => !allCoins.find(c => c.id === id));
+    extraIds.forEach(id => {
+        if (extraCoins[id]) {
+            allCoinsList.push(extraCoins[id]);
+        }
+    });
+
+    const local = allCoinsList.filter(c => 
+        c.name?.toLowerCase().includes(q) || 
+        c.symbol?.toLowerCase().includes(q)
+    ).slice(0, 8);
+    
     renderSearchResults(local, true);
 
     clearTimeout(searchDebounce);
     searchDebounce = setTimeout(async () => {
         try {
+            // Ищем через API для более полных результатов
             const res = await apiFetch(API_BASE + '/search?query=' + encodeURIComponent(q));
             if (!res.ok) return;
             const data = await res.json();
-            const remote = (data.coins || []).slice(0, 12).map(c => ({ id: c.id, name: c.name, symbol: c.symbol, image: c.thumb }));
+            const remote = (data.coins || []).slice(0, 12).map(c => ({ 
+                id: c.id, 
+                name: c.name, 
+                symbol: c.symbol, 
+                image: c.thumb 
+            }));
             const localIds = new Set(local.map(c => c.id));
             const merged = local.concat(remote.filter(c => !localIds.has(c.id)));
             renderSearchResults(merged.slice(0, 12), false);
