@@ -31,6 +31,12 @@
   
   <!-- ===== АВТОРИЗАЦИЯ ===== -->
   <script src="auth.js"></script>
+  <script>
+    // Восстановление состояния авторизации при загрузке страницы
+    if (typeof window.restoreCachedState === 'function') {
+      window.restoreCachedState();
+    }
+  </script>
   
   <style>
         /* ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И БАЗОВЫЕ СТИЛИ ===== */
