@@ -1,0 +1,2882 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Portfolio Tracker Pro - AirdropLab</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="alternate icon" href="assets/favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css">
+  
+  <!-- ===== FIREBASE SDK (Compat версии) ===== -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+  
+  <!-- ===== КОНФИГУРАЦИЯ FIREBASE ===== -->
+  <script src="config/firebase-config.js"></script>
+  
+  <!-- ===== СКРИПТЫ САЙТА ===== -->
+  <script src="languages.js"></script>
+  <script src="header.js"></script>
+  
+  <script src="assets/reagents.js"></script>
+  <script src="assets/global-cache.js"></script>
+  <script src="assets/preload-system.js"></script>
+  <script src="assets/offline-manager.js"></script>
+  
+  <!-- ===== АВТОРИЗАЦИЯ ===== -->
+  <script src="auth.js"></script>
+  
+  <style>
+        /* ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И БАЗОВЫЕ СТИЛИ ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  --bg-primary: #080c18;
+  --bg-secondary: #0f1729;
+  --bg-card: rgba(20, 30, 55, 0.7);
+  --bg-card-hover: rgba(30, 45, 80, 0.8);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --text-primary: #f0f4ff;
+  --text-secondary: #b0c4e8;
+  --text-muted: #7a8bb5;
+  --green: #00e676;
+  --green-dim: rgba(0, 230, 118, 0.18);
+  --red: #ff5252;
+  --red-dim: rgba(255, 82, 82, 0.18);
+  --yellow: #ffd740;
+  --yellow-dim: rgba(255, 215, 64, 0.18);
+  --blue: #448aff;
+  --blue-dim: rgba(68, 138, 255, 0.15);
+  --purple: #b388ff;
+  --purple-dim: rgba(179, 136, 255, 0.15);
+  --orange: #ffab40;
+  --orange-dim: rgba(255, 171, 64, 0.15);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --glass: rgba(255, 255, 255, 0.04);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image: radial-gradient(ellipse at 20% 50%, rgba(0, 230, 118, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(68, 138, 255, 0.05) 0%, transparent 60%);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ===== ТЕМЫ ===== */
+body.theme-glass {
+  --bg-primary: #080c18;
+  --bg-secondary: #0f1729;
+  --bg-card: rgba(20, 30, 55, 0.7);
+  --bg-card-hover: rgba(30, 45, 80, 0.8);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --text-primary: #f0f4ff;
+  --text-secondary: #b0c4e8;
+  --text-muted: #7a8bb5;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --glass: rgba(255, 255, 255, 0.04);
+  --green-dim: rgba(0, 230, 118, 0.18);
+  --red-dim: rgba(255, 82, 82, 0.18);
+  --yellow-dim: rgba(255, 215, 64, 0.18);
+}
+
+body.theme-dark {
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #111827;
+  --bg-card: #1a2236;
+  --bg-card-hover: #24304a;
+  --border-color: #1f2937;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --glass: rgba(255, 255, 255, 0.02);
+  --green-dim: rgba(0, 230, 118, 0.16);
+  --red-dim: rgba(255, 82, 82, 0.16);
+  --yellow-dim: rgba(255, 215, 64, 0.16);
+}
+
+body.theme-original {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2128;
+  --bg-card-hover: #2a3441;
+  --border-color: #30363d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --green: #3fb950;
+  --red: #f85149;
+  --yellow: #d29922;
+  --green-dim: rgba(63, 185, 80, 0.2);
+  --red-dim: rgba(248, 81, 73, 0.2);
+  --yellow-dim: rgba(210, 153, 34, 0.2);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --glass: transparent;
+}
+
+body.theme-original .header,
+body.theme-original .tabs,
+body.theme-original .card,
+body.theme-original .stat-card,
+body.theme-original .advice-card,
+body.theme-original .order-card,
+body.theme-original .global-impact-card,
+body.theme-original .per-coin-card,
+body.theme-original .collapsible-header,
+body.theme-original .modal {
+  backdrop-filter: none !important;
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.theme-original .advice-card.buy {
+  background: var(--green-dim) !important;
+  border-left-color: var(--green) !important;
+}
+body.theme-original .advice-card.sell {
+  background: var(--red-dim) !important;
+  border-left-color: var(--red) !important;
+}
+body.theme-original .advice-card.hold {
+  background: var(--yellow-dim) !important;
+  border-left-color: var(--yellow) !important;
+}
+body.theme-original .advice-text {
+  color: var(--text-secondary);
+}
+
+/* ===== ОБЩАЯ ОБЁРТКА ===== */
+.container {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 20px 24px 40px;
+}
+
+/* ===== HEADER ===== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
+  backdrop-filter: blur(12px);
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  position: relative;
+  z-index: 1; /* Не дает хедеру перекрывать модалки */
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-muted) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.logo span {
+  background: linear-gradient(135deg, var(--green) 0%, #00c853 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.last-update {
+  font-size: 13px;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  padding: 6px 16px;
+  border-radius: 30px;
+  border: 1px solid var(--border-color);
+}
+
+.theme-switcher {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-card);
+  border-radius: 30px;
+  padding: 3px;
+  border: 1px solid var(--border-color);
+}
+
+.theme-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+  border-radius: 20px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.theme-btn.active {
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+/* ===== КНОПКИ ===== */
+.btn {
+  padding: 8px 18px;
+  border-radius: 30px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--green) 0%, #00c853 100%);
+  color: #000;
+  border: none;
+  box-shadow: 0 4px 16px rgba(0, 230, 118, 0.3);
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 28px rgba(0, 230, 118, 0.4);
+}
+
+.btn-danger {
+  background: var(--red-dim);
+  color: var(--red);
+  border-color: rgba(255, 82, 82, 0.3);
+}
+.btn-danger:hover {
+  background: rgba(255, 82, 82, 0.25);
+}
+
+.btn-blue {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border-color: rgba(68, 138, 255, 0.3);
+}
+.btn-blue:hover {
+  background: rgba(68, 138, 255, 0.25);
+}
+
+.btn-yellow {
+  background: var(--yellow-dim);
+  color: var(--yellow);
+  border-color: rgba(255, 215, 64, 0.3);
+}
+.btn-yellow:hover {
+  background: rgba(255, 215, 64, 0.25);
+}
+
+.btn-sm {
+  padding: 5px 14px;
+  font-size: 12px;
+}
+.btn-xs {
+  padding: 3px 8px;
+  font-size: 11px;
+  border-radius: 20px;
+}
+
+/* ===== УВЕДОМЛЕНИЯ ===== */
+.notif-bell {
+  position: relative;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+  z-index: 1000;
+}
+.notif-bell:hover {
+  background: var(--bg-card-hover);
+}
+
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(255, 82, 82, 0.5);
+}
+
+.notif-dropdown {
+  position: absolute;
+  right: 0;
+  top: 48px;
+  width: 380px;
+  max-height: 460px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  z-index: 99999 !important;
+  display: none;
+  padding: 16px;
+  backdrop-filter: blur(12px);
+}
+.notif-dropdown.active {
+  display: block;
+}
+
+.notif-dropdown .clear-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+.notif-dropdown .clear-btn:hover {
+  background: rgba(255, 82, 82, 0.25);
+}
+
+.notif-item {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  font-size: 13px;
+  border-left: 3px solid var(--border-color);
+  background: var(--glass);
+}
+.notif-item.buy {
+  border-left-color: var(--green);
+  background: var(--green-dim);
+}
+.notif-item.sell {
+  border-left-color: var(--red);
+  background: var(--red-dim);
+}
+.notif-item.info {
+  border-left-color: var(--blue);
+  background: var(--blue-dim);
+}
+.notif-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.notif-empty {
+  color: var(--text-muted);
+  padding: 20px;
+  text-align: center;
+  font-size: 13px;
+}
+.notif-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin: 10px 0 6px;
+  font-weight: 600;
+}
+.pending-alert-item {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  font-size: 12px;
+  background: var(--glass);
+  border: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.pending-alert-item button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+}
+.pending-alert-item button:hover {
+  color: var(--red);
+}
+
+/* ===== СТАТИСТИКА ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+  opacity: 0.4;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--text-muted);
+  box-shadow: var(--shadow);
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.stat-sub {
+  font-size: 13px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.pos {
+  color: var(--green);
+}
+.neg {
+  color: var(--red);
+}
+.neu {
+  color: var(--text-secondary);
+}
+
+/* ===== ПОЛОСКА FEAR & GREED ===== */
+.gauge-track {
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.gauge-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease, background 0.3s ease;
+}
+.gauge-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* ===== TABS ===== */
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 28px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 4px 6px;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-btn {
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 30px;
+  white-space: nowrap;
+  transition: var(--transition);
+  font-family: inherit;
+}
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--glass);
+}
+.tab-btn.active {
+  color: var(--text-primary);
+  background: rgba(0, 230, 118, 0.15);
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.05);
+}
+.tab-btn .tab-icon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.tab-panel {
+  display: none;
+  animation: fadeSlide 0.4s ease;
+}
+.tab-panel.active {
+  display: block;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== СЕКЦИИ / ЗАГОЛОВКИ ===== */
+.section-title {
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+.section-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  margin-top: -8px;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+/* ===== КАРТОЧКИ ===== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  transition: var(--transition);
+}
+.card:hover {
+  border-color: var(--text-muted);
+}
+
+/* ===== РАСПРЕДЕЛЕНИЕ (круг + легенда) ===== */
+.distribution-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+.pie-wrap {
+  flex-shrink: 0;
+}
+.pie-wrap canvas {
+  width: 180px;
+  height: 180px;
+}
+
+.legend-wrap {
+  flex: 1;
+  min-width: 220px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px 16px;
+  align-content: start;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: default;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: var(--transition);
+}
+.legend-row:hover {
+  background: var(--glass);
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.legend-others {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--blue);
+}
+.legend-others:hover {
+  text-decoration: underline;
+}
+
+.pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ===== ТАБЛИЦА ПОРТФЕЛЯ ===== */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th {
+  text-align: left;
+  padding: 10px 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition);
+}
+th:hover {
+  color: var(--text-primary);
+}
+th.no-sort {
+  cursor: default;
+}
+th.no-sort:hover {
+  color: var(--text-muted);
+}
+th .sort-arrow {
+  font-size: 9px;
+  margin-left: 4px;
+  opacity: 0.4;
+}
+th.sort-asc .sort-arrow,
+th.sort-desc .sort-arrow {
+  opacity: 1;
+  color: var(--green);
+}
+
+td {
+  padding: 8px 8px;
+  border-bottom: 1px solid var(--border-color);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-size: 12px;
+}
+tr:hover {
+  background: var(--glass);
+}
+tr:last-child td {
+  border-bottom: none;
+}
+tr.expand-row td {
+  white-space: normal;
+  background: rgba(0, 230, 118, 0.03);
+}
+
+.coin-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.coin-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--border-color);
+}
+.coin-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.coin-name {
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.coin-name:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+.coin-symbol {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.pnl-big {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 30px;
+  display: inline-block;
+}
+.pnl-big.pos {
+  background: var(--green-dim);
+  color: var(--green);
+}
+.pnl-big.neg {
+  background: var(--red-dim);
+  color: var(--red);
+}
+
+.action-btns {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: visible;
+}
+.action-btns .btn {
+  padding: 2px 6px;
+  font-size: 11px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+.action-btns .btn:hover {
+  background: var(--glass);
+  color: var(--text-primary);
+}
+.action-btns .btn-danger:hover {
+  color: var(--red);
+}
+.action-btns .btn-blue:hover {
+  color: var(--blue);
+}
+
+/* ===== AI СОВЕТНИК ===== */
+.advisor-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+  transition: var(--transition);
+}
+.summary-card:hover {
+  border-color: var(--text-muted);
+}
+.summary-card .title {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.summary-card .value {
+  font-size: 26px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.advice-card {
+  border-left: 4px solid var(--border-color);
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin-bottom: 16px;
+  border-top: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+.advice-card:hover {
+  border-color: var(--text-muted);
+}
+.advice-card.buy {
+  border-left-color: var(--green);
+  background: var(--green-dim);
+}
+.advice-card.sell {
+  border-left-color: var(--red);
+  background: var(--red-dim);
+}
+.advice-card.hold {
+  border-left-color: var(--yellow);
+  background: var(--yellow-dim);
+}
+
+.advice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.advice-title {
+  font-weight: 700;
+  font-size: 16px;
+}
+.advice-badge {
+  font-size: 11px;
+  padding: 4px 14px;
+  border-radius: 30px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-buy {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid rgba(0, 230, 118, 0.3);
+}
+.badge-sell {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+}
+.badge-hold {
+  background: var(--yellow-dim);
+  color: var(--yellow);
+  border: 1px solid rgba(255, 215, 64, 0.3);
+}
+
+.advice-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+/* --- Блок "План действий / докупки" внутри рекомендации --- */
+.advice-action {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.advice-action-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.advice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 10px 0;
+}
+
+.advice-metric {
+  background: rgba(0, 0, 0, 0.22);
+  padding: 12px 10px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: var(--transition);
+}
+.advice-metric:hover {
+  background: rgba(0, 0, 0, 0.32);
+  transform: translateY(-2px);
+}
+.advice-metric-value {
+  font-size: 17px;
+  font-weight: 700;
+}
+.advice-metric-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.advice-btn {
+  margin-top: 12px;
+}
+
+/* --- Чипы сигналов (сила сигнала / score / категория / RSI и т.д.) --- */
+.signal-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.signal-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--glass);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.signal-chip.green {
+  color: var(--green);
+  border-color: rgba(0, 230, 118, 0.35);
+  background: var(--green-dim);
+}
+.signal-chip.red {
+  color: var(--red);
+  border-color: rgba(255, 82, 82, 0.35);
+  background: var(--red-dim);
+}
+.signal-chip.yellow {
+  color: var(--yellow);
+  border-color: rgba(255, 215, 64, 0.35);
+  background: var(--yellow-dim);
+}
+.signal-chip.blue {
+  color: var(--blue);
+  border-color: rgba(68, 138, 255, 0.35);
+  background: var(--blue-dim);
+}
+.signal-chip.purple {
+  color: var(--purple);
+  border-color: rgba(179, 136, 255, 0.35);
+  background: var(--purple-dim);
+}
+.signal-chip.orange {
+  color: var(--orange);
+  border-color: rgba(255, 171, 64, 0.35);
+  background: var(--orange-dim);
+}
+
+/* ===== ОРДЕРА ===== */
+.orders-flat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 14px;
+}
+
+.order-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 0;
+  transition: var(--transition);
+}
+.order-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--text-muted);
+  box-shadow: var(--shadow);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.order-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+.order-badge {
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 30px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.badge-pending {
+  background: var(--yellow-dim);
+  color: var(--yellow);
+  border: 1px solid rgba(255, 215, 64, 0.3);
+}
+.badge-ready {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid rgba(0, 230, 118, 0.3);
+}
+
+.order-status-badge {
+  font-size: 10px;
+  padding: 3px 12px;
+  border-radius: 30px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.status-active {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid rgba(68, 138, 255, 0.3);
+}
+.status-inactive {
+  background: rgba(100, 116, 139, 0.15);
+  color: var(--text-muted);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+.status-executed {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid rgba(0, 230, 118, 0.3);
+}
+.status-pending {
+  background: var(--yellow-dim);
+  color: var(--yellow);
+  border: 1px solid rgba(255, 215, 64, 0.3);
+}
+
+.order-progress-wrap { margin: 10px 0; }
+.order-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.order-progress {
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.order-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.order-exec-progress {
+  margin-top: 10px;
+  padding: 10px;
+  background: var(--glass);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+.order-exec-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+.order-exec-label .exec-pct {
+  font-weight: 700;
+  font-size: 13px;
+}
+.order-exec-label .exec-pct.ready {
+  color: var(--green);
+}
+.order-exec-label .exec-pct.waiting {
+  color: var(--yellow);
+}
+.order-exec-label .exec-pct.inactive {
+  color: var(--text-muted);
+}
+.order-exec-label .exec-pct.executed {
+  color: var(--green);
+}
+.order-exec-track {
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+.order-exec-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease, background 0.3s ease;
+}
+.order-exec-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.order-impact {
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--blue-dim);
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--blue);
+  font-size: 12px;
+}
+
+.order-impact-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: center;
+}
+@media (max-width: 768px) {
+  .order-impact-grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .order-impact-grid .arrow-col {
+    transform: rotate(90deg);
+  }
+}
+
+.order-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.order-metric {
+  background: rgba(0, 0, 0, 0.22);
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: var(--transition);
+}
+.order-metric:hover {
+  background: rgba(0, 0, 0, 0.32);
+  transform: translateY(-2px);
+}
+.order-metric-value {
+  font-size: 17px;
+  font-weight: 700;
+}
+.order-metric-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Селектор статуса ордера + бейдж сравнения с рынком */
+.order-status-select {
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+.market-diff-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  display: inline-block;
+  margin-left: 8px;
+}
+.market-diff-badge.pos {
+  background: var(--green-dim);
+  color: var(--green);
+}
+.market-diff-badge.neg {
+  background: var(--red-dim);
+  color: var(--red);
+}
+
+/* ===== ФИЛЬТРЫ ОРДЕРОВ ===== */
+.order-filters {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filter-btn {
+  padding: 3px 12px;
+  border-radius: 30px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+}
+.filter-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+.filter-btn.active {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: rgba(0, 230, 118, 0.3);
+}
+
+/* ===== GLOBAL IMPACT (сводное влияние всех ордеров) ===== */
+.global-impact-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+.global-impact-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.global-impact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.global-impact-metric {
+  background: rgba(0, 0, 0, 0.22);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.global-impact-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+.global-impact-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.per-coin-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+.per-coin-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.per-coin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.per-coin-card {
+  background: var(--glass);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  position: relative;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.per-coin-card:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-3px);
+  border-color: var(--text-muted);
+}
+.per-coin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.per-coin-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.per-coin-price {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.per-coin-info {
+  flex: 1;
+  min-width: 0;
+}
+.per-coin-symbol {
+  font-size: 16px;
+  font-weight: 700;
+}
+.per-coin-qty {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.per-coin-avg {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.per-coin-avg .arrow {
+  color: var(--text-muted);
+  margin: 0 4px;
+}
+.per-coin-avg .avg-pos {
+  color: var(--green);
+  font-weight: 600;
+}
+.per-coin-avg .avg-neg {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.per-coin-locked {
+  text-align: center;
+  font-size: 13px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.per-coin-locked .value,
+.per-coin-locked strong {
+  color: var(--yellow);
+  font-size: 16px;
+}
+
+/* --- Единый подфон для блока "кол-во / средняя / P&L%" ---
+   Строки физически оборачиваются в один <div class="per-coin-stats-box">
+   через JS-патч ниже — это даёт гарантированно единый фон без швов
+   между строками, в отличие от чисто-CSS обхода. */
+.per-coin-stats-box {
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+}
+.per-coin-stats-box .per-coin-row {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 3px 0;
+}
+.per-coin-stats-box .per-coin-row:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.per-coin-row {
+  font-size: 11.5px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: nowrap;
+  background: rgba(0, 0, 0, 0.22);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 4px 10px;
+}
+.per-coin-header + .per-coin-row {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.per-coin-row:last-child {
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+.per-coin-row:not(.per-coin-header + .per-coin-row):not(:last-child) {
+  border-top: none;
+  border-bottom: none;
+}
+.per-coin-row .label {
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.per-coin-row .value {
+  font-weight: 700;
+  font-size: 11.5px;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.order-count-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(68, 138, 255, 0.4);
+}
+.per-coin-img {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid var(--border-color);
+}
+
+/* ===== COLLAPSIBLE ===== */
+.collapsible-section {
+  margin-bottom: 24px;
+}
+.collapsible-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+  user-select: none;
+}
+.collapsible-header:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--text-muted);
+}
+.collapsible-header .toggle-icon {
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: transform 0.3s ease;
+  margin-left: 8px;
+}
+.collapsible-header.collapsed .toggle-icon {
+  transform: rotate(-90deg);
+}
+.collapsible-content {
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+  max-height: 20000px;
+  opacity: 1;
+  padding-top: 16px;
+}
+.collapsible-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0 !important;
+}
+
+/* ===== TOOLBAR & SEARCH ===== */
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 160px;
+  max-width: 320px;
+}
+.search-wrap input {
+  width: 100%;
+  padding: 8px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 30px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: var(--transition);
+}
+.search-wrap input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.15);
+}
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  z-index: 50;
+  display: none;
+  margin-top: 4px;
+  box-shadow: var(--shadow);
+}
+.search-results.active {
+  display: block;
+}
+.search-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+.search-item:hover {
+  background: var(--glass);
+}
+.search-item img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+.search-item:last-child {
+  border-bottom: none;
+}
+.search-loading {
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.port-search-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+.port-search-wrap input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+}
+.port-search-wrap input:focus {
+  border-color: var(--green);
+}
+
+/* ===== FORMS & MODALS ===== */
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 120px;
+}
+.form-group label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.form-group input,
+.form-group select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+  transition: var(--transition);
+}
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.1);
+}
+.form-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+/* ===== УНИКАЛЬНЫЕ МОДАЛКИ ДЛЯ ПОРТФЕЛЯ (pt- = portfolio) ===== */
+.pt-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 16px;
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.25s ease;
+}
+
+.pt-modal-overlay.active {
+    display: flex;
+}
+
+.pt-modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    max-width: 540px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+    animation: slideUp 0.3s ease;
+    position: relative;
+    z-index: 10001;
+}
+
+.pt-modal-wide {
+    max-width: 700px;
+}
+
+.pt-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.pt-modal-title {
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.pt-modal-close {
+    background: none;
+    border: none;
+    font-size: 26px;
+    cursor: pointer;
+    color: var(--text-muted);
+    line-height: 1;
+    transition: var(--transition);
+}
+
+.pt-modal-close:hover {
+    color: var(--text-primary);
+    transform: rotate(90deg);
+}
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.modal-title {
+  font-size: 19px;
+  font-weight: 700;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  color: var(--text-muted);
+  line-height: 1;
+  transition: var(--transition);
+}
+.modal-close:hover {
+  color: var(--text-primary);
+  transform: rotate(90deg);
+}
+
+/* ===== ТРАНЗАКЦИИ ===== */
+.tx-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.tx-row:last-child {
+  border-bottom: none;
+}
+.tx-row span {
+  flex: 1;
+}
+.tx-row .tx-actions {
+  flex: 0;
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.flex-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.flex-col {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* ===== CHART ===== */
+.chart-container {
+  width: 100%;
+  height: 260px;
+  position: relative;
+}
+canvas {
+  width: 100%;
+  height: 100%;
+}
+.pie-chart {
+  width: 180px;
+  height: 180px;
+}
+
+/* ===== DCA ===== */
+.dca-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.dca-metric {
+  text-align: center;
+  padding: 12px;
+  background: var(--glass);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+.dca-metric-value {
+  font-size: 18px;
+  font-weight: 700;
+}
+.dca-metric-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ===== HEATMAP ===== */
+.heatmap {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 4px;
+}
+.heatmap-item {
+  border-radius: var(--radius-sm);
+  padding: 10px 6px;
+  text-align: center;
+  font-size: 11px;
+  cursor: pointer;
+  transition: var(--transition);
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid transparent;
+}
+.heatmap-item:hover {
+  transform: scale(1.05);
+  border-color: var(--text-muted);
+  z-index: 2;
+}
+.hm-symbol {
+  font-weight: 700;
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+.hm-change {
+  font-weight: 600;
+  font-size: 11px;
+}
+.hm-cap {
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stat-value {
+    font-size: 22px;
+  }
+  .tab-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  .form-row {
+    flex-direction: column;
+  }
+  .form-group {
+    min-width: 100%;
+  }
+  .notif-dropdown {
+    width: 300px;
+    right: -20px;
+  }
+  .orders-flat-grid {
+    grid-template-columns: 1fr;
+  }
+  .modal {
+    padding: 18px;
+  }
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .header-actions {
+    justify-content: space-between;
+  }
+  .per-coin-grid {
+    grid-template-columns: 1fr;
+  }
+  .distribution-wrapper {
+    flex-direction: column;
+    align-items: center;
+  }
+  .legend-wrap {
+    width: 100%;
+  }
+  .advice-grid,
+  .order-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-card {
+    padding: 12px;
+  }
+  .stat-value {
+    font-size: 18px;
+  }
+  .tab-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-wrap {
+    max-width: 100%;
+  }
+  .action-btns .btn {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+}
+/* Переключатель вида */
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-card);
+  border-radius: 30px;
+  padding: 3px;
+  border: 1px solid var(--border-color);
+}
+.view-btn {
+  padding: 4px 10px;
+  font-size: 13px;
+  border-radius: 20px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.view-btn.active {
+  background: var(--green-dim);
+  color: var(--green);
+}
+/* ===== КАРТОЧКИ ПОРТФЕЛЯ ===== */
+.portfolio-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.portfolio-card {
+  background: var(--bg-card);
+  position: relative;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.portfolio-card:hover {
+  border-color: var(--text-muted);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* Строка изменения 24ч */
+.portfolio-card-change-row {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.portfolio-card-change-row .change.pos {
+  color: var(--green);
+}
+.portfolio-card-change-row .change.neg {
+  color: var(--red);
+}
+
+/* Верхняя строка: иконка, имя, цена, бейдж */
+.portfolio-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.portfolio-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.portfolio-card-img {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+}
+
+.portfolio-card-name-group {
+  display: flex;
+  flex-direction: column;
+}
+.portfolio-card-symbol {
+  font-weight: 700;
+  font-size: 16px;
+}
+.portfolio-card-name {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Блок цена + бейдж P&L */
+ 
+
+.portfolio-card-price {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* Метка P&L % — выступает сверху справа */
+.portfolio-card-pnl-badge {
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 16px;  /* увеличили шрифт */
+  color: #fff;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  z-index: 2;
+}
+.portfolio-card-pnl-badge.pos {
+  background: var(--green);
+  border-color: var(--green);
+}
+.portfolio-card-pnl-badge.neg {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+/* Тело карточки — две колонки */
+.portfolio-card-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 16px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-sm);
+  margin-top: 6px;
+}
+
+.portfolio-card-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.portfolio-card-row:last-child {
+  border-bottom: none;
+}
+.portfolio-card-row .label {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.portfolio-card-row .value {
+  font-weight: 600;
+  font-size: 13px;
+}
+.portfolio-card-row .value.pos {
+  color: var(--green);
+}
+.portfolio-card-row .value.neg {
+  color: var(--red);
+}
+
+/* Кнопки */
+.portfolio-card-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.portfolio-card-actions .btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+}
+.portfolio-card-actions .btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+/* ===== DCA КАЛЬКУЛЯТОР (улучшенный) ===== */
+.dca-wrapper {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+}
+.dca-title {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+}
+.dca-grid-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.dca-grid-group .dca-item {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  text-align: center;
+  transition: var(--transition);
+}
+.dca-grid-group .dca-item:hover {
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
+}
+.dca-item-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+.dca-item-value {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+.dca-item-value.green {
+  color: var(--green);
+}
+.dca-item-value.red {
+  color: var(--red);
+}
+.dca-item-value.blue {
+  color: var(--blue);
+}
+.dca-item-value.yellow {
+  color: var(--yellow);
+}
+
+/* Поля ввода */
+.dca-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.dca-input-group label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+.dca-input-group input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: var(--transition);
+}
+.dca-input-group input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.15);
+}
+
+/* Группа результатов */
+.dca-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.dca-result-item {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+.dca-result-item .label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.dca-result-item .value {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+.dca-result-item .value.green { color: var(--green); }
+.dca-result-item .value.red { color: var(--red); }
+.dca-result-item .value.blue { color: var(--blue); }
+
+/* Рекомендация DCA */
+.dca-recommendation {
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+.dca-recommendation .rec-badge {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.dca-recommendation .rec-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.dca-recommendation.rec-recommended {
+  border-left-color: var(--green);
+  background: var(--green-dim);
+}
+.dca-recommendation.rec-not-recommended {
+  border-left-color: var(--red);
+  background: var(--red-dim);
+}
+.dca-recommendation.rec-neutral {
+  border-left-color: var(--yellow);
+  background: var(--yellow-dim);
+}
+  </style>
+</head>
+<body>
+  <!-- SITE HEADER -->
+  <div id="site-header"></div>
+
+  <!-- ОСНОВНОЙ КОНТЕЙНЕР ПОРТФЕЛЯ -->
+  <div class="max-w-[1600px] mx-auto px-4 py-6">
+    <div class="container" id="portfolio-root">
+     
+  <!-- CORS Warning -->
+  <div id="corsWarning" style="display:none; background:var(--red-dim); border:1px solid rgba(255,82,82,0.4); border-radius:var(--radius); padding:14px 18px; margin-bottom:16px; font-size:13px;">
+    <strong style="color:var(--red);">⚠️ CoinGecko временно недоступен</strong><br>
+    CORS-блокировка или лимит запросов (429). Данные портфеля сохранены и отображаются из кэша.<br>
+    <strong>Решение:</strong> используйте VPN, подождите 2-3 минуты или обновите страницу.
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">Crypto<span>Tracker</span></div>
+    <div class="header-actions">
+      <div class="last-update" id="lastUpdate">Загрузка...</div>
+      <!-- Переключатель тем -->
+      <div class="theme-switcher" style="display:flex; gap:4px; background:var(--bg-card); border-radius:30px; padding:3px; border:1px solid var(--border-color);">
+        <button class="btn btn-xs theme-btn active" data-theme="glass" title="Стекло" style="border-radius:20px; background:transparent; border:none; color:var(--text-muted);"><i class="fas fa-glass-whiskey"></i></button>
+        <button class="btn btn-xs theme-btn" data-theme="dark" title="Тёмный" style="border-radius:20px; background:transparent; border:none; color:var(--text-muted);"><i class="fas fa-moon"></i></button>
+        <button class="btn btn-xs theme-btn" data-theme="original" title="Оригинал" style="border-radius:20px; background:transparent; border:none; color:var(--text-muted);"><i class="fas fa-square"></i></button>
+      </div>
+      <button class="btn btn-sm" id="authBtn" onclick="openAuthModal()" style="display:none;">Войти</button>
+      <div id="userInfo" style="display:none; align-items:center; gap:8px;">
+        <span id="userEmail" style="font-size:13px; color:var(--text-secondary);"></span>
+        <button class="btn btn-sm btn-danger" onclick="signOutUser()">Выйти</button>
+      </div>
+      <div class="notif-bell" onclick="toggleNotif(event)">
+        <i class="fas fa-bell" style="font-size:18px;"></i>
+        <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+        <div class="notif-dropdown" id="notifDropdown" onclick="event.stopPropagation()">
+          <!-- контент подгружается через JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-label"><i class="fas fa-wallet"></i> Портфель</div><div class="stat-value" id="stTotal">$0</div><div class="stat-sub" id="stPnl">0%</div></div>
+    <div class="stat-card"><div class="stat-label"><i class="fas fa-coins"></i> Вложено</div><div class="stat-value" id="stInvested">$0</div><div class="stat-sub neu">Всего инвестиций</div></div>
+    <div class="stat-card"><div class="stat-label"><i class="fas fa-chart-line"></i> BTC доминация</div><div class="stat-value" id="stBtcDom">-</div><div class="stat-sub neu" id="stEthDom">eth: -</div></div>
+    <div class="stat-card"><div class="stat-label"><i class="fas fa-face-smile"></i> Fear & Greed</div><div class="stat-value" id="stFear">-</div><div class="gauge-track"><div class="gauge-fill" id="fearBar" style="width:0%;"></div></div><div class="gauge-labels"><span>Страх</span><span>Нейтр.</span><span>Жадность</span></div></div>
+    <div class="stat-card"><div class="stat-label"><i class="fas fa-globe"></i> Капитализация</div><div class="stat-value" id="stCap">-</div><div class="stat-sub" id="stCapChange">-</div></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="portfolio"><span class="tab-icon"><i class="fas fa-folder-open"></i></span>Портфель</button>
+    <button class="tab-btn" data-tab="market"><span class="tab-icon"><i class="fas fa-chart-bar"></i></span>Рынок</button>
+    <button class="tab-btn" data-tab="heatmap"><span class="tab-icon"><i class="fas fa-fire"></i></span>Тепловая карта</button>
+    <button class="tab-btn" data-tab="dca"><span class="tab-icon"><i class="fas fa-calculator"></i></span>DCA</button>
+    <button class="tab-btn" data-tab="advisor"><span class="tab-icon"><i class="fas fa-robot"></i></span>AI советник</button>
+    <button class="tab-btn" data-tab="feed"><span class="tab-icon"><i class="fas fa-list-ul"></i></span>Лента</button>
+  </div>
+
+  <!-- PANEL: PORTFOLIO -->
+  <div class="tab-panel active" id="panel-portfolio">
+
+    <div class="card">
+      <div class="section-title"><span class="icon"><i class="fas fa-pie-chart"></i></span>Распределение</div>
+      <div class="distribution-wrapper">
+        <div class="pie-wrap">
+          <canvas class="pie-chart" id="pieCanvas" width="180" height="180"></canvas>
+        </div>
+        <div class="legend-wrap" id="pieLegend"></div>
+      </div>
+    </div>
+
+    <!-- Мои активы -->
+    <div class="collapsible-section">
+      <div class="collapsible-header" onclick="toggleSection('portfolioAssets')">
+        <div class="section-title" style="margin:0;"><span class="icon"><i class="fas fa-gem"></i></span>Мои активы</div>
+        <span class="toggle-icon" id="portfolioAssets-toggle">▼</span>
+      </div>
+      <div class="collapsible-content" id="portfolioAssets">
+        <div class="toolbar">
+  <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Добавить</button>
+  <button class="btn btn-sm" onclick="exportData()"><i class="fas fa-file-export"></i> Экспорт</button>
+  <button class="btn btn-sm" onclick="document.getElementById('importFile').click()"><i class="fas fa-file-import"></i> Импорт</button>
+  <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
+  <div class="search-wrap">
+    <input type="text" id="portfolioSearch" placeholder="🔍 Поиск..." oninput="filterPortfolio(this.value)">
+  </div>
+  <div class="view-toggle">
+    <button class="btn btn-sm view-btn active" data-view="table" onclick="setPortfolioViewMode('table')"><i class="fas fa-table"></i></button>
+    <button class="btn btn-sm view-btn" data-view="cards" onclick="setPortfolioViewMode('cards')"><i class="fas fa-th"></i></button>
+  </div>
+</div>
+        <div class="table-wrap">
+          <table id="portTable">
+            <thead><tr>
+              <th onclick="sortPortfolio('name')">Монета <span class="sort-arrow">↕</span></th>
+              <th onclick="sortPortfolio('amount')">Кол-во <span class="sort-arrow">↕</span></th>
+              <th onclick="sortPortfolio('avgPrice')">Средняя <span class="sort-arrow">↕</span></th>
+              <th onclick="sortPortfolio('price')">Цена <span class="sort-arrow">↕</span></th>
+              <th onclick="sortPortfolio('value')">Стоимость <span class="sort-arrow">↕</span></th>
+              <th onclick="sortPortfolio('pnl')">P&L % <span class="sort-arrow">↕</span></th>
+              <th onclick="sortPortfolio('pnlDollar')">P&L $ <span class="sort-arrow">↕</span></th>
+              <th onclick="sortPortfolio('realized')">Реализ. <span class="sort-arrow">↕</span></th>
+              <th onclick="sortPortfolio('currentX')">X <span class="sort-arrow">↕</span></th>
+              <th onclick="sortPortfolio('xNeeded')">X до окупа <span class="sort-arrow">↕</span></th>
+              <th class="no-sort">Действия</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ордера -->
+    <div class="collapsible-section">
+      <div class="collapsible-header" onclick="toggleSection('ordersSection')">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="section-title" style="margin:0;"><span class="icon"><i class="fas fa-clipboard-list"></i></span>Ордера</div>
+          <span id="ordersBadge" style="display:none; font-size:12px; color:var(--text-muted); background:var(--glass); padding:2px 14px; border-radius:30px; border:1px solid var(--border-color);"></span>
+        </div>
+        <span class="toggle-icon" id="ordersSection-toggle">▼</span>
+      </div>
+      <div class="collapsible-content" id="ordersSection">
+        <div class="section-sub">Лимитные ордера – сколько USDT заморожено, насколько близко к исполнению и как изменится средняя цена</div>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="openOrderModal()"><i class="fas fa-plus"></i> Добавить ордер</button>
+          <div class="search-wrap" style="flex:1; max-width:300px; margin-left:16px;">
+            <input type="text" id="ordersSearch" placeholder="🔍 Поиск по монете..." oninput="filterOrdersByCoin(this.value)">
+          </div>
+          <span id="ordersSummary" style="font-size:13px; color:var(--text-muted);"></span>
+          <div class="order-filters" style="margin-left:auto;">
+            <button class="filter-btn active" onclick="setOrderFilter('all')">Все</button>
+            <button class="filter-btn" onclick="setOrderFilter('active')">Активные</button>
+            <button class="filter-btn" onclick="setOrderFilter('inactive')">Неактивные</button>
+            <button class="filter-btn" onclick="setOrderFilter('pending')">В ожидании</button>
+            <button class="filter-btn" onclick="setOrderFilter('executed')">Исполненные</button>
+          </div>
+        </div>
+        <div id="globalOrdersImpact"></div>
+        <div id="ordersList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: MARKET -->
+  <div class="tab-panel" id="panel-market">
+    <div class="section-title"><span class="icon"><i class="fas fa-globe-americas"></i></span>Все монеты <span style="font-size:13px; color:var(--text-muted); font-weight:400;">(Топ-500, клик по заголовку для сортировки)</span></div>
+    <div class="toolbar">
+      <div class="search-wrap" style="flex:1; max-width:400px;">
+        <input type="text" id="marketSearch" placeholder="🔍 Поиск..." oninput="filterMarket(this.value)">
+      </div>
+      <span id="marketCount" style="font-size:13px; color:var(--text-muted);"></span>
+    </div>
+    <div class="table-wrap">
+      <table id="marketTable">
+        <thead><tr>
+          <th onclick="sortMarket('market_cap_rank')"># <span class="sort-arrow">↕</span></th>
+          <th class="no-sort">Монета</th>
+          <th onclick="sortMarket('current_price')">Цена <span class="sort-arrow">↕</span></th>
+          <th onclick="sortMarket('price_change_percentage_24h')">24ч <span class="sort-arrow">↕</span></th>
+          <th onclick="sortMarket('price_change_percentage_7d_in_currency')">7д <span class="sort-arrow">↕</span></th>
+          <th onclick="sortMarket('market_cap')">Кап <span class="sort-arrow">↕</span></th>
+          <th onclick="sortMarket('total_volume')">Объём <span class="sort-arrow">↕</span></th>
+          <th onclick="sortMarket('ath_change_percentage')">От ATH <span class="sort-arrow">↕</span></th>
+          <th class="no-sort">График</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PANEL: HEATMAP -->
+  <div class="tab-panel" id="panel-heatmap">
+    <div class="section-title"><span class="icon"><i class="fas fa-fire"></i></span>Тепловая карта</div>
+    <div class="section-sub">Размер = капитализация · Цвет = изменение 24ч</div>
+    <div class="heatmap" id="heatmapGrid"></div>
+  </div>
+
+  <!-- PANEL: DCA -->
+  <div class="tab-panel" id="panel-dca">
+    <div class="section-title"><span class="icon"><i class="fas fa-calculator"></i></span>DCA Калькулятор</div>
+    <div class="section-sub">Выберите монету из портфеля – рекомендация появится сразу</div>
+    <div class="card">
+      <div class="form-row">
+        <div class="form-group"><label>Монета</label><select id="dcaCoin" onchange="updateDCA()"></select></div>
+        <div class="form-group"><label>Средняя ($)</label><input type="number" id="dcaAvg" readonly></div>
+        <div class="form-group"><label>Кол-во</label><input type="number" id="dcaQty" readonly></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Цена ($)</label><input type="number" id="dcaPrice" readonly></div>
+        <div class="form-group"><label>Сумма докупки ($)</label><input type="number" id="dcaInvest" placeholder="1000" oninput="calcDCA(true)"></div>
+        <div class="form-group"><label>Или количество</label><input type="number" id="dcaAddQty" placeholder="0" oninput="calcDCA(false)"></div>
+      </div>
+      <div id="dcaResult" style="display:none;">
+        <div class="dca-grid">
+          <div class="dca-metric"><div class="dca-metric-value" id="dcaNewAvg">$0</div><div class="dca-metric-label">Новая средняя</div></div>
+          <div class="dca-metric"><div class="dca-metric-value" id="dcaTotalQty">0</div><div class="dca-metric-label">Итого монет</div></div>
+          <div class="dca-metric"><div class="dca-metric-value" id="dcaTotalInv">$0</div><div class="dca-metric-label">Всего вложено</div></div>
+          <div class="dca-metric"><div class="dca-metric-value pos" id="dcaBreakEven">0%</div><div class="dca-metric-label">Рост до окупа</div></div>
+          <div class="dca-metric"><div class="dca-metric-value" id="dcaCurPnl">0%</div><div class="dca-metric-label">Текущий P&L</div></div>
+          <div class="dca-metric"><div class="dca-metric-value" id="dcaRec" style="font-size:15px;">-</div><div class="dca-metric-label">Рекомендация</div></div>
+        </div>
+        <div id="dcaAction" style="margin-top:14px; padding:14px; border-radius:var(--radius-sm); font-size:14px; line-height:1.7;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: ADVISOR -->
+  <div class="tab-panel" id="panel-advisor">
+    <div class="section-title"><span class="icon"><i class="fas fa-robot"></i></span>AI Советник</div>
+    <div class="section-sub">Авто-алерты создаются автоматически по логике советника</div>
+
+    <div class="advisor-summary">
+      <div class="summary-card"><div class="title"><i class="fas fa-arrow-up" style="color:var(--green);"></i> Купить</div><div class="value pos" id="sumBuy">0</div></div>
+      <div class="summary-card"><div class="title"><i class="fas fa-arrow-down" style="color:var(--red);"></i> Продать</div><div class="value neg" id="sumSell">0</div></div>
+      <div class="summary-card"><div class="title"><i class="fas fa-hand"></i> Держать</div><div class="value neu" id="sumHold">0</div></div>
+      <div class="summary-card"><div class="title"><i class="fas fa-bell"></i> Авто-алерты</div><div class="value" id="sumAlerts">0</div></div>
+    </div>
+
+    <div class="toolbar" style="margin-bottom:16px;">
+      <button class="btn btn-sm" onclick="setAdvisorFilter('all')">Все</button>
+      <button class="btn btn-sm btn-primary" onclick="setAdvisorFilter('buy')"><i class="fas fa-arrow-up"></i> Купить</button>
+      <button class="btn btn-sm btn-danger" onclick="setAdvisorFilter('sell')"><i class="fas fa-arrow-down"></i> Продать</button>
+      <button class="btn btn-sm btn-yellow" onclick="setAdvisorFilter('hold')"><i class="fas fa-hand"></i> Держать</button>
+      <button class="btn btn-sm btn-blue" onclick="toggleAutoAlerts()">
+        <i class="fas fa-robot"></i> Авто-алерты: <span id="autoAlertsState">on</span>
+      </button>
+    </div>
+
+    <div id="advisorList"></div>
+    <div id="newCoinSuggestions" style="margin-top:24px;"></div>
+  </div>
+
+  <!-- PANEL: FEED -->
+  <div class="tab-panel" id="panel-feed">
+    <div class="section-title"><span class="icon"><i class="fas fa-list-ul"></i></span>Лента транзакций</div>
+    <div class="section-sub">Все покупки и продажи по портфелю в хронологическом порядке</div>
+    <div id="feedList"></div>
+  </div>
+</div>
+
+
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+  <script src="footer.js"></script>
+  <script src="referral-prompt.js"></script>
+  <!-- ===== СКРИПТ ПОРТФЕЛЯ ===== -->
+  <script src="portfolio.js"></script>
+  
+  
+<!-- ===== MODALS (сокращены для экономии места) ===== -->
+<!-- Модалки аналогичны предыдущей версии, их содержимое не менялось -->
+<div class="pt-modal-overlay" id="modal"> 
+   <div class="pt-modal">
+     <div class="pt-modal-header"><div class="pt-modal-title" id="modalTitle">Добавить покупку</div><button class="pt-modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="form-row">
+      <div class="form-group" style="flex:2;"><label>Монета</label><div class="search-wrap"><input type="text" id="mCoinSearch" placeholder="Введите название или тикер..." oninput="searchCoins(this.value)" onfocus="searchCoins(this.value)" autocomplete="off"><input type="hidden" id="mCoinId"><input type="hidden" id="mCoinImg"><div class="search-results" id="searchResults"></div></div></div>
+      <div class="form-group"><label>Количество</label><input type="number" id="mQty" step="any" placeholder="0.5"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Цена ($)</label><input type="number" id="mPrice" step="any" placeholder="45000"></div>
+      <div class="form-group"><label>Дата</label><input type="date" id="mDate"></div>
+      <div class="form-group"><label>Тип</label><div style="display:flex; gap:16px; align-items:center; height:42px;"><label><input type="radio" name="txType" value="buy" checked> Покупка</label><label><input type="radio" name="txType" value="sell"> Продажа</label></div></div>
+    </div>
+    <div class="form-hint" id="mExistingHint" style="display:none; margin-bottom:8px;"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Цель ($)</label><input type="number" id="mTarget" step="any" placeholder="100000"></div>
+      <div class="form-group"><label>Стоп ($)</label><input type="number" id="mStop" step="any" placeholder="35000"></div>
+    </div>
+    <div class="form-row"><div class="form-group"><label>Заметка</label><input type="text" id="mNotes" placeholder="Стратегия"></div></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+      <button class="btn" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveHolding()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="pt-modal-overlay" id="txModal">
+  <div class="pt-modal">
+    <div class="pt-modal-header"><div class="pt-modal-title" id="txModalTitle">Транзакции</div><button class="pt-modal-close" onclick="closeTxModal()">&times;</button></div>
+    <div id="txList"></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+      <button class="btn btn-primary btn-sm" onclick="openAddPurchaseModal()"><i class="fas fa-plus"></i> Добавить</button>
+    </div>
+  </div>
+</div>
+
+<div class="pt-modal-overlay" id="chartModal">
+  <div class="pt-modal modal-wide">
+    <div class="pt-modal-header"><div class="pt-modal-title" id="chartModalTitle">График</div><button class="pt-modal-close" onclick="closeChartModal()">&times;</button></div>
+    <div class="form-row" style="margin-bottom:4px;">
+      <button class="btn btn-sm" onclick="loadCoinChart(currentChartCoin,7)">7д</button>
+      <button class="btn btn-sm" onclick="loadCoinChart(currentChartCoin,30)">30д</button>
+      <button class="btn btn-sm" onclick="loadCoinChart(currentChartCoin,90)">90д</button>
+      <button class="btn btn-sm" onclick="loadCoinChart(currentChartCoin,365)">1г</button>
+    </div>
+    <div class="chart-container"><canvas id="realChartCanvas"></canvas></div>
+    <div id="chartLoading" style="text-align:center; color:var(--text-muted); font-size:13px; margin-top:6px;"></div>
+  </div>
+</div>
+
+<div class="pt-modal-overlay" id="authModal">
+  <div class="pt-modal">
+    <div class="pt-modal-header"><div class="pt-modal-title" id="authModalTitle">Вход</div><button class="pt-modal-close" onclick="closeAuthModal()">&times;</button></div>
+    <div id="authError" style="display:none; background:var(--red-dim); color:var(--red); padding:8px; border-radius:var(--radius-sm); margin-bottom:10px; font-size:12px;"></div>
+    <div class="form-row"><div class="form-group"><label>Email</label><input type="email" id="authEmail" placeholder="your@email.com"></div></div>
+    <div class="form-row"><div class="form-group"><label>Пароль</label><input type="password" id="authPassword" placeholder="••••••••"></div></div>
+    <div style="text-align:right;"><button class="btn btn-sm" style="background:none; border:none; color:var(--text-muted); padding:0;" onclick="resetPassword()">Забыли пароль?</button></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+      <button class="btn" onclick="closeAuthModal()">Отмена</button>
+      <button class="btn btn-primary" id="authSubmitBtn" onclick="handleAuth()">Войти</button>
+    </div>
+    <div style="text-align:center; margin-top:12px; padding-top:12px; border-top:1px solid var(--border-color);">
+      <button class="btn btn-blue" style="width:100%;" onclick="signInWithGoogle()">Войти через Google</button>
+    </div>
+    <div style="text-align:center; margin-top:10px; font-size:12px; color:var(--text-muted);">
+      <span id="authToggleText">Нет аккаунта?</span>
+      <button class="btn btn-sm" style="background:none; border:none; color:var(--green); padding:0;" onclick="toggleAuthMode()" id="authToggleBtn">Зарегистрироваться</button>
+    </div>
+  </div>
+</div>
+
+<div class="pt-modal-overlay" id="orderModal">
+  <div class="pt-modal">
+    <div class="pt-modal-header"><div class="pt-modal-title" id="orderModalTitle">Добавить ордер</div><button class="pt-modal-close" onclick="closeOrderModal()">&times;</button></div>
+    <div class="form-row">
+      <div class="form-group" style="flex:2;"><label>Монета</label><div class="search-wrap"><input type="text" id="orderCoinSearch" placeholder="Название..." oninput="searchOrderCoins(this.value)" onfocus="searchOrderCoins(this.value)" autocomplete="off"><input type="hidden" id="orderCoinId"><input type="hidden" id="orderCoinImg"><div class="search-results" id="orderSearchResults"></div></div></div>
+      <div class="form-group"><label>Кол-во</label><input type="number" id="orderQty" step="any" placeholder="0.5" oninput="calcOrderTotal()"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Цена ($)</label><input type="number" id="orderPrice" step="any" placeholder="45000" oninput="calcOrderTotal()"></div>
+      <div class="form-group"><label>Сумма USDT</label><input type="number" id="orderTotal" step="any" placeholder="1000" oninput="calcOrderQty()"></div>
+    </div>
+    <div class="form-hint">Количество и цена пересчитывают сумму.</div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:14px;">
+      <button class="btn" onclick="closeOrderModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveOrder()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+  <!-- ===== МОДАЛКА ЛОГИНА (создается динамически, но для надежности добавим) ===== -->
+  <div id="loginModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
+    <div class="modal-content modal-sm p-6 relative" style="background:#1e2538; border:1px solid rgba(148,163,184,0.2); border-radius:16px; max-width:400px; width:90%; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+      <button onclick="window.closeLoginModal && window.closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:24px; cursor:pointer;">
+        <i class="fas fa-times"></i>
+      </button>
+      <h2 class="text-2xl font-bold mb-6 text-center text-white">Вход</h2>
+      <div class="space-y-3">
+        <button onclick="window.loginGoogle && window.loginGoogle()" class="w-full bg-white text-slate-900 font-bold py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-200">
+          <i class="fab fa-google text-red-500"></i> Google
+        </button>
+        <button onclick="window.loginTwitter && window.loginTwitter()" class="w-full bg-[#1DA1F2] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-3">
+          <i class="fab fa-twitter"></i> Twitter
+        </button>
+        <div class="relative py-2">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-700"></div></div>
+          <div class="relative flex justify-center"><span class="bg-[#1e2538] px-2 text-xs text-slate-500">ИЛИ EMAIL</span></div>
+        </div>
+        <form onsubmit="window.handleEmailAuth && window.handleEmailAuth(event)" class="space-y-3">
+          <input type="email" id="emailInput" placeholder="Email" required class="w-full bg-[#1e2538] border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+          <input type="password" id="passInput" placeholder="Пароль" required class="w-full bg-[#1e2538] border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+          <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold py-3 rounded-xl hover:from-cyan-500 hover:to-blue-500">
+            Войти
+          </button>
+        </form>
+        <div class="text-center">
+          <button onclick="window.toggleRegisterMode && window.toggleRegisterMode()" class="text-cyan-400 hover:text-cyan-300 text-sm">
+            Нет аккаунта? Зарегистрироваться
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Инициализация модалки логина
+    document.addEventListener('DOMContentLoaded', function() {
+      // Проверяем, создана ли модалка через auth.js
+      if (!document.getElementById('loginModal')) {
+        console.log('🔐 Creating login modal from portfolio.html...');
+        // Создаем модалку через функцию из auth.js если она есть
+        if (typeof window.createLoginModal === 'function') {
+          window.createLoginModal();
+        }
+      }
+      
+      // Открываем модалку при клике на кнопку входа
+      document.querySelectorAll('[onclick*="openLoginModal"]').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (typeof window.openLoginModal === 'function') {
+            window.openLoginModal();
+          } else {
+            // Если функция не определена, показываем нашу модалку
+            const modal = document.getElementById('loginModal');
+            if (modal) {
+              modal.style.display = 'flex';
+              modal.classList.add('active');
+            }
+          }
+        });
+      });
+    });
+  </script>
+
+  <!-- Scroll Navigation Buttons -->
+  <button id="scrollToTopBtn" class="scroll-nav-btn" onclick="scrollToTop()" title="Вверх">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 15l-6-6-6 6"/>
+    </svg>
+  </button>
+  <button id="scrollToOrdersBtn" class="scroll-nav-btn" onclick="scrollToOrdersSection()" title="К ордерам">
+    <i class="fas fa-clipboard-list" style="font-size: 20px;"></i>
+  </button>
+
+  <style>
+    .scroll-nav-btn {
+      position: fixed;
+      right: 24px;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .scroll-nav-btn:hover {
+      background: var(--bg-card-hover);
+      transform: scale(1.05);
+      border-color: var(--text-primary);
+    }
+    #scrollToTopBtn {
+      bottom: 80px;
+    }
+    #scrollToOrdersBtn {
+      bottom: 24px;
+    }
+    .scroll-nav-btn.visible {
+      display: flex;
+    }
+  </style>
+
+  <script>
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function scrollToOrdersSection() {
+      const ordersHeader = document.querySelector('.collapsible-header[onclick*="ordersSection"]');
+      if (ordersHeader) {
+        const headerOffset = 80;
+        const elementPosition = ordersHeader.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    // Show/hide scroll buttons based on active tab
+    function updateScrollButtons() {
+      const activeTab = document.querySelector('.tab-btn.active');
+      const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+      const scrollToOrdersBtn = document.getElementById('scrollToOrdersBtn');
+      
+      if (activeTab && activeTab.dataset.tab === 'portfolio') {
+        scrollToTopBtn.classList.add('visible');
+        scrollToOrdersBtn.classList.add('visible');
+      } else {
+        scrollToTopBtn.classList.remove('visible');
+        scrollToOrdersBtn.classList.remove('visible');
+      }
+    }
+
+    // Listen for tab changes
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          setTimeout(updateScrollButtons, 100);
+        });
+      });
+      updateScrollButtons();
+    });
+  </script>
+
+  <script>
+    // Закрытие модалок при клике вне их области
+    document.addEventListener('click', function(e) {
+      const modals = document.querySelectorAll('.pt-modal-overlay.active');
+      modals.forEach(modal => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
