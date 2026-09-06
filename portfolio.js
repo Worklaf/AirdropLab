@@ -7,7 +7,7 @@
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И КОНСТАНТЫ
 // ============================================================
 
-const API_BASE = 'https://api.coingecko.com/api/v3';
+const API_BASE = '/api/coingecko?path=';
 const COINCAP_API = 'https://api.coincap.io/v2';
 const BINANCE_API = 'https://api.binance.com/api/v3';
 const FEAR_API = 'https://api.alternative.me/fng/?limit=1';
@@ -344,10 +344,10 @@ function getCache() {
     try {
         const cache = JSON.parse(localStorage.getItem(CACHE_KEY));
         if (!cache) return null;
+        console.log('📦 Кэш загружен, монет:', cache.coins ? cache.coins.length : 0);
         return cache;
     } catch { return null; }
 }
-
 // ============================================================
 // ФУНКЦИИ ДЛЯ РАБОТЫ С COINGECKO
 // ============================================================
@@ -426,6 +426,8 @@ async function fetchAll() {
         const cache = getCache();
         if (cache && cache.coins && cache.coins.length) {
             allCoins = cache.coins;
+            console.log('📦 Загружено из кэша:', allCoins.length, 'монет');
+            
             // Дедупликация
             if (allCoins.length > 0) {
                 const seen = new Set();
@@ -448,7 +450,7 @@ async function fetchAll() {
             hideCorsWarning();
             const cacheAge = Math.floor((Date.now() - cache.time) / 60000);
             const updateEl = document.getElementById('lastUpdate');
-            if (updateEl) updateEl.textContent = `кэш (${cacheAge} мин назад)`;
+            if (updateEl) updateEl.textContent = `кэш (${cacheAge} мин назад, ${allCoins.length} монет)`;
             
             // Фоновое обновление через прокси
             await refreshDataViaProxy();
@@ -470,7 +472,7 @@ async function fetchAll() {
             renderAll();
             checkNotifs();
             const updateEl = document.getElementById('lastUpdate');
-            if (updateEl) updateEl.textContent = 'CoinGecko недоступен, показан кэш от ' + new Date(cache.time).toLocaleTimeString('ru-RU');
+            if (updateEl) updateEl.textContent = 'CoinGecko недоступен, показан кэш от ' + new Date(cache.time).toLocaleTimeString('ru-RU') + ' (' + allCoins.length + ' монет)';
         } else {
             const updateEl = document.getElementById('lastUpdate');
             if (updateEl) updateEl.textContent = 'CoinGecko недоступен. Данные загрузятся позже.';
@@ -482,7 +484,7 @@ async function refreshDataViaProxy() {
     try {
         console.log('🔄 Загрузка данных через прокси...');
         
-        // Загружаем топ-250 монет через прокси
+        // Загружаем топ-250 монет через прокси (страница 1)
         const page1Res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h,7d,30d`);
         
         if (!page1Res.ok) {
@@ -490,17 +492,24 @@ async function refreshDataViaProxy() {
         }
         
         const data1 = await page1Res.json();
-        let allData = data1;
+        console.log('📄 Страница 1 загружена:', data1.length, 'монет');
+        
+        // ЗАПОМИНАЕМ данные первой страницы
+        let allData = [...data1];
         
         // Пробуем загрузить вторую страницу
         try {
             const page2Res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=2&sparkline=true&price_change_percentage=24h,7d,30d`);
             if (page2Res.ok) {
                 const data2 = await page2Res.json();
+                console.log('📄 Страница 2 загружена:', data2.length, 'монет');
+                // ОБЪЕДИНЯЕМ данные
                 allData = [...data1, ...data2];
+            } else {
+                console.warn('⚠️ Страница 2 не загружена:', page2Res.status);
             }
         } catch (e2) {
-            console.log('Page 2 load failed:', e2);
+            console.log('⚠️ Страница 2 не загружена:', e2.message);
         }
         
         // Дедупликация
@@ -517,6 +526,7 @@ async function refreshDataViaProxy() {
         
         allCoins = allData;
         console.log('✅ Загружено через прокси:', allCoins.length, 'монет');
+        console.log('✅ Первые 3 монеты:', allCoins.slice(0, 3).map(c => c.symbol));
 
         // Загружаем глобальные данные
         try {
@@ -534,7 +544,7 @@ async function refreshDataViaProxy() {
             }
         } catch (e) { console.log('Fear data load failed:', e); }
 
-        // Сохраняем в кэш
+        // Сохраняем в кэш (ВСЕ 500 монет!)
         const cacheData = {
             time: Date.now(),
             coins: allCoins,
@@ -544,8 +554,21 @@ async function refreshDataViaProxy() {
         };
         try {
             localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+            console.log('💾 Кэш сохранен, монет:', allCoins.length);
         } catch (e) {
             console.warn('Cache not saved:', e);
+            // Если кэш слишком большой - сохраняем только часть
+            try {
+                const smallerCache = {
+                    time: Date.now(),
+                    coins: allCoins.slice(0, 300),
+                    global: globalData,
+                    fear: fearData,
+                    portfolioCoins: extraCoins
+                };
+                localStorage.setItem(CACHE_KEY, JSON.stringify(smallerCache));
+                console.log('💾 Кэш сохранен (урезанный):', smallerCache.coins.length);
+            } catch (e2) {}
         }
 
         await refreshExtraCoins();
@@ -553,7 +576,8 @@ async function refreshDataViaProxy() {
         hideCorsWarning();
         renderAll();
         checkNotifs();
-        document.getElementById('lastUpdate').textContent = 'обновлено: ' + new Date().toLocaleTimeString('ru-RU');
+        const updateEl = document.getElementById('lastUpdate');
+        if (updateEl) updateEl.textContent = 'обновлено: ' + new Date().toLocaleTimeString('ru-RU') + ' (' + allCoins.length + ' монет)';
         
     } catch (error) {
         console.error('Error loading via proxy:', error);
@@ -1168,18 +1192,9 @@ function renderMarket() {
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    // Объединяем allCoins и extraCoins для полного списка
-    let allCoinsList = [...allCoins];
+    // Используем ВСЕ монеты из allCoins (уже 500)
+    let sorted = [...allCoins];
     
-    // Добавляем монеты из extraCoins которых нет в allCoins
-    const extraIds = Object.keys(extraCoins).filter(id => !allCoins.find(c => c.id === id));
-    extraIds.forEach(id => {
-        if (extraCoins[id]) {
-            allCoinsList.push(extraCoins[id]);
-        }
-    });
-    
-    let sorted = allCoinsList;
     if (marketFilter) {
         sorted = sorted.filter(c => 
             c.name?.toLowerCase().includes(marketFilter) || 
@@ -1192,17 +1207,18 @@ function renderMarket() {
     sorted.sort((a, b) => {
         let av = a[col] || 0;
         let bv = b[col] || 0;
-        if (col === 'ath_change_percentage') { av = a.ath ? ((a.current_price - a.ath) / a.ath) * 100 : 0;
-            bv = b.ath ? ((b.current_price - b.ath) / b.ath) * 100 : 0; }
+        if (col === 'ath_change_percentage') { 
+            av = a.ath ? ((a.current_price - a.ath) / a.ath) * 100 : 0;
+            bv = b.ath ? ((b.current_price - b.ath) / b.ath) * 100 : 0; 
+        }
         return dir === 'asc' ? av - bv : bv - av;
     });
 
     const countEl = document.getElementById('marketCount');
     if (countEl) countEl.textContent = sorted.length + ' монет';
 
-    // Ограничиваем отображение до 500 монет для производительности
-    const displayCoins = sorted.slice(0, 500);
-    displayCoins.forEach((c, i) => {
+    // Отображаем ВСЕ монеты (без ограничения!)
+    sorted.forEach((c, i) => {
         const hasAth = typeof c.ath === 'number' && c.ath > 0;
         const fromAth = hasAth ? ((c.current_price - c.ath) / c.ath) * 100 : null;
         const spark = c.sparkline_in_7d ? c.sparkline_in_7d.price : [];
