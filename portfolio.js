@@ -660,7 +660,6 @@ function hideCorsWarning() {
         const missingFromCache = neededIds.filter(id => !extraCoins[id]);
         if (missingFromCache.length === 0) {
             console.log('✅ Все монеты найдены в кэше extraCoins');
-            return;
         }
         
         console.log('🔄 Загрузка недостающих монет:', missingFromCache.length, 'шт.');
