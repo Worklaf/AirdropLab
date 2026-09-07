@@ -642,7 +642,7 @@ function hideCorsWarning() {
         
         if (!neededIds.length) {
             console.log('✅ Все портфельные монеты уже загружены');
-            return;
+            
         }
         
         console.log('🔄 Загрузка портфельных монет:', neededIds.length, 'шт.', neededIds);
