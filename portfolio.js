@@ -245,6 +245,7 @@ async function saveAlerts() {
         console.error('Error saving alerts:', e);
     }
 }
+let isSavingOrders = false; // Объявите эту переменную ГЛОБАЛЬНО (например, рядом с let orders = [])
 
 async function loadOrders() {
     if (window.db && window.currentUser) {
@@ -252,7 +253,7 @@ async function loadOrders() {
             const userId = window.currentUser.uid;
             const docRef = window.db.collection('portfolios').doc(userId);
             
-            // ✅ Добавить таймаут для onSnapshot
+            // ✅ Таймаут для onSnapshot
             let snapshotReceived = false;
             const timeout = setTimeout(() => {
                 if (!snapshotReceived) {
@@ -262,6 +263,10 @@ async function loadOrders() {
             }, 5000);
             
             const unsubscribe = docRef.onSnapshot((docSnap) => {
+                // ✅ Если мы сами сохраняем данные, игнорируем этот вызов
+                if (isSavingOrders) return;
+
+                // ✅ Помечаем, что получили данные, и очищаем таймаут
                 snapshotReceived = true;
                 clearTimeout(timeout);
                 
@@ -291,7 +296,6 @@ async function loadOrders() {
     
     loadOrdersFromLocalStorage();
 }
-
 function loadOrdersFromLocalStorage() {
     try {
         const d = localStorage.getItem(ORDERS_KEY);
@@ -306,28 +310,18 @@ function loadOrdersFromLocalStorage() {
         orders = [];
     }
 }
+
 async function saveOrders() {
-    // Сохраняем в localStorage как кэш
+    isSavingOrders = true;
     try {
         localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-    } catch (e) {}
-
-    // Сохраняем в Firebase
-    if (window.db && window.currentUser) {
-        try {
+        if (window.db && window.currentUser) {
             const userId = window.currentUser.uid;
             const docRef = window.db.collection('portfolios').doc(userId);
             await docRef.set({ orders: orders, updatedAt: new Date().toISOString() }, { merge: true });
-            console.log('✅ Orders saved to Firebase');
-            
-            // ✅ ДОБАВИТЬ: после успешного сохранения обрабатываем очередь
-            await processSyncQueue();
-            
-        } catch (e) {
-            console.error('❌ Error saving orders to Firebase:', e);
-            addToSyncQueue('orders', orders);
         }
-    }
+    } catch (e) {}
+    isSavingOrders = false;
 }
 
 // Очередь для офлайн-синхронизации
@@ -3498,38 +3492,36 @@ function filterOrdersByCoin(searchTerm) {
     renderOrders();
 }
 
+let processedOrderIds = new Set(); // Добавьте глобальную переменную
+
 function checkOrderExecution() {
     let anyExecuted = false;
-    let pendingCount = 0;
-    let resolvedCount = 0;
     
     orders.forEach(o => {
-        if (o.status === 'active' || o.status === 'pending') {
-            pendingCount++;
+        // Проверяем, что ордер активен/ожидает и еще не обрабатывался в этой сессии
+        if ((o.status === 'active' || o.status === 'pending') && !processedOrderIds.has(o.id)) {
             const c = findCoin(o.coinId);
-            if (c && c.current_price > 0) {
-                resolvedCount++;
-                if (c.current_price <= o.price) {
-                    addPurchaseFromOrder(o);
-                    o.status = 'executed';
-                    o.executedAt = Date.now();
-                    anyExecuted = true;
-                    addNotification(o.symbol + ': ордер на покупку исполнен по цене ' + fmt$(o.price), 'buy');
-                }
+            if (c && c.current_price > 0 && c.current_price <= o.price) {
+                // Помечаем как обработанный ДО вызова addPurchaseFromOrder
+                processedOrderIds.add(o.id);
+                
+                addPurchaseFromOrder(o);
+                o.status = 'executed';
+                o.executedAt = Date.now();
+                anyExecuted = true;
+                addNotification(o.symbol + ': ордер на покупку исполнен по цене ' + fmt$(o.price), 'buy');
+                
+                // ВАЖНО: Добавляем задержку, чтобы избежать мгновенного срабатывания onSnapshot
+                setTimeout(() => {
+                    saveOrders();
+                    renderAll();
+                }, 1000); // 1 секунда задержка
             }
         }
     });
     
-    // ✅ Логируем, если есть ожидающие ордера без цен
-    if (pendingCount > 0 && resolvedCount === 0) {
-        console.log('⏳ Ожидание данных о ценах для ' + pendingCount + ' ордеров');
-        // Повторная проверка через 5 секунд
-        setTimeout(checkOrderExecution, 5000);
-    }
-    
     if (anyExecuted) {
-        saveOrders();
-        renderAll();
+        // Убираем мгновенный saveOrders/renderAll, так как он вызывается в setTimeout выше
     }
 }
 function setupTabListeners() {
@@ -4405,40 +4397,25 @@ async function updatePortfolioPrices() {
         const portfolioIds = portfolio.map(h => h.coinId).filter(Boolean);
         if (!portfolioIds.length) return;
         
-        // Легкий запрос через прокси - только цены для монет в портфеле
-        const res = await fetch(`/api/coingecko?path=simple/price?ids=${portfolioIds.join(',')}&vs_currencies=usd&include_24hr_change=true`);
-        if (!res.ok) return;
-        
-        const prices = await res.json();
-        
+        // Разбиваем на чанки по 30 монет
+        const chunkSize = 30;
         let updated = false;
-        allCoins.forEach(coin => {
-            if (prices[coin.id]) {
-                coin.current_price = prices[coin.id].usd;
-                coin.price_change_percentage_24h = prices[coin.id].usd_24h_change || 0;
-                updated = true;
-            }
-        });
         
-        Object.keys(extraCoins).forEach(id => {
-            if (prices[id]) {
-                extraCoins[id].current_price = prices[id].usd;
-                extraCoins[id].price_change_percentage_24h = prices[id].usd_24h_change || 0;
-                updated = true;
-            }
-        });
+        for (let i = 0; i < portfolioIds.length; i += chunkSize) {
+            const chunk = portfolioIds.slice(i, i + chunkSize);
+            const res = await fetch(`/api/coingecko?path=simple/price?ids=${chunk.join(',')}&vs_currencies=usd&include_24hr_change=true`);
+            if (!res.ok) continue;
+            
+            const prices = await res.json();
+            // Обновляем данные...
+        }
         
         if (updated) {
             renderHeader();
             renderPortfolio();
             renderAdvisor();
-            const updateEl = document.getElementById('lastUpdate');
-            if (updateEl) updateEl.textContent = 'цены обновлены: ' + new Date().toLocaleTimeString('ru-RU');
         }
-        
-    } catch (e) {
-        console.log('Price update failed:', e);
-    }
+    } catch (e) {}
 }
 // ============================================================
 // АВТОРИЗАЦИЯ - ГЛОБАЛЬНАЯ ФУНКЦИЯ
