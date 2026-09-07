@@ -4459,36 +4459,32 @@ setInterval(checkNotifs, 10000);
 
     // ИСПРАВЛЕНИЕ: Используем правильный паттерн ожидания Firebase
     function attemptAuthSetup() {
-        if (window.auth) {
-            window.auth.onAuthStateChanged(function(user) {
-                currentUser = user;
-                window.currentUser = user;
-                
-                // Обновляем UI
-                if (typeof window.updateAuthUI === 'function') window.updateAuthUI();
-                if (typeof window.syncAuth === 'function') window.syncAuth();
+    if (window.auth) {
+        window.auth.onAuthStateChanged(async function(user) {  // ✅ Добавили async
+            currentUser = user;
+            window.currentUser = user;
+            
+            if (typeof window.updateAuthUI === 'function') window.updateAuthUI();
+            if (typeof window.syncAuth === 'function') window.syncAuth();
 
-                if (user) {
-                    // Перезагружаем ВСЕ данные, включая ордера, при входе в аккаунт
-                    loadPortfolio();
-                    loadNotifs();
-                    loadAlerts();
-                    loadOrders(); // ВАЖНО: Загружаем ордера при авторизации
-                    renderAll();
-                } else {
-                    // Если вышел - загружаем из localStorage
-                    loadPortfolio();
-                    loadNotifs();
-                    loadAlerts();
-                    loadOrders();
-                    renderAll();
-                }
-            });
-        } else {
-            // Если auth еще не готов, пробуем через 500 мс
-            setTimeout(attemptAuthSetup, 500);
-        }
+            if (user) {
+                await loadPortfolio();   // ✅ Теперь await работает!
+                await loadNotifs();      // ✅ Теперь await работает!
+                await loadAlerts();      // ✅ Теперь await работает!
+                await loadOrders();      // ✅ Теперь await работает!
+                renderAll();
+            } else {
+                await loadPortfolio();   // ✅ Теперь await работает!
+                await loadNotifs();      // ✅ Теперь await работает!
+                await loadAlerts();      // ✅ Теперь await работает!
+                await loadOrders();      // ✅ Теперь await работает!
+                renderAll();
+            }
+        });
+    } else {
+        setTimeout(attemptAuthSetup, 500);
     }
+}
     
     // Запускаем попытку подключения
     attemptAuthSetup();
