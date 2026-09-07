@@ -633,7 +633,14 @@ function hideCorsWarning() {
 }
 
 
-   async function refreshExtraCoins() {
+ async function refreshExtraCoins() {
+    // ✅ Если уже загружаем - пропускаем
+    if (refreshExtraCoins._loading) {
+        console.log('⏳ Уже идет загрузка, пропускаем...');
+        return;
+    }
+    refreshExtraCoins._loading = true;
+    
     try {
         // ✅ Убеждаемся, что allCoins - массив
         const coinsArray = Array.isArray(allCoins) ? allCoins : [];
@@ -643,7 +650,7 @@ function hideCorsWarning() {
         
         if (!neededIds.length) {
             console.log('✅ Все портфельные монеты уже загружены');
-            
+            return; // ✅ Важно: выходим из функции
         }
         
         console.log('🔄 Загрузка портфельных монет:', neededIds.length, 'шт.', neededIds);
@@ -661,12 +668,13 @@ function hideCorsWarning() {
         const missingFromCache = neededIds.filter(id => !extraCoins[id]);
         if (missingFromCache.length === 0) {
             console.log('✅ Все монеты найдены в кэше extraCoins');
+            return; // ✅ Важно: выходим из функции
         }
         
         console.log('🔄 Загрузка недостающих монет:', missingFromCache.length, 'шт.');
         
         // 3. Пробуем загрузить через разные источники
-        const chunkSize = 10; // Уменьшаем чанк для надежности
+        const chunkSize = 10;
         let loadedCount = 0;
         
         for (let i = 0; i < missingFromCache.length; i += chunkSize) {
@@ -675,7 +683,7 @@ function hideCorsWarning() {
             
             let loaded = false;
             
-            // ✅ СПОСОБ 1: Прямой запрос к CoinGecko (без прокси, с CORS)
+            // ✅ СПОСОБ 1: Прямой запрос к CoinGecko
             try {
                 const url = `${COINGECKO_API}/coins/markets?vs_currency=usd&ids=${chunk.join(',')}&sparkline=true&price_change_percentage=24h,7d,30d`;
                 console.log(`📡 Прямой запрос: ${url}`);
@@ -702,7 +710,7 @@ function hideCorsWarning() {
                 console.warn('⚠️ Прямой запрос не удался:', e.message);
             }
             
-            // ✅ СПОСОБ 2: Simple price (если не загрузилось)
+            // ✅ СПОСОБ 2: Simple price
             if (!loaded) {
                 try {
                     const url = `${COINGECKO_API}/simple/price?ids=${chunk.join(',')}&vs_currencies=usd&include_market_cap=true&include_24hr_change=true`;
@@ -741,7 +749,7 @@ function hideCorsWarning() {
                 }
             }
             
-            // ✅ СПОСОБ 3: Если ничего не работает - создаем заглушку
+            // ✅ СПОСОБ 3: Заглушка
             if (!loaded) {
                 console.warn(`⚠️ Не удалось загрузить чанк: ${chunk.join(', ')}`);
                 chunk.forEach(id => {
@@ -781,6 +789,8 @@ function hideCorsWarning() {
         
     } catch (error) {
         console.error('❌ Ошибка в refreshExtraCoins:', error);
+    } finally {
+        refreshExtraCoins._loading = false;
     }
 }
 // ============================================================
