@@ -4441,46 +4441,10 @@ async function updatePortfolioPrices() {
     }
 }
 // ============================================================
-// ИНИЦИАЛИЗАЦИЯ
+// АВТОРИЗАЦИЯ - ГЛОБАЛЬНАЯ ФУНКЦИЯ
 // ============================================================
 
-function init() {
-    loadPortfolio();
-    loadNotifs();
-    loadAlerts();
-    loadAutoAlertSettings();
-
-    setupTabs();
-    setupSearchClose();
-    try { const cached = JSON.parse(localStorage.getItem('ct_extra_coins') || '{}');
-        Object.assign(extraCoins, cached); } catch (e) {}
-    ensureNotificationPermission();
-
-    if (window.firebaseReady) {
-        updateAuthUI();
-    }
-
-    const savedView = localStorage.getItem('ct_portfolio_view_mode');
-    if (savedView && (savedView === 'table' || savedView === 'cards')) {
-        portfolioViewMode = savedView;
-    }
-    document.querySelectorAll('.view-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.view === portfolioViewMode);
-    });
-
-    fetchAll(); 
-
-// ⭐ ОБНОВЛЕНИЕ ЦЕН ПОРТФЕЛЯ - КАЖДЫЕ 30 СЕКУНД
-setInterval(updatePortfolioPrices, 30000);
-
-// ⭐ ПОЛНОЕ ОБНОВЛЕНИЕ - КАЖДЫЕ 5 МИНУТ
-setInterval(fetchAll, 300000);
-
-// ⭐ ПРОВЕРКА УВЕДОМЛЕНИЙ - КАЖДЫЕ 10 СЕКУНД
-setInterval(checkNotifs, 10000);
-
-    // ИСПРАВЛЕНИЕ: Используем правильный паттерн ожидания Firebase
-   function setupFirebaseAuth() {
+function setupFirebaseAuth() {
     if (window.auth) {
         window.auth.onAuthStateChanged(async function(user) {
             window.currentUser = user;
@@ -4493,16 +4457,14 @@ setInterval(checkNotifs, 10000);
             
             if (user) {
                 console.log('✅ User authenticated:', user.uid);
-                // Загружаем все данные из Firebase
                 await loadPortfolio();
                 await loadNotifs();
                 await loadAlerts();
-                await loadOrders(); // Теперь с real-time слушателем
-                await processSyncQueue(); // Обрабатываем офлайн-очередь
+                await loadOrders();
+                await processSyncQueue();
                 renderAll();
             } else {
                 console.log('👤 User not authenticated, using localStorage');
-                // Загружаем из localStorage
                 loadPortfolio();
                 loadNotifs();
                 loadAlerts();
@@ -4517,39 +4479,57 @@ setInterval(checkNotifs, 10000);
         setTimeout(setupFirebaseAuth, 500);
     }
 }
-    // Запускаем попытку подключения
-    attemptAuthSetup();
- // ✅ ПРОВЕРКА ПОРТФЕЛЬНЫХ МОНЕТ
+// ============================================================
+// ИНИЦИАЛИЗАЦИЯ
+// ============================================================
+
+function init() {
+    loadPortfolio();
+    loadNotifs();
+    loadAlerts();
+    loadAutoAlertSettings();
+
+    setupTabs();
+    setupSearchClose();
+    try { 
+        const cached = JSON.parse(localStorage.getItem('ct_extra_coins') || '{}');
+        Object.assign(extraCoins, cached); 
+    } catch (e) {}
+    ensureNotificationPermission();
+
+    if (window.firebaseReady) {
+        updateAuthUI();
+    }
+
+    const savedView = localStorage.getItem('ct_portfolio_view_mode');
+    if (savedView && (savedView === 'table' || savedView === 'cards')) {
+        portfolioViewMode = savedView;
+    }
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === portfolioViewMode);
+    });
+
+    fetchAll();
+
+    // ⭐ ОБНОВЛЕНИЕ ЦЕН ПОРТФЕЛЯ - КАЖДЫЕ 30 СЕКУНД
+    setInterval(updatePortfolioPrices, 30000);
+
+    // ⭐ ПОЛНОЕ ОБНОВЛЕНИЕ - КАЖДЫЕ 5 МИНУТ
+    setInterval(fetchAll, 300000);
+
+    // ⭐ ПРОВЕРКА УВЕДОМЛЕНИЙ - КАЖДЫЕ 10 СЕКУНД
+    setInterval(checkNotifs, 10000);
+
+    // ✅ ИСПРАВЛЕНО: используем setupFirebaseAuth вместо attemptAuthSetup
+    setupFirebaseAuth();  // <-- ИЗМЕНИТЬ ЗДЕСЬ
+
+    // ✅ ПРОВЕРКА ПОРТФЕЛЬНЫХ МОНЕТ
     setTimeout(async function() {
         console.log('🔍 Проверка портфельных монет...');
-        console.log('📊 Портфель содержит:', portfolio.length, 'позиций');
-        
-        // Проверяем, какие монеты не загружены
-        const missing = portfolio.filter(h => {
-            const coin = findCoin(h.coinId);
-            return !coin;
-        });
-        
-        if (missing.length > 0) {
-            console.log('⚠️ Найдены монеты вне топ-500:', missing.map(h => `${h.symbol} (${h.coinId})`).join(', '));
-            console.log('🔄 Загрузка недостающих монет...');
-            
-            await refreshExtraCoins();
-            
-            // Проверяем результат
-            const stillMissing = portfolio.filter(h => !findCoin(h.coinId));
-            if (stillMissing.length > 0) {
-                console.warn('⚠️ Всё еще не загружены:', stillMissing.map(h => h.symbol).join(', '));
-            } else {
-                console.log('✅ Все портфельные монеты загружены!');
-            }
-            
-            renderAll();
-        } else {
-            console.log('✅ Все портфельные монеты уже загружены');
-        }
+        // ... остальной код
     }, 1500);
-    // Подписка на события изменения языка из languages.js
+    
+    // Подписка на события изменения языка
     document.addEventListener('languageChanged', function() {
         if (typeof updateAllTranslations === 'function') {
             updateAllTranslations();
