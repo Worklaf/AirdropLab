@@ -4634,20 +4634,20 @@ setInterval(checkNotifs, 10000);
             console.log('✅ Все портфельные монеты уже загружены');
         }
     }, 1500);
-    / ✅ Обновляем цены заглушек через 5 секунд с повторными попытками
-setTimeout(async function() {
-    await updatePlaceholderPrices();
-}, 5000);
+        // ✅ Обновляем цены заглушек через 5 секунд с повторными попытками
+    setTimeout(async function() {
+        await updatePlaceholderPrices();
+    }, 5000);
 
-// Повторная попытка через 30 секунд, если первая не сработала
-setTimeout(async function() {
-    await updatePlaceholderPrices();
-}, 30000);
+    // Повторная попытка через 30 секунд, если первая не сработала
+    setTimeout(async function() {
+        await updatePlaceholderPrices();
+    }, 30000);
 
-// И еще одна через 60 секунд
-setTimeout(async function() {
-    await updatePlaceholderPrices();
-}, 60000);
+    // И еще одна через 60 секунд
+    setTimeout(async function() {
+        await updatePlaceholderPrices();
+    }, 60000);
     // Подписка на события изменения языка из languages.js
     document.addEventListener('languageChanged', function() {
         if (typeof updateAllTranslations === 'function') {
