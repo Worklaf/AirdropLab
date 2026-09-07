@@ -481,29 +481,39 @@ async function fetchAll() {
 async function refreshDataViaProxy() {
     try {
         console.log('🔄 Загрузка данных через прокси...');
-        
-        // Загружаем топ-250 монет через прокси
+
+        // ============================================================
+        // 1. ЗАГРУЗКА ТОП-250 МОНЕТ (страница 1)
+        // ============================================================
         const page1Res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h,7d,30d`);
-        
+
         if (!page1Res.ok) {
             throw new Error('Proxy returned ' + page1Res.status);
         }
-        
+
         const data1 = await page1Res.json();
         let allData = data1;
-        
-        // Пробуем загрузить вторую страницу
+
+        // ============================================================
+        // 2. ЗАГРУЗКА ВТОРОЙ СТРАНИЦЫ (монеты 251-500)
+        // ============================================================
         try {
+            console.log('🔄 Загрузка второй страницы (251-500)...');
             const page2Res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=2&sparkline=true&price_change_percentage=24h,7d,30d`);
             if (page2Res.ok) {
                 const data2 = await page2Res.json();
                 allData = [...data1, ...data2];
+                console.log('✅ Загружена вторая страница, всего монет:', allData.length);
+            } else {
+                console.warn('⚠️ Вторая страница не загружена, статус:', page2Res.status);
             }
         } catch (e2) {
-            console.log('Page 2 load failed:', e2);
+            console.log('❌ Ошибка загрузки второй страницы:', e2);
         }
-        
-        // Дедупликация
+
+        // ============================================================
+        // 3. ДЕДУПЛИКАЦИЯ (на случай, если API вернул дубли)
+        // ============================================================
         if (allData.length > 0) {
             const seen = new Set();
             allData = allData.filter(coin => {
@@ -514,27 +524,38 @@ async function refreshDataViaProxy() {
                 return true;
             });
         }
-        
-        allCoins = allData;
-        console.log('✅ Загружено через прокси:', allCoins.length, 'монет');
 
-        // Загружаем глобальные данные
+        // Сохраняем в allCoins
+        allCoins = allData;
+        console.log('✅ ИТОГО загружено через прокси:', allCoins.length, 'монет');
+
+        // ============================================================
+        // 4. ЗАГРУЗКА ГЛОБАЛЬНЫХ ДАННЫХ
+        // ============================================================
         try {
             const globalRes = await fetch('/api/coingecko?path=global');
             if (globalRes.ok) {
                 globalData = await globalRes.json();
             }
-        } catch (e) { console.log('Global data load failed:', e); }
+        } catch (e) {
+            console.log('❌ Global data load failed:', e);
+        }
 
-        // Загружаем Fear & Greed
+        // ============================================================
+        // 5. ЗАГРУЗКА FEAR & GREED
+        // ============================================================
         try {
             const fearRes = await fetch('https://api.alternative.me/fng/?limit=1');
             if (fearRes.ok) {
                 fearData = await fearRes.json();
             }
-        } catch (e) { console.log('Fear data load failed:', e); }
+        } catch (e) {
+            console.log('❌ Fear data load failed:', e);
+        }
 
-        // Сохраняем в кэш
+        // ============================================================
+        // 6. СОХРАНЕНИЕ В КЭШ
+        // ============================================================
         const cacheData = {
             time: Date.now(),
             coins: allCoins,
@@ -548,15 +569,22 @@ async function refreshDataViaProxy() {
             console.warn('Cache not saved:', e);
         }
 
+        // ============================================================
+        // 7. ОБНОВЛЕНИЕ EXTRA COINS И ОТРИСОВКА
+        // ============================================================
         await refreshExtraCoins();
         syncAutoAlertsFromAdvisor();
         hideCorsWarning();
         renderAll();
         checkNotifs();
-        document.getElementById('lastUpdate').textContent = 'обновлено: ' + new Date().toLocaleTimeString('ru-RU');
-        
+
+        const updateEl = document.getElementById('lastUpdate');
+        if (updateEl) {
+            updateEl.textContent = 'обновлено: ' + new Date().toLocaleTimeString('ru-RU');
+        }
+
     } catch (error) {
-        console.error('Error loading via proxy:', error);
+        console.error('❌ Ошибка загрузки через прокси:', error);
         throw error;
     }
 }
