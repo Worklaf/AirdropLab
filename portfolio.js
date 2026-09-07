@@ -355,32 +355,7 @@ function getCache() {
 async function apiFetch(url, attempts) {
     attempts = attempts || 0;
     
-    // Если это запрос к CoinGecko - используем прокси
-    if (url.includes('api.coingecko.com')) {
-        const path = url.replace('https://api.coingecko.com/api/v3/', '');
-        const proxyUrl = `/api/coingecko?path=${encodeURIComponent(path)}`;
-        
-        try {
-            const ctrl = new AbortController();
-            const t = setTimeout(() => ctrl.abort(), 15000);
-            const res = await fetch(proxyUrl, {
-                signal: ctrl.signal,
-                headers: { 'Accept': 'application/json' }
-            });
-            clearTimeout(t);
-            
-            if (res.ok) return res;
-            if (res.status === 429 && attempts < 3) {
-                await new Promise(r => setTimeout(r, 2000 * (attempts + 1)));
-                return apiFetch(url, attempts + 1);
-            }
-            return res;
-        } catch (e) {
-            console.log('Proxy fetch error:', e);
-        }
-    }
-
-    // Fallback: прямые запросы
+    // Прямой запрос (как в старой версии)
     try {
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), 8000);
@@ -392,11 +367,15 @@ async function apiFetch(url, attempts) {
         });
         clearTimeout(t);
         if (res.ok) return res;
+        if (res.status === 429 && attempts < 3) {
+            await new Promise(r => setTimeout(r, 2000 * (attempts + 1)));
+            return apiFetch(url, attempts + 1);
+        }
     } catch (e) {
         console.log('Direct fetch failed:', e.message);
     }
 
-    // Fallback: сторонние прокси (удалите, если не нужны)
+    // Прокси-сервисы (как в старой версии)
     const proxies = [
         'https://api.allorigins.win/raw?url=',
         'https://corsproxy.io/?',
@@ -419,6 +398,157 @@ async function apiFetch(url, attempts) {
     }
 
     throw new Error('fetch failed');
+}
+
+// ============================================================
+// ЗАМЕНЯЕМ fetchAll НА ЭТУ ВЕРСИЮ
+// ============================================================
+
+async function fetchAll() {
+    try {
+        const cache = getCache();
+        if (cache && cache.coins && cache.coins.length) {
+            allCoins = cache.coins;
+            // Дедупликация
+            if (allCoins.length > 0) {
+                const seen = new Set();
+                allCoins = allCoins.filter(coin => {
+                    if (seen.has(coin.id)) {
+                        return false;
+                    }
+                    seen.add(coin.id);
+                    return true;
+                });
+            }
+            if (cache.global) globalData = cache.global;
+            if (cache.fear) fearData = cache.fear;
+            if (cache.portfolioCoins) {
+                Object.assign(extraCoins, cache.portfolioCoins);
+            }
+            syncAutoAlertsFromAdvisor();
+            renderAll();
+            checkNotifs();
+            hideCorsWarning();
+            const cacheAge = Math.floor((Date.now() - cache.time) / 60000);
+            const updateEl = document.getElementById('lastUpdate');
+            if (updateEl) updateEl.textContent = `кэш (${cacheAge} мин назад)`;
+            
+            // Фоновое обновление
+            await refreshDataDirect();
+            return;
+        }
+
+        // Если кэша нет - загружаем напрямую
+        await refreshDataDirect();
+        
+    } catch (e) {
+        console.error('fetchAll error:', e);
+        const cache = getCache();
+        if (cache && (cache.portfolioCoins || cache.coins)) {
+            allCoins = cache.portfolioCoins || cache.coins || [];
+            if (cache.global) globalData = cache.global;
+            if (cache.fear) fearData = cache.fear;
+            await refreshExtraCoins();
+            syncAutoAlertsFromAdvisor();
+            renderAll();
+            checkNotifs();
+            const updateEl = document.getElementById('lastUpdate');
+            if (updateEl) updateEl.textContent = 'CoinGecko недоступен, показан кэш от ' + new Date(cache.time).toLocaleTimeString('ru-RU');
+        } else {
+            const updateEl = document.getElementById('lastUpdate');
+            if (updateEl) updateEl.textContent = 'CoinGecko недоступен. Данные загрузятся позже.';
+        }
+        maybeShowCorsWarning(e);
+    }
+}
+
+// ============================================================
+// НОВАЯ ФУНКЦИЯ ДЛЯ ПРЯМОЙ ЗАГРУЗКИ (как в старой версии)
+// ============================================================
+
+async function refreshDataDirect() {
+    try {
+        console.log('🔄 Загрузка данных напрямую...');
+        
+        // Загружаем топ-250 монет
+        const page1 = await apiFetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h,7d,30d');
+        if (!page1.ok) throw new Error('page 1 status ' + page1.status);
+        const data1 = await page1.json();
+        let allData = data1;
+
+        // Пробуем загрузить вторую страницу
+        try {
+            const page2 = await apiFetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=2&sparkline=true&price_change_percentage=24h,7d,30d');
+            if (page2.ok) {
+                const data2 = await page2.json();
+                allData = [...data1, ...data2];
+                console.log('✅ Загружено 500 монет');
+            }
+        } catch (e2) {
+            console.log('Page 2 load failed:', e2);
+        }
+
+        // Дедупликация
+        if (allData.length > 0) {
+            const seen = new Set();
+            allData = allData.filter(coin => {
+                if (seen.has(coin.id)) {
+                    return false;
+                }
+                seen.add(coin.id);
+                return true;
+            });
+        }
+
+        allCoins = allData;
+        console.log('✅ ИТОГО загружено:', allCoins.length, 'монет');
+
+        // Загружаем глобальные данные
+        try {
+            const globalRes = await apiFetch('https://api.coingecko.com/api/v3/global');
+            if (globalRes.ok) {
+                globalData = await globalRes.json();
+            }
+        } catch (e) {
+            console.log('Global data load failed:', e);
+        }
+
+        // Загружаем Fear & Greed
+        try {
+            const fearRes = await fetch('https://api.alternative.me/fng/?limit=1');
+            if (fearRes.ok) {
+                fearData = await fearRes.json();
+            }
+        } catch (e) {
+            console.log('Fear data load failed:', e);
+        }
+
+        // Сохраняем в кэш
+        const cacheData = {
+            time: Date.now(),
+            coins: allCoins,
+            global: globalData,
+            fear: fearData,
+            portfolioCoins: extraCoins
+        };
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+        } catch (e) {
+            console.warn('Cache not saved:', e);
+        }
+
+        await refreshExtraCoins();
+        syncAutoAlertsFromAdvisor();
+        hideCorsWarning();
+        renderAll();
+        checkNotifs();
+        const updateEl = document.getElementById('lastUpdate');
+        if (updateEl) updateEl.textContent = 'обновлено: ' + new Date().toLocaleTimeString('ru-RU');
+        
+    } catch (error) {
+        console.error('Error loading data directly:', error);
+        throw error;
+    }
 }
 
 async function fetchAll() {
