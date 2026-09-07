@@ -401,12 +401,11 @@ async function apiFetch(url, attempts) {
 
     throw new Error('fetch failed');
 }
-
 // ============================================================
 // ЗАГРУЗКА ДАННЫХ (ПОЛНОСТЬЮ ИЗ СТАРОЙ ВЕРСИИ)
 // ============================================================
 
-
+async function fetchAll() {  // ✅ ДОБАВИЛИ async
     try {
         const cache = getCache();
         if (cache && cache.coins && cache.coins.length) {
@@ -427,7 +426,7 @@ async function apiFetch(url, attempts) {
             if (cache.global) globalData = cache.global;
             if (cache.fear) fearData = cache.fear;
             
-            // ✅ ФИКС: Загружаем портфельные монеты из кэша
+            // ✅ Загружаем портфельные монеты из кэша
             if (cache.portfolioCoins) {
                 Object.assign(extraCoins, cache.portfolioCoins);
                 console.log('📦 Загружено портфельных монет из кэша:', Object.keys(cache.portfolioCoins).length);
@@ -442,12 +441,12 @@ async function apiFetch(url, attempts) {
             if (updateEl) updateEl.textContent = `кэш (${cacheAge} мин назад)`;
             
             // Фоновое обновление
-            await refreshDataDirect();
+            await refreshDataDirect();  // ✅ Теперь await работает!
             return;
         }
 
         // Если кэша нет - загружаем напрямую
-        await refreshDataDirect();
+        await refreshDataDirect();  // ✅ Теперь await работает!
         
     } catch (e) {
         console.error('fetchAll error:', e);
@@ -457,12 +456,12 @@ async function apiFetch(url, attempts) {
             if (cache.global) globalData = cache.global;
             if (cache.fear) fearData = cache.fear;
             
-            // ✅ ФИКС: Загружаем портфельные монеты из кэша
+            // ✅ Загружаем портфельные монеты из кэша
             if (cache.portfolioCoins) {
                 Object.assign(extraCoins, cache.portfolioCoins);
             }
             
-            await refreshExtraCoins();
+            await refreshExtraCoins();  // ✅ Теперь await работает!
             syncAutoAlertsFromAdvisor();
             renderAll();
             checkNotifs();
@@ -4493,15 +4492,15 @@ setInterval(checkNotifs, 10000);
     
     // Запускаем попытку подключения
     attemptAuthSetup();
-  // ✅ Проверяем портфельные монеты
-    setTimeout(async function() {
-        const missing = portfolio.filter(h => !findCoin(h.coinId));
-        if (missing.length > 0) {
-            console.log('⚠️ Найдены монеты вне топ-500:', missing.map(h => h.symbol).join(', '));
-            await refreshExtraCoins();
-            renderAll();
-        }
-    }, 1000);
+ // ✅ ИСПРАВЛЕНИЕ:
+setTimeout(async function() {  // ✅ Добавили async
+    const missing = portfolio.filter(h => !findCoin(h.coinId));
+    if (missing.length > 0) {
+        console.log('⚠️ Найдены монеты вне топ-500:', missing.map(h => h.symbol).join(', '));
+        await refreshExtraCoins();  // ✅ Теперь await работает!
+        renderAll();
+    }
+}, 1000);
     // Подписка на события изменения языка из languages.js
     document.addEventListener('languageChanged', function() {
         if (typeof updateAllTranslations === 'function') {
