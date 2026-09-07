@@ -356,16 +356,13 @@ function getCache() {
 
 async function apiFetch(url, attempts) {
     attempts = attempts || 0;
-    
-    // Прямой запрос
+
     try {
         const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 8000);
+        const t = setTimeout(() => ctrl.abort(), 5000); // было 8000
         const res = await fetch(url, {
-            mode: 'cors',
-            referrerPolicy: 'no-referrer',
-            headers: { 'Accept': 'application/json' },
-            signal: ctrl.signal
+            mode: 'cors', referrerPolicy: 'no-referrer',
+            headers: { 'Accept': 'application/json' }, signal: ctrl.signal
         });
         clearTimeout(t);
         if (res.ok) return res;
@@ -373,33 +370,28 @@ async function apiFetch(url, attempts) {
             await new Promise(r => setTimeout(r, 2000 * (attempts + 1)));
             return apiFetch(url, attempts + 1);
         }
-    } catch (e) {
-        console.log('Direct fetch failed:', e.message);
-    }
+    } catch (e) {}
 
-    // Прокси-сервисы
     const proxies = [
         'https://api.allorigins.win/raw?url=',
         'https://corsproxy.io/?',
         'https://api.codetabs.com/v1/proxy?quest='
     ];
 
-    for (let p of proxies) {
-        try {
-            const ctrl = new AbortController();
-            const t = setTimeout(() => ctrl.abort(), 12000);
-            const proxyUrl = p + encodeURIComponent(url);
-            const res = await fetch(proxyUrl, { signal: ctrl.signal });
-            clearTimeout(t);
-            if (res.ok) return res;
-            if (res.status === 429 && attempts < 2) {
-                await new Promise(r => setTimeout(r, 2000));
-                continue;
-            }
-        } catch (e) {}
-    }
+    // ✅ Пробуем ВСЕ прокси ОДНОВРЕМЕННО, берём первый успешный
+    const attemptsArr = proxies.map(p => {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 6000); // было 12000
+        return fetch(p + encodeURIComponent(url), { signal: ctrl.signal })
+            .then(res => { clearTimeout(t); if (!res.ok) throw new Error('bad status'); return res; })
+            .catch(err => { clearTimeout(t); throw err; });
+    });
 
-    throw new Error('fetch failed');
+    try {
+        return await Promise.any(attemptsArr);
+    } catch (e) {
+        throw new Error('fetch failed');
+    }
 }
 // ============================================================
 // ЗАГРУЗКА ДАННЫХ (ПОЛНОСТЬЮ ИЗ СТАРОЙ ВЕРСИИ)
