@@ -104,30 +104,6 @@ function findCoin(id) {
 // ============================================================
  
 
-// Следим за изменениями пользователя
-if (window.auth) {
-    window.auth.onAuthStateChanged(function(user) {
-        currentUser = user;
-        window.currentUser = user;
-        if (user) {
-            loadPortfolio();
-            loadNotifs();
-            loadAlerts();
-            loadOrders();
-            loadAutoAlertSettings();
-            renderAll();
-        } else {
-            // Загружаем из localStorage при выходе
-            loadPortfolio();
-            loadNotifs();
-            loadAlerts();
-            loadOrders();
-            renderAll();
-        }
-        updateAuthUI();
-    });
-}
-
 async function loadPortfolio() {
     try {
         if (window.db && window.currentUser) {
@@ -271,55 +247,127 @@ async function saveAlerts() {
 }
 
 async function loadOrders() {
-    // Всегда загружаем из Firebase если пользователь авторизован
     if (window.db && window.currentUser) {
         try {
             const userId = window.currentUser.uid;
             const docRef = window.db.collection('portfolios').doc(userId);
-            const docSnap = await docRef.get();
-            if (docSnap.exists) {
-                const data = docSnap.data();
-                if (data.orders) {
-                    orders = data.orders;
-                    console.log('Orders loaded from Firebase:', orders.length);
-                    return;
+            
+            // ✅ Добавить таймаут для onSnapshot
+            let snapshotReceived = false;
+            const timeout = setTimeout(() => {
+                if (!snapshotReceived) {
+                    console.warn('⏳ Firebase snapshot timeout, using localStorage');
+                    loadOrdersFromLocalStorage();
                 }
-            }
-            console.log('No orders found in Firebase for user');
-        } catch (e) { console.error('Error loading orders from Firebase:', e); }
+            }, 5000);
+            
+            const unsubscribe = docRef.onSnapshot((docSnap) => {
+                snapshotReceived = true;
+                clearTimeout(timeout);
+                
+                if (docSnap.exists) {
+                    const data = docSnap.data();
+                    if (data.orders) {
+                        orders = data.orders;
+                        try {
+                            localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+                        } catch (e) {}
+                        console.log('✅ Orders loaded from Firebase (real-time):', orders.length);
+                        renderOrders();
+                    }
+                }
+            }, (error) => {
+                clearTimeout(timeout);
+                console.error('❌ Error listening to orders:', error);
+                loadOrdersFromLocalStorage();
+            });
+            
+            window._ordersUnsubscribe = unsubscribe;
+            return;
+        } catch (e) {
+            console.error('❌ Error setting up orders listener:', e);
+        }
     }
     
-    // Fallback: загружаем из localStorage только если не авторизован или Firebase не сработал
+    loadOrdersFromLocalStorage();
+}
+
+function loadOrdersFromLocalStorage() {
     try {
         const d = localStorage.getItem(ORDERS_KEY);
         if (d) {
             orders = JSON.parse(d);
             orders.forEach(o => { if (!o.status) o.status = 'active'; });
-            console.log('Orders loaded from localStorage:', orders.length);
+            console.log('📦 Orders loaded from localStorage:', orders.length);
+            renderOrders();
         }
-    } catch (e) { console.error('Error loading orders from localStorage:', e); }
+    } catch (e) {
+        console.error('❌ Error loading orders from localStorage:', e);
+        orders = [];
+    }
 }
-
 async function saveOrders() {
-    // Сохраняем в localStorage для быстрого доступа
+    // Сохраняем в localStorage как кэш
     try {
         localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-    } catch (e) {
-        if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
-            console.error('localStorage quota exceeded for orders');
-        }
-    }
-    
-    // Сохраняем в Firebase для синхронизации между устройствами
+    } catch (e) {}
+
+    // Сохраняем в Firebase
     if (window.db && window.currentUser) {
         try {
             const userId = window.currentUser.uid;
             const docRef = window.db.collection('portfolios').doc(userId);
-            await docRef.set({ orders: orders }, { merge: true });
+            await docRef.set({ orders: orders, updatedAt: new Date().toISOString() }, { merge: true });
+            console.log('✅ Orders saved to Firebase');
+            
+            // ✅ ДОБАВИТЬ: после успешного сохранения обрабатываем очередь
+            await processSyncQueue();
+            
         } catch (e) {
-            console.error('Error saving orders to Firebase:', e);
+            console.error('❌ Error saving orders to Firebase:', e);
+            addToSyncQueue('orders', orders);
         }
     }
+}
+
+// Очередь для офлайн-синхронизации
+let syncQueue = [];
+
+function addToSyncQueue(type, data) {
+    syncQueue.push({ type, data, timestamp: Date.now() });
+    try {
+        localStorage.setItem('ct_sync_queue', JSON.stringify(syncQueue));
+    } catch (e) {}
+}
+
+async function processSyncQueue() {
+    if (!window.db || !window.currentUser) return;
+    if (syncQueue.length === 0) {
+        try {
+            const stored = localStorage.getItem('ct_sync_queue');
+            if (stored) syncQueue = JSON.parse(stored);
+        } catch (e) {}
+    }
+    
+    while (syncQueue.length > 0) {
+        const item = syncQueue[0];
+        try {
+            if (item.type === 'orders') {
+                const userId = window.currentUser.uid;
+                const docRef = window.db.collection('portfolios').doc(userId);
+                await docRef.set({ orders: item.data }, { merge: true });
+                syncQueue.shift();
+                console.log('✅ Synced queued orders');
+            }
+        } catch (e) {
+            console.error('❌ Sync failed, will retry later:', e);
+            break;
+        }
+    }
+    
+    try {
+        localStorage.setItem('ct_sync_queue', JSON.stringify(syncQueue));
+    } catch (e) {}
 }
 
 function loadAutoAlertSettings() {
@@ -3083,7 +3131,10 @@ function renderOrders() {
     const searchInput = document.getElementById('ordersSearch');
 
     if (!container) return;
-
+if (!allCoins.length && Object.keys(extraCoins).length === 0) {
+        container.innerHTML = '<div style="color:var(--text-3);padding:16px;">Загрузка данных...</div>';
+        return;
+    }
     checkOrderExecution();
 
     let filteredOrders = orders;
@@ -3449,10 +3500,15 @@ function filterOrdersByCoin(searchTerm) {
 
 function checkOrderExecution() {
     let anyExecuted = false;
+    let pendingCount = 0;
+    let resolvedCount = 0;
+    
     orders.forEach(o => {
         if (o.status === 'active' || o.status === 'pending') {
+            pendingCount++;
             const c = findCoin(o.coinId);
             if (c && c.current_price > 0) {
+                resolvedCount++;
                 if (c.current_price <= o.price) {
                     addPurchaseFromOrder(o);
                     o.status = 'executed';
@@ -3463,11 +3519,37 @@ function checkOrderExecution() {
             }
         }
     });
+    
+    // ✅ Логируем, если есть ожидающие ордера без цен
+    if (pendingCount > 0 && resolvedCount === 0) {
+        console.log('⏳ Ожидание данных о ценах для ' + pendingCount + ' ордеров');
+        // Повторная проверка через 5 секунд
+        setTimeout(checkOrderExecution, 5000);
+    }
+    
     if (anyExecuted) {
         saveOrders();
         renderAll();
     }
 }
+function setupTabListeners() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.dataset.tab === 'orders' || btn.dataset.tab === 'portfolio') {
+                // При переключении на вкладку с ордерами или портфелем
+                // обновляем данные
+                if (window.currentUser) {
+                    // Не перезагружаем, если уже есть real-time слушатель
+                    // но можно принудительно проверить
+                }
+                renderOrders();
+            }
+        });
+    });
+}
+
+// Добавить в init()
+setupTabListeners();
 
 function addPurchaseFromOrder(order) {
     let holding = portfolio.find(h => h.coinId === order.coinId);
@@ -4367,7 +4449,6 @@ function init() {
     loadNotifs();
     loadAlerts();
     loadAutoAlertSettings();
-    loadOrders(); // Загружаем ордера сразу
 
     setupTabs();
     setupSearchClose();
@@ -4399,34 +4480,43 @@ setInterval(fetchAll, 300000);
 setInterval(checkNotifs, 10000);
 
     // ИСПРАВЛЕНИЕ: Используем правильный паттерн ожидания Firebase
-    function attemptAuthSetup() {
+   function setupFirebaseAuth() {
     if (window.auth) {
-        window.auth.onAuthStateChanged(async function(user) {  // ✅ Добавили async
-            currentUser = user;
+        window.auth.onAuthStateChanged(async function(user) {
             window.currentUser = user;
+            
+            // Очищаем старые слушатели
+            if (window._ordersUnsubscribe) {
+                window._ordersUnsubscribe();
+                window._ordersUnsubscribe = null;
+            }
+            
+            if (user) {
+                console.log('✅ User authenticated:', user.uid);
+                // Загружаем все данные из Firebase
+                await loadPortfolio();
+                await loadNotifs();
+                await loadAlerts();
+                await loadOrders(); // Теперь с real-time слушателем
+                await processSyncQueue(); // Обрабатываем офлайн-очередь
+                renderAll();
+            } else {
+                console.log('👤 User not authenticated, using localStorage');
+                // Загружаем из localStorage
+                loadPortfolio();
+                loadNotifs();
+                loadAlerts();
+                loadOrdersFromLocalStorage();
+                renderAll();
+            }
             
             if (typeof window.updateAuthUI === 'function') window.updateAuthUI();
             if (typeof window.syncAuth === 'function') window.syncAuth();
-
-            if (user) {
-                await loadPortfolio();   // ✅ Теперь await работает!
-                await loadNotifs();      // ✅ Теперь await работает!
-                await loadAlerts();      // ✅ Теперь await работает!
-                await loadOrders();      // ✅ Теперь await работает!
-                renderAll();
-            } else {
-                await loadPortfolio();   // ✅ Теперь await работает!
-                await loadNotifs();      // ✅ Теперь await работает!
-                await loadAlerts();      // ✅ Теперь await работает!
-                await loadOrders();      // ✅ Теперь await работает!
-                renderAll();
-            }
         });
     } else {
-        setTimeout(attemptAuthSetup, 500);
+        setTimeout(setupFirebaseAuth, 500);
     }
 }
-    
     // Запускаем попытку подключения
     attemptAuthSetup();
  // ✅ ПРОВЕРКА ПОРТФЕЛЬНЫХ МОНЕТ
