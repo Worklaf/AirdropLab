@@ -633,6 +633,7 @@ function hideCorsWarning() {
 }
 
 
+   async function refreshExtraCoins() {
     try {
         // ✅ Убеждаемся, что allCoins - массив
         const coinsArray = Array.isArray(allCoins) ? allCoins : [];
