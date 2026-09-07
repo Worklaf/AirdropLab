@@ -635,34 +635,38 @@ function hideCorsWarning() {
 
    async function refreshExtraCoins() {
     try {
+        // ✅ Убеждаемся, что allCoins - массив
         const coinsArray = Array.isArray(allCoins) ? allCoins : [];
         
+        // Получаем ID монет из портфеля, которых нет в allCoins
         const neededIds = [...new Set(portfolio.map(h => h.coinId).filter(id => id && !coinsArray.find(c => c.id === id)))];
         
         if (!neededIds.length) {
             console.log('✅ Все портфельные монеты уже загружены');
-            return;
+            
         }
         
         console.log('🔄 Загрузка портфельных монет:', neededIds.length, 'шт.', neededIds);
         
-        // 1. Проверяем локальный кэш
+        // 1. Сначала проверяем локальный кэш extraCoins
         try { 
             const cached = JSON.parse(localStorage.getItem('ct_extra_coins') || '{}'); 
             Object.assign(extraCoins, cached); 
             console.log('📦 Загружено из кэша extraCoins:', Object.keys(cached).length, 'монет');
-        } catch (e) {}
+        } catch (e) {
+            console.warn('⚠️ Не удалось загрузить кэш extraCoins:', e);
+        }
         
         // 2. Проверяем, какие монеты еще нужны
         const missingFromCache = neededIds.filter(id => !extraCoins[id]);
         if (missingFromCache.length === 0) {
             console.log('✅ Все монеты найдены в кэше extraCoins');
-            return;
         }
         
         console.log('🔄 Загрузка недостающих монет:', missingFromCache.length, 'шт.');
         
-        const chunkSize = 10;
+        // 3. Пробуем загрузить через разные источники
+        const chunkSize = 10; // Уменьшаем чанк для надежности
         let loadedCount = 0;
         
         for (let i = 0; i < missingFromCache.length; i += chunkSize) {
@@ -671,50 +675,44 @@ function hideCorsWarning() {
             
             let loaded = false;
             
-            // ⭐ ПРОБУЕМ ЧЕРЕЗ ПРОКСИ ДЛЯ SIMPLE PRICE
+            // ✅ СПОСОБ 1: Прямой запрос к CoinGecko (без прокси, с CORS)
             try {
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`${COINGECKO_API}/simple/price?ids=${chunk.join(',')}&vs_currencies=usd&include_market_cap=true&include_24hr_change=true`)}`;
-                console.log(`📡 Запрос через прокси (simple price): ${proxyUrl.substring(0, 100)}...`);
+                const url = `${COINGECKO_API}/coins/markets?vs_currency=usd&ids=${chunk.join(',')}&sparkline=true&price_change_percentage=24h,7d,30d`;
+                console.log(`📡 Прямой запрос: ${url}`);
                 
-                const res = await fetch(proxyUrl, {
+                const res = await fetch(url, {
                     mode: 'cors',
                     headers: { 'Accept': 'application/json' }
                 });
                 
                 if (res.ok) {
                     const data = await res.json();
-                    chunk.forEach(id => {
-                        if (data[id]) {
-                            const holding = portfolio.find(h => h.coinId === id);
-                            extraCoins[id] = {
-                                id: id,
-                                symbol: holding ? holding.symbol : id,
-                                name: holding ? holding.symbol : id,
-                                image: '',
-                                current_price: data[id].usd,
-                                market_cap: data[id].usd_market_cap || 0,
-                                price_change_percentage_24h: data[id].usd_24h_change || 0,
-                                ath: null,
-                                sparkline_in_7d: { price: [] },
-                                last_updated: new Date().toISOString()
-                            };
-                            console.log(`✅ Загружена базовая информация: ${id} (${data[id].usd})`);
-                            loadedCount++;
-                        }
-                    });
-                    loaded = true;
+                    if (data && data.length > 0) {
+                        data.forEach(c => { 
+                            extraCoins[c.id] = c; 
+                            console.log(`✅ Загружена: ${c.symbol} (${c.name})`);
+                        });
+                        loaded = true;
+                        loadedCount += data.length;
+                    }
+                } else {
+                    console.warn(`⚠️ Прямой запрос не удался: ${res.status}`);
                 }
             } catch (e) {
-                console.warn('⚠️ Прокси simple price не сработал:', e.message);
+                console.warn('⚠️ Прямой запрос не удался:', e.message);
             }
             
-            // ⭐ ПРОБУЕМ ЧЕРЕЗ СЕРВЕРНЫЙ ПРОКСИ
+            // ✅ СПОСОБ 2: Simple price (если не загрузилось)
             if (!loaded) {
                 try {
-                    const serverProxyUrl = `/api/coingecko?path=simple/price?ids=${chunk.join(',')}&vs_currencies=usd&include_market_cap=true&include_24hr_change=true`;
-                    console.log(`📡 Запрос через серверный прокси: ${serverProxyUrl}`);
+                    const url = `${COINGECKO_API}/simple/price?ids=${chunk.join(',')}&vs_currencies=usd&include_market_cap=true&include_24hr_change=true`;
+                    console.log(`📡 Simple price запрос: ${url}`);
                     
-                    const res = await fetch(serverProxyUrl);
+                    const res = await fetch(url, {
+                        mode: 'cors',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    
                     if (res.ok) {
                         const data = await res.json();
                         chunk.forEach(id => {
@@ -732,18 +730,18 @@ function hideCorsWarning() {
                                     sparkline_in_7d: { price: [] },
                                     last_updated: new Date().toISOString()
                                 };
-                                console.log(`✅ Загружена через сервер: ${id} (${data[id].usd})`);
+                                console.log(`✅ Загружена базовая информация: ${id} (${data[id].usd})`);
                                 loadedCount++;
                             }
                         });
                         loaded = true;
                     }
                 } catch (e) {
-                    console.warn('⚠️ Серверный прокси не сработал:', e.message);
+                    console.warn('⚠️ Simple price не удался:', e.message);
                 }
             }
             
-            // ⭐ СОЗДАЕМ ЗАГЛУШКУ
+            // ✅ СПОСОБ 3: Если ничего не работает - создаем заглушку
             if (!loaded) {
                 console.warn(`⚠️ Не удалось загрузить чанк: ${chunk.join(', ')}`);
                 chunk.forEach(id => {
@@ -767,14 +765,19 @@ function hideCorsWarning() {
                 });
             }
             
+            // Пауза между запросами
             await new Promise(r => setTimeout(r, 500));
         }
         
         console.log(`✅ Загрузка портфельных монет завершена. Загружено: ${loadedCount}, Всего в extraCoins: ${Object.keys(extraCoins).length}`);
         
+        // ✅ Сохраняем в кэш
         try {
             localStorage.setItem('ct_extra_coins', JSON.stringify(extraCoins));
-        } catch (e) {}
+            console.log('💾 Сохранено в localStorage: ct_extra_coins');
+        } catch (e) {
+            console.warn('⚠️ Не удалось сохранить ct_extra_coins:', e);
+        }
         
     } catch (error) {
         console.error('❌ Ошибка в refreshExtraCoins:', error);
@@ -3548,102 +3551,7 @@ function checkOrderExecution() {
         renderAll();
     }
 }
-// ============================================================
-// ОБНОВЛЕНИЕ ЦЕН ДЛЯ МОНЕТ-ЗАГЛУШЕК
-// ============================================================
 
-async function updatePlaceholderPrices() {
-    console.log('🔄 Проверка монет-заглушек...');
-    
-    const placeholders = Object.keys(extraCoins).filter(id => extraCoins[id].isPlaceholder);
-    
-    if (!placeholders.length) {
-        console.log('✅ Нет монет-заглушек');
-        return;
-    }
-    
-    console.log(`🔄 Найдено ${placeholders.length} монет-заглушек:`, placeholders);
-    
-    const chunkSize = 20;
-    let updated = 0;
-    
-    for (let i = 0; i < placeholders.length; i += chunkSize) {
-        const chunk = placeholders.slice(i, i + chunkSize);
-        
-        // ⭐ ИСПОЛЬЗУЕМ ПРОКСИ ДЛЯ ОБХОДА CORS
-        const proxyUrls = [
-            `https://api.allorigins.win/raw?url=${encodeURIComponent(`${COINGECKO_API}/simple/price?ids=${chunk.join(',')}&vs_currencies=usd&include_24hr_change=true`)}`,
-            `https://corsproxy.io/?${encodeURIComponent(`${COINGECKO_API}/simple/price?ids=${chunk.join(',')}&vs_currencies=usd&include_24hr_change=true`)}`,
-            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`${COINGECKO_API}/simple/price?ids=${chunk.join(',')}&vs_currencies=usd&include_24hr_change=true`)}`
-        ];
-        
-        let success = false;
-        
-        for (const proxyUrl of proxyUrls) {
-            try {
-                console.log(`📡 Запрос через прокси: ${proxyUrl.substring(0, 100)}...`);
-                
-                const res = await fetch(proxyUrl, {
-                    mode: 'cors',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                if (res.ok) {
-                    const prices = await res.json();
-                    chunk.forEach(id => {
-                        if (prices[id] && prices[id].usd > 0) {
-                            extraCoins[id].current_price = prices[id].usd;
-                            extraCoins[id].price_change_percentage_24h = prices[id].usd_24h_change || 0;
-                            extraCoins[id].isPlaceholder = false;
-                            updated++;
-                            console.log(`✅ Обновлена цена для ${extraCoins[id].symbol}: $${prices[id].usd}`);
-                        }
-                    });
-                    success = true;
-                    break;
-                }
-            } catch (e) {
-                console.warn(`⚠️ Прокси не сработал:`, e.message);
-            }
-        }
-        
-        // Если прокси не сработали, пробуем через ваш серверный прокси
-        if (!success) {
-            try {
-                const serverProxyUrl = `/api/coingecko?path=simple/price?ids=${chunk.join(',')}&vs_currencies=usd&include_24hr_change=true`;
-                console.log(`📡 Запрос через серверный прокси: ${serverProxyUrl}`);
-                
-                const res = await fetch(serverProxyUrl);
-                if (res.ok) {
-                    const prices = await res.json();
-                    chunk.forEach(id => {
-                        if (prices[id] && prices[id].usd > 0) {
-                            extraCoins[id].current_price = prices[id].usd;
-                            extraCoins[id].price_change_percentage_24h = prices[id].usd_24h_change || 0;
-                            extraCoins[id].isPlaceholder = false;
-                            updated++;
-                            console.log(`✅ Обновлена цена через сервер для ${extraCoins[id].symbol}: $${prices[id].usd}`);
-                        }
-                    });
-                }
-            } catch (e) {
-                console.warn('⚠️ Серверный прокси не сработал:', e.message);
-            }
-        }
-        
-        await new Promise(r => setTimeout(r, 1000));
-    }
-    
-    if (updated > 0) {
-        try {
-            localStorage.setItem('ct_extra_coins', JSON.stringify(extraCoins));
-            console.log(`💾 Обновлено ${updated} монет-заглушек`);
-        } catch (e) {}
-        renderAll();
-    }
-}
-
-window.updatePlaceholderPrices = updatePlaceholderPrices;
 function addPurchaseFromOrder(order) {
     let holding = portfolio.find(h => h.coinId === order.coinId);
     if (!holding) {
@@ -4634,20 +4542,6 @@ setInterval(checkNotifs, 10000);
             console.log('✅ Все портфельные монеты уже загружены');
         }
     }, 1500);
-        // ✅ Обновляем цены заглушек через 5 секунд с повторными попытками
-    setTimeout(async function() {
-        await updatePlaceholderPrices();
-    }, 5000);
-
-    // Повторная попытка через 30 секунд, если первая не сработала
-    setTimeout(async function() {
-        await updatePlaceholderPrices();
-    }, 30000);
-
-    // И еще одна через 60 секунд
-    setTimeout(async function() {
-        await updatePlaceholderPrices();
-    }, 60000);
     // Подписка на события изменения языка из languages.js
     document.addEventListener('languageChanged', function() {
         if (typeof updateAllTranslations === 'function') {
