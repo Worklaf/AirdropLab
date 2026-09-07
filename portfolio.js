@@ -572,21 +572,21 @@ function hideCorsWarning() {
 async function refreshExtraCoins() {
     const neededIds = [...new Set(portfolio.map(h => h.coinId).filter(id => id && !allCoins.find(c => c.id === id)))];
     if (!neededIds.length) return;
-    
+
     try { 
         const cached = JSON.parse(localStorage.getItem('ct_extra_coins') || '{}'); 
         Object.assign(extraCoins, cached); 
     } catch (e) {}
-    
+
     const missingFromCache = neededIds.filter(id => !extraCoins[id]);
     if (missingFromCache.length === 0) return;
-    
-    // Загружаем через прокси
+
+    // Загружаем напрямую с CoinGecko (с прокси-фоллбэком через apiFetch)
     const chunkSize = 20;
     for (let i = 0; i < missingFromCache.length; i += chunkSize) {
         const chunk = missingFromCache.slice(i, i + chunkSize);
         try {
-            const res = await fetch(`/api/coingecko?path=coins/markets?vs_currency=usd&ids=${chunk.join(',')}&sparkline=true&price_change_percentage=24h,7d,30d`);
+            const res = await apiFetch(`${COINGECKO_API}/coins/markets?vs_currency=usd&ids=${chunk.join(',')}&sparkline=true&price_change_percentage=24h,7d,30d`);
             if (res.ok) {
                 const data = await res.json();
                 data.forEach(c => { extraCoins[c.id] = c; });
@@ -4218,13 +4218,12 @@ async function updatePortfolioPrices() {
     try {
         const portfolioIds = portfolio.map(h => h.coinId).filter(Boolean);
         if (!portfolioIds.length) return;
-        
-        // Легкий запрос через прокси - только цены для монет в портфеле
-        const res = await fetch(`/api/coingecko?path=simple/price?ids=${portfolioIds.join(',')}&vs_currencies=usd&include_24hr_change=true`);
+
+        const res = await apiFetch(`${COINGECKO_API}/simple/price?ids=${portfolioIds.join(',')}&vs_currencies=usd&include_24hr_change=true`);
         if (!res.ok) return;
-        
+
         const prices = await res.json();
-        
+
         let updated = false;
         allCoins.forEach(coin => {
             if (prices[coin.id]) {
@@ -4233,7 +4232,7 @@ async function updatePortfolioPrices() {
                 updated = true;
             }
         });
-        
+
         Object.keys(extraCoins).forEach(id => {
             if (prices[id]) {
                 extraCoins[id].current_price = prices[id].usd;
@@ -4241,7 +4240,14 @@ async function updatePortfolioPrices() {
                 updated = true;
             }
         });
-        
+
+        // если каких-то монет из портфеля вообще не оказалось ни в allCoins, ни в extraCoins - подгружаем их полностью
+        const missingIds = portfolioIds.filter(id => !allCoins.find(c => c.id === id) && !extraCoins[id]);
+        if (missingIds.length) {
+            await refreshExtraCoins();
+            updated = true;
+        }
+
         if (updated) {
             renderHeader();
             renderPortfolio();
@@ -4249,7 +4255,7 @@ async function updatePortfolioPrices() {
             const updateEl = document.getElementById('lastUpdate');
             if (updateEl) updateEl.textContent = 'цены обновлены: ' + new Date().toLocaleTimeString('ru-RU');
         }
-        
+
     } catch (e) {
         console.log('Price update failed:', e);
     }
